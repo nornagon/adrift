@@ -47,10 +47,14 @@ class GLFWDisplay extends Display {
     glfwSetKeyCallback(window, (window: Long, key: Int, scancode: Int, action: Int, mods: Int) => {
       if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         key match {
-          case GLFW_KEY_LEFT => pendingActions.append(Action.PlayerMove(-1, 0))
-          case GLFW_KEY_RIGHT => pendingActions.append(Action.PlayerMove(1, 0))
-          case GLFW_KEY_UP => pendingActions.append(Action.PlayerMove(0, -1))
-          case GLFW_KEY_DOWN => pendingActions.append(Action.PlayerMove(0, 1))
+          case GLFW_KEY_LEFT | GLFW_KEY_H => pendingActions.append(Action.PlayerMove(-1, 0))
+          case GLFW_KEY_DOWN | GLFW_KEY_J => pendingActions.append(Action.PlayerMove(0, 1))
+          case GLFW_KEY_UP | GLFW_KEY_K => pendingActions.append(Action.PlayerMove(0, -1))
+          case GLFW_KEY_RIGHT | GLFW_KEY_L => pendingActions.append(Action.PlayerMove(1, 0))
+          case GLFW_KEY_Y => pendingActions.append(Action.PlayerMove(-1, -1))
+          case GLFW_KEY_U => pendingActions.append(Action.PlayerMove(1, -1))
+          case GLFW_KEY_B => pendingActions.append(Action.PlayerMove(-1, 1))
+          case GLFW_KEY_N => pendingActions.append(Action.PlayerMove(1, 1))
           case GLFW_KEY_I => showingInventory = true; render(lastState)
           case GLFW_KEY_ESCAPE => showingInventory = false; render(lastState)
           case _ =>
@@ -93,7 +97,8 @@ class GLFWDisplay extends Display {
     case Empty => 32
     case Floor => 46
     case Grass => 44
-    case Tree => 65
+    case TreeOak => 65
+    case TreeFicus => 88
     case GlassWall => 95
   }
 

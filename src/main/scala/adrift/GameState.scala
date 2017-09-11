@@ -12,7 +12,10 @@ case object Floor extends Terrain
 case object GlassWall extends Terrain {
   override val walkable = false
 }
-case object Tree extends Terrain {
+case object TreeOak extends Terrain {
+  override val walkable = false
+}
+case object TreeFicus extends Terrain {
   override val walkable = false
 }
 case object Grass extends Terrain
@@ -38,7 +41,7 @@ object GameState {
     drawCircle(64, 64, 50) { (x, y) => state.map(x, y) = GlassWall }
     for ((x, y) <- state.map.indices) {
       if (state.map(x, y) == Grass && random.nextFloat() < 1/6f)
-        state.map(x, y) = Tree
+        state.map(x, y) = if (random.nextFloat() < 0.3) TreeFicus else TreeOak
     }
     state.player = (64, 32)
     state
