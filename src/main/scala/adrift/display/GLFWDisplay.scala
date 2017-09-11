@@ -9,6 +9,15 @@ import org.lwjgl.opengl.GL11._
 
 import scala.collection.mutable
 
+object BoxDrawing {
+  val DR = 112
+  val UR = 109
+  val DL = 110
+  val UL = 125
+  val LR = 64
+  val UD = 66
+}
+
 class GLFWDisplay extends Display {
   val CHAR_W = 16
   val CHAR_H = 16
@@ -16,7 +25,10 @@ class GLFWDisplay extends Display {
   var upper: Texture = _
   var lower: Texture = _
   var spriteBatch: SpriteBatch = _
+  var lastState: GameState = _
   private val pendingActions = mutable.Buffer.empty[Action]
+
+  var showingInventory = false
 
   def init(): Unit = {
     GLFWErrorCallback.createPrint(System.err).set()
@@ -39,6 +51,8 @@ class GLFWDisplay extends Display {
           case GLFW_KEY_RIGHT => pendingActions.append(Action.PlayerMove(1, 0))
           case GLFW_KEY_UP => pendingActions.append(Action.PlayerMove(0, -1))
           case GLFW_KEY_DOWN => pendingActions.append(Action.PlayerMove(0, 1))
+          case GLFW_KEY_I => showingInventory = true; render(lastState)
+          case GLFW_KEY_ESCAPE => showingInventory = false; render(lastState)
           case _ =>
         }
       }
@@ -101,6 +115,23 @@ class GLFWDisplay extends Display {
       spriteBatch.drawRegion(tex, cx * 8, cy * 8, 8, 8, x * CHAR_W, y * CHAR_H, CHAR_W, CHAR_H)
     }
 
+    def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = {
+      drawChar(upper, x, y, BoxDrawing.DR)
+      drawChar(upper, x + w - 1, y, BoxDrawing.DL)
+      drawChar(upper, x, y + h - 1, BoxDrawing.UR)
+      drawChar(upper, x + w - 1, y + h - 1, BoxDrawing.UL)
+      for (iy <- 1 until (h - 1); ix <- 1 until (w - 1))
+        drawChar(upper, x + ix, y + iy, 32)
+      for (ix <- 1 until (w - 1)) {
+        drawChar(upper, x + ix, y, BoxDrawing.LR)
+        drawChar(upper, x + ix, y + h - 1, BoxDrawing.LR)
+      }
+      for (iy <- 1 until (h - 1)) {
+        drawChar(upper, x, y + iy, BoxDrawing.UD)
+        drawChar(upper, x + w - 1, y + iy, BoxDrawing.UD)
+      }
+    }
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     val left = player._1 - windowWidthChars/2
@@ -122,12 +153,18 @@ class GLFWDisplay extends Display {
       }
       drawChar(lower, i, worldHeightChars, tc)
     }
+    if (showingInventory) {
+      drawBox(10, 10, 20, 10)
+    }
     spriteBatch.end()
 
     glfwSwapBuffers(window)
   }
 
-  override def update(state: GameState): Unit = render(state)
+  override def update(state: GameState): Unit = {
+    lastState = state
+    render(state)
+  }
 
   override def waitForAction: Action = {
     if (pendingActions.nonEmpty)
