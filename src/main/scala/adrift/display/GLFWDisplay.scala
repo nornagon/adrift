@@ -3,7 +3,7 @@ package adrift.display
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift.{Action, GameState, Grid}
 import org.lwjgl.glfw.GLFW._
-import org.lwjgl.glfw.{GLFWErrorCallback, GLFWWindowCloseCallbackI}
+import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11._
 
@@ -73,11 +73,13 @@ class GLFWDisplay extends Display {
   def render(state: GameState): Unit = {
     val map: Grid[Int] = state.map
     val player: (Int, Int) = state.player
-    glfwSetWindowSize(window, map.width * CHAR_W, map.height * CHAR_H)
+    val windowWidthChars = 80
+    val windowHeightChars = 48
+    glfwSetWindowSize(window, windowWidthChars * CHAR_W, windowHeightChars * CHAR_H)
     glfwShowWindow(window)
     glClearColor(0, 0, 0, 1)
 
-    spriteBatch.resize(CHAR_W * map.width, CHAR_H * map.height)
+    spriteBatch.resize(CHAR_W * windowWidthChars, CHAR_H * windowHeightChars)
 
     def drawChar(x: Int, y: Int, c: Int): Unit = {
       val cx = c % 32
@@ -87,10 +89,15 @@ class GLFWDisplay extends Display {
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+    val left = player._1 - windowWidthChars/2
+    val right = left + windowWidthChars
+    val top = player._2 - windowHeightChars/2
+    val bottom = top + windowHeightChars
+
     spriteBatch.begin()
-    for (y <- 0 until map.height; x <- 0 until map.width) {
-      if (x == player._1 && y == player._2) drawChar(x, y, 0)
-      else drawChar(x, y, map(x, y))
+    for (y <- top until bottom; x <- left until right) {
+      if (x == player._1 && y == player._2) drawChar(x - left, y - top, 0)
+      else if (map.contains(x, y)) drawChar(x - left, y - top, map(x, y))
     }
     spriteBatch.end()
 
