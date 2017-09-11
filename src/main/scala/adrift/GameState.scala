@@ -59,11 +59,15 @@ object GameState {
     var dx: Int = 1
     var dy: Int = 1
     var err: Int = dx - (r << 1)
+    var lastY = -1
     while (x >= y) {
-      for (xi <- x0 - x to x0 + x) putpixel(xi, y0 + y)
-      for (xi <- x0 - y to x0 + y) putpixel(xi, y0 + x)
-      for (xi <- x0 - x to x0 + x) putpixel(xi, y0 - y)
-      for (xi <- x0 - y to x0 + y) putpixel(xi, y0 - x)
+      if (y != lastY) {
+        for (xi <- x0 - x to x0 + x) putpixel(xi, y0 + y)
+        for (xi <- x0 - y to x0 + y) putpixel(xi, y0 + x)
+        for (xi <- x0 - x to x0 + x) putpixel(xi, y0 - y)
+        for (xi <- x0 - y to x0 + y) putpixel(xi, y0 - x)
+      }
+      lastY = y
 
       if (err <= 0) {
         y += 1
