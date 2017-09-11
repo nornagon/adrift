@@ -1,7 +1,7 @@
 package adrift.display
 
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
-import adrift.{Action, GameState, Grid}
+import adrift._
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
@@ -70,8 +70,16 @@ class GLFWDisplay extends Display {
     spriteBatch = SpriteBatch.create
   }
 
+  def charForTerrain(terrain: Terrain): Int = terrain match {
+    case Empty => 32
+    case Floor => 46
+    case Grass => 44
+    case Tree => 65
+    case GlassWall => 95
+  }
+
   def render(state: GameState): Unit = {
-    val map: Grid[Int] = state.map
+    val map: Grid[Terrain] = state.map
     val player: (Int, Int) = state.player
     val windowWidthChars = 80
     val windowHeightChars = 48
@@ -97,7 +105,7 @@ class GLFWDisplay extends Display {
     spriteBatch.begin()
     for (y <- top until bottom; x <- left until right) {
       if (x == player._1 && y == player._2) drawChar(x - left, y - top, 0)
-      else if (map.contains(x, y)) drawChar(x - left, y - top, map(x, y))
+      else if (map.contains(x, y)) drawChar(x - left, y - top, charForTerrain(map(x, y)))
     }
     spriteBatch.end()
 

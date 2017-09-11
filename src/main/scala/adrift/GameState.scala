@@ -2,13 +2,29 @@ package adrift
 
 import adrift.Action._
 
+sealed trait Terrain {
+  def walkable: Boolean = true
+}
+case object Empty extends Terrain {
+  override val walkable = false
+}
+case object Floor extends Terrain
+case object GlassWall extends Terrain {
+  override val walkable = false
+}
+case object Tree extends Terrain {
+  override val walkable = false
+}
+case object Grass extends Terrain
+
 class GameState(width: Int, height: Int) {
-  val map: Grid[Int] = new Grid[Int](width, height)(32)
+  val map: Grid[Terrain] = new Grid[Terrain](width, height)(Empty)
   var player: (Int, Int) = (0, 0)
   def receive(action: Action): Unit = {
     action match {
       case PlayerMove(dx, dy) =>
-        player = (player._1 + dx, player._2 + dy)
+        if (map(player._1 + dx, player._2 + dy).walkable)
+          player = (player._1 + dx, player._2 + dy)
       case Quit =>
     }
   }
@@ -18,8 +34,12 @@ object GameState {
   def generateWorld: GameState = {
     val state = new GameState(128, 128)
     val random = new scala.util.Random(42)
-    filledCircle(64, 64, 50) { (x, y) => state.map(x, y) = if (random.nextFloat() < 0.1) 44 else 46 }
-    drawCircle(64, 64, 50) { (x, y) => state.map(x, y) = 95 }
+    filledCircle(64, 64, 50) { (x, y) => state.map(x, y) = if (random.nextFloat() < 0.1) Grass else Floor }
+    drawCircle(64, 64, 50) { (x, y) => state.map(x, y) = GlassWall }
+    for ((x, y) <- state.map.indices) {
+      if (state.map(x, y) == Grass && random.nextFloat() < 1/6f)
+        state.map(x, y) = Tree
+    }
     state.player = (64, 32)
     state
   }
