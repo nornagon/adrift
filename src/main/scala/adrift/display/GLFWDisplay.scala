@@ -2,6 +2,7 @@ package adrift.display
 
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift._
+import adrift.items.Item
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
@@ -94,12 +95,16 @@ class GLFWDisplay extends Display {
   }
 
   def charForTerrain(terrain: Terrain): Int = terrain match {
-    case Empty => 32
+    case EmptySpace => 32
     case Floor => 46
     case Grass => 44
     case TreeOak => 65
     case TreeFicus => 88
     case GlassWall => 95
+  }
+
+  def charForItem(item: Item): Int = item.kind match {
+    case items.HoloNote => 33
   }
 
   def render(state: GameState): Unit = {
@@ -136,6 +141,16 @@ class GLFWDisplay extends Display {
         drawChar(upper, x + w - 1, y + iy, BoxDrawing.UD)
       }
     }
+    def drawString(x: Int, y: Int, s: String): Unit = {
+      for ((c, i) <- s.zipWithIndex) {
+        val tc = c match {
+          case cc if cc >= 'A' && cc <= 'Z' => cc
+          case cc if cc >= 'a' && cc <= 'z' => cc - 'a' + 1
+          case cc => cc
+        }
+        drawChar(lower, x + i, y, tc)
+      }
+    }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -147,23 +162,44 @@ class GLFWDisplay extends Display {
     spriteBatch.begin()
     for (y <- top until bottom; x <- left until right) {
       if (x == player._1 && y == player._2) drawChar(upper, x - left, y - top, 0)
-      else if (map.contains(x, y)) drawChar(upper, x - left, y - top, charForTerrain(map(x, y)))
-    }
-    val message = s"Here: ${(map.apply _).tupled(player)}"
-    for ((c, i) <- message.zipWithIndex) {
-      val tc = c match {
-        case x if x >= 'A' && x <= 'Z' => x
-        case x if x >= 'a' && x <= 'z' => x - 'a' + 1
-        case x => x
+      else if (map.contains(x, y)) {
+        val items = state.items(x, y)
+        if (items.nonEmpty) {
+          drawChar(upper, x - left, y - top, charForItem(items.last))
+        } else {
+          drawChar(upper, x - left, y - top, charForTerrain(map(x, y)))
+        }
       }
-      drawChar(lower, i, worldHeightChars, tc)
     }
+    val message = messageAtCell(state, player)
+    drawString(0, worldHeightChars, message)
     if (showingInventory) {
-      drawBox(10, 10, 20, 10)
+      drawBox(1, 1, 30, 20)
+      drawString(2, 2, "Nearby")
+      val nearbyItems = mutable.Buffer.empty[(Item, (Int, Int))]
+      for (dy <- -2 to 2; dx <- -2 to 2) {
+        val items = state.items(player._1 + dx, player._2 + dy)
+        if (items.nonEmpty) {
+          nearbyItems ++= items.map((_, (player._1 + dx, player._2 + dy)))
+        }
+      }
+      for (((item, pos), i) <- nearbyItems.zipWithIndex) {
+        drawString(4, 3 + i, item.kind.name)
+      }
+      drawString(2, 3, ">")
     }
     spriteBatch.end()
 
     glfwSwapBuffers(window)
+  }
+
+  def messageAtCell(state: GameState, position: (Int, Int)): String = {
+    val items = state.items(position)
+    if (items.nonEmpty) {
+      s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
+    } else {
+      state.map(position).toString
+    }
   }
 
   override def update(state: GameState): Unit = {

@@ -8,6 +8,12 @@ class Grid[T](val width: Int, val height: Int)(initial: T) {
     require(contains(x, y), s"Coordinate ($x, $y) was out of range $width x $height")
     cells(y * width + x)
   }
+  def apply(pos: (Int, Int)): T = {
+    apply(pos._1, pos._2)
+  }
+  def update(pos: (Int, Int), c: T): Unit = {
+    update(pos._1, pos._2, c)
+  }
   def update(x: Int, y: Int, c: T): Unit = {
     require(contains(x, y), s"Coordinate ($x, $y) was out of range $width x $height")
     cells(y * width + x) = c
