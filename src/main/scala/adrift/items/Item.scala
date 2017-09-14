@@ -95,7 +95,14 @@ case object TypeIAScrew extends ItemKind {
 case object HoloNote extends ItemKind {
   val name = "holonote"
   val description = "A small cube that projects a 3D holographic message. A novelty, really, it's much easier to just write an e-mail."
-  val parts = Seq(RechargeableBattery -> 1, HolographicProjector -> 1, SmallPlasticCasing -> 1, Microprocessor -> 1, TypeIAScrew -> 6)
+  val parts = Seq(
+    RechargeableBattery -> 1,
+    HolographicProjector -> 1,
+    SmallPlasticCasing -> 1,
+    Microprocessor -> 1,
+    MRAMChip -> 1,
+    TypeIAScrew -> 6
+  )
 }
 
 case object Fastener extends ItemKind {
