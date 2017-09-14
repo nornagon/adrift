@@ -76,18 +76,30 @@ class Renderer(
     }
   }
 
-  def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {
-    var cx = 0
-    var cy = 0
+  def linesForString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] = {
+    val lines = mutable.Buffer.empty[String]
+    val currentLine = new mutable.StringBuilder()
     for (word <- s.split("\\s")) {
-      if (cx + word.length >= maxWidth) {
-        cy += 1
-        cx = 0
+      val wordWithSpace = (if (currentLine.nonEmpty) " " else "") + word
+      if (currentLine.size + wordWithSpace.length >= maxWidth) {
+        lines.append(currentLine.toString())
+        currentLine.clear()
       }
-      if (cy >= maxHeight)
-        return
-      drawString(x + cx, y + cy, word)
-      cx += word.length + 1
+      // TODO: ellipsis
+      if (lines.size >= maxHeight) return lines
+      if (currentLine.nonEmpty)
+        currentLine.append(" ")
+      currentLine.append(word)
+    }
+    if (currentLine.isEmpty)
+      lines
+    else
+      lines :+ currentLine.toString()
+  }
+
+  def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {
+    for ((line, cy) <- linesForString(maxWidth, maxHeight, s).zipWithIndex) {
+      drawString(x, y + cy, line)
     }
   }
 }
@@ -97,35 +109,44 @@ trait Screen {
   def render(renderer: Renderer): Unit
 }
 
-class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
-  val anchor = (5, 3)
+class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLocation) extends Screen {
+  def item: Item = state.itemAtLocation(itemLocation)
+  private val anchor = (5, 3)
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
-
+    if (action == GLFW_PRESS) {
+      key match {
+        case GLFW_KEY_D if (mods & GLFW_MOD_SHIFT) != 0 =>
+          display.pushAction(Action.Disassemble(itemLocation))
+          display.popScreen()
+        case _ =>
+      }
+    }
   }
 
   override def render(renderer: Renderer): Unit = {
     val itemsByKind = item.parts.groupBy(_.kind)
     val width = 30
-    val height = 9 + itemsByKind.size
+    val descriptionLines = renderer.linesForString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
+    val height = 2 + descriptionLines.size + 2 + itemsByKind.size
     renderer.drawBox(anchor._1, anchor._2, width, height)
     renderer.drawString(anchor._1 + 1, anchor._2, s"[${item.kind.name}]")
-    renderer.drawStringWrapped(anchor._1 + 1, anchor._2 + 1, maxWidth = width - 2, maxHeight = 5, item.kind.description)
-    renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 5 + 1, "Parts:")
+    renderer.drawStringWrapped(anchor._1 + 1, anchor._2 + 1, maxWidth = width - 2, maxHeight = 9, item.kind.description)
+    renderer.drawString(anchor._1 + 1, anchor._2 + 1 + descriptionLines.size + 1, "Parts:")
     for ((p, i) <- itemsByKind.zipWithIndex) {
       val str = s"${if (p._2.size != 1) s"${p._2.size} x " else ""}${p._1.name}"
-      renderer.drawString(anchor._1 + 2, anchor._2 + 1 + 5 + 1 + 1 + i, str)
+      renderer.drawString(anchor._1 + 2, anchor._2 + 1 + descriptionLines.size + 1 + 1 + i, str)
     }
   }
 }
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  def nearbyItems: Seq[(Item, (Int, Int))] = {
+  def nearbyItems: Seq[(Item, ItemLocation)] = {
     val player = state.player
-    val nearbyItems = mutable.Buffer.empty[(Item, (Int, Int))]
+    val nearbyItems = mutable.Buffer.empty[(Item, ItemLocation)]
     for (dy <- -2 to 2; dx <- -2 to 2) {
       val items = state.items(player._1 + dx, player._2 + dy)
       if (items.nonEmpty) {
-        nearbyItems ++= items.map((_, (player._1 + dx, player._2 + dy)))
+        nearbyItems ++= items.zipWithIndex.map { case (item, i) => (item, OnFloor(player._1 + dx, player._2 + dy, i)) }
       }
     }
     nearbyItems
@@ -135,40 +156,45 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
       key match {
-        case GLFW_KEY_J | GLFW_KEY_DOWN => selectedIdx = math.min(selectedIdx + 1, nearbyItems.size - 1)
-        case GLFW_KEY_K | GLFW_KEY_UP => selectedIdx = math.max(selectedIdx - 1, 0)
+        case GLFW_KEY_J | GLFW_KEY_DOWN => selectedIdx = (selectedIdx + 1) % nearbyItems.size
+        case GLFW_KEY_K | GLFW_KEY_UP => selectedIdx = (selectedIdx + nearbyItems.size - 1) % nearbyItems.size
         case GLFW_KEY_E =>
           if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
-            display.pushScreen(new ExamineScreen(display, state, nearbyItems(selectedIdx)._1))
+            display.pushScreen(new ExamineScreen(display, state, nearbyItems(selectedIdx)._2))
         case _ =>
       }
   }
 
   override def render(renderer: Renderer): Unit = {
-    val player = state.player
-    renderer.drawBox(1, 1, 30, 20)
+    val width = 30
+    renderer.drawBox(1, 1, width, 2 + 1 + nearbyItems.size)
     renderer.drawString(2, 2, "Nearby")
     for (((item, pos), i) <- nearbyItems.zipWithIndex) {
       renderer.drawString(4, 3 + i, item.kind.name)
-      renderer.drawString(20, 3 + i, directionString(pos._1 - player._1, pos._2 - player._2))
+      renderer.drawString(width - 2, 3 + i, directionString(pos))
     }
     if (nearbyItems.nonEmpty)
       renderer.drawString(2, 3 + selectedIdx, ">")
   }
 
-  def directionString(x: Int, y: Int): String = {
-    if (x < 0) {
-      if (y < 0) "NW"
-      else if (y == 0) "W"
-      else "SW"
-    } else if (x == 0) {
-      if (y < 0) "N"
-      else if (y == 0) "."
-      else "S"
-    } else {
-      if (y < 0) "NE"
-      else if (y == 0) "E"
-      else "SE"
+  def directionString(pos: ItemLocation): String = {
+    pos match {
+      case OnFloor(x, y, _) =>
+        val dx = x - state.player._1
+        val dy = y - state.player._2
+        if (dx < 0) {
+          if (dy < 0) "NW"
+          else if (dy == 0) "W"
+          else "SW"
+        } else if (dx == 0) {
+          if (dy < 0) "N"
+          else if (dy == 0) "."
+          else "S"
+        } else {
+          if (dy < 0) "NE"
+          else if (dy == 0) "E"
+          else "SE"
+        }
     }
   }
 }
@@ -271,6 +297,22 @@ class GLFWDisplay extends Display {
 
   def charForItem(item: Item): Int = item.kind match {
     case items.HoloNote => '!'
+      // Tiny components
+    case items.MRAMChip => 39
+    case items.TypeIAScrew => 39
+    case items.Microprocessor => 39
+    case items.TinyDCMotor => 39
+    case items.LaserDiode => 39
+      // Small components
+    case items.HolographicProjector => 90
+    case items.RechargeableBattery => 90
+    case items.Magnet => 90
+    case items.Mirror => 90
+      //
+    case items.SmallPlasticCasing => 87
+    case items.CopperWire => 93
+      // ???
+    case _ => 127
   }
 
   def render(state: GameState): Unit = {
