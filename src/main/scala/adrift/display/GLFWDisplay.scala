@@ -53,7 +53,7 @@ class Renderer(
     drawChar(upper, x, y + h - 1, BoxDrawing.UR)
     drawChar(upper, x + w - 1, y + h - 1, BoxDrawing.UL)
     for (iy <- 1 until (h - 1); ix <- 1 until (w - 1))
-      drawChar(upper, x + ix, y + iy, 32)
+      drawChar(upper, x + ix, y + iy, ' ')
     for (ix <- 1 until (w - 1)) {
       drawChar(upper, x + ix, y, BoxDrawing.LR)
       drawChar(upper, x + ix, y + h - 1, BoxDrawing.LR)
@@ -64,8 +64,9 @@ class Renderer(
     }
   }
 
-  def drawString(x: Int, y: Int, s: String): Unit = {
+  def drawString(x: Int, y: Int, s: String, maxWidth: Int = 0): Unit = {
     for ((c, i) <- s.zipWithIndex) {
+      if (maxWidth != 0 && i >= maxWidth) return
       val tc = c match {
         case cc if cc >= 'a' && cc <= 'z' => cc - 'a' + 1
         case '[' => 27
@@ -129,12 +130,12 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
     val descriptionLines = renderer.linesForString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
     val height = 2 + descriptionLines.size + 2 + itemsByKind.size
     renderer.drawBox(anchor._1, anchor._2, width, height)
-    renderer.drawString(anchor._1 + 1, anchor._2, s"[${item.kind.name}]")
+    renderer.drawString(anchor._1 + 1, anchor._2, s"[${item.kind.name}]", maxWidth = width-2)
     renderer.drawStringWrapped(anchor._1 + 1, anchor._2 + 1, maxWidth = width - 2, maxHeight = 9, item.kind.description)
     renderer.drawString(anchor._1 + 1, anchor._2 + 1 + descriptionLines.size + 1, "Parts:")
     for ((p, i) <- itemsByKind.zipWithIndex) {
       val str = s"${if (p._2.size != 1) s"${p._2.size} x " else ""}${p._1.name}"
-      renderer.drawString(anchor._1 + 2, anchor._2 + 1 + descriptionLines.size + 1 + 1 + i, str)
+      renderer.drawString(anchor._1 + 2, anchor._2 + 1 + descriptionLines.size + 1 + 1 + i, str, maxWidth = width - 3)
     }
   }
 }
@@ -166,15 +167,16 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: Renderer): Unit = {
+    val anchor = (1, 1)
     val width = 30
-    renderer.drawBox(1, 1, width, 2 + 1 + nearbyItems.size)
-    renderer.drawString(2, 2, "Nearby")
+    renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
+    renderer.drawString(anchor._1 + 1, anchor._2 + 1, "Nearby")
     for (((item, pos), i) <- nearbyItems.zipWithIndex) {
-      renderer.drawString(4, 3 + i, item.kind.name)
-      renderer.drawString(width - 2, 3 + i, directionString(pos))
+      renderer.drawString(anchor._1 + 2, anchor._2 + 2 + i, item.kind.name, maxWidth = width - 3 - 2)
+      renderer.drawString(width - 2, anchor._2 + 2 + i, directionString(pos))
     }
     if (nearbyItems.nonEmpty)
-      renderer.drawString(2, 3 + selectedIdx, ">")
+      renderer.drawString(anchor._1 + 1, anchor._2 + 2 + selectedIdx, ">")
   }
 
   def directionString(pos: ItemLocation): String = {
@@ -200,11 +202,11 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 }
 
 class GLFWDisplay extends Display {
-  var window: Long = 0
-  var upper: Texture = _
-  var lower: Texture = _
-  var spriteBatch: SpriteBatch = _
-  var lastState: GameState = _
+  private var window: Long = 0
+  private var upper: Texture = _
+  private var lower: Texture = _
+  private var spriteBatch: SpriteBatch = _
+  private var lastState: GameState = _
   private val pendingActions = mutable.Buffer.empty[Action]
 
   private val screens = mutable.ListBuffer.empty[Screen]
@@ -229,7 +231,7 @@ class GLFWDisplay extends Display {
     }
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE)
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
 
     window = glfwCreateWindow(640, 480, "Adrift", 0, 0)
     if (window == 0)
@@ -297,22 +299,22 @@ class GLFWDisplay extends Display {
 
   def charForItem(item: Item): Int = item.kind match {
     case items.HoloNote => '!'
-      // Tiny components
+      // Tiny components `
     case items.MRAMChip => 39
     case items.TypeIAScrew => 39
     case items.Microprocessor => 39
     case items.TinyDCMotor => 39
     case items.LaserDiode => 39
-      // Small components
+      // Small components ◆
     case items.HolographicProjector => 90
     case items.RechargeableBattery => 90
     case items.Magnet => 90
     case items.Mirror => 90
       //
-    case items.SmallPlasticCasing => 87
-    case items.CopperWire => 93
+    case items.SmallPlasticCasing => 87 // ⊚
+    case items.CopperWire => 93 // vertical squiggle
       // ???
-    case _ => 127
+    case _ => 127 // ▚
   }
 
   def render(state: GameState): Unit = {
