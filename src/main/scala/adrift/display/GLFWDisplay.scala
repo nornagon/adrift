@@ -252,15 +252,9 @@ class GLFWDisplay extends Display {
     for (i <- 0 until image.bytes.limit() by 4) {
       val isWhite = image.bytes.get(i) == 0
       if (isWhite) {
-        image.bytes.put(i, 0xff.toByte)
-        image.bytes.put(i+1, 0xff.toByte)
-        image.bytes.put(i+2, 0xff.toByte)
-        image.bytes.put(i+3, 0xff.toByte)
+        image.bytes.putInt(i, 0xffffffff)
       } else {
-        image.bytes.put(i, 0x00.toByte)
-        image.bytes.put(i+1, 0x00.toByte)
-        image.bytes.put(i+2, 0x00.toByte)
-        image.bytes.put(i+3, 0x00.toByte)
+        image.bytes.putInt(i, 0x00000000)
       }
     }
     image
