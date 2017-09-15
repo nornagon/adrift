@@ -25,6 +25,58 @@ object PETSCII {
   val UpperRightTriangle = 95
 }
 
+object Appearance {
+  def charForTerrain(terrain: Terrain): Int = terrain match {
+    case Terrain.EmptySpace => ' '
+    case Terrain.Floor => '.'
+    case Terrain.Grass => ','
+    case Terrain.TreeOak => PETSCII.Spades
+    case Terrain.TreeFicus => PETSCII.Clubs
+    case Terrain.GlassWall => PETSCII.UpperRightTriangle
+  }
+
+  def charForItem(item: Item): Int = item.kind match {
+    case items.HoloNote => '!'
+    // Tiny components `
+    case items.MRAMChip => 39
+    case items.TypeIAScrew => 39
+    case items.Microprocessor => 39
+    case items.TinyDCMotor => 39
+    case items.LaserDiode => 39
+    // Small components ◆
+    case items.HolographicProjector => 90
+    case items.RechargeableBattery => 90
+    case items.Magnet => 90
+    case items.Mirror => 90
+    //
+    case items.SmallPlasticCasing => 87 // ⊚
+    case items.CopperWire => 93 // vertical squiggle
+    // ???
+    case _ => 127 // ▚
+  }
+
+  def charAtPosition(state: GameState, x: Int, y: Int): Int = {
+    if (x == state.player._1 && y == state.player._2) 0
+    else if (state.map.contains(x, y)) {
+      val items = state.items(x, y)
+      if (items.nonEmpty) {
+        charForItem(items.last)
+      } else {
+        Appearance.charForTerrain(state.map(x, y))
+      }
+    } else ' '
+  }
+
+  def messageAtCell(state: GameState, position: (Int, Int)): String = {
+    val items = state.items(position)
+    if (items.nonEmpty) {
+      s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
+    } else {
+      state.map(position).toString
+    }
+  }
+}
+
 class Renderer(
   spriteBatch: SpriteBatch,
   tileWidth: Int,
@@ -77,7 +129,7 @@ class Renderer(
     }
   }
 
-  def linesForString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] = {
+  def wrapString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] = {
     val lines = mutable.Buffer.empty[String]
     val currentLine = new mutable.StringBuilder()
     for (word <- s.split("\\s")) {
@@ -99,7 +151,7 @@ class Renderer(
   }
 
   def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {
-    for ((line, cy) <- linesForString(maxWidth, maxHeight, s).zipWithIndex) {
+    for ((line, cy) <- wrapString(maxWidth, maxHeight, s).zipWithIndex) {
       drawString(x, y + cy, line)
     }
   }
@@ -127,7 +179,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
   override def render(renderer: Renderer): Unit = {
     val itemsByKind = item.parts.groupBy(_.kind)
     val width = 30
-    val descriptionLines = renderer.linesForString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
+    val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
     val height = 2 + descriptionLines.size + 2 + itemsByKind.size
     renderer.drawBox(anchor._1, anchor._2, width, height)
     renderer.drawString(anchor._1 + 1, anchor._2, s"[${item.kind.name}]", maxWidth = width-2)
@@ -215,13 +267,56 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 }
 
+class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
+  var (x, y) = state.player
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+      key match {
+        case GLFW_KEY_H | GLFW_KEY_LEFT => x -= 1
+        case GLFW_KEY_J | GLFW_KEY_DOWN => y += 1
+        case GLFW_KEY_K | GLFW_KEY_UP => y -= 1
+        case GLFW_KEY_L | GLFW_KEY_RIGHT => x += 1
+        case GLFW_KEY_Y => x -= 1; y -= 1
+        case GLFW_KEY_U => x += 1; y -= 1
+        case GLFW_KEY_B => x -= 1; y += 1
+        case GLFW_KEY_N => x += 1; y += 1
+        case _ =>
+      }
+    }
+  }
+
+  override def render(renderer: Renderer): Unit = {
+    val char = (Appearance.charAtPosition(state, x, y) + 128) % 256
+    val (left, right, top, bottom) = display.cameraBounds(state)
+    renderer.drawChar(display.upper, x - left, y - top, char)
+    val width = 20
+    val anchor =
+      if (x - left <= (right - left) / 2 - 1)
+        (display.windowWidthChars - 1 - width, 1)
+      else
+        (1, 1)
+
+    val terrain = state.map(x, y)
+    val items = state.items(x, y)
+    renderer.drawBox(anchor._1, anchor._2, width, 2 + 1 + math.min(items.size, 10))
+    renderer.drawString(anchor._1 + 1, anchor._2 + 1, terrain.toString, width - 2)
+    for ((item, i) <- items.take(9).zipWithIndex) {
+      renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + i, item.kind.name, maxWidth = width - 2)
+    }
+    if (items.size > 9)
+      renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + 9, s"${items.size - 9} more...")
+  }
+}
+
 class GLFWDisplay extends Display {
   private var window: Long = 0
-  private var upper: Texture = _
-  private var lower: Texture = _
+  var upper: Texture = _
+  var lower: Texture = _
   private var spriteBatch: SpriteBatch = _
   private var lastState: GameState = _
   private val pendingActions = mutable.Buffer.empty[Action]
+  val windowWidthChars = 80
+  val windowHeightChars = 48
 
   private val screens = mutable.ListBuffer.empty[Screen]
 
@@ -271,6 +366,7 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_B => pendingActions.append(Action.PlayerMove(-1, 1))
             case GLFW_KEY_N => pendingActions.append(Action.PlayerMove(1, 1))
             case GLFW_KEY_I => pushScreen(new InventoryScreen(this, lastState))
+            case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))
             case _ =>
           }
         }
@@ -302,33 +398,13 @@ class GLFWDisplay extends Display {
     image
   }
 
-  def charForTerrain(terrain: Terrain): Int = terrain match {
-    case Terrain.EmptySpace => ' '
-    case Terrain.Floor => '.'
-    case Terrain.Grass => ','
-    case Terrain.TreeOak => PETSCII.Spades
-    case Terrain.TreeFicus => PETSCII.Clubs
-    case Terrain.GlassWall => PETSCII.UpperRightTriangle
-  }
-
-  def charForItem(item: Item): Int = item.kind match {
-    case items.HoloNote => '!'
-      // Tiny components `
-    case items.MRAMChip => 39
-    case items.TypeIAScrew => 39
-    case items.Microprocessor => 39
-    case items.TinyDCMotor => 39
-    case items.LaserDiode => 39
-      // Small components ◆
-    case items.HolographicProjector => 90
-    case items.RechargeableBattery => 90
-    case items.Magnet => 90
-    case items.Mirror => 90
-      //
-    case items.SmallPlasticCasing => 87 // ⊚
-    case items.CopperWire => 93 // vertical squiggle
-      // ???
-    case _ => 127 // ▚
+  def cameraBounds(state: GameState): (Int, Int, Int, Int) = {
+    val worldHeightChars = windowHeightChars - 1
+    val left = state.player._1 - windowWidthChars/2
+    val right = left + windowWidthChars
+    val top = state.player._2 - worldHeightChars/2
+    val bottom = top + worldHeightChars
+    (left, right, top, bottom)
   }
 
   def render(state: GameState): Unit = {
@@ -361,7 +437,7 @@ class GLFWDisplay extends Display {
     spriteBatch.begin()
 
     renderWorld(state, renderer, left, right, top, bottom)
-    val message = state.message.getOrElse(messageAtCell(state, state.player))
+    val message = state.message.getOrElse(Appearance.messageAtCell(state, state.player))
     renderer.drawString(0, worldHeightChars, message)
 
     for (screen <- screens) {
@@ -382,24 +458,8 @@ class GLFWDisplay extends Display {
     bottom: Int
   ) = {
     for (y <- top until bottom; x <- left until right) {
-      if (x == state.player._1 && y == state.player._2) renderer.drawChar(upper, x - left, y - top, 0)
-      else if (state.map.contains(x, y)) {
-        val items = state.items(x, y)
-        if (items.nonEmpty) {
-          renderer.drawChar(upper, x - left, y - top, charForItem(items.last))
-        } else {
-          renderer.drawChar(upper, x - left, y - top, charForTerrain(state.map(x, y)))
-        }
-      }
-    }
-  }
-
-  def messageAtCell(state: GameState, position: (Int, Int)): String = {
-    val items = state.items(position)
-    if (items.nonEmpty) {
-      s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
-    } else {
-      state.map(position).toString
+      val char = Appearance.charAtPosition(state, x, y)
+      renderer.drawChar(upper, x - left, y - top, char)
     }
   }
 
