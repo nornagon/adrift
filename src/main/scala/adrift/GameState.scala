@@ -7,13 +7,18 @@ import scala.collection.mutable
 
 sealed trait ItemLocation
 case class OnFloor(x: Int, y: Int/* TODO: level? */, index: Int) extends ItemLocation
+case class InHands(index: Int) extends ItemLocation
+
+
+case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buffer.empty)
 
 
 class GameState(width: Int, height: Int) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(Terrain.EmptySpace)
   val items: Grid[Seq[Item]] = new Grid[Seq[Item]](width, height)(Seq.empty)
   var player: (Int, Int) = (0, 0)
-  val inventory: mutable.Buffer[Item] = mutable.Buffer.empty
+  val hands = Container(maxItems = 2)
+
   def receive(action: Action): Unit = {
     action match {
       case PlayerMove(dx, dy) =>
@@ -22,6 +27,19 @@ class GameState(width: Int, height: Int) {
       case Disassemble(location) =>
         val item = removeItem(location)
         items(player) ++= item.parts
+      case PickUp(location) =>
+        if (hands.contents.size < hands.maxItems) {
+          val item = removeItem(location)
+          hands.contents.append(item)
+        }
+      case PutDown(location) =>
+        location match {
+          case loc: InHands =>
+            val item = removeItem(loc)
+            items(player) :+= item
+          case _ =>
+            // Can't put that down.
+        }
       case Quit =>
     }
   }
@@ -29,12 +47,18 @@ class GameState(width: Int, height: Int) {
   def itemAtLocation(location: ItemLocation): Item = location match {
     case OnFloor(x, y, index) =>
       items(x, y)(index)
+    case InHands(index) =>
+      hands.contents(index)
   }
 
   def removeItem(location: ItemLocation): Item = location match {
     case OnFloor(x, y, index) =>
       val item = items(x, y)(index)
       items(x, y) = items(x, y).patch(index, Nil, 1)
+      item
+    case InHands(index) =>
+      val item = hands.contents(index)
+      hands.contents.remove(index)
       item
   }
 }

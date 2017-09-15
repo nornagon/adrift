@@ -150,7 +150,13 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
         nearbyItems ++= items.zipWithIndex.map { case (item, i) => (item, OnFloor(player._1 + dx, player._2 + dy, i)) }
       }
     }
-    nearbyItems
+    nearbyItems ++ inHandItems
+  }
+
+  def inHandItems: Seq[(Item, ItemLocation)] = {
+    state.hands.contents.zipWithIndex.map {
+      case (item, i) => (item, InHands(i))
+    }
   }
 
   var selectedIdx = 0
@@ -162,6 +168,12 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case GLFW_KEY_E =>
           if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
             display.pushScreen(new ExamineScreen(display, state, nearbyItems(selectedIdx)._2))
+        case GLFW_KEY_G =>
+          if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
+            display.pushAction(Action.PickUp(nearbyItems(selectedIdx)._2))
+        case GLFW_KEY_D =>
+          if (selectedIdx >= 0 && selectedIdx < nearbyItems.size && nearbyItems(selectedIdx)._2.isInstanceOf[InHands])
+            display.pushAction(Action.PutDown(nearbyItems(selectedIdx)._2))
         case _ =>
       }
   }
@@ -197,6 +209,8 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
           else if (dy == 0) "E"
           else "SE"
         }
+      case InHands(_) =>
+        "H"
     }
   }
 }
