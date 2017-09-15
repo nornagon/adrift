@@ -361,7 +361,7 @@ class GLFWDisplay extends Display {
     spriteBatch.begin()
 
     renderWorld(state, renderer, left, right, top, bottom)
-    val message = messageAtCell(state, state.player)
+    val message = state.message.getOrElse(messageAtCell(state, state.player))
     renderer.drawString(0, worldHeightChars, message)
 
     for (screen <- screens) {

@@ -19,7 +19,10 @@ class GameState(width: Int, height: Int) {
   var player: (Int, Int) = (0, 0)
   val hands = Container(maxItems = 2)
 
+  var message: Option[String] = None
+
   def receive(action: Action): Unit = {
+    message = None
     action match {
       case PlayerMove(dx, dy) =>
         if (map(player._1 + dx, player._2 + dy).walkable)
@@ -27,18 +30,23 @@ class GameState(width: Int, height: Int) {
       case Disassemble(location) =>
         val item = removeItem(location)
         items(player) ++= item.parts
+        message = Some(s"You take apart the ${item.kind.name}.")
       case PickUp(location) =>
         if (hands.contents.size < hands.maxItems) {
           val item = removeItem(location)
           hands.contents.append(item)
+          message = Some(s"You pick up the ${item.kind.name}.")
+        } else {
+          message = Some("Your hands are full.")
         }
       case PutDown(location) =>
         location match {
           case loc: InHands =>
             val item = removeItem(loc)
             items(player) :+= item
+            message = Some(s"You place the ${item.kind.name} on the ${map(player)}.")
           case _ =>
-            // Can't put that down.
+            message = Some("You can't put that down.")
         }
       case Quit =>
     }
