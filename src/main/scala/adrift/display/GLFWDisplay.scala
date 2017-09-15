@@ -289,12 +289,12 @@ class GLFWDisplay extends Display {
   }
 
   def charForTerrain(terrain: Terrain): Int = terrain match {
-    case EmptySpace => ' '
-    case Floor => '.'
-    case Grass => ','
-    case TreeOak => PETSCII.Spades
-    case TreeFicus => PETSCII.Clubs
-    case GlassWall => PETSCII.UpperRightTriangle
+    case Terrain.EmptySpace => ' '
+    case Terrain.Floor => '.'
+    case Terrain.Grass => ','
+    case Terrain.TreeOak => PETSCII.Spades
+    case Terrain.TreeFicus => PETSCII.Clubs
+    case Terrain.GlassWall => PETSCII.UpperRightTriangle
   }
 
   def charForItem(item: Item): Int = item.kind match {
