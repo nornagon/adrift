@@ -11,30 +11,24 @@ import org.lwjgl.opengl.GL11._
 
 import scala.collection.mutable
 
-/*
-object PETSCII {
-  object BoxDrawing {
-    val DR = 112
-    val UR = 109
-    val DL = 110
-    val UL = 125
-    val LR = 64
-    val UD = 66
-  }
-  val Spades = 65
-  val Clubs = 88
-  val UpperRightTriangle = 95
-}
-*/
-
 object CP437 {
   object BoxDrawing {
-    val DR = 13*16+10
-    val UR = 12*16+0
-    val DL = 11*16+15
-    val UL = 13*16+9
-    val LR = 12*16+4
-    val UD = 11*16+3
+    // The CP437 box drawing characters are arranged in this ridiculous way because on the original IBM PC MDA adapter,
+    // characters were 8x8 but the display put a pixel of space between them. So David J. Bradley, Andy Saenz and Lew
+    // Eggebrecht, in their infinite wisdom, decided to hardcode, _into the graphics card_, that when displaying
+    // characters in the range 0xC0-0xDF, the rightmost column of pixels would be duplicated into the 9th column on the
+    // screen, to avoid a gap in the line.
+    val LURD = 12*16+5
+    val LUR_ = 12*16+1
+    val LU_D = 11*16+4
+    val L_RD = 12*16+2
+    val _URD = 12*16+3
+    val __RD = 13*16+10
+    val _UR_ = 12*16+0
+    val LU__ = 13*16+9
+    val L__D = 11*16+15
+    val L_R_ = 12*16+4
+    val _U_D = 11*16+3
   }
   val Hearts = 3
   val Diamonds = 4
@@ -56,9 +50,26 @@ object Appearance {
     case Terrain.Wall => '#'
   }
 
-  def charForWall(left: Terrain, up: Terrain, right: Terrain, down: Terrain): Int = {
-    // TODO box-drawing chars
-    '#'
+  def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain): Int = {
+    import CP437.BoxDrawing._
+    (left == center, up == center, right == center, down == center) match {
+      case (false, false, false, false) => '#'
+      case (false, false, false, true)
+        | (false, true, false, false)
+        | (false, true, false, true) => _U_D
+      case (false, false, true, false)
+        | (true, false, false, false)
+        | (true, false, true, false) => L_R_
+      case (false, false, true, true) => __RD
+      case (false, true, true, false) => _UR_
+      case (true, true, false, false) => LU__
+      case (true, false, false, true) => L__D
+      case (true, true, true, false) => LUR_
+      case (true, true, false, true) => LU_D
+      case (true, false, true, true) => L_RD
+      case (false, true, true, true) => _URD
+      case (true, true, true, true) => LURD
+    }
   }
 
   def charForItem(item: Item): Int = item.kind match {
@@ -91,6 +102,7 @@ object Appearance {
         state.map(x, y) match {
           case Terrain.Wall =>
             charForWall(
+              state.map(x, y),
               state.map.getOrElse((x - 1, y), Terrain.EmptySpace),
               state.map.getOrElse((x, y - 1), Terrain.EmptySpace),
               state.map.getOrElse((x + 1, y), Terrain.EmptySpace),
@@ -137,19 +149,19 @@ class Renderer(
 
   def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = {
     import CP437.BoxDrawing
-    drawChar(font, x, y, BoxDrawing.DR)
-    drawChar(font, x + w - 1, y, BoxDrawing.DL)
-    drawChar(font, x, y + h - 1, BoxDrawing.UR)
-    drawChar(font, x + w - 1, y + h - 1, BoxDrawing.UL)
+    drawChar(font, x, y, BoxDrawing.__RD)
+    drawChar(font, x + w - 1, y, BoxDrawing.L__D)
+    drawChar(font, x, y + h - 1, BoxDrawing._UR_)
+    drawChar(font, x + w - 1, y + h - 1, BoxDrawing.LU__)
     for (iy <- 1 until (h - 1); ix <- 1 until (w - 1))
       drawChar(font, x + ix, y + iy, ' ')
     for (ix <- 1 until (w - 1)) {
-      drawChar(font, x + ix, y, BoxDrawing.LR)
-      drawChar(font, x + ix, y + h - 1, BoxDrawing.LR)
+      drawChar(font, x + ix, y, BoxDrawing.L_R_)
+      drawChar(font, x + ix, y + h - 1, BoxDrawing.L_R_)
     }
     for (iy <- 1 until (h - 1)) {
-      drawChar(font, x, y + iy, BoxDrawing.UD)
-      drawChar(font, x + w - 1, y + iy, BoxDrawing.UD)
+      drawChar(font, x, y + iy, BoxDrawing._U_D)
+      drawChar(font, x + w - 1, y + iy, BoxDrawing._U_D)
     }
   }
 
