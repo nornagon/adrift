@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL11._
 
 import scala.collection.mutable
 
+/*
 object PETSCII {
   object BoxDrawing {
     val DR = 112
@@ -24,15 +25,34 @@ object PETSCII {
   val Clubs = 88
   val UpperRightTriangle = 95
 }
+*/
+
+object CP437 {
+  object BoxDrawing {
+    val DR = 13*16+10
+    val UR = 12*16+0
+    val DL = 11*16+15
+    val UL = 13*16+9
+    val LR = 12*16+4
+    val UD = 11*16+3
+  }
+  val Hearts = 3
+  val Diamonds = 4
+  val Clubs = 5
+  val Spades = 6
+  val Bullet = 7
+  val LightShade = 11*16
+  val Delta = 235
+}
 
 object Appearance {
   def charForTerrain(terrain: Terrain): Int = terrain match {
     case Terrain.EmptySpace => ' '
     case Terrain.Floor => '.'
     case Terrain.Grass => ','
-    case Terrain.TreeOak => PETSCII.Spades
-    case Terrain.TreeFicus => PETSCII.Clubs
-    case Terrain.GlassWall => PETSCII.UpperRightTriangle
+    case Terrain.TreeOak => CP437.Spades
+    case Terrain.TreeFicus => CP437.Clubs
+    case Terrain.GlassWall => CP437.LightShade
     case Terrain.Wall => '#'
   }
 
@@ -44,25 +64,25 @@ object Appearance {
   def charForItem(item: Item): Int = item.kind match {
     case items.HoloNote => '!'
     // Tiny components `
-    case items.MRAMChip => 39
-    case items.TypeIAScrew => 39
-    case items.Microprocessor => 39
-    case items.TinyDCMotor => 39
-    case items.LaserDiode => 39
+    case items.MRAMChip => '`'
+    case items.TypeIAScrew => '`'
+    case items.Microprocessor => '`'
+    case items.TinyDCMotor => '`'
+    case items.LaserDiode => '`'
     // Small components ◆
-    case items.HolographicProjector => 90
-    case items.RechargeableBattery => 90
-    case items.Magnet => 90
-    case items.Mirror => 90
+    case items.HolographicProjector => CP437.Diamonds
+    case items.RechargeableBattery => CP437.Diamonds
+    case items.Magnet => CP437.Diamonds
+    case items.Mirror => CP437.Diamonds
     //
-    case items.SmallPlasticCasing => 87 // ⊚
-    case items.CopperWire => 93 // vertical squiggle
+    case items.SmallPlasticCasing => CP437.Bullet // ⊚
+    case items.CopperWire => CP437.Delta // δ
     // ???
-    case _ => 127 // ▚
+    case _ => 2 // ☻
   }
 
   def charAtPosition(state: GameState, x: Int, y: Int): Int = {
-    if (x == state.player._1 && y == state.player._2) 0
+    if (x == state.player._1 && y == state.player._2) '@'
     else if (state.map.contains(x, y)) {
       val items = state.items(x, y)
       if (items.nonEmpty) {
@@ -76,7 +96,7 @@ object Appearance {
               state.map.getOrElse((x + 1, y), Terrain.EmptySpace),
               state.map.getOrElse((x, y + 1), Terrain.EmptySpace)
             )
-          case other => charForTerrain(state.map(x, y))
+          case other => charForTerrain(other)
         }
       }
     } else ' '
@@ -98,12 +118,14 @@ class Renderer(
   tileHeight: Int,
   screenTileWidth: Int,
   screenTileHeight: Int,
-  upper: Texture,
-  lower: Texture,
+  font: Texture,
 ) {
+  private val tilesPerRow: Int = font.width / tileWidth
+  require(font.width / tileWidth.toFloat - tilesPerRow == 0)
+
   def drawChar(tex: Texture, x: Int, y: Int, c: Int): Unit = {
-    val cx = c % 32
-    val cy = c / 32
+    val cx = c % tilesPerRow
+    val cy = c / tilesPerRow
     spriteBatch.drawRegion(
       tex,
       cx * tileWidth, cy * tileHeight,
@@ -114,33 +136,33 @@ class Renderer(
   }
 
   def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = {
-    import PETSCII.BoxDrawing
-    drawChar(upper, x, y, BoxDrawing.DR)
-    drawChar(upper, x + w - 1, y, BoxDrawing.DL)
-    drawChar(upper, x, y + h - 1, BoxDrawing.UR)
-    drawChar(upper, x + w - 1, y + h - 1, BoxDrawing.UL)
+    import CP437.BoxDrawing
+    drawChar(font, x, y, BoxDrawing.DR)
+    drawChar(font, x + w - 1, y, BoxDrawing.DL)
+    drawChar(font, x, y + h - 1, BoxDrawing.UR)
+    drawChar(font, x + w - 1, y + h - 1, BoxDrawing.UL)
     for (iy <- 1 until (h - 1); ix <- 1 until (w - 1))
-      drawChar(upper, x + ix, y + iy, ' ')
+      drawChar(font, x + ix, y + iy, ' ')
     for (ix <- 1 until (w - 1)) {
-      drawChar(upper, x + ix, y, BoxDrawing.LR)
-      drawChar(upper, x + ix, y + h - 1, BoxDrawing.LR)
+      drawChar(font, x + ix, y, BoxDrawing.LR)
+      drawChar(font, x + ix, y + h - 1, BoxDrawing.LR)
     }
     for (iy <- 1 until (h - 1)) {
-      drawChar(upper, x, y + iy, BoxDrawing.UD)
-      drawChar(upper, x + w - 1, y + iy, BoxDrawing.UD)
+      drawChar(font, x, y + iy, BoxDrawing.UD)
+      drawChar(font, x + w - 1, y + iy, BoxDrawing.UD)
     }
   }
 
   def drawString(x: Int, y: Int, s: String, maxWidth: Int = 0): Unit = {
     for ((c, i) <- s.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return
-      val tc = c match {
+      val tc = c /*match {
         case cc if cc >= 'a' && cc <= 'z' => cc - 'a' + 1
         case '[' => 27
         case ']' => 29
         case cc => cc
-      }
-      drawChar(lower, x + i, y, tc)
+      }*/
+      drawChar(font, x + i, y, tc)
     }
   }
 
@@ -303,7 +325,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def render(renderer: Renderer): Unit = {
     val char = (Appearance.charAtPosition(state, x, y) + 128) % 256
     val (left, right, top, bottom) = display.cameraBounds(state)
-    renderer.drawChar(display.upper, x - left, y - top, char)
+    renderer.drawChar(display.font, x - left, y - top, char)
     val width = 20
     val anchor =
       if (x - left <= (right - left) / 2 - 1)
@@ -325,8 +347,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
 class GLFWDisplay extends Display {
   private var window: Long = 0
-  var upper: Texture = _
-  var lower: Texture = _
+  var font: Texture = _
   private var spriteBatch: SpriteBatch = _
   private var lastState: GameState = _
   private val pendingActions = mutable.Buffer.empty[Action]
@@ -394,8 +415,7 @@ class GLFWDisplay extends Display {
 
     GL.createCapabilities()
 
-    upper = Texture.fromImage(loadc64("c64_upp.gif"))
-    lower = Texture.fromImage(loadc64("c64_low.gif"))
+    font = Texture.fromImage(Image.fromFile("cp437_8x8.png"))
     spriteBatch = SpriteBatch.create
   }
 
@@ -440,7 +460,7 @@ class GLFWDisplay extends Display {
 
     spriteBatch.resize(screenCharWidth * windowWidthChars, screenCharHeight * windowHeightChars)
 
-    val renderer = new Renderer(spriteBatch, 8, 8, screenCharWidth, screenCharHeight, upper, lower)
+    val renderer = new Renderer(spriteBatch, 8, 8, screenCharWidth, screenCharHeight, font)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -471,10 +491,10 @@ class GLFWDisplay extends Display {
     right: Int,
     top: Int,
     bottom: Int
-  ) = {
+  ): Unit = {
     for (y <- top until bottom; x <- left until right) {
       val char = Appearance.charAtPosition(state, x, y)
-      renderer.drawChar(upper, x - left, y - top, char)
+      renderer.drawChar(font, x - left, y - top, char)
     }
   }
 
