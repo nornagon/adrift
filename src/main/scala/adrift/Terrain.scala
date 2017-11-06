@@ -11,6 +11,10 @@ object Terrain {
 
   case object Floor extends Terrain
 
+  case object Wall extends Terrain {
+    override val walkable = false
+  }
+
   case object GlassWall extends Terrain {
     override val walkable = false
   }

@@ -33,6 +33,12 @@ object Appearance {
     case Terrain.TreeOak => PETSCII.Spades
     case Terrain.TreeFicus => PETSCII.Clubs
     case Terrain.GlassWall => PETSCII.UpperRightTriangle
+    case Terrain.Wall => '#'
+  }
+
+  def charForWall(left: Terrain, up: Terrain, right: Terrain, down: Terrain): Int = {
+    // TODO box-drawing chars
+    '#'
   }
 
   def charForItem(item: Item): Int = item.kind match {
@@ -62,7 +68,16 @@ object Appearance {
       if (items.nonEmpty) {
         charForItem(items.last)
       } else {
-        Appearance.charForTerrain(state.map(x, y))
+        state.map(x, y) match {
+          case Terrain.Wall =>
+            charForWall(
+              state.map.getOrElse((x - 1, y), Terrain.EmptySpace),
+              state.map.getOrElse((x, y - 1), Terrain.EmptySpace),
+              state.map.getOrElse((x + 1, y), Terrain.EmptySpace),
+              state.map.getOrElse((x, y + 1), Terrain.EmptySpace)
+            )
+          case other => charForTerrain(state.map(x, y))
+        }
       }
     } else ' '
   }

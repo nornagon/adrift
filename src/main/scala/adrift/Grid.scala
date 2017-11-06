@@ -11,6 +11,7 @@ class Grid[T](val width: Int, val height: Int)(initial: T) {
   def apply(pos: (Int, Int)): T = {
     apply(pos._1, pos._2)
   }
+  def getOrElse(pos: (Int, Int), default: => T): T = if (contains(pos)) apply(pos) else default
   def update(pos: (Int, Int), c: T): Unit = {
     update(pos._1, pos._2, c)
   }
@@ -19,6 +20,7 @@ class Grid[T](val width: Int, val height: Int)(initial: T) {
     cells(y * width + x) = c
   }
   def contains(x: Int, y: Int): Boolean = x >= 0 && x < width && y >= 0 && y < height
+  def contains(pos: (Int, Int)): Boolean = contains(pos._1, pos._2)
   def indices: IndexedSeq[(Int, Int)] = for (y <- 0 until height; x <- 0 until width) yield (x, y)
 }
 
