@@ -25,7 +25,7 @@ class GameState(width: Int, height: Int) {
     message = None
     action match {
       case PlayerMove(dx, dy) =>
-        if (map(player._1 + dx, player._2 + dy).walkable)
+        if (map(player._1 + dx, player._2 + dy).walkable || true)
           player = (player._1 + dx, player._2 + dy)
       case Disassemble(location) =>
         val item = removeItem(location)

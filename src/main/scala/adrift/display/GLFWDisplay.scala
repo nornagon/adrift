@@ -504,7 +504,11 @@ class GLFWDisplay extends Display {
     top: Int,
     bottom: Int
   ): Unit = {
-    for (y <- top until bottom; x <- left until right) {
+    val lit = mutable.Set.empty[(Int, Int)]
+    FOV.fovCircle(radius = 100, opaqueApply = true, (dx, dy) => !state.map(state.player._1 + dx, state.player._2 + dy).walkable, (x, y) => {
+      lit.add((state.player._1 + x, state.player._2 + y))
+    })
+    for (y <- top until bottom; x <- left until right; if lit contains (x, y)) {
       val char = Appearance.charAtPosition(state, x, y)
       renderer.drawChar(font, x - left, y - top, char)
     }
