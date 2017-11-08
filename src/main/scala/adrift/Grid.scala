@@ -11,7 +11,8 @@ class Grid[T](val width: Int, val height: Int)(initial: T) {
   def apply(pos: (Int, Int)): T = {
     apply(pos._1, pos._2)
   }
-  def getOrElse(pos: (Int, Int), default: => T): T = if (contains(pos)) apply(pos) else default
+  def get(pos: (Int, Int)): Option[T] = if (contains(pos)) Some(apply(pos)) else None
+  def getOrElse(pos: (Int, Int), default: => T): T = get(pos).getOrElse(default)
   def update(pos: (Int, Int), c: T): Unit = {
     update(pos._1, pos._2, c)
   }

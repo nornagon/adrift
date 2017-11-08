@@ -505,7 +505,8 @@ class GLFWDisplay extends Display {
     bottom: Int
   ): Unit = {
     val lit = mutable.Set.empty[(Int, Int)]
-    FOV.fovCircle(radius = 100, opaqueApply = true, (dx, dy) => !state.map(state.player._1 + dx, state.player._2 + dy).walkable, (x, y) => {
+    val opaque = (dx: Int, dy: Int) => !state.map.get(state.player._1 + dx, state.player._2 + dy).exists(_.walkable)
+    FOV.castShadows(radius = 10, opaqueApply = true, opaque, (x, y) => {
       lit.add((state.player._1 + x, state.player._2 + y))
     })
     for (y <- top until bottom; x <- left until right; if lit contains (x, y)) {
