@@ -200,7 +200,7 @@ object GameState {
       }
     }
     */
-    state.player = (64, 32)
+    state.movePlayer(64, 32)
     state
   }
 
