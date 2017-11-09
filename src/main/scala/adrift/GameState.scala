@@ -134,9 +134,6 @@ object GameState {
         Stream.iterate(p)(a => (a._1 + d._1, a._2 + d._2))
           .takeWhile(state.map.contains)
           .find(p => state.map(p) == Terrain.Wall)
-      def clipX(x: Int) = math.max(0, math.min(state.map.width - 1, x))
-      def clipY(y: Int) = math.max(0, math.min(state.map.height - 1, y))
-      def clip(p: (Int, Int)): (Int, Int) = (clipX(p._1), clipY(p._2))
       var fails = 0
       for (attempt <- 1 to 256) {
         // find something to attach to
@@ -148,34 +145,34 @@ object GameState {
           // we'll be -x or +x
           if (random.nextBoolean()) {
             // -x, empty space to our right.
-            // walk left until we find a wall.
             findFirstWall(empty, (-1, 0)).map { e =>
-              (e._1 - width, e._2 - (height * random.nextFloat()).toInt) }
+              ((e._1 - width, e._2 - (height * random.nextFloat()).toInt), e) }
           } else {
             // +x, empty space to our left.
             findFirstWall(empty, (1, 0)).map { e =>
-              (e._1 + 1, e._2 - (height * random.nextFloat()).toInt) }
+              ((e._1 + 1, e._2 - (height * random.nextFloat()).toInt), e) }
           }
         } else {
           // we'll be -y or +y
           if (random.nextBoolean()) {
             // -y, empty space to our down.
             findFirstWall(empty, (0, -1)).map { e =>
-              (e._1 - (width * random.nextFloat()).toInt, e._2 - height) }
+              ((e._1 - (width * random.nextFloat()).toInt, e._2 - height), e) }
           } else {
             // +y, empty space to our up.
             findFirstWall(empty, (0, 1)).map { e =>
-              (e._1 - (width * random.nextFloat()).toInt, e._2 + 1) }
+              ((e._1 - (width * random.nextFloat()).toInt, e._2 + 1), e) }
           }
         }
         if (rectLeftTop.isEmpty) fails += 1
-        rectLeftTop foreach { rlt =>
-          val canPlace = (for (dx <- 0 until width; dy <- 0 until height) yield (dx, dy)).forall { case (dx, dy) =>
-            state.map(clip(rlt._1 + dx, rlt._2 + dy)) == Terrain.Wall
+        rectLeftTop foreach { case (rlt, door) =>
+          val canPlace = (for (dx <- -1 to width; dy <- -1 to height) yield (rlt._1 + dx, rlt._2 + dy)).forall { p =>
+            state.map.get(p).contains(Terrain.Wall)
           }
           if (canPlace) {
             for (x <- rlt._1 until (rlt._1 + width); y <- rlt._2 until rlt._2 + height) {
-              state.map(clip((x, y))) = Terrain.Floor
+              state.map(x, y) = Terrain.Floor
+              state.map(door) = Terrain.Floor
             }
           } else {
             fails += 1
