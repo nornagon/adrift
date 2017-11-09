@@ -25,8 +25,9 @@ class GameState(width: Int, height: Int) {
     message = None
     action match {
       case PlayerMove(dx, dy) =>
-        if (map(player._1 + dx, player._2 + dy).walkable || true)
-          player = (player._1 + dx, player._2 + dy)
+        if (map(player._1 + dx, player._2 + dy).walkable || true) {
+          movePlayer(player._1 + dx, player._2 + dy)
+        }
       case Disassemble(location) =>
         val item = removeItem(location)
         items(player) ++= item.parts
@@ -51,6 +52,24 @@ class GameState(width: Int, height: Int) {
       case Quit =>
     }
   }
+
+  def movePlayer(x: Int, y: Int): Unit = {
+    player = (x, y)
+    recalculateFOV()
+  }
+
+  private var visible = Set.empty[(Int, Int)]
+  private def recalculateFOV(): Unit = {
+    val newVisible = mutable.Set.empty[(Int, Int)]
+    newVisible += player
+    val opaque = (dx: Int, dy: Int) => !map.get(player._1 + dx, player._2 + dy).exists(_.walkable)
+    FOV.castShadows(radius = 100, opaqueApply = true, opaque, (x, y) => {
+      newVisible.add((player._1 + x, player._2 + y))
+    })
+    visible = newVisible.toSet
+  }
+  def isVisible(x: Int, y: Int): Boolean = isVisible((x, y))
+  def isVisible(p: (Int, Int)): Boolean = visible contains p
 
   def itemAtLocation(location: ItemLocation): Item = location match {
     case OnFloor(x, y, index) =>

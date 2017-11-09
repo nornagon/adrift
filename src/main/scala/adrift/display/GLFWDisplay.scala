@@ -53,7 +53,7 @@ object Appearance {
   def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain): Int = {
     import CP437.BoxDrawing._
     (left == center, up == center, right == center, down == center) match {
-      case (false, false, false, false) => '#'
+      case (false, false, false, false) => 254
       case (false, false, false, true)
         | (false, true, false, false)
         | (false, true, false, true) => _U_D
@@ -99,15 +99,22 @@ object Appearance {
       if (items.nonEmpty) {
         charForItem(items.last)
       } else {
+        def apparent(x: Int, y: Int): Option[Terrain] = {
+          if (state.map.contains(x, y) && state.isVisible(x, y))
+            Some(state.map((x, y)))
+          else None
+        }
         state.map(x, y) match {
           case Terrain.Wall =>
-            charForWall(
-              state.map(x, y),
-              state.map.getOrElse((x - 1, y), Terrain.EmptySpace),
-              state.map.getOrElse((x, y - 1), Terrain.EmptySpace),
-              state.map.getOrElse((x + 1, y), Terrain.EmptySpace),
-              state.map.getOrElse((x, y + 1), Terrain.EmptySpace)
-            )
+            val left = apparent(x - 1, y)
+            val up = apparent(x, y - 1)
+            val right = apparent(x + 1, y)
+            val down = apparent(x, y + 1)
+            charForWall(state.map(x, y),
+              left.getOrElse(Terrain.EmptySpace),
+              up.getOrElse(Terrain.EmptySpace),
+              right.getOrElse(Terrain.EmptySpace),
+              down.getOrElse(Terrain.EmptySpace))
           case other => charForTerrain(other)
         }
       }
@@ -135,7 +142,7 @@ class Renderer(
   private val tilesPerRow: Int = font.width / tileWidth
   require(font.width / tileWidth.toFloat - tilesPerRow == 0)
 
-  def drawChar(tex: Texture, x: Int, y: Int, c: Int): Unit = {
+  def drawChar(tex: Texture, x: Int, y: Int, c: Int, color: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f)): Unit = {
     val cx = c % tilesPerRow
     val cy = c / tilesPerRow
     spriteBatch.drawRegion(
@@ -143,7 +150,8 @@ class Renderer(
       cx * tileWidth, cy * tileHeight,
       tileWidth, tileHeight,
       x * screenTileWidth, y * screenTileHeight,
-      screenTileWidth, screenTileHeight
+      screenTileWidth, screenTileHeight,
+      color
     )
   }
 
@@ -504,14 +512,14 @@ class GLFWDisplay extends Display {
     top: Int,
     bottom: Int
   ): Unit = {
-    val lit = mutable.Set.empty[(Int, Int)]
-    val opaque = (dx: Int, dy: Int) => !state.map.get(state.player._1 + dx, state.player._2 + dy).exists(_.walkable)
-    FOV.castShadows(radius = 10, opaqueApply = true, opaque, (x, y) => {
-      lit.add((state.player._1 + x, state.player._2 + y))
-    })
-    for (y <- top until bottom; x <- left until right; if lit contains (x, y)) {
-      val char = Appearance.charAtPosition(state, x, y)
-      renderer.drawChar(font, x - left, y - top, char)
+    for (y <- top until bottom; x <- left until right) {
+      if (state.isVisible(x, y)) {
+        val char = Appearance.charAtPosition(state, x, y)
+        renderer.drawChar(font, x - left, y - top, char)
+      } else {
+        val char = Appearance.charAtPosition(state, x, y)
+        renderer.drawChar(font, x - left, y - top, char, (0.2f, 0.0f, 0.2f, 1.0f))
+      }
     }
   }
 

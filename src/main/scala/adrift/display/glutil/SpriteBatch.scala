@@ -92,18 +92,49 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
     }
   }
 
-  def drawRegion(tex: Texture, srcX: Float, srcY: Float, srcWidth: Float, srcHeight: Float, dstX: Float, dstY: Float): Unit = {
-    drawRegion(tex, srcX, srcY, srcWidth, srcHeight, dstX, dstY, srcWidth, srcHeight)
-  }
-  def drawRegion(tex: Texture, srcX: Float, srcY: Float, srcWidth: Float, srcHeight: Float, dstX: Float, dstY: Float, dstWidth: Float, dstHeight: Float): Unit = {
+  def drawRegion(
+    tex: Texture,
+    srcX: Float,
+    srcY: Float,
+    srcWidth: Float,
+    srcHeight: Float,
+    dstX: Float,
+    dstY: Float,
+    color: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f)
+  ): Unit =
+    drawRegion(tex, srcX, srcY, srcWidth, srcHeight, dstX, dstY, srcWidth, srcHeight, color)
+
+  def drawRegion(
+    tex: Texture,
+    srcX: Float,
+    srcY: Float,
+    srcWidth: Float,
+    srcHeight: Float,
+    dstX: Float,
+    dstY: Float,
+    dstWidth: Float,
+    dstHeight: Float,
+    color: (Float, Float, Float, Float)
+  ): Unit = {
     val u = srcX / tex.width
     val v = srcY / tex.height
     val u2 = (srcX + srcWidth) / tex.width
     val v2 = (srcY + srcHeight) / tex.height
-    draw(tex, dstX, dstY, dstWidth, dstHeight, u, v, u2, v2)
+    draw(tex, dstX, dstY, dstWidth, dstHeight, u, v, u2, v2, color)
   }
 
-  def draw(tex: Texture, x: Float, y: Float, width: Float, height: Float, u: Float, v: Float, u2: Float, v2: Float): Unit = {
+  def draw(
+    tex: Texture,
+    x: Float,
+    y: Float,
+    width: Float,
+    height: Float,
+    u: Float,
+    v: Float,
+    u2: Float,
+    v2: Float,
+    color: (Float, Float, Float, Float)
+  ): Unit = {
     checkFlush(tex)
 
     val x1 = x
@@ -118,10 +149,10 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
     val x4 = x
     val y4 = y + height
 
-    val r = 1.0f
-    val g = 1.0f
-    val b = 1.0f
-    val a = 1.0f
+    val r = color._1
+    val g = color._2
+    val b = color._3
+    val a = color._4
 
     vertex(x1, y1, r, g, b, a, u, v)
     vertex(x2, y2, r, g, b, a, u2, v)
