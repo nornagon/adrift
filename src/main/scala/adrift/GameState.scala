@@ -15,6 +15,7 @@ case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buf
 
 class GameState(width: Int, height: Int) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(Terrain.EmptySpace)
+  val furniture: Grid[Option[Furniture]] = new Grid[Option[Furniture]](width, height)(None)
   val items: Grid[Seq[Item]] = new Grid[Seq[Item]](width, height)(Seq.empty)
   var player: (Int, Int) = (0, 0)
   val hands = Container(maxItems = 2)
@@ -25,7 +26,7 @@ class GameState(width: Int, height: Int) {
     message = None
     action match {
       case PlayerMove(dx, dy) =>
-        if (map(player._1 + dx, player._2 + dy).walkable || true) {
+        if (canWalk(player._1 + dx, player._2 + dy) || true) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
       case Disassemble(location) =>
@@ -55,14 +56,35 @@ class GameState(width: Int, height: Int) {
 
   def movePlayer(x: Int, y: Int): Unit = {
     player = (x, y)
+    openNearbyDoors()
     recalculateFOV()
+  }
+
+  def openNearbyDoors(): Unit = {
+    for (x <- player._1 - 6 to player._1 + 6; y <- player._2 - 6 to player._2 + 6) {
+      for (f <- furniture.get(x, y).flatten) {
+        if (f == Furniture.DoorClosed && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
+          furniture(x, y) = Some(Furniture.DoorOpen)
+        } else if (f == Furniture.DoorOpen && (x - player._1).abs > 2 || (y - player._2).abs > 2) {
+          furniture(x, y) = Some(Furniture.DoorClosed)
+        }
+      }
+    }
+  }
+
+  def canWalk(x: Int, y: Int): Boolean = {
+    map.get(x, y).exists(_.walkable) && furniture.get(x, y).flatten.forall(_.walkable)
+  }
+
+  def isOpaque(x: Int, y: Int): Boolean = {
+    map.get(x, y).exists(_.opaque) || furniture.get(x, y).flatten.exists(_.opaque)
   }
 
   private var visible = Set.empty[(Int, Int)]
   private def recalculateFOV(): Unit = {
     val newVisible = mutable.Set.empty[(Int, Int)]
     newVisible += player
-    val opaque = (dx: Int, dy: Int) => !map.get(player._1 + dx, player._2 + dy).exists(_.walkable)
+    val opaque = (dx: Int, dy: Int) => isOpaque(player._1 + dx, player._2 + dy)
     FOV.castShadows(radius = 100, opaqueApply = true, opaque, (x, y) => {
       newVisible.add((player._1 + x, player._2 + y))
     })
@@ -129,7 +151,7 @@ object GameState {
           val x = random.nextInt(xMax - xMin) + xMin
           val y = random.nextInt(state.map.height)
           (x, y)
-        }.find(state.map(_).walkable).get
+        }.find(p => state.canWalk(p._1, p._2)).get
       def findFirstWall(p: (Int, Int), d: (Int, Int)): Option[(Int, Int)] =
         Stream.iterate(p)(a => (a._1 + d._1, a._2 + d._2))
           .takeWhile(state.map.contains)
@@ -172,8 +194,9 @@ object GameState {
           if (canPlace) {
             for (x <- rlt._1 until (rlt._1 + width); y <- rlt._2 until rlt._2 + height) {
               state.map(x, y) = Terrain.Floor
-              state.map(door) = Terrain.Floor
             }
+            state.map(door) = Terrain.Floor
+            state.furniture(door) = Some(Furniture.DoorClosed)
           } else {
             fails += 1
           }

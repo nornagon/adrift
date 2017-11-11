@@ -92,12 +92,20 @@ object Appearance {
     case _ => 2 // ☻
   }
 
+  def charForFurniture(furniture: Furniture): Int = furniture match {
+    case Furniture.DoorClosed => '+'
+    case Furniture.DoorOpen => '-'
+  }
+
   def charAtPosition(state: GameState, x: Int, y: Int): Int = {
     if (x == state.player._1 && y == state.player._2) '@'
     else if (state.map.contains(x, y)) {
       val items = state.items(x, y)
+      val furniture = state.furniture(x, y)
       if (items.nonEmpty) {
         charForItem(items.last)
+      } else if (furniture.nonEmpty) {
+        charForFurniture(furniture.get)
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
           if (state.map.contains(x, y) && state.isVisible(x, y))
