@@ -113,6 +113,126 @@ class GameState(width: Int, height: Int) {
 }
 
 object GameState {
+  def generateWorld2: GameState = {
+    val random = new scala.util.Random(42)
+    // let's not worry, for now, about the content of the rooms. just the shapes.
+
+    // so step one, let's make a lattice of points, where each point is going to be room-potential.
+    val rooms = new Grid[Int](width = 200, height = 15)(initial = 0)
+    val connections = mutable.Map.empty[((Int, Int), (Int, Int)), Int]
+    def addConn(from: (Int, Int), to: (Int, Int), typ: Int): Unit = {
+      connections((from, to)) = typ
+      connections((to, from)) = typ
+    }
+    /*
+     room door
+   -1  0  0
+    +-----+  door y-1
+    |     |
+    |  +  >  room y=0
+    |     |
+    +--v--+  door y=0
+
+    +-----+-----+-----+-----+
+    |     |     |     |     |
+    |     0     1     2     |
+    |     |     |     |     |
+    +--0--+--0--+--0--+--0--+
+    |     |     |     |     |
+    |     0     1     2     |
+    |     |     |     |     |
+    +--1--+--1--+--1--+--1--+
+    |     |     |     |     |
+    |     0     1     2     |
+    |     |     |     |     |
+    +--2--+--2--+--2--+--2--+
+    |     |     |     |     |
+    |     0     1     2     |
+    |     |     |     |     |
+    +-----+-----+-----+-----+
+
+    number h doors = number h rooms * (number v rooms - 1)
+    number v doors = number v rooms * (number h rooms - 1)
+    total # doors = h doors + v doors
+                  = h rooms * (v rooms - 1) + v rooms * (h rooms - 1)
+                  = h rooms * v rooms - h rooms + v rooms * h rooms - v rooms
+                  = 2 * h * v - h - v
+                  = 2 s s - 2 s
+                  = 2 s (s - 1)
+
+     */
+    // set the center line to be corridor
+    for (x <- 0 until rooms.width) {
+      rooms(x, rooms.height/2) = 1
+      addConn((x, rooms.height/2), (x+1, rooms.height/2), 1)
+    }
+
+    for (i <- 1 to 2000) {
+      val x = random.nextInt(rooms.width-1)
+      val y = random.nextInt(rooms.height-1)
+      val mirrorY = -y + 2 * (rooms.height / 2)
+      val connType = random.nextInt(2) + 1
+      if (random.nextBoolean()) {
+        addConn((x, y), (x+1, y), connType)
+        addConn((x, mirrorY), (x+1, mirrorY), connType)
+      } else {
+        addConn((x, y), (x, y+1), connType)
+        addConn((x, mirrorY), (x, mirrorY-1), connType)
+      }
+    }
+
+    // everything but the main corridor will be empty.
+
+    // now let's turn that into a map.
+
+    val state = new GameState(rooms.width * 6, rooms.height * 6)
+    for (y <- 0 until rooms.height; x <- 0 until rooms.width) {
+      for (dy <- 1 to 5; dx <- 1 to 5) {
+        state.map(x*6 + dx, y*6 + dy) = Terrain.Floor
+      }
+    }
+
+    // walls
+    for (y <- 0 until rooms.height-1; x <- 0 until rooms.width-1) {
+      state.map(x*6, y*6) = Terrain.Wall;
+      {
+        val c = connections getOrElse(((x, y), (x, y + 1)), 0)
+        val t = c match {
+          case 0 => Terrain.Wall
+          case 1 => Terrain.Floor
+          case 2 => Terrain.Wall
+        }
+        for (dx <- 1 to 5) {
+          state.map(x*6 + dx, y*6 + 6) = t
+        }
+        if (c == 2) {
+          state.map(x*6 + 3, y * 6 + 6) = Terrain.Floor
+          state.furniture(x*6 + 3, y * 6 + 6) = Some(Furniture.DoorClosed)
+        }
+      }
+      {
+        val c = connections getOrElse(((x, y), (x + 1, y)), 0)
+        val t = c match {
+          case 0 => Terrain.Wall
+          case 1 => Terrain.Floor
+          case 2 => Terrain.Wall
+        }
+        for (dy <- 1 to 5) {
+          state.map(x * 6 + 6, y * 6 + dy) = t
+        }
+        if (c == 2) {
+          state.map(x*6 + 6, y * 6 + 3) = Terrain.Floor
+          state.furniture(x*6 + 6, y * 6 + 3) = Some(Furniture.DoorClosed)
+        }
+      }
+    }
+
+    state.movePlayer(4, state.map.height / 2)
+
+    state
+  }
+
+
   def generateWorld: GameState = {
     val state = new GameState(2048, 128)
     val random = new scala.util.Random(42)

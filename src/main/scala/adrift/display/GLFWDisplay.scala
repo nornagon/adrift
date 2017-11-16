@@ -526,7 +526,7 @@ class GLFWDisplay extends Display {
         renderer.drawChar(font, x - left, y - top, char)
       } else {
         val char = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, (0.2f, 0.0f, 0.2f, 1.0f))
+        renderer.drawChar(font, x - left, y - top, char, (0.0f, 0.1f, 0.05f, 1.0f))
       }
     }
   }
