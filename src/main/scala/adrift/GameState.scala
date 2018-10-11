@@ -26,7 +26,7 @@ class GameState(width: Int, height: Int) {
     message = None
     action match {
       case PlayerMove(dx, dy) =>
-        if (canWalk(player._1 + dx, player._2 + dy) || true) {
+        if (canWalk(player._1 + dx, player._2 + dy)) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
       case Disassemble(location) =>
@@ -113,6 +113,15 @@ class GameState(width: Int, height: Int) {
 }
 
 object GameState {
+  def generateWorld3: GameState = {
+    val random = new scala.util.Random(42)
+    val state = new GameState(2048, 128)
+    for ((x, y) <- state.map.indices) {
+      state.map(x, y) = Terrain.Wall
+    }
+    state
+  }
+
   def generateWorld2: GameState = {
     val random = new scala.util.Random(42)
     // let's not worry, for now, about the content of the rooms. just the shapes.
@@ -237,6 +246,7 @@ object GameState {
     val state = new GameState(2048, 128)
     val random = new scala.util.Random(42)
 
+    /*
     for (y <- 0 until state.map.height; x <- 0 until state.map.width) {
       state.map(x, y) = Terrain.Wall
     }
@@ -324,8 +334,8 @@ object GameState {
       }
       println(s"Fails: $fails")
     }
+    */
 
-    /*
     GridUtils.filledCircle(64, 64, r = 50) { (x, y) =>
       state.map(x, y) = if (random.nextFloat() < 0.1) Terrain.Grass else Terrain.Floor
     }
@@ -339,7 +349,6 @@ object GameState {
         }
       }
     }
-    */
     state.movePlayer(64, 32)
     state
   }

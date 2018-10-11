@@ -139,7 +139,7 @@ object Appearance {
   }
 }
 
-class Renderer(
+class GlyphRenderer(
   spriteBatch: SpriteBatch,
   tileWidth: Int,
   tileHeight: Int,
@@ -224,7 +224,7 @@ class Renderer(
 
 trait Screen {
   def key(key: Int, scancode: Int, action: Int, mods: Int): Unit
-  def render(renderer: Renderer): Unit
+  def render(renderer: GlyphRenderer): Unit
 }
 
 class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLocation) extends Screen {
@@ -241,7 +241,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
     }
   }
 
-  override def render(renderer: Renderer): Unit = {
+  override def render(renderer: GlyphRenderer): Unit = {
     val itemsByKind = item.parts.groupBy(_.kind)
     val width = 30
     val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
@@ -295,7 +295,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       }
   }
 
-  override def render(renderer: Renderer): Unit = {
+  override def render(renderer: GlyphRenderer): Unit = {
     val anchor = (1, 1)
     val width = 30
     renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
@@ -350,7 +350,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
     }
   }
 
-  override def render(renderer: Renderer): Unit = {
+  override def render(renderer: GlyphRenderer): Unit = {
     val char = (Appearance.charAtPosition(state, x, y) + 128) % 256
     val (left, right, top, bottom) = display.cameraBounds(state)
     renderer.drawChar(display.font, x - left, y - top, char)
@@ -488,7 +488,7 @@ class GLFWDisplay extends Display {
 
     spriteBatch.resize(screenCharWidth * windowWidthChars, screenCharHeight * windowHeightChars)
 
-    val renderer = new Renderer(spriteBatch, 8, 8, screenCharWidth, screenCharHeight, font)
+    val renderer = new GlyphRenderer(spriteBatch, 8, 8, screenCharWidth, screenCharHeight, font)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
@@ -514,7 +514,7 @@ class GLFWDisplay extends Display {
 
   private def renderWorld(
     state: GameState,
-    renderer: Renderer,
+    renderer: GlyphRenderer,
     left: Int,
     right: Int,
     top: Int,
