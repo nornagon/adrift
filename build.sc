@@ -10,6 +10,7 @@ object adrift extends SbtModule {
   override def millSourcePath = pwd
   override def scalaVersion = "2.12.4"
   override def ivyDeps = Agg(
+    ivy"org.choco-solver:choco-solver:4.0.8",
   ) ++ Agg.from(
     Seq(
       "lwjgl",
