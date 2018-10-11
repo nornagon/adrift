@@ -484,6 +484,8 @@ class GLFWDisplay extends Display {
     val visible = glfwGetWindowAttrib(window, GLFW_VISIBLE)
     if (visible == GLFW_FALSE)
       glfwShowWindow(window)
+    glfwGetFramebufferSize(window, wBuf, hBuf)
+    glViewport(0, 0, wBuf.get(), hBuf.get())
     glClearColor(0, 0, 0, 1)
 
     spriteBatch.resize(screenCharWidth * windowWidthChars, screenCharHeight * windowHeightChars)
@@ -526,7 +528,7 @@ class GLFWDisplay extends Display {
         renderer.drawChar(font, x - left, y - top, char)
       } else {
         val char = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, (0.0f, 0.1f, 0.05f, 1.0f))
+        renderer.drawChar(font, x - left, y - top, char, color = (0.0f, 0.1f, 0.05f, 1.0f))
       }
     }
   }
