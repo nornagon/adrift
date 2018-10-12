@@ -14,10 +14,12 @@ object WaveFunctionCollapse {
     def propagator(dir: Int, t: Int): Set[Int]
   }
 
-  def solve(tileset: TileSet, width: Int, height: Int, random: Random): Option[Seq[Seq[Int]]] = {
+  def solve(tileset: TileSet, width: Int, height: Int, random: Random)(
+    restrict: (Int, Int) => Option[Set[Int]] = (_, _) => None
+  ): Option[Seq[Seq[Int]]] = {
     val model = new Model
     val horizontallyAllowedPairs = new Tuples
-    for (t1 <- 0 until tileset.size; t2 <- 0 until tileset.size; if tileset.propagator(0, t1)(t2)) {
+    for (t1 <- 0 until tileset.size; t2 <- 0 until tileset.size; if tileset.propagator(2, t1)(t2)) {
       horizontallyAllowedPairs.add(t1, t2)
     }
     val verticallyAllowedPairs = new Tuples
@@ -36,9 +38,13 @@ object WaveFunctionCollapse {
       if (y < height - 1) {
         model.table(grid(y * width + x), grid((y + 1) * width + x), verticallyAllowedPairs).post()
       }
+      restrict(x, y) foreach { restriction =>
+        val v = grid(y * width + x)
+        model.member(v, restriction.toArray).post()
+      }
     }
 
-    val solver = model.getSolver()
+    val solver = model.getSolver
     solver.limitTime("10s")
     solver.setSearch(Search.intVarSearch(
       new FirstFail(model),
