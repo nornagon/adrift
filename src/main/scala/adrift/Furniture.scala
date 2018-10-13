@@ -14,4 +14,8 @@ object Furniture {
   case object DoorOpen extends Furniture {
     override val walkable = true
   }
+
+  case object Desk extends Furniture {
+    override val walkable = true
+  }
 }

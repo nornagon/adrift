@@ -6,10 +6,15 @@ import adrift.{Furniture, GameState, Terrain}
 import scala.util.Random
 
 object WorldGen {
-  sealed trait ConnectionType
+  sealed trait ConnectionType {
+    def rotated: ConnectionType = this
+  }
   case object Open extends ConnectionType
   case object Wall extends ConnectionType
   case object Door extends ConnectionType
+  case class Internal(i: Int, r: Int = 0) extends ConnectionType {
+    override def rotated: Internal = copy(r = (r + 1) % 4)
+  }
 
   case class Room(
     name: String,
@@ -21,18 +26,12 @@ object WorldGen {
     rotation: Int = 0
   ) {
     def rotated: Room = copy(
-      left = up,
-      up = right,
-      right = down,
-      down = left,
+      left = up.rotated,
+      up = right.rotated,
+      right = down.rotated,
+      down = left.rotated,
       rotation = (rotation + 1) % 4
     )
-    def dir(i: Int): ConnectionType = i match {
-      case 0 => left
-      case 1 => down
-      case 2 => right
-      case 3 => up
-    }
   }
   val corridor = Room(
     "corridor",
@@ -72,7 +71,6 @@ object WorldGen {
     right = Open,
     up = Open,
     down = Open,
-    rotatable = false
   )
   val corridorT = Room(
     "corridor",
@@ -80,6 +78,23 @@ object WorldGen {
     right = Open,
     up = Open,
     down = Open,
+    rotatable = true
+  )
+
+  val labLeft = Room(
+    "labLeft",
+    left = Wall,
+    right = Internal(1),
+    up = Wall,
+    down = Door,
+    rotatable = true
+  )
+  val labRight = Room(
+    "labRight",
+    left = Internal(1),
+    right = Wall,
+    up = Wall,
+    down = Wall,
     rotatable = true
   )
 
@@ -115,7 +130,7 @@ object WorldGen {
     for ((x, y) <- state.map.indices) {
       state.map(x, y) = Terrain.Wall
     }
-    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, corridorX, corridorT, quarters))
+    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, corridorX, corridorT, quarters, labLeft, labRight))
     val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
     val ss = s.get
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
@@ -134,7 +149,7 @@ object WorldGen {
           }
           state.map(x + 3, y) = Terrain.Floor
           state.furniture(x + 3, y) = Some(Furniture.DoorClosed)
-        case Open =>
+        case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = Terrain.Floor
           }
@@ -151,10 +166,15 @@ object WorldGen {
           }
           state.map(x, y + 3) = Terrain.Floor
           state.furniture(x, y + 3) = Some(Furniture.DoorClosed)
-        case Open =>
+        case Open | Internal(_, _) =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = Terrain.Floor
           }
+      }
+      room.name match {
+        case "labLeft" =>
+          state.furniture(x + 1, y + 1) = Some(Furniture.Desk)
+        case _ =>
       }
       // center
       for (dx <- 1 to 5; dy <- 1 to 5) state.map(x + dx, y + dy) = Terrain.Floor

@@ -4,6 +4,7 @@ import org.chocosolver.graphsolver.GraphModel
 import org.chocosolver.graphsolver.search.strategy.GraphSearch
 import org.chocosolver.solver._
 import org.chocosolver.solver.constraints.extension.Tuples
+import org.chocosolver.solver.search.loop.monitors.{IMonitorOpenNode, ISearchMonitor}
 import org.chocosolver.solver.search.strategy.Search
 import org.chocosolver.solver.search.strategy.selectors.values.IntDomainRandom
 import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail
@@ -153,14 +154,17 @@ object WaveFunctionCollapse {
 
 
     solver.plugMonitor(new LogStatEveryXXms(solver, 1000))
-    /*solver.plugMonitor(new ISearchMonitor with IMonitorOpenNode {
-      var i = 0
-      override def afterOpenNode(): Unit = {
-        if (i % 100 == 0)
-          printGraph(connectivity.getValue)
-        i += 1
-      }
-    })*/
+    if (false) {
+      solver.plugMonitor(new ISearchMonitor with IMonitorOpenNode {
+        var i = 0
+
+        override def afterOpenNode(): Unit = {
+          if (i % 100 == 0)
+            printGraph(connectivity.getValue)
+          i += 1
+        }
+      })
+    }
     //solver.setLubyRestart(500, new FailCounter(model, 1000), 500)
     solver.limitTime("10s")
 
