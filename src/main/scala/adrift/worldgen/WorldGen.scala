@@ -1,9 +1,9 @@
 package adrift.worldgen
 
-import adrift.worldgen.WaveFunctionCollapse.TileSet
+import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
+import adrift.{Furniture, GameState, Terrain}
 
 import scala.util.Random
-import adrift.{Furniture, GameState, Terrain}
 
 object WorldGen {
   sealed trait ConnectionType
@@ -40,6 +40,7 @@ object WorldGen {
     right = Open,
     up = Wall,
     down = Wall,
+    rotatable = true
   )
   val corridorWithDoor = Room(
     "corridor",
@@ -65,8 +66,24 @@ object WorldGen {
     down = Door,
     rotatable = true
   )
+  val corridorX = Room(
+    "corridor",
+    left = Open,
+    right = Open,
+    up = Open,
+    down = Open,
+    rotatable = false
+  )
+  val corridorT = Room(
+    "corridor",
+    left = Wall,
+    right = Open,
+    up = Open,
+    down = Open,
+    rotatable = true
+  )
 
-  class RoomTiles(rooms: Seq[Room]) extends TileSet {
+  class RoomTiles(rooms: Seq[Room]) extends GraphTileSet {
     val expanded: Seq[Room] = rooms.flatMap {
       case r if r.rotatable =>
         Stream.iterate(r, 4)(_.rotated)
@@ -75,43 +92,33 @@ object WorldGen {
     }
     override def size: Int = expanded.size
 
-    private val opposite = Seq(2, 3, 0, 1)
-    override def propagator(dir: Int, t: Int): Set[Int] = {
-      val tsDirWall = expanded(t).dir(dir)
-      val oppositeDir = opposite(dir)
-      expanded.zipWithIndex.collect {
-        case (r, i) if r.dir(oppositeDir) == tsDirWall => i
-      }(collection.breakOut)
-    }
-
     def interpret(result: Seq[Seq[Int]]): Seq[Seq[Room]] = result.map(_.map(expanded))
+
+    override def allowedHorizontal(left: Int, right: Int): Boolean =
+      expanded(left).right == expanded(right).left
+
+    override def allowedVertical(top: Int, bottom: Int): Boolean =
+      expanded(top).down == expanded(bottom).up
+
+    override def connectedHorizontal(left: Int, right: Int): Boolean =
+      expanded(left).right != Wall
+
+    override def connectedVertical(top: Int, bottom: Int): Boolean =
+      expanded(top).down != Wall
   }
 
   def generateWorld: GameState = {
     val random = new Random(51)
-    val state = new GameState(2048, 128)
+    val width = 40
+    val height = 40
+    val state = new GameState(width * 6, height * 6)
     for ((x, y) <- state.map.indices) {
       state.map(x, y) = Terrain.Wall
     }
-    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, quarters))
-    val s = WaveFunctionCollapse.solve(tiles, 8, 8, random) { (x, y) =>
-      var s = tiles.expanded.indices.toSet
-      if (x == 0) {
-        s &= tiles.expanded.zipWithIndex.collect { case (r, i) if r.left == Wall => i }.toSet
-      }
-      if (x == 7) {
-        s &= tiles.expanded.zipWithIndex.collect { case (r, i) if r.right == Wall => i }.toSet
-      }
-      if (y == 0) {
-        s &= tiles.expanded.zipWithIndex.collect { case (r, i) if r.up == Wall => i }.toSet
-      }
-      if (y == 7) {
-        s &= tiles.expanded.zipWithIndex.collect { case (r, i) if r.down == Wall => i }.toSet
-      }
-      Some(s)
-    }.map(tiles.interpret)
+    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, corridorX, corridorT, quarters))
+    val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
     val ss = s.get
-    for (ty <- 0 until 8; tx <- 0 until 8; x = tx * 6; y = ty * 6) {
+    for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
       state.map(x, y) = Terrain.Wall
@@ -151,11 +158,8 @@ object WorldGen {
       }
       // center
       for (dx <- 1 to 5; dy <- 1 to 5) state.map(x + dx, y + dy) = Terrain.Floor
-
-      if (tx < 7) assert(ss(tx)(ty).right == ss(tx + 1)(ty).left, s"H mismatch at $tx,$ty: ${ss(tx)(ty)} ${ss(tx + 1)(ty)} ${tiles.propagator(0, tiles.expanded.indexOf(ss(tx)(ty))).map(tiles.expanded)}")
-      if (ty < 7) assert(ss(tx)(ty).down == ss(tx)(ty+ 1).up, s"V mismatch at $tx,$ty: ${ss(tx)(ty)} ${ss(tx)(ty + 1)} ${tiles.propagator(1, tiles.expanded.indexOf(ss(tx)(ty))).map(tiles.expanded)}")
     }
-    state.movePlayer(1, 2)
+    state.movePlayer(width*3 + 3, height*3 + 3)
     state
   }
 }
