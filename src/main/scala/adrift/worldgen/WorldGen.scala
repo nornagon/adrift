@@ -98,6 +98,39 @@ object WorldGen {
     rotatable = true
   )
 
+  val farmLeft = Room(
+    "farmLeft",
+    left = Wall,
+    right = Internal(2),
+    up = Internal(3),
+    down = Door,
+    rotatable = true
+  )
+  val farmRight = Room(
+    "farmRight",
+    left = Internal(2),
+    right = Wall,
+    up = Internal(4),
+    down = Wall,
+    rotatable = true
+  )
+  val farmTopLeft = Room(
+    "farmTop",
+    left = Wall,
+    right = Internal(5),
+    up = Wall,
+    down = Internal(3),
+    rotatable = true
+  )
+  val farmTopRight = Room(
+    "farmRight",
+    left = Internal(5),
+    right = Wall,
+    up = Wall,
+    down = Internal(4),
+    rotatable = true
+  )
+
   class RoomTiles(rooms: Seq[Room]) extends GraphTileSet {
     val expanded: Seq[Room] = rooms.flatMap {
       case r if r.rotatable =>
@@ -130,7 +163,11 @@ object WorldGen {
     for ((x, y) <- state.map.indices) {
       state.map(x, y) = Terrain.Wall
     }
-    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, corridorX, corridorT, quarters, labLeft, labRight))
+    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, corridorX, corridorT,
+      quarters,
+      labLeft, labRight,
+      farmLeft, farmRight, farmTopLeft, farmTopRight,
+    ))
     val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
     val ss = s.get
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
