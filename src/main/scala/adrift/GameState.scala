@@ -345,7 +345,8 @@ object GameState {
         state.map(x, y) = if (random.nextFloat() < 0.3) Terrain.TreeFicus else Terrain.TreeOak
       if (state.map(x, y).walkable) {
         if (random.nextFloat() < 1/512f) {
-          state.items(x, y) :+= generateItem(items.HoloNote)
+//          state.items(x, y) :+= generateItem(items.HoloNote)
+          state.items(x, y) :+= generateItem(items.LaserPump)
         }
       }
     }

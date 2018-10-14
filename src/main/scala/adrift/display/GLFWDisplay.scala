@@ -76,7 +76,7 @@ object Appearance {
     case items.HoloNote => '!'
     // Tiny components `
     case items.MRAMChip => '`'
-    case items.TypeIAScrew => '`'
+    case items.Screw(_,_,_) => '`'
     case items.Microprocessor => '`'
     case items.TinyDCMotor => '`'
     case items.LaserDiode => '`'
@@ -84,7 +84,8 @@ object Appearance {
     case items.HolographicProjector => CP437.Diamonds
     case items.RechargeableBattery => CP437.Diamonds
     case items.Magnet => CP437.Diamonds
-    case items.Mirror => CP437.Diamonds
+    case items.FlatMirror => CP437.Diamonds
+    case items.LaserPump => CP437.Diamonds
     //
     case items.SmallPlasticCasing => CP437.Bullet // ⊚
     case items.CopperWire => CP437.Delta // δ
