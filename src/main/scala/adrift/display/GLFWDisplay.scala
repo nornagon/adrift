@@ -235,6 +235,15 @@ class GlyphRenderer(
       drawString(x, y + cy, line)
     }
   }
+
+  def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, lines: Seq[String]): Unit = {
+    drawBox(left, top, width, lines.size + 2)
+    if (title != null)
+      drawString(left + 1, top, s"[$title]", maxWidth = width-2)
+    for ((l, i) <- lines.zipWithIndex) {
+      drawString(left + 1, top + 1 + i, l, width - 2)
+    }
+  }
 }
 
 trait Screen {
@@ -260,15 +269,17 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
     val itemsByKind = item.parts.groupBy(_.kind)
     val width = 30
     val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
-    val height = 2 + descriptionLines.size + 2 + itemsByKind.size
-    renderer.drawBox(anchor._1, anchor._2, width, height)
-    renderer.drawString(anchor._1 + 1, anchor._2, s"[${item.kind.name}]", maxWidth = width-2)
-    renderer.drawStringWrapped(anchor._1 + 1, anchor._2 + 1, maxWidth = width - 2, maxHeight = 9, item.kind.description)
-    renderer.drawString(anchor._1 + 1, anchor._2 + 1 + descriptionLines.size + 1, "Parts:")
-    for ((p, i) <- itemsByKind.zipWithIndex) {
-      val str = s"${if (p._2.size != 1) s"${p._2.size} x " else ""}${p._1.name}"
-      renderer.drawString(anchor._1 + 2, anchor._2 + 1 + descriptionLines.size + 1 + 1 + i, str, maxWidth = width - 3)
-    }
+    renderer.frame(
+      left = anchor._1, top = anchor._2,
+      width = width,
+      title = item.kind.name,
+      lines = descriptionLines ++
+        Seq("", "Parts:") ++
+        itemsByKind.map {
+          case (kind, items) if items.size == 1 => kind.name
+          case (kind, items) => s"${items.size} x ${kind.name}"
+        }
+    )
   }
 }
 
@@ -379,16 +390,15 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val terrain = state.map(x, y)
     val furniture = state.furniture(x, y)
     val items = state.items(x, y)
-    renderer.drawBox(anchor._1, anchor._2, width, 2 + 1 + furniture.size + math.min(items.size, 10))
-    renderer.drawString(anchor._1 + 1, anchor._2 + 1, terrain.toString, width - 2)
-    furniture foreach { f =>
-      renderer.drawString(anchor._1 + 1, anchor._2 + 2, f.toString, width - 2)
-    }
-    for ((item, i) <- items.take(9).zipWithIndex) {
-      renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + i, item.kind.name, maxWidth = width - 2)
-    }
-    if (items.size > 9)
-      renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + 9, s"${items.size - 9} more...")
+
+    renderer.frame(
+      left = anchor._1, top = anchor._2,
+      width = width,
+      lines = Seq(terrain.toString) ++
+        furniture.map(_.toString) ++
+        items.take(9).map(_.kind.name) ++
+        (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
+    )
   }
 }
 
@@ -464,20 +474,6 @@ class GLFWDisplay extends Display {
 
     font = Texture.fromImage(Image.fromFile("cp437_8x8.png"))
     spriteBatch = SpriteBatch.create
-  }
-
-  private def loadc64(name: String): Image = {
-    val image = Image.fromFile(name)
-    // TODO: would be better to just do this transform in an image editor
-    for (i <- 0 until image.bytes.limit() by 4) {
-      val isWhite = image.bytes.get(i) == 0
-      if (isWhite) {
-        image.bytes.putInt(i, 0xffffffff)
-      } else {
-        image.bytes.putInt(i, 0x00000000)
-      }
-    }
-    image
   }
 
   def cameraBounds(state: GameState): (Int, Int, Int, Int) = {

@@ -117,7 +117,7 @@ object WorldGen {
     rotatable = true
   )
   val farmTopLeft = Room(
-    "farmTop",
+    "farmTopLeft",
     left = Wall,
     right = Internal(5),
     up = Wall,
@@ -125,7 +125,7 @@ object WorldGen {
     rotatable = true
   )
   val farmTopRight = Room(
-    "farmRight",
+    "farmTopRight",
     left = Internal(5),
     right = Wall,
     up = Wall,
@@ -213,6 +213,8 @@ object WorldGen {
       room.name match {
         case "labLeft" =>
           state.furniture(x + 1, y + 1) = Some(Furniture.Desk)
+        case "farmLeft" =>
+          state.items(x + 3, y + 3) :+= generateItem(items.LaserPump)
         case _ =>
       }
       // center
