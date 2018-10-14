@@ -65,7 +65,7 @@ class GameState(width: Int, height: Int) {
       for (f <- furniture.get(x, y).flatten) {
         if (f == Furniture.DoorClosed && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
           furniture(x, y) = Some(Furniture.DoorOpen)
-        } else if (f == Furniture.DoorOpen && (x - player._1).abs > 2 || (y - player._2).abs > 2) {
+        } else if (f == Furniture.DoorOpen && ((x - player._1).abs > 2 || (y - player._2).abs > 2)) {
           furniture(x, y) = Some(Furniture.DoorClosed)
         }
       }

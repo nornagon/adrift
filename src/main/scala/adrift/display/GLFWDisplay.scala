@@ -96,6 +96,7 @@ object Appearance {
   def charForFurniture(furniture: Furniture): Int = furniture match {
     case Furniture.DoorClosed => '+'
     case Furniture.DoorOpen => '-'
+    case Furniture.Desk => '='
   }
 
   def charAtPosition(state: GameState, x: Int, y: Int): Int = {
@@ -363,9 +364,13 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
         (1, 1)
 
     val terrain = state.map(x, y)
+    val furniture = state.furniture(x, y)
     val items = state.items(x, y)
-    renderer.drawBox(anchor._1, anchor._2, width, 2 + 1 + math.min(items.size, 10))
+    renderer.drawBox(anchor._1, anchor._2, width, 2 + 1 + furniture.size + math.min(items.size, 10))
     renderer.drawString(anchor._1 + 1, anchor._2 + 1, terrain.toString, width - 2)
+    furniture foreach { f =>
+      renderer.drawString(anchor._1 + 1, anchor._2 + 2, f.toString, width - 2)
+    }
     for ((item, i) <- items.take(9).zipWithIndex) {
       renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + i, item.kind.name, maxWidth = width - 2)
     }
