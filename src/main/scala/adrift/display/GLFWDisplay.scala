@@ -158,7 +158,7 @@ class GlyphRenderer(
     y: Int,
     c: Int,
     fg: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f),
-    bg: (Float, Float, Float, Float) = (0f, 0f, 0f, 0f)
+    bg: (Float, Float, Float, Float) = (0f, 0f, 0f, 1f)
   ): Unit = {
     if (bg._4 != 0) {
       val cx = 0xdb % tilesPerRow
