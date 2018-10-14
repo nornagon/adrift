@@ -260,6 +260,14 @@ case object TinyDCMotor extends ItemKind {
   val parts = Seq(CopperWire -> 2, Magnet -> 2)
 }
 
+case class StepperMotor(name: String, description: String, parts: Seq[(ItemKind, Int)]) extends ItemKind
+object StepperMotor {
+  val C = StepperMotor(
+    name = "C-size stepper motor",
+    description = "A motor this size puts out more force than a human can.",
+    parts = Seq(/* todo */))
+}
+
 case object MRAMChip extends ItemKind {
   val name = "MRAM chip"
   val description = "A magnetic memory chip. You'd need to attach it to a computer to read or write its contents."
@@ -303,7 +311,7 @@ object Screw {
   def TypeIB: Screw = Screw("type IB screw", 
                             "A carbon-printed type IB screw, used when you need to hold large things together, but not too well")
   def TypeIIB: Screw = Screw("type IIB screw", 
-                             "A carbon-printed type IIB screw, the standard in afixing human-scale objects.")
+                             "A carbon-printed type IIB screw, the standard in affixing human-scale objects.")
   def TypeIIIB: Screw = Screw("type IIIB screw", 
                               "A carbon-printed type IIIB screw, for maximum strength and precision in large objects")
   def TypeIC: Screw = Screw("type IC screw", 

@@ -63,10 +63,14 @@ class GameState(width: Int, height: Int) {
   def openNearbyDoors(): Unit = {
     for (x <- player._1 - 6 to player._1 + 6; y <- player._2 - 6 to player._2 + 6) {
       for (f <- furniture.get(x, y).flatten) {
-        if (f == Furniture.DoorClosed && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
-          furniture(x, y) = Some(Furniture.DoorOpen)
-        } else if (f == Furniture.DoorOpen && ((x - player._1).abs > 2 || (y - player._2).abs > 2)) {
-          furniture(x, y) = Some(Furniture.DoorClosed)
+        f match {
+          case door: Furniture.AutomaticDoor =>
+            if (!door.open && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
+              door.open = true
+            } else if (door.open && ((x - player._1).abs > 2 || (y - player._2).abs > 2)) {
+              door.open = false
+            }
+          case _ =>
         }
       }
     }
@@ -216,7 +220,7 @@ object GameState {
         }
         if (c == 2) {
           state.map(x*6 + 3, y * 6 + 6) = Terrain.Floor
-          state.furniture(x*6 + 3, y * 6 + 6) = Some(Furniture.DoorClosed)
+          state.furniture(x*6 + 3, y * 6 + 6) = Some(Furniture.AutomaticDoor())
         }
       }
       {
@@ -231,7 +235,7 @@ object GameState {
         }
         if (c == 2) {
           state.map(x*6 + 6, y * 6 + 3) = Terrain.Floor
-          state.furniture(x*6 + 6, y * 6 + 3) = Some(Furniture.DoorClosed)
+          state.furniture(x*6 + 6, y * 6 + 3) = Some(Furniture.AutomaticDoor())
         }
       }
     }

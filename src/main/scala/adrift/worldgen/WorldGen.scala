@@ -185,7 +185,7 @@ object WorldGen {
             state.map(x + dx, y) = Terrain.Wall
           }
           state.map(x + 3, y) = Terrain.Floor
-          state.furniture(x + 3, y) = Some(Furniture.DoorClosed)
+          state.furniture(x + 3, y) = Some(Furniture.AutomaticDoor())
         case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = Terrain.Floor
@@ -202,7 +202,7 @@ object WorldGen {
             state.map(x, y + dy) = Terrain.Wall
           }
           state.map(x, y + 3) = Terrain.Floor
-          state.furniture(x, y + 3) = Some(Furniture.DoorClosed)
+          state.furniture(x, y + 3) = Some(Furniture.AutomaticDoor())
         case Open | Internal(_, _) =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = Terrain.Floor

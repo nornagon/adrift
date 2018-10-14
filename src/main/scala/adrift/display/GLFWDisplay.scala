@@ -94,8 +94,8 @@ object Appearance {
   }
 
   def charForFurniture(furniture: Furniture): Int = furniture match {
-    case Furniture.DoorClosed => '+'
-    case Furniture.DoorOpen => '-'
+    case Furniture.AutomaticDoor(false) => '+'
+    case Furniture.AutomaticDoor(true) => '-'
     case Furniture.Desk => '='
   }
 
