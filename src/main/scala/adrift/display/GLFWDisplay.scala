@@ -94,8 +94,8 @@ object Appearance {
   }
 
   def charForFurniture(furniture: Furniture): Int = furniture match {
-    case Furniture.DoorClosed => '+'
-    case Furniture.DoorOpen => '-'
+    case Furniture.AutomaticDoor(false) => '+'
+    case Furniture.AutomaticDoor(true) => '-'
     case Furniture.Desk => '='
   }
 
@@ -152,7 +152,26 @@ class GlyphRenderer(
   private val tilesPerRow: Int = font.width / tileWidth
   require(font.width / tileWidth.toFloat - tilesPerRow == 0)
 
-  def drawChar(tex: Texture, x: Int, y: Int, c: Int, color: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f)): Unit = {
+  def drawChar(
+    tex: Texture,
+    x: Int,
+    y: Int,
+    c: Int,
+    fg: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f),
+    bg: (Float, Float, Float, Float) = (0f, 0f, 0f, 1f)
+  ): Unit = {
+    if (bg._4 != 0) {
+      val cx = 0xdb % tilesPerRow
+      val cy = 0xdb / tilesPerRow
+      spriteBatch.drawRegion(
+        tex,
+        cx * tileWidth, cy * tileHeight,
+        tileWidth, tileHeight,
+        x * screenTileWidth, y * screenTileHeight,
+        screenTileWidth, screenTileHeight,
+        bg
+      )
+    }
     val cx = c % tilesPerRow
     val cy = c / tilesPerRow
     spriteBatch.drawRegion(
@@ -161,7 +180,7 @@ class GlyphRenderer(
       tileWidth, tileHeight,
       x * screenTileWidth, y * screenTileHeight,
       screenTileWidth, screenTileHeight,
-      color
+      fg
     )
   }
 
@@ -186,13 +205,7 @@ class GlyphRenderer(
   def drawString(x: Int, y: Int, s: String, maxWidth: Int = 0): Unit = {
     for ((c, i) <- s.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return
-      val tc = c /*match {
-        case cc if cc >= 'a' && cc <= 'z' => cc - 'a' + 1
-        case '[' => 27
-        case ']' => 29
-        case cc => cc
-      }*/
-      drawChar(font, x + i, y, tc)
+      drawChar(font, x + i, y, c)
     }
   }
 
@@ -222,6 +235,15 @@ class GlyphRenderer(
       drawString(x, y + cy, line)
     }
   }
+
+  def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, lines: Seq[String]): Unit = {
+    drawBox(left, top, width, lines.size + 2)
+    if (title != null)
+      drawString(left + 1, top, s"[$title]", maxWidth = width-2)
+    for ((l, i) <- lines.zipWithIndex) {
+      drawString(left + 1, top + 1 + i, l, width - 2)
+    }
+  }
 }
 
 trait Screen {
@@ -247,15 +269,17 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
     val itemsByKind = item.parts.groupBy(_.kind)
     val width = 30
     val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
-    val height = 2 + descriptionLines.size + 2 + itemsByKind.size
-    renderer.drawBox(anchor._1, anchor._2, width, height)
-    renderer.drawString(anchor._1 + 1, anchor._2, s"[${item.kind.name}]", maxWidth = width-2)
-    renderer.drawStringWrapped(anchor._1 + 1, anchor._2 + 1, maxWidth = width - 2, maxHeight = 9, item.kind.description)
-    renderer.drawString(anchor._1 + 1, anchor._2 + 1 + descriptionLines.size + 1, "Parts:")
-    for ((p, i) <- itemsByKind.zipWithIndex) {
-      val str = s"${if (p._2.size != 1) s"${p._2.size} x " else ""}${p._1.name}"
-      renderer.drawString(anchor._1 + 2, anchor._2 + 1 + descriptionLines.size + 1 + 1 + i, str, maxWidth = width - 3)
-    }
+    renderer.frame(
+      left = anchor._1, top = anchor._2,
+      width = width,
+      title = item.kind.name,
+      lines = descriptionLines ++
+        Seq("", "Parts:") ++
+        itemsByKind.map {
+          case (kind, items) if items.size == 1 => kind.name
+          case (kind, items) => s"${items.size} x ${kind.name}"
+        }
+    )
   }
 }
 
@@ -353,9 +377,9 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    val char = (Appearance.charAtPosition(state, x, y) + 128) % 256
+    val char = Appearance.charAtPosition(state, x, y)
     val (left, right, top, bottom) = display.cameraBounds(state)
-    renderer.drawChar(display.font, x - left, y - top, char)
+    renderer.drawChar(display.font, x - left, y - top, char, fg=(0, 0, 0, 1), bg=(1,1,1,1))
     val width = 20
     val anchor =
       if (x - left <= (right - left) / 2 - 1)
@@ -366,16 +390,15 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val terrain = state.map(x, y)
     val furniture = state.furniture(x, y)
     val items = state.items(x, y)
-    renderer.drawBox(anchor._1, anchor._2, width, 2 + 1 + furniture.size + math.min(items.size, 10))
-    renderer.drawString(anchor._1 + 1, anchor._2 + 1, terrain.toString, width - 2)
-    furniture foreach { f =>
-      renderer.drawString(anchor._1 + 1, anchor._2 + 2, f.toString, width - 2)
-    }
-    for ((item, i) <- items.take(9).zipWithIndex) {
-      renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + i, item.kind.name, maxWidth = width - 2)
-    }
-    if (items.size > 9)
-      renderer.drawString(anchor._1 + 1, anchor._2 + 1 + 1 + 9, s"${items.size - 9} more...")
+
+    renderer.frame(
+      left = anchor._1, top = anchor._2,
+      width = width,
+      lines = Seq(terrain.toString) ++
+        furniture.map(_.toString) ++
+        items.take(9).map(_.kind.name) ++
+        (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
+    )
   }
 }
 
@@ -453,20 +476,6 @@ class GLFWDisplay extends Display {
     spriteBatch = SpriteBatch.create
   }
 
-  private def loadc64(name: String): Image = {
-    val image = Image.fromFile(name)
-    // TODO: would be better to just do this transform in an image editor
-    for (i <- 0 until image.bytes.limit() by 4) {
-      val isWhite = image.bytes.get(i) == 0
-      if (isWhite) {
-        image.bytes.putInt(i, 0xffffffff)
-      } else {
-        image.bytes.putInt(i, 0x00000000)
-      }
-    }
-    image
-  }
-
   def cameraBounds(state: GameState): (Int, Int, Int, Int) = {
     val worldHeightChars = windowHeightChars - 1
     val left = state.player._1 - windowWidthChars/2
@@ -499,6 +508,8 @@ class GLFWDisplay extends Display {
     val renderer = new GlyphRenderer(spriteBatch, 8, 8, screenCharWidth, screenCharHeight, font)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     val left = state.player._1 - windowWidthChars/2
     val right = left + windowWidthChars
@@ -534,7 +545,7 @@ class GLFWDisplay extends Display {
         renderer.drawChar(font, x - left, y - top, char)
       } else {
         val char = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, color = (0.0f, 0.1f, 0.05f, 1.0f))
+        renderer.drawChar(font, x - left, y - top, char, fg = (0.0f, 0.1f, 0.05f, 1.0f))
       }
     }
   }

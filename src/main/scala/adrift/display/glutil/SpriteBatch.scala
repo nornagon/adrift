@@ -33,6 +33,7 @@ object SpriteBatch {
       varying vec2 vTexCoord;
       void main() {
         vec4 texColor = texture2D(u_texture, vTexCoord);
+        if (texColor == vec4(0., 0., 0., 1.)) texColor.a = 0.;
         gl_FragColor = vColor * texColor;
       }
     """
