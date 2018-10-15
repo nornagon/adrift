@@ -12,6 +12,13 @@ object adrift extends SbtModule {
   override def ivyDeps = Agg(
     ivy"org.choco-solver:choco-solver:4.0.6",
     ivy"org.choco-solver:choco-graph:4.2.2",
+
+    ivy"io.circe::circe-core:0.9.1",
+    ivy"io.circe::circe-generic:0.9.1",
+    ivy"io.circe::circe-generic-extras:0.9.1",
+    ivy"io.circe::circe-parser:0.9.1",
+    ivy"io.circe::circe-optics:0.9.1",
+    ivy"io.circe::circe-yaml:0.7.0",
   ) ++ Agg.from(
     Seq(
       "lwjgl",

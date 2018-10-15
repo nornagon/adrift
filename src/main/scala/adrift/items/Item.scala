@@ -1,5 +1,7 @@
 package adrift.items
 
+import java.io.Reader
+
 /*
 Items have some generic type (a battery, a screwdriver, a tomato) and some specific state (half charged, found in the
 elevator, moldy).
@@ -49,6 +51,28 @@ Less simple:
 - wear
 
  */
+
+case class YamlItem(
+  name: String,
+  description: String,
+  parts: Seq[YamlItemPart],
+)
+case class YamlItemPart(
+  `type`: String,
+  disassembled_with: String = "hand",
+  count: Int = 1
+)
+object Yaml {
+  import io.circe.yaml
+  import io.circe.generic.extras.auto._
+  import io.circe.generic.extras.Configuration
+  implicit val configuration: Configuration = Configuration.default.withDefaults
+
+  def parse(reader: Reader): Seq[YamlItem] = {
+    val json = yaml.parser.parse(reader).fold(throw _, identity)
+    json.as[Seq[YamlItem]].fold(throw _, identity)
+  }
+}
 
 trait ItemKind {
   def name: String
