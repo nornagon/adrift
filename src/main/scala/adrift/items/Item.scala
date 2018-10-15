@@ -53,7 +53,7 @@ Less simple:
 trait ItemKind {
   def name: String
   def description: String
-  def parts: Seq[(ItemKind, Int)]
+  def parts: Seq[((ItemKind, Int),Operation)]
 }
 
 trait ItemCondition {
@@ -81,10 +81,13 @@ trait Tool {
   def provides: Operation
 }
 trait Operation{}
+case class HandleOp() extends Operation
 case class ScrewOp() extends Operation
 case class BoltOp() extends Operation
 case class PryOp() extends Operation
 case class HammerOp() extends Operation
+case class CutOp() extends Operation
+case class SolderOp() extends Operation
 
 
 //
@@ -117,6 +120,20 @@ case object MultiWrench extends ItemKind with Tool {
   val description = "twisting the knob adjusts the grip size.  This is pretty much only useful for adding or removing bolts."
   val parts = Seq()
   val provides = BoltOp()
+}
+
+case object PocketKnife extends ItemKind with Tool {
+  val name = "BoxCutter"
+  val description = "A sharp, virtually unbreakable tungsteel blade makes this a great tool or, in a pinch, a weapon."
+  val parts = Seq()
+  val provides = CutOp()
+}
+
+case object SolderingIron extends ItemKind with Tool {
+  val name = "Soldering Iron"
+  val description = "an RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components"
+  val parts = Seq()
+  val provides = SolderOp()
 }
 
 //
@@ -162,7 +179,7 @@ case object NylonThread extends ItemKind {
 case object SyntheticFabric extends ItemKind {
   val name = "synthetic fabric rag"
   val description = "A small section of synthetic fabric. It's extremely light and strong."
-  val parts = Seq(NylonThread -> 8)
+  val parts = Seq((NylonThread -> 8) -> CutOp())
 }
 
 
@@ -170,7 +187,7 @@ case object SyntheticFabric extends ItemKind {
 // Optical components?
 //
 
-case class Lens(name: String, description: String, parts: Seq[(ItemKind,Int)] = Seq()) extends ItemKind
+case class Lens(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)] = Seq()) extends ItemKind
 object Lens {
   def Z1L: Lens = Lens("Z1 Lens", "The smallest most concave module-compatible lens available")
   def Z2L: Lens = Lens("Z2 Lens", "A small, maximally concave module-compatible lens")
@@ -194,7 +211,7 @@ object Lens {
   def W5L: Lens = Lens("W5 Lens", "A huge, maximally convex module-compatible lens")
 }
 
-case class Mirror(name: String, description: String, parts: Seq[(ItemKind,Int)] = Seq()) extends ItemKind
+case class Mirror(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)] = Seq()) extends ItemKind
 object Mirror {
   def Z1M: Mirror = Mirror("Z1 Mirror", "The smallest most concave module-compatible mirror available")
   def Z2M: Mirror = Mirror("Z2 Mirror", "A small, maximally concave module-compatible mirror")
@@ -225,10 +242,14 @@ object Mirror {
 case object ShipPowerAdapter extends ItemKind {
   val name = "ship power adapter"
   val description = "a box of electronics to adapt from ship power to any other kind of power supply"
-  val parts = Seq(EBoard.A -> 1, FlexComponent -> 21, Microprocessor -> 1)
+  val parts = Seq(
+    (EBoard.A -> 1) -> ScrewOp(), 
+    (FlexComponent -> 21) -> SolderOp(), 
+    (Microprocessor -> 1) -> SolderOp()
+    )
 }
 
-case class PowerSupply(name: String, description: String, parts: Seq[(ItemKind,Int)]) extends ItemKind
+case class PowerSupply(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)]) extends ItemKind
 object PowerSupply {
   def PM3_A: PowerSupply = PowerSupply("M3A power supply", "Ptronics smallest power supply is perfect for a phone or cat toy", Seq())
   def PM5_A: PowerSupply = PowerSupply("M5A power supply", "Another small supply from Ptronics with more voltage and small amps", Seq())
@@ -241,7 +262,7 @@ object PowerSupply {
   def PM7_E: PowerSupply = PowerSupply("M7E power supply", "This beast of a power supply compensates for inefficiency with even more power", Seq())
 }
 
-case class EBoard(name: String, description: String, parts: Seq[(ItemKind,Int)] = Seq()) extends ItemKind
+case class EBoard(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)] = Seq()) extends ItemKind
 object EBoard {
   def A: EBoard = EBoard("micro e-board", "a small modular electronics substrate")
   def B: EBoard = EBoard("standard e-board", "a normal modular electronics substrate")
@@ -257,7 +278,7 @@ case object FlexComponent extends ItemKind {
 case object TinyDCMotor extends ItemKind {
   val name = "tiny DC motor"
   val description = "A small DC motor. Could be from a remote-controlled toy or something."
-  val parts = Seq(CopperWire -> 2, Magnet -> 2)
+  val parts = Seq((CopperWire -> 2) -> CutOp(), (Magnet -> 2) -> PryOp())
 }
 
 case object MRAMChip extends ItemKind {
@@ -292,7 +313,7 @@ case object SmallPlasticCasing extends ItemKind {
 
 // Fasteners
 
-case class Screw(name: String, description: String, parts: Seq[(ItemKind,Int)] = Seq()) extends ItemKind
+case class Screw(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)] = Seq()) extends ItemKind
 object Screw {
   def TypeIA: Screw = Screw("type IA screw", 
                             "A small, carbon-printed type IA screw, like you'd find in any cheap device these days.")
@@ -322,7 +343,7 @@ case object Fastener extends ItemKind {
 
 // Modular Item pieces
 
-case class ModularPanel(name: String, description: String, parts: Seq[(ItemKind,Int)] = Seq()) extends ItemKind
+case class ModularPanel(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)] = Seq()) extends ItemKind
 object ModularPanel{
   def SizeA: ModularPanel = ModularPanel("A-Size Modular panel",
                                      "A variable-size modular panel used in constructing micro-scale structural frames")
@@ -336,7 +357,7 @@ object ModularPanel{
                                      "A variable-size modular panel used in constructing colossal structural frames")
 }
 
-case class ModularRod(name: String, description: String, parts: Seq[(ItemKind,Int)] = Seq()) extends ItemKind
+case class ModularRod(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)] = Seq()) extends ItemKind
 object ModularRod{
   def SizeA: ModularRod = ModularRod("A-Size Modular Rod",
                                      "A variable-length modular rod used in constructing micro-scale structural frames")
@@ -350,32 +371,32 @@ object ModularRod{
                                      "A variable-length modular rod used in constructing colossal structural frames")
 }
 
-case class Frame(name: String, description: String, parts: Seq[(ItemKind,Int)]) extends ItemKind
+case class Frame(name: String, description: String, parts: Seq[((ItemKind,Int),Operation)]) extends ItemKind
 object Frame {
   def SizeA: Frame = Frame("A-Size Frame",
                            "A micro-scale structural frame for holding mechanical and electrical components",
-                           Seq(ModularRod.SizeA -> 12,
-                               ModularPanel.SizeA -> 6)
+                           Seq((ModularRod.SizeA -> 12) -> ScrewOp(),
+                               (ModularPanel.SizeA -> 6) -> ScrewOp())
                            )
   def SizeB: Frame = Frame("B-Size Frame",
                            "A small structural frame for holding mechanical and electrical components",
-                           Seq(ModularRod.SizeB -> 12,
-                               ModularPanel.SizeB -> 6)
+                           Seq((ModularRod.SizeB -> 12) -> ScrewOp(),
+                               (ModularPanel.SizeB -> 6) -> ScrewOp())
                           )
   def SizeC: Frame = Frame("C-Size Frame",
                            "A structural frame for holding mechanical and electrical components",
-                           Seq(ModularRod.SizeC -> 12,
-                               ModularPanel.SizeC -> 6)
+                           Seq((ModularRod.SizeC -> 12) -> ScrewOp(),
+                               (ModularPanel.SizeC -> 6) -> ScrewOp())
                           )
   def SizeD: Frame = Frame("D-Size Frame",
                            "A large structural frame for holding mechanical and electrical components",
-                           Seq(ModularRod.SizeD -> 12,
-                               ModularPanel.SizeD -> 6)
+                           Seq((ModularRod.SizeD -> 12) -> ScrewOp(),
+                               (ModularPanel.SizeD -> 6) -> ScrewOp())
                           )
   def SizeE: Frame = Frame("E-Size Frame",
                            "A massive structural frame for holding mechanical and electrical components",
-                           Seq(ModularRod.SizeE -> 12,
-                               ModularPanel.SizeE -> 6)
+                           Seq((ModularRod.SizeE -> 12) -> ScrewOp(),
+                               (ModularPanel.SizeE -> 6) -> ScrewOp())
                           )
 }
 
@@ -385,16 +406,16 @@ case object LaserPump extends ItemKind {
   val name = "laser pump"
   val description = "a device that uses laser power to pressurize or depressurize a volume"
   val parts = Seq(
-    Frame.SizeA -> 2,
-    Frame.SizeB -> 1,
-    LaserDiode -> 6,
-    Lens.Z1L -> 2,
-    Mirror.Y1M -> 6,
-    Lens.Y1L -> 6,
-    Lens.W2L -> 6,
-    EBoard.A -> 2,
-    PowerSupply.PM5_C -> 1,
-    Screw.TypeIC -> 12
+    (Frame.SizeA -> 2) -> ScrewOp(),
+    (Frame.SizeB -> 1) -> ScrewOp(),
+    (LaserDiode -> 6) -> ScrewOp(),
+    (Lens.Z1L -> 2) -> ScrewOp(),
+    (Mirror.Y1M -> 6) -> ScrewOp(),
+    (Lens.Y1L -> 6) -> ScrewOp(),
+    (Lens.W2L -> 6) -> ScrewOp(),
+    (EBoard.A -> 2) -> ScrewOp(),
+    (PowerSupply.PM5_C -> 1) -> ScrewOp(),
+    (Screw.TypeIC -> 12) -> ScrewOp()
     )
 }
 
@@ -402,44 +423,55 @@ case object Refrigerator extends ItemKind {
   val name = "refrigerator"
   val description = "This industrial cooler can suck a lot of heat out of an attached volume"
   val parts = Seq(
-    Frame.SizeC -> 1,
-    LaserPump -> 4,
-    Frame.SizeB -> 2,
-    ShipPowerAdapter -> 1,
-    Screw.TypeIIB -> 12,
-    Screw.TypeIB -> 18
+    (Frame.SizeC -> 1) -> ScrewOp(),
+    (LaserPump -> 4) -> ScrewOp(),
+    (Frame.SizeB -> 2) -> ScrewOp(),
+    (ShipPowerAdapter -> 1) -> ScrewOp(),
+    (Screw.TypeIIB -> 12) -> ScrewOp(),
+    (Screw.TypeIB -> 18) -> ScrewOp()
     )
 }
 
 case object CryoCasket extends ItemKind {
    val name = "CryoCasket"
    val description = "A top-of-the-line system for maintaining a human alive at low temperature"
-   val parts = Seq(Refrigerator -> 2, Frame.SizeD -> 4, Screw.TypeIA -> 2)
+   val parts = Seq(
+    (Refrigerator -> 2) -> ScrewOp(), 
+    (Frame.SizeD -> 4) -> ScrewOp(), 
+    (Screw.TypeIA -> 2) -> ScrewOp()
+    )
 }
 
 case object HoloNote extends ItemKind {
   val name = "holonote"
   val description = "A small cube that projects a 3D holographic message. A novelty, really, it's much easier to just write an e-mail."
   val parts = Seq(
-    RechargeableBattery -> 1,
-    HolographicProjector -> 1,
-    SmallPlasticCasing -> 1,
-    Microprocessor -> 1,
-    MRAMChip -> 1,
-    Screw.TypeIA -> 6
+    (RechargeableBattery -> 1) -> ScrewOp(),
+    (HolographicProjector -> 1) -> ScrewOp(),
+    (SmallPlasticCasing -> 1) -> ScrewOp(),
+    (Microprocessor -> 1) -> ScrewOp(),
+    (MRAMChip -> 1) -> ScrewOp(),
+    (Screw.TypeIA -> 6) -> ScrewOp()
   )
 }
 
 case object HolographicProjector extends ItemKind {
   val name = "holographic projector"
   val description = "A laser array and an assortment of spinning mirrors, capable of producing an ethereal full-color 3-dimensional image."
-  val parts = Seq(LaserDiode -> 3, FlatMirror -> 1, TinyDCMotor -> 1)
+  val parts = Seq(
+    (LaserDiode -> 3) -> ScrewOp(), 
+    (FlatMirror -> 1) -> ScrewOp(), 
+    (TinyDCMotor -> 1) -> ScrewOp())
 }
 
 case object Backpack extends ItemKind {
   val name = "backpack"
   val description = "A light textile bag that straps close to the body. It has a lot of pockets."
-  val parts = Seq(SyntheticFabric -> 4, NylonThread -> 2, Fastener -> 2)
+  val parts = Seq(
+    (SyntheticFabric -> 4) -> CutOp(), 
+    (NylonThread -> 2) -> CutOp(), 
+    (Fastener -> 2) -> PryOp()
+    )
 }
 
 case object FlatMirror extends ItemKind {

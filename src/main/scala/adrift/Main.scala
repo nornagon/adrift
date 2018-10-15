@@ -5,7 +5,8 @@ import adrift.worldgen.WorldGen
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val state = WorldGen.generateWorld
+    // val state = WorldGen.generateWorld
+    val state = GameState.generateWorld
     val display: Display = new GLFWDisplay
     display.init()
     display.update(state)

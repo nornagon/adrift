@@ -355,6 +355,6 @@ object GameState {
   }
 
   def generateItem(itemKind: ItemKind): Item = {
-    Item(itemKind, Seq.empty, itemKind.parts.flatMap { case (part, count) => Seq.fill(count)(generateItem(part)) })
+    Item(itemKind, Seq.empty, itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) })
   }
 }
