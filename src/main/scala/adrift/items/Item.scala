@@ -55,7 +55,7 @@ Less simple:
 case class YamlItem(
   name: String,
   description: String,
-  parts: Seq[YamlItemPart],
+  parts: Seq[YamlItemPart] = Seq.empty,
 )
 case class YamlItemPart(
   `type`: String,
@@ -68,9 +68,24 @@ object Yaml {
   import io.circe.generic.extras.Configuration
   implicit val configuration: Configuration = Configuration.default.withDefaults
 
-  def parse(reader: Reader): Seq[YamlItem] = {
+  def parse(reader: Reader): Map[String, ItemKind] = {
     val json = yaml.parser.parse(reader).fold(throw _, identity)
-    json.as[Seq[YamlItem]].fold(throw _, identity)
+    interpret(json.as[Seq[YamlItem]].fold(throw _, identity))
+  }
+
+  def interpret(items: Seq[YamlItem]): Map[String, ItemKind] = {
+    val itemsById = items.groupBy(_.name).map { case (k, v) => assert(v.size == 1); k -> v.head }
+    lazy val ret: Map[String, ItemKind] = itemsById.map { case (id, yamlItem) =>
+      id -> new ItemKind {
+        override def name = yamlItem.name
+        override def description = yamlItem.description
+        override def parts = yamlItem.parts.map { yamlPart =>
+          ((ret(yamlPart.`type`), yamlPart.count), null: Operation)
+        }
+        override def toString = s"ItemKind($name, $description, $parts)"
+      }
+    }
+    ret
   }
 }
 

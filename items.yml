@@ -1,16 +1,34 @@
-- name: screwdriver
+- type: item
+  name: screwdriver
   description: A standard K35 screwdriver, like you'd find in a koligan.
-  parts: []
   provides: [ SCREW_DRIVING ]
 
-- name: hand-held hammer
+- type: item
+  name: hand-held hammer
   description: A largely obsolete device, the hand-held hammer consists of a rigid handle and weighted head.
   parts:
     - { type: wooden rod, disassembled_with: HAMMERING }
     - { type: chunk of steel, disassembled_with: HAMMERING }
 
-- name: tiny DC motor
+- type: item
+  name: tiny DC motor
   description: A small DC motor. Could be from a remote-controlled toy or something.
   parts:
     - { type: copper wire, count: 2, disassembled_with: SOLDERING }
     - { type: magnet, count: 2 } # you just take these out with your hands once you've unsoldered the wire
+
+- type: item
+  name: wooden rod
+  description: A wooden rod.
+
+- type: item
+  name: chunk of steel
+  description: A chunk of steel
+
+- type: item
+  name: copper wire
+  description: ''
+
+- type: item
+  name: magnet
+  description: ''
