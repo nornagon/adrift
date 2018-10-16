@@ -16,10 +16,12 @@ object Furniture {
     override def opaque: Boolean = !open
 
     override val parts = Seq(
+      /*
       ModularPanel.SizeD -> 2,
       Screw.TypeIIB -> 8,
       ModularRod.SizeD -> 4,
       StepperMotor.C -> 4,
+      */
       // still needs: control circuitry, power, presence detection
     )
 

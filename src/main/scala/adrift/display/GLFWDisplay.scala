@@ -18,17 +18,17 @@ object CP437 {
     // Eggebrecht, in their infinite wisdom, decided to hardcode, _into the graphics card_, that when displaying
     // characters in the range 0xC0-0xDF, the rightmost column of pixels would be duplicated into the 9th column on the
     // screen, to avoid a gap in the line.
-    val LURD = 12*16+5
-    val LUR_ = 12*16+1
-    val LU_D = 11*16+4
-    val L_RD = 12*16+2
-    val _URD = 12*16+3
-    val __RD = 13*16+10
-    val _UR_ = 12*16+0
-    val LU__ = 13*16+9
-    val L__D = 11*16+15
-    val L_R_ = 12*16+4
-    val _U_D = 11*16+3
+    val LURD = 0xc0 + 5
+    val LUR_ = 0xc0 + 1
+    val LU_D = 0xb0 + 4
+    val L_RD = 0xc0 + 2
+    val _URD = 0xc0 + 3
+    val __RD = 0xd0 + 10
+    val _UR_ = 0xc0 + 0
+    val LU__ = 0xd0 + 9
+    val L__D = 0xb0 + 15
+    val L_R_ = 0xc0 + 4
+    val _U_D = 0xb0 + 3
   }
   val Hearts = 3
   val Diamonds = 4
@@ -73,6 +73,8 @@ object Appearance {
   }
 
   def charForItem(item: Item): Int = item.kind match {
+      // TODO: encode item display in yaml
+      /*
     case items.HoloNote => '!'
     // Tiny components `
     case items.MRAMChip => '`'
@@ -89,6 +91,7 @@ object Appearance {
     //
     case items.SmallPlasticCasing => CP437.Bullet // ⊚
     case items.CopperWire => CP437.Delta // δ
+    */
     // ???
     case _ => 2 // ☻
   }

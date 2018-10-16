@@ -7,7 +7,7 @@ import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 import scala.collection.mutable
 import scala.util.Random
 
-object WorldGen {
+case class WorldGen(items: Map[String, ItemKind]) {
   sealed trait ConnectionType {
     def rotated: ConnectionType = this
   }
@@ -214,7 +214,7 @@ object WorldGen {
         case "labLeft" =>
           state.furniture(x + 1, y + 1) = Some(Furniture.Desk)
         case "farmLeft" =>
-          state.items(x + 3, y + 3) :+= generateItem(items.LaserPump)
+          state.items(x + 3, y + 3) :+= generateItem(items("laser pump"))
         case _ =>
       }
       // center
@@ -448,7 +448,7 @@ object WorldGen {
       if (state.map(x, y).walkable) {
         if (random.nextFloat() < 1/512f) {
           //          state.items(x, y) :+= generateItem(items.HoloNote)
-          state.items(x, y) :+= generateItem(items.LaserPump)
+          state.items(x, y) :+= generateItem(items("laser pump"))
         }
       }
     }

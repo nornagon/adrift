@@ -93,6 +93,23 @@ object WaveFunctionCollapse {
       model.intVar(0, gts.size)
     }
 
+    /*
+    for (x <- 0 until width) {
+      for (y <- 0 until height / 2 - 1) {
+        val oppY = height - 1 - y
+        val northV = model.isEdge(connectivity, y*width+x, (y+1)*width+x)
+        val southV = model.isEdge(connectivity, oppY*width+x, (oppY-1)*width+x)
+        model.arithm(northV, "=", southV).post()
+
+        if (x < width-1) {
+          val northH = model.isEdge(connectivity, y * width + x, y * width + x + 1)
+          val southH = model.isEdge(connectivity, oppY * width + x, oppY * width + x + 1)
+          model.arithm(northH, "=", southH).post()
+        }
+      }
+    }
+    */
+
     // this represents the allowed tuples of (left, right, isConnected)
     // e.g. if a tuple (0, 3, true) is present in the set, it means tile 3
     // is allowed to be to the right of tile 0, and those tiles are

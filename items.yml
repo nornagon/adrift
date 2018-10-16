@@ -1,3 +1,7 @@
+#
+# Tools
+#
+
 - type: item
   name: screwdriver
   description: A standard K35 screwdriver, like you'd find in a koligan.
@@ -9,26 +13,394 @@
   parts:
     - { type: wooden rod, disassembled_with: HAMMERING }
     - { type: chunk of steel, disassembled_with: HAMMERING }
+  provides: [ HAMMERING ]
+
+- type: item
+  name: crowbar
+  description: Used during the invasion by many as a last-ditch weapon. The weight is comforting, and it's a practical tool too.
+  provides: [ PRYING ]
+
+- type: item
+  name: multi-wrench
+  description: Twisting the knob adjusts the grip size.  This is pretty much only useful for adding or removing bolts.
+  provides: [ BOLT_TURNING ]
+
+- type: item
+  name: box cutter
+  description: A sharp, virtually unbreakable tungsteel blade makes this a great tool or, in a pinch, a weapon.
+  provides: [ CUTTING ]
+
+- type: item
+  name: soldering iron
+  description: An RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components.
+  provides: [ SOLDERING ]
+
+
+#
+# Raw Materials
+#
+- type: item
+  name: copper wire
+  description: A few meters of thin copper wire.
+
+- type: item
+  name: wooden rod
+  description: A foot-long cylinder of dead tree. The tree was probably grown on Earth... it's nice to hold a piece of home in your hands.
+
+- type: item
+  name: chunk of steel
+  description: It feels cold and heavy in your hand.
+
+- type: item
+  name: magnet
+  description: A permanent ferrite magnet. It'd stick to your refrigerator.
+
+- type: item
+  name: glass plate
+  description: A small glass plate. Maybe for a small window, display screen or mirror.
+
+- type: item
+  name: aluminum foil
+  description: A small sheet of aluminum foil. Wrap a burrito or make something shiny.
+
+- type: item
+  name: sheet metal
+  description: A small sheet of some steel alloy. Make a box or plate from it.
+
+- type: item
+  name: nylon thread
+  description: A few meters of nylon thread.
+
+- type: item
+  name: synthetic fabric rag
+  description: A small section of synthetic fabric. It's extremely light and strong.
+  parts:
+    - { type: nylon thread, count: 8, disassembled_with: CUTTING }
+
+
+
+#
+# Optical components
+#
+- type: item
+  name: Z1 lens
+  description: The smallest most concave module-compatible lens available.
+- type: item
+  name: Z2 lens
+  description: A small, maximally concave module-compatible lens.
+- type: item
+  name: Z3 lens
+  description: A medium sized, maximally concave module-compatible lens.
+- type: item
+  name: Z4 lens
+  description: A large, maximally concave module-compatible lens.
+- type: item
+  name: Z5 lens
+  description: A huge, maximally concave module-compatible lens.
+- type: item
+  name: Y1 lens
+  description: A teeny-tiny, concave module-compatible lens available.
+- type: item
+  name: Y2 lens
+  description: A small, concave module-compatible lens.
+- type: item
+  name: Y3 lens
+  description: A medium sized, concave module-compatible lens.
+- type: item
+  name: Y4 lens
+  description: A large, concave module-compatible lens.
+- type: item
+  name: Y5 lens
+  description: A huge, concave module-compatible lens.
+- type: item
+  name: X1 lens
+  description: The smallest convex module-compatible lens available.
+- type: item
+  name: X2 lens
+  description: A small, convex module-compatible lens.
+- type: item
+  name: X3 lens
+  description: A medium sized, convex module-compatible lens.
+- type: item
+  name: X4 lens
+  description: A large, convex module-compatible lens.
+- type: item
+  name: X5 lens
+  description: A huge, convex module-compatible lens.
+- type: item
+  name: W1 lens
+  description: The smallest maximally convex module-compatible lens available.
+- type: item
+  name: W2 lens
+  description: A small, maximally convex module-compatible lens.
+- type: item
+  name: W3 lens
+  description: A medium sized, maximally convex module-compatible lens.
+- type: item
+  name: W4 lens
+  description: A large, maximally convex module-compatible lens.
+- type: item
+  name: W5 lens
+  description: A huge, maximally convex module-compatible lens.
+
+- type: item
+  name: Z1 mirror
+  description: The smallest most concave module-compatible mirror available.
+- type: item
+  name: Z2 mirror
+  description: A small, maximally concave module-compatible mirror.
+- type: item
+  name: Z3 mirror
+  description: A medium sized, maximally concave module-compatible mirror.
+- type: item
+  name: Z4 mirror
+  description: A large, maximally concave module-compatible mirror.
+- type: item
+  name: Z5 mirror
+  description: A huge, maximally concave module-compatible mirror.
+- type: item
+  name: Y1 mirror
+  description: A teeny-tiny, concave module-compatible mirror available.
+- type: item
+  name: Y2 mirror
+  description: A small, concave module-compatible mirror.
+- type: item
+  name: Y3 mirror
+  description: A medium sized, concave module-compatible mirror.
+- type: item
+  name: Y4 mirror
+  description: A large, concave module-compatible mirror.
+- type: item
+  name: Y5 mirror
+  description: A huge, concave module-compatible mirror.
+- type: item
+  name: X1 mirror
+  description: The smallest convex module-compatible mirror available.
+- type: item
+  name: X2 mirror
+  description: A small, convex module-compatible mirror.
+- type: item
+  name: X3 mirror
+  description: A medium sized, convex module-compatible mirror.
+- type: item
+  name: X4 mirror
+  description: A large, convex module-compatible mirror.
+- type: item
+  name: X5 mirror
+  description: A huge, convex module-compatible mirror.
+- type: item
+  name: W1 mirror
+  description: The smallest maximally convex module-compatible mirror available.
+- type: item
+  name: W2 mirror
+  description: A small, maximally convex module-compatible mirror.
+- type: item
+  name: W3 mirror
+  description: A medium sized, maximally convex module-compatible mirror.
+- type: item
+  name: W4 mirror
+  description: A large, maximally convex module-compatible mirror.
+- type: item
+  name: W5 mirror
+  description: A huge, maximally convex module-compatible mirror.
+
+#
+# Electronic parts
+#
+
+- type: item
+  name: ship power adapter
+  description: A box of electronics to adapt from ship power to any other kind of power supply.
+  parts:
+    - { type: micro e-board, count: 1, disassembled_with: SCREWING }
+    - { type: flex component, count: 21, disassembled_with: SOLDERING }
+    - { type: microprocessor, count: 1, disassembled_with: SOLDERING }
+
+- { type: item, name: "M3A power supply", description: "Ptronics smallest power supply is perfect for a phone or cat toy." }
+- { type: item, name: "M5A power supply", description: "Another small supply from Ptronics with more voltage and small amps." }
+- { type: item, name: "M7A power supply", description: "A small high voltage power supply." }
+- { type: item, name: "M3C power supply", description: "MegaMicro made this supply to fill a gap in Ptronics line of power supplies." }
+- { type: item, name: "M5C power supply", description: "Ptronics most popular power supply. Used as bricks in some countries." }
+- { type: item, name: "M7C power supply", description: "If you touch this power supply wrong, you'll probably die." }
+- { type: item, name: "M3E power supply", description: "A low voltage, high amperage supply from your friends at Ptronics." }
+- { type: item, name: "M5E power supply", description: "An off-brand copy of the popular Ptronics M5E unit... someone was trying to save money here." }
+- { type: item, name: "M7E power supply", description: "This beast of a power supply compensates for inefficiency with even more power." }
+
+- type: item
+  name: micro e-board
+  description: A small modular electronics substrate.
+- type: item
+  name: standard e-board
+  description: A normal modular electronics substrate.
+- type: item
+  name: mega e-board
+  description: A huge modular electronics substrate.
+
+- type: item
+  name: flex component
+  description: A single part that can serve as any of a huge number of possible electronic components depending on how it's configured.
 
 - type: item
   name: tiny DC motor
   description: A small DC motor. Could be from a remote-controlled toy or something.
   parts:
-    - { type: copper wire, count: 2, disassembled_with: SOLDERING }
-    - { type: magnet, count: 2 } # you just take these out with your hands once you've unsoldered the wire
+    - { type: copper wire, count: 2, disassembled_with: CUTTING }
+    - { type: magnet, count: 1, disassembled_with: HAND }
 
 - type: item
-  name: wooden rod
-  description: A wooden rod.
+  name: C-size stepper motor
+  description: A motor this size puts out more force than a human can.
 
 - type: item
-  name: chunk of steel
-  description: A chunk of steel
+  name: MRAM chip
+  description: A magnetic memory chip. You'd need to attach it to a computer to read or write its contents.
 
 - type: item
-  name: copper wire
-  description: ''
+  name: microprocessor
+  description: "The part number is written on the chip: BCM2837RIFBG."
 
 - type: item
-  name: magnet
-  description: ''
+  name: laser diode
+  description: A weak laser diode. Probably still shouldn't look directly into it, though.
+
+- type: item
+  name: rechargeable battery
+  description: A rechargeable copper foam substrate battery. Popular in RC toys. Safe and long-lasting.
+
+- type: item
+  name: small plastic casing
+  description: A small plastic box that can be screwed shut.
+
+#
+# Fasteners
+#
+
+- { type: item, name: "type IA screw", description: "A small, carbon-printed type IA screw, like you'd find in any cheap device these days." }
+- { type: item, name: "type IIA screw", description: "A carbon-printed type IIA screw, mostly used for small high quality components." }
+- { type: item, name: "type IIIA screw", description: "A carbon-printed type IIIA screw, for ultimate precision in micro devices." }
+- { type: item, name: "type IB screw", description: "A carbon-printed type IB screw, used when you need to hold large things together, but not too well." }
+- { type: item, name: "type IIB screw", description: "A carbon-printed type IIB screw, the standard in affixing human-scale objects." }
+- { type: item, name: "type IIIB screw", description: "A carbon-printed type IIIB screw, for maximum strength and precision in large objects." }
+- { type: item, name: "type IC screw", description: "A carbon-printed type IC screw, for bolting together huge plastic crap." }
+- { type: item, name: "type IIC screw", description: "A carbon-printed type IIC screw, for holding an engine in a car or similar applications." }
+- { type: item, name: "type IIIC screw", description: "A carbon-printed type IIIC screw, for when you need to keep the wings on your supersonic fighter." }
+
+- type: item
+  name: fastener
+  description: A small metal connector, with two parts easily attached and detached from one another by hand.
+
+#
+# Modular item pieces
+#
+
+- { type: item, name: "A-size modular panel", description: "A variable-size modular panel used in constructing micro-scale structural frames." }
+- { type: item, name: "B-size modular panel", description: "A variable-size modular panel used in constructing small structural frames." }
+- { type: item, name: "C-size modular panel", description: "A variable-size modular panel used in constructing breadbox-sized structural frames." }
+- { type: item, name: "D-size modular panel", description: "A variable-size modular panel used in constructing large structural frames." }
+- { type: item, name: "E-size modular panel", description: "A variable-size modular panel used in constructing colossal structural frames." }
+
+- { type: item, name: "A-size modular rod", description: "A variable-length modular rod used in constructing micro-scale structural frames" }
+- { type: item, name: "B-size modular rod", description: "A variable-length modular rod used in constructing small structural frames" }
+- { type: item, name: "C-size modular rod", description: "A variable-length modular rod used in constructing breadbox-sized structural frames" }
+- { type: item, name: "D-size modular rod", description: "A variable-length modular rod used in constructing large structural frames" }
+- { type: item, name: "E-size modular rod", description: "A variable-length modular rod used in constructing colossal structural frames" }
+
+- type: item
+  name: A-size frame
+  description: A micro-scale structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "A-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "A-size modular panel", count: 6, disassembled_with: SCREWING }
+- type: item
+  name: B-size frame
+  description: A small structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "B-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "B-size modular panel", count: 6, disassembled_with: SCREWING }
+- type: item
+  name: C-size frame
+  description: A structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "C-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "C-size modular panel", count: 6, disassembled_with: SCREWING }
+- type: item
+  name: D-size frame
+  description: A large structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "D-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "D-size modular panel", count: 6, disassembled_with: SCREWING }
+- type: item
+  name: E-size frame
+  description: A massive structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "E-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "E-size modular panel", count: 6, disassembled_with: SCREWING }
+
+# Composite Items/furniture likely found in Cryo/medical/crew quarters
+
+- type: item
+  name: laser pump
+  description: A device that uses laser power to pressurize or depressurize a volume.
+  parts:
+    - { type: A-size frame, count: 2, disassembled_with: SCREWING }
+    - { type: B-size frame, count: 1, disassembled_with: SCREWING }
+    - { type: laser diode, count: 6, disassembled_with: SCREWING }
+    - { type: Z1 lens, count: 2, disassembled_with: SCREWING }
+    - { type: Y1 mirror, count: 6, disassembled_with: SCREWING }
+    - { type: Y1 lens, count: 6, disassembled_with: SCREWING }
+    - { type: W2 lens, count: 6, disassembled_with: SCREWING }
+    - { type: W2 lens, count: 6, disassembled_with: SCREWING }
+    - { type: micro e-board, count: 2, disassembled_with: SCREWING }
+    - { type: M5C power supply, count: 1, disassembled_with: SCREWING }
+    - { type: type IC screw, count: 12, disassembled_with: SCREWING }
+
+- type: item
+  name: refrigerator
+  description: This industrial cooler can suck a lot of heat out of an attached volume.
+  parts:
+    - { type: C-size frame, count: 1, disassembled_with: SCREWING }
+    - { type: laser pump, count: 4, disassembled_with: SCREWING }
+    - { type: B-size frame, count: 2, disassembled_with: SCREWING }
+    - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
+    - { type: type IIB screw, count: 12, disassembled_with: SCREWING }
+    - { type: type IB screw, count: 18, disassembled_with: SCREWING }
+
+- type: item
+  name: cryocasket
+  description: A top-of-the-line system for maintaining a human alive at low temperature.
+  parts:
+    - { type: refrigerator, count: 2, disassembled_with: SCREWING }
+    - { type: D-size frame, count: 4, disassembled_with: SCREWING }
+    - { type: type IA screw, count: 2, disassembled_with: SCREWING }
+
+- type: item
+  name: holonote
+  description: A small cube that projects a 3D holographic message. A novelty, really, it's much easier to just write an e-mail.
+  parts:
+    - { type: rechargeable battery, disassembled_with: SCREWING }
+    - { type: holographic projector, disassembled_with: SCREWING }
+    - { type: small plastic casing, disassembled_with: SCREWING }
+    - { type: microprocessor, disassembled_with: SOLDERING }
+    - { type: MRAM chip, disassembled_with: SOLDERING }
+    - { type: type IA screw, count: 6, disassembled_with: SCREWING }
+
+
+- type: item
+  name: holographic projector
+  description: A laser array and an assortment of spinning mirrors, capable of producing an ethereal full-color 3-dimensional image.
+  parts:
+    - { type: laser diode, count: 3, disassembled_with: SOLDERING }
+    - { type: flat mirror, disassembled_with: SCREWING }
+    - { type: tiny DC motor, disassembled_with: SOLDERING }
+
+- type: item
+  name: backpack
+  description: A light textile bag that straps close to the body. It has a lot of pockets.
+  parts:
+    - { type: synthetic fabric rag, count: 4, disassembled_with: CUTTING }
+    - { type: nylon thread, count: 2, disassembled_with: CUTTING }
+    - { type: fastener, count: 2, disassembled_with: CUTTING }
+
+- type: item
+  name: flat mirror
+  description: A small mirror. Your face looks strange, as if it belongs to someone else.
