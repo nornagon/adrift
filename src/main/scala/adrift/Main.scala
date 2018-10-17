@@ -1,15 +1,14 @@
 package adrift
 
-import java.io.FileReader
+import java.nio.file.Paths
 
 import adrift.display.{Display, GLFWDisplay}
-import adrift.items.Yaml
 import adrift.worldgen.WorldGen
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val items = Yaml.parse(new FileReader("items.yml"))
-    val state = WorldGen(items).generateWorld
+    val data = Data.parse(Paths.get("data"))
+    val state = WorldGen(data).generateWorld
     val display: Display = new GLFWDisplay
     display.init()
     display.update(state)

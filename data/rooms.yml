@@ -1,0 +1,133 @@
+- type: terrain
+  name: floor
+
+- type: terrain
+  name: wall
+
+- type: room
+  name: quarters
+  rotatable: true
+  flippable: true
+  layout: |
+    ==.DD
+    t....
+    ---..
+    dc...
+    d....
+  connections:
+    down: DOOR
+  default_terrain: floor
+  defs:
+    .: { terrain: floor }
+    =: { furniture: bed }
+    -: { terrain: wall }
+    d: { furniture: desk }
+    c: { furniture: chair }
+    D: { furniture: closet, items: { group: clothing, count: 2 } }
+    t: { furniture: side table }
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: lab
+  layout: |
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+  connections:
+    "0,0 down": DOOR
+  rotatable: true
+
+- type: room
+  name: hall
+  layout: |
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+  connections:
+    "0,1 down": DOOR
+  rotatable: true
+
+- type: room
+  name: corridor
+  layout: &corridor-layout |
+    .....
+    .....
+    .....
+    .....
+    .....
+  connections:
+    0,0 left: OPEN
+    0,0 right: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor with door
+  layout: *corridor-layout
+  connections:
+    0,0 left: OPEN
+    0,0 up: DOOR
+    0,0 right: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor T
+  layout: *corridor-layout
+  connections:
+    0,0 left: OPEN
+    0,0 right: OPEN
+    0,0 up: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor X
+  layout: *corridor-layout
+  connections:
+    0,0 left: OPEN
+    0,0 right: OPEN
+    0,0 up: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor end
+  layout: *corridor-layout
+  connections:
+    0,0 left: OPEN
+  rotatable: true
+
+- type: item_group
+  name: clothing
+  choose:
+    - { group: shirt }
+    - { group: pants }
+    - { group: dress }
+    - { group: shoes }
+    - { group: work clothes }
+    - { group: underwear }
+
+- type: item_group
+  name: shirt
+  choose:
+    - { item: t-shirt }
+    - { item: dress shirt }
+    - { item: long-sleeve uniform shirt }
+
+- type: item_group
+  name: bedding
+  choose:
+    - { item: bedsheet }
+    - { item: duvet }
+    - { item: pillow }

@@ -7,14 +7,14 @@ import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 import scala.collection.mutable
 import scala.util.Random
 
-case class WorldGen(items: Map[String, ItemKind]) {
+case class WorldGen(data: Data) {
   sealed trait ConnectionType {
     def rotated: ConnectionType = this
   }
   case object Open extends ConnectionType
   case object Wall extends ConnectionType
   case object Door extends ConnectionType
-  case class Internal(i: Int, r: Int = 0) extends ConnectionType {
+  case class Internal(s: String, r: Int = 0) extends ConnectionType {
     override def rotated: Internal = copy(r = (r + 1) % 4)
   }
 
@@ -25,7 +25,7 @@ case class WorldGen(items: Map[String, ItemKind]) {
     up: ConnectionType,
     down: ConnectionType,
     rotatable: Boolean = false,
-    rotation: Int = 0
+    rotation: Int = 0,
   ) {
     def rotated: Room = copy(
       left = up.rotated,
@@ -35,54 +35,54 @@ case class WorldGen(items: Map[String, ItemKind]) {
       rotation = (rotation + 1) % 4
     )
   }
-  val corridor = Room(
-    "corridor",
-    left = Open,
-    right = Open,
-    up = Wall,
-    down = Wall,
-    rotatable = true
-  )
-  val corridorWithDoor = Room(
-    "corridor",
-    left = Open,
-    right = Open,
-    up = Door,
-    down = Wall,
-    rotatable = true
-  )
-  val corridorEnd = Room(
-    "corridor",
-    left = Wall,
-    right = Open,
-    up = Wall,
-    down = Wall,
-    rotatable = true
-  )
-  val quarters = Room(
-    "quarters",
-    left = Wall,
-    right = Wall,
-    up = Wall,
-    down = Door,
-    rotatable = true
-  )
-  val corridorX = Room(
-    "corridor",
-    left = Open,
-    right = Open,
-    up = Open,
-    down = Open,
-  )
-  val corridorT = Room(
-    "corridor",
-    left = Wall,
-    right = Open,
-    up = Open,
-    down = Open,
-    rotatable = true
-  )
 
+  def conn(s: String): ConnectionType = s match {
+    case "DOOR" => Door
+    case "OPEN" => Open
+    case _ => Wall
+  }
+
+  val rooms = data.rooms.values.toList.flatMap { rd =>
+    val layout = rd.layout.split("\n").map(_.chars.toArray)
+    assert(layout.length > 0, s"${rd.name}: empty layout")
+    assert(layout.forall(_.length == layout(0).length), s"${rd.name}: mismatched layout")
+    // valid room dimensions: 5, 11, 17, 23
+    // i.e. v = k*6-1
+    //  ==> (v+1) / 6 = k
+    assert((layout.length + 1) / 6 * 6 == layout.length + 1, s"${rd.name}: non-multiple-of-5 layout")
+    assert((layout(0).length + 1) / 6 * 6 == layout(0).length + 1, s"${rd.name}: non-multiple-of-5 layout")
+
+    for (y <- 0 until (layout.length + 1) / 6; x <- 0 until (layout(0).length + 1) / 6) yield {
+      val left = rd.connections.get(s"$x,$y left").map(conn).getOrElse {
+        if (x == 0) Wall
+        else Internal(s"${rd.name} ${x-1},$y h")
+      }
+      val right = rd.connections.get(s"$x,$y right").map(conn).getOrElse {
+        if (x == layout(0).length / 5 - 1) Wall
+        else Internal(s"${rd.name} $x,$y h")
+      }
+      val up = rd.connections.get(s"$x,$y up").map(conn).getOrElse {
+        if (y == 0) Wall
+        else Internal(s"${rd.name} $x,${y-1} v")
+      }
+      val down = rd.connections.get(s"$x,$y down").map(conn).getOrElse {
+        if (y == layout.length / 5 - 1) Wall
+        else Internal(s"${rd.name} $x,$y v")
+      }
+      Room(
+        name = rd.name,
+        left = left,
+        right = right,
+        up = up,
+        down = down,
+        rotatable = rd.rotatable,
+      )
+    }
+  }
+  println(rooms)
+
+
+  /*
   val labLeft = Room(
     "labLeft",
     left = Wall,
@@ -132,6 +132,7 @@ case class WorldGen(items: Map[String, ItemKind]) {
     down = Internal(4),
     rotatable = true
   )
+  */
 
   class RoomTiles(rooms: Seq[Room]) extends GraphTileSet {
     val expanded: Seq[Room] = rooms.flatMap {
@@ -165,11 +166,7 @@ case class WorldGen(items: Map[String, ItemKind]) {
     for ((x, y) <- state.map.indices) {
       state.map(x, y) = Terrain.Wall
     }
-    val tiles = new RoomTiles(Seq(corridor, corridorWithDoor, corridorEnd, corridorX, corridorT,
-      quarters,
-      labLeft, labRight,
-      farmLeft, farmRight, farmTopLeft, farmTopRight,
-    ))
+    val tiles = new RoomTiles(rooms)
     val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
     val ss = s.get
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
@@ -214,7 +211,7 @@ case class WorldGen(items: Map[String, ItemKind]) {
         case "labLeft" =>
           state.furniture(x + 1, y + 1) = Some(Furniture.Desk)
         case "farmLeft" =>
-          state.items(x + 3, y + 3) :+= generateItem(items("laser pump"))
+          state.items(x + 3, y + 3) :+= generateItem(data.items("laser pump"))
         case _ =>
       }
       // center
@@ -447,8 +444,7 @@ case class WorldGen(items: Map[String, ItemKind]) {
         state.map(x, y) = if (random.nextFloat() < 0.3) Terrain.TreeFicus else Terrain.TreeOak
       if (state.map(x, y).walkable) {
         if (random.nextFloat() < 1/512f) {
-          //          state.items(x, y) :+= generateItem(items.HoloNote)
-          state.items(x, y) :+= generateItem(items("laser pump"))
+          state.items(x, y) :+= generateItem(data.items("laser pump"))
         }
       }
     }

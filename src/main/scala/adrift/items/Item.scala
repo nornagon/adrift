@@ -56,75 +56,11 @@ Less simple:
 
  */
 
-trait ItemKind {
-  def name: String
-  def description: String
-  def parts: Seq[((ItemKind, Int),Operation)]
-}
-
-case class ItemKindForReal(
+case class ItemKind(
   name: String,
   description: String,
   parts: Seq[((ItemKind, Int), Operation)]
-) extends ItemKind
-
-sealed trait YamlObject
-object YamlObject {
-  case class ItemKind(
-    name: String,
-    description: String,
-    parts: Seq[ItemPart] = Seq.empty
-  ) extends YamlObject
-
-  case class ItemPart(
-    `type`: String,
-    disassembled_with: String = "hand",
-    count: Int = 1
-  )
-
-  case class Operation(id: String) extends YamlObject
-}
-
-object Yaml {
-  import io.circe.generic.extras.Configuration
-  import io.circe.generic.extras.auto._
-  import io.circe.yaml
-
-  implicit val configuration: Configuration = Configuration.default.withDefaults
-
-  class ParseError(error: String, cause: Throwable) extends RuntimeException(error, cause)
-
-  def parse(reader: Reader): Map[String, ItemKind] = {
-    val objsByType = yaml.parser.parse(reader)
-      .flatMap(_.as[Seq[Json]])
-      .map(_.groupBy(_.hcursor.get[String]("type").right.get))
-      .fold(throw _, identity)
-    val items = objsByType("item").map(itemObj => itemObj.as[YamlObject.ItemKind].fold(ex => throw new ParseError(s"$itemObj", ex), identity))
-    parseItems(items)
-  }
-
-  def parseItems(items: Seq[YamlObject.ItemKind]): Map[String, ItemKind] = {
-    val itemsById = items.groupBy(_.name).map {
-      case (k, v) =>
-        assert(v.size == 1, s"more than one item with the name '$k'")
-        k -> v.head
-    }
-    val lazyMap = mutable.Map.empty[String, ItemKind]
-    def itemForId(id: String): ItemKind = {
-      lazyMap.getOrElseUpdate(id, {
-        val i = itemsById(id)
-        ItemKindForReal(
-          i.name,
-          i.description,
-          i.parts.map { p =>
-            ((itemForId(p.`type`), p.count), HandleOp() /* TODO */)
-          }
-        )
-      })
-    }
-    itemsById.map { case (k, _) => k -> itemForId(k) }
-  }
-}
+)
 
 trait ItemCondition {
   def functional: Boolean = false
