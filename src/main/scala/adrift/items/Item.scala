@@ -73,6 +73,38 @@ case class Item(
 ) {
   def functional: Boolean = conditions.forall(_.functional) && parts.forall(_.functional)
 }
+case object Item 
+  {
+  val item_display:Map[String,Int] = Map(
+    "SMALL_TOOL" -> 0x74,       // t
+    "TOOL" -> 0x54 ,            // T
+    "RAW_THIN" -> 0x09 ,        // ○ 
+    "RAW_ROD" -> 0x7C ,         // |
+    "RAW_BLOCK" -> 0x23 ,       // #
+    "RAW_PLATE" -> 0x04 ,       // ♦
+    "RAW_CLOTH" -> 0xB0 ,       // ░
+    "OPTICAL" -> 0x28 ,         // (
+    "SMALL_BOX" -> 0x6E ,       // n
+    "MEDIUM_BOX" -> 0xEF ,      // ∩
+    "LARGE_BOX" -> 0x55 ,       // U
+    "SMALL_PLATE" -> 0xA9 ,     // ⌐
+    "MEDIUM_PLATE" -> 0xE2 ,    // Γ
+    "LARGE_PLATE" -> 0x4C ,     // L
+    "SMALL_COMPONENT" -> 0xFA , // ·
+    "MEDIUM_COMPONENT" -> 0xF9 ,// ∙
+    "LARGE_COMPONENT" -> 0xF8 , // °
+    "SMALL_ROD" -> 0x27 ,       // '
+    "MEDIUM_ROD" -> 0x21 ,      // !
+    "LARGE_ROD" -> 0x2F ,       // /
+    "SMALL_PART" -> 0x87 ,      // ç
+    "SMALL_EQUIPMENT" -> 0x2D , // -
+    "MEDIUM_EQUIPMENT" -> 0x3D ,// =
+    "LARGE_EQUIPMENT" -> 0xF0 , // ≡
+    "HUMAN_EQUIPMENT" -> 0xE9 , // Θ
+    "CLOTHING" -> 0x43          // C
+    )
+  }
+
 
 case class Charge(kwh: Double, maxKwh: Double) extends ItemCondition {
   override def functional: Boolean = kwh > 0
@@ -94,4 +126,5 @@ case class PryOp() extends Operation
 case class HammerOp() extends Operation
 case class CutOp() extends Operation
 case class SolderOp() extends Operation
+
 
