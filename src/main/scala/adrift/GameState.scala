@@ -33,6 +33,11 @@ class GameState(width: Int, height: Int) {
         val item = removeItem(location)
         items(player) ++= item.parts
         message = Some(s"You take apart the ${item.kind.name}.")
+      case Assemble(item) => {
+        // if item in buildableItems() {   // handle in ui?
+          items(player) :+= item
+        // }
+      }
       case PickUp(location) =>
         if (hands.contents.size < hands.maxItems) {
           val item = removeItem(location)
@@ -114,4 +119,34 @@ class GameState(width: Int, height: Int) {
       hands.contents.remove(index)
       item
   }
+  def addItem(item: Item, location: OnFloor) = {
+    items(location.x, location.y) :+ item
+  }
+  def buildableItems(availableItems: Seq[Item]): Seq[Item] = {
+    val availableOps: Seq(Operation) = Seq()
+    for (item <- availableItems) match {
+      case t: Tool() =>  availableOps :+ t.provides()
+      case _ => 
+    }
+    var itemIndex: Map(ItemKind,Int) = Map()
+    foreach (item<-availableItems) {
+      if itemIndex.keys.contains(item.kind) {
+        itemIndex(item.kind) += 1
+      } else {
+        itemIndex = itemIndex + (item.kind -> 1)
+      }
+    }
+    val constructable: Seq(ItemKind) = Data.items.values.filter(i => i.parts.len>0)
+    def buildable(item: ItemKind, available: Map(ItemKind,Int)): Boolean = {
+      // Call this function recursively on the parts of the item
+      if item 
+
+      item.parts.flatmap(((kind,qty),op) => {
+        if availableOps.contains(op) {
+          if available.keys.contains(kind)  
+        }
+        })
+    }
+  }
+
 }

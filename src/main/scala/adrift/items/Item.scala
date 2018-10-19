@@ -126,5 +126,3 @@ case class PryOp() extends Operation
 case class HammerOp() extends Operation
 case class CutOp() extends Operation
 case class SolderOp() extends Operation
-
-
