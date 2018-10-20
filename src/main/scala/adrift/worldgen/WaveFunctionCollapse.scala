@@ -126,9 +126,22 @@ object WaveFunctionCollapse {
       allowedVertical.add(t1, t2, if (connectedVertically) 1 else 0)
     }
 
+    val leftEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(-1, t)) yield t)(collection.breakOut)
+    val rightEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(t, -1)) yield t)(collection.breakOut)
+    val topEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedVertical(-1, t)) yield t)(collection.breakOut)
+    val bottomEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedVertical(t, -1)) yield t)(collection.breakOut)
+
     // restrict the tile choice to those that can be placed next to each other, and
     // enforce that the connectivity map matches the tile choice
     for (y <- 0 until height; x <- 0 until width) {
+      if (x == 0)
+        model.member(tiles(y*width+x), leftEdgeAllowed).post()
+      if (x == width - 1)
+        model.member(tiles(y*width+x), rightEdgeAllowed).post()
+      if (y == 0)
+        model.member(tiles(y*width+x), topEdgeAllowed).post()
+      if (y == height - 1)
+        model.member(tiles(y*width+x), bottomEdgeAllowed).post()
       if (x < width - 1) {
         val connectedRight = model.isEdge(connectivity, y*width+x, y*width+x+1)
         model.table(

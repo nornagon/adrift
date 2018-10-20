@@ -26,6 +26,7 @@ case class WorldGen(data: Data) {
     down: ConnectionType,
     rotatable: Boolean = false,
     rotation: Int = 0,
+    fill: Option[(GameState, (Int, Int) => (Int, Int)) => Unit]
   ) {
     def rotated: Room = copy(
       left = up.rotated,
@@ -52,6 +53,16 @@ case class WorldGen(data: Data) {
     assert((layout.length + 1) / 6 * 6 == layout.length + 1, s"${rd.name}: non-multiple-of-5 layout")
     assert((layout(0).length + 1) / 6 * 6 == layout(0).length + 1, s"${rd.name}: non-multiple-of-5 layout")
 
+    def doFill(s: GameState, xf: (Int, Int) => (Int, Int)): Unit = {
+      for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex) {
+        val (tx, ty) = xf(x, y)
+        if (cell == '.')
+          s.map(tx, ty) = Terrain.Floor
+        else
+          s.map(tx, ty) = Terrain.Wall
+      }
+    }
+
     for (y <- 0 until (layout.length + 1) / 6; x <- 0 until (layout(0).length + 1) / 6) yield {
       val left = rd.connections.get(s"$x,$y left").map(conn).getOrElse {
         if (x == 0) Wall
@@ -76,63 +87,10 @@ case class WorldGen(data: Data) {
         up = up,
         down = down,
         rotatable = rd.rotatable,
+        fill = if (x == 0 && y == 0) Some(doFill _) else None
       )
     }
   }
-  println(rooms)
-
-
-  /*
-  val labLeft = Room(
-    "labLeft",
-    left = Wall,
-    right = Internal(1),
-    up = Wall,
-    down = Door,
-    rotatable = true
-  )
-  val labRight = Room(
-    "labRight",
-    left = Internal(1),
-    right = Wall,
-    up = Wall,
-    down = Wall,
-    rotatable = true
-  )
-
-  val farmLeft = Room(
-    "farmLeft",
-    left = Wall,
-    right = Internal(2),
-    up = Internal(3),
-    down = Door,
-    rotatable = true
-  )
-  val farmRight = Room(
-    "farmRight",
-    left = Internal(2),
-    right = Wall,
-    up = Internal(4),
-    down = Wall,
-    rotatable = true
-  )
-  val farmTopLeft = Room(
-    "farmTopLeft",
-    left = Wall,
-    right = Internal(5),
-    up = Wall,
-    down = Internal(3),
-    rotatable = true
-  )
-  val farmTopRight = Room(
-    "farmTopRight",
-    left = Internal(5),
-    right = Wall,
-    up = Wall,
-    down = Internal(4),
-    rotatable = true
-  )
-  */
 
   class RoomTiles(rooms: Seq[Room]) extends GraphTileSet {
     val expanded: Seq[Room] = rooms.flatMap {
@@ -146,10 +104,14 @@ case class WorldGen(data: Data) {
     def interpret(result: Seq[Seq[Int]]): Seq[Seq[Room]] = result.map(_.map(expanded))
 
     override def allowedHorizontal(left: Int, right: Int): Boolean =
-      expanded(left).right == expanded(right).left
+      if (left == -1) expanded(right).left == Wall
+      else if (right == -1) expanded(left).right == Wall
+      else expanded(left).right == expanded(right).left
 
     override def allowedVertical(top: Int, bottom: Int): Boolean =
-      expanded(top).down == expanded(bottom).up
+      if (top == -1) expanded(bottom).up == Wall
+      else if (bottom == -1) expanded(top).down == Wall
+      else expanded(top).down == expanded(bottom).up
 
     override def connectedHorizontal(left: Int, right: Int): Boolean =
       expanded(left).right != Wall
@@ -159,7 +121,7 @@ case class WorldGen(data: Data) {
   }
 
   def generateWorld: GameState = {
-    val random = new Random(51)
+    val random = new Random(52)
     val width = 40
     val height = 40
     val state = new GameState(width * 6, height * 6)
@@ -216,6 +178,24 @@ case class WorldGen(data: Data) {
       }
       // center
       for (dx <- 1 to 5; dy <- 1 to 5) state.map(x + dx, y + dy) = Terrain.Floor
+    }
+    for (ty <- 0 until height; tx <- 0 until width) {
+      val room = ss(tx)(ty)
+      for (fill <- room.fill) {
+        val (ox, oy) = room.rotation match {
+          case 0 => (tx*6+1, ty*6+1)
+          case 1 => (tx*6+1, ty*6+5)
+          case 2 => (tx*6+5, ty*6+5)
+          case 3 => (tx*6+5, ty*6+1)
+        }
+        val xf: (Int, Int) => (Int, Int) = room.rotation match {
+          case 0 => (x, y) => (ox + x, oy + y)
+          case 1 => (x, y) => (ox + y, oy - x)
+          case 2 => (x, y) => (ox - x, oy - y)
+          case 3 => (x, y) => (ox - y, oy + x)
+        }
+        fill(state, xf)
+      }
     }
     state.movePlayer(width*3 + 3, height*3 + 3)
     state
