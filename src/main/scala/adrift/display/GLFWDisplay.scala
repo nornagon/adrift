@@ -484,10 +484,10 @@ class GLFWDisplay extends Display {
   }
 
   def render(state: GameState): Unit = {
-    val windowWidthChars = 80
-    val windowHeightChars = 48
-    val screenCharWidth = 16
-    val screenCharHeight = 16
+    val windowWidthChars = 80*2
+    val windowHeightChars = 48*2
+    val screenCharWidth = 16/2
+    val screenCharHeight = 16/2
     val worldHeightChars = windowHeightChars - 1
     val wBuf = BufferUtils.createIntBuffer(1)
     val hBuf = BufferUtils.createIntBuffer(1)
