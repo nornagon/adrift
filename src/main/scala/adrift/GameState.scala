@@ -3,7 +3,6 @@ package adrift
 import adrift.Action._
 import adrift.items.Item
 import adrift.items.ItemKind
-import adrift.items.Tool
 import adrift.items.Operation
 
 import scala.collection.mutable
@@ -130,32 +129,25 @@ class GameState(width: Int, height: Int, data: Data) {
 
   def buildableItems(availableItems: Seq[Item]): Seq[ItemKind] = {
     // First put together a list of operations we can do with the tools in our area
-    val availableOps: Seq[Operation] = Seq()
-    for (item <- availableItems) item match {
-      case t: Tool =>  availableOps :+ t.provides
-      case _ => 
-    }
+    var availableOps: Seq[Operation] = Seq()
+    for (item <- availableItems) availableOps ++= item.kind.provides
     // Make a map of the available item kinds and quantities
     var itemIndex: mutable.Map[ItemKind, Int] = mutable.Map()
     availableItems foreach { 
       case (item) => {
         if (itemIndex.contains(item.kind)) {
           val qty: Int = itemIndex(item.kind) + 1
-          itemIndex = itemIndex - item.kind
           itemIndex = itemIndex + (item.kind -> qty)
         } else {
           itemIndex = itemIndex + (item.kind -> 1)
         }
       }
     }
-    // recursively go through each kind of item and 
-    // val constructable: Seq[ItemKind] = data.items.values.filter(i => i.parts.length>0)
-    
-    def buildable(item: ItemKind): Boolean = {
+
+    def buildable(item: ItemKind, itemIndex: mutable.Map[ItemKind, Int]): Boolean = {
       if (itemIndex.contains(item)) {
         val qty = itemIndex(item)
         if (qty > 0) {
-          itemIndex -= item
           itemIndex += (item -> (qty - 1))
           return true
         } else {
@@ -167,7 +159,7 @@ class GameState(width: Int, height: Int, data: Data) {
         if (availableOps.contains(op)) {
           var q = qty
           while (q > 0) {
-            if (buildable(kind)) {
+            if (buildable(kind, itemIndex)) {
               q = q - 1
             } else {
               return false
@@ -179,6 +171,6 @@ class GameState(width: Int, height: Int, data: Data) {
       }
       true
     }
-    data.items.values.toSeq.filter(itemkind => buildable(itemkind))
+    data.items.values.toSeq.filter(itemkind => buildable(itemkind, itemIndex))
   }
 }
