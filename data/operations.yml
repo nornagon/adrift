@@ -1,0 +1,20 @@
+- type: operation
+  id: SCREWING
+
+- type: operation
+  id: HAMMERING
+
+- type: operation
+  id: PRYING
+
+- type: operation
+  id: BOLT_TURNING
+
+- type: operation
+  id: CUTTING
+
+- type: operation
+  id: SOLDERING
+
+- type: operation
+  id: HANDLING

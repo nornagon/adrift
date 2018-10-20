@@ -59,7 +59,8 @@ Less simple:
 case class ItemKind(
   name: String,
   description: String,
-  parts: Seq[((ItemKind, Int), Operation)],
+  parts: Seq[((ItemKind, Int), ItemOperation)],
+  provides: Seq[ItemOperation],
 )
 
 trait ItemCondition {
@@ -114,17 +115,4 @@ case class BurntOut() extends ItemCondition
 case class Rusted() extends ItemCondition
 case class DoorOpen() extends ItemCondition
 
-
-trait Tool {
-  def provides: Operation
-}
-trait Operation{}
-case class HandleOp() extends Operation
-case class ScrewOp() extends Operation
-case class BoltOp() extends Operation
-case class PryOp() extends Operation
-case class HammerOp() extends Operation
-case class CutOp() extends Operation
-case class SolderOp() extends Operation
-
-
+case class ItemOperation(id: String)

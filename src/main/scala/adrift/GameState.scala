@@ -2,6 +2,8 @@ package adrift
 
 import adrift.Action._
 import adrift.items.{DoorOpen, Item}
+import adrift.items.ItemKind
+import adrift.items.ItemOperation
 
 import scala.collection.mutable
 
@@ -32,6 +34,11 @@ class GameState(data: Data, width: Int, height: Int) {
         val item = removeItem(location)
         items(player) ++= item.parts
         message = Some(s"You take apart the ${item.kind.name}.")
+      case Assemble(item,location) => {
+        // if item in buildableItems() {   // handle in ui?
+          items(player) :+= item
+        // }
+      }
       case PickUp(location) =>
         if (hands.contents.size < hands.maxItems) {
           val item = removeItem(location)
@@ -99,6 +106,7 @@ class GameState(data: Data, width: Int, height: Int) {
     })
     visible = newVisible.toSet
   }
+
   def isVisible(x: Int, y: Int): Boolean = isVisible((x, y))
   def isVisible(p: (Int, Int)): Boolean = visible contains p
 
@@ -118,5 +126,56 @@ class GameState(data: Data, width: Int, height: Int) {
       val item = hands.contents(index)
       hands.contents.remove(index)
       item
+  }
+
+  def addItem(item: Item, location: OnFloor) = {
+    items(location.x, location.y) :+ item
+  }
+
+  def buildableItems(availableItems: Seq[Item]): Seq[ItemKind] = {
+    // First put together a list of operations we can do with the tools in our area
+    var availableOps: Seq[ItemOperation] = Seq()
+    for (item <- availableItems) availableOps ++= item.kind.provides
+    // Make a map of the available item kinds and quantities
+    var itemIndex: mutable.Map[ItemKind, Int] = mutable.Map()
+    availableItems foreach {
+      case (item) => {
+        if (itemIndex.contains(item.kind)) {
+          val qty: Int = itemIndex(item.kind) + 1
+          itemIndex = itemIndex + (item.kind -> qty)
+        } else {
+          itemIndex = itemIndex + (item.kind -> 1)
+        }
+      }
+    }
+
+    def buildable(item: ItemKind, itemIndex: mutable.Map[ItemKind, Int]): Boolean = {
+      if (itemIndex.contains(item)) {
+        val qty = itemIndex(item)
+        if (qty > 0) {
+          itemIndex += (item -> (qty - 1))
+          return true
+        } else {
+          return false
+        }
+      }
+      // Call this function recursively on the parts of the item to see if each subpart is buildable
+      for (((kind: ItemKind, qty: Int), op: ItemOperation) <- item.parts) {
+        if (availableOps.contains(op)) {
+          var q = qty
+          while (q > 0) {
+            if (buildable(kind, itemIndex)) {
+              q = q - 1
+            } else {
+              return false
+            }
+          }
+        } else {
+          return false
+        }
+      }
+      true
+    }
+    data.items.values.toSeq.filter(itemkind => buildable(itemkind, itemIndex))
   }
 }

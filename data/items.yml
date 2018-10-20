@@ -5,7 +5,7 @@
 - type: item
   name: screwdriver
   description: A standard K35 screwdriver, like you'd find in a koligan.
-  provides: [ SCREW_DRIVING ]
+  provides: [ SCREWING ]
   display: SMALL_TOOL
 
 - type: item
@@ -308,7 +308,7 @@
   description: A small DC motor. Could be from a remote-controlled toy or something.
   parts:
     - { type: copper wire, count: 2, disassembled_with: CUTTING }
-    - { type: magnet, count: 1, disassembled_with: HAND }
+    - { type: magnet, count: 1, disassembled_with: HANDLING }
   display: SMALL_COMPONENT
 
 - type: item
