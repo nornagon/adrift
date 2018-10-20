@@ -3,7 +3,7 @@ package adrift
 import adrift.Action._
 import adrift.items.Item
 import adrift.items.ItemKind
-import adrift.items.Operation
+import adrift.items.ItemOperation
 
 import scala.collection.mutable
 
@@ -129,7 +129,7 @@ class GameState(width: Int, height: Int, data: Data) {
 
   def buildableItems(availableItems: Seq[Item]): Seq[ItemKind] = {
     // First put together a list of operations we can do with the tools in our area
-    var availableOps: Seq[Operation] = Seq()
+    var availableOps: Seq[ItemOperation] = Seq()
     for (item <- availableItems) availableOps ++= item.kind.provides
     // Make a map of the available item kinds and quantities
     var itemIndex: mutable.Map[ItemKind, Int] = mutable.Map()
@@ -155,7 +155,7 @@ class GameState(width: Int, height: Int, data: Data) {
         }
       }
       // Call this function recursively on the parts of the item to see if each subpart is buildable
-      for (((kind: ItemKind, qty: Int), op: Operation) <- item.parts) {
+      for (((kind: ItemKind, qty: Int), op: ItemOperation) <- item.parts) {
         if (availableOps.contains(op)) {
           var q = qty
           while (q > 0) {
