@@ -31,12 +31,12 @@
   default_terrain: floor
   defs:
     .: { terrain: floor }
-    =: { furniture: bed }
+    =: { items: [ bed ] }
     -: { terrain: wall }
-    d: { furniture: desk }
-    c: { furniture: chair }
-    D: { furniture: closet, items: { group: clothing, count: 2 } }
-    t: { furniture: side table }
+    d: { items: [ desk ] }
+    c: { items: [ chair ] }
+    D: { items: [ closet ] }
+    t: { items: [ side table ] }
   items:
     - area: "0,0-1,0"
       group: bedding

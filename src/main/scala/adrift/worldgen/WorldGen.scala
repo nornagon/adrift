@@ -60,6 +60,11 @@ case class WorldGen(data: Data) {
         val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
         val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
         s.map(tx, ty) = data.terrain(terrain)
+        val items = d("items").flatMap(_.asArray).getOrElse(Seq.empty)
+        items.foreach { item_kind_id =>
+          val item_kind = data.items(item_kind_id.asString.get)
+          s.items(tx, ty) :+= generateItem(item_kind)
+        }
       }
     }
 

@@ -500,3 +500,28 @@
   name: automatic door
   description: All the doors on the ship sense your coming and going and glide open silently.
   display: DOOR
+
+- type: item
+  name: bed
+  description: bed
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: closet
+  description: closet
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: side table
+  description: side table
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: desk
+  description: desk
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: chair
+  description: chair
+  display: HUMAN_EQUIPMENT

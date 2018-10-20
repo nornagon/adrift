@@ -71,27 +71,8 @@ object Appearance {
     case k if k.name == "automatic door" =>
       val isOpen = item.conditions.exists(_.isInstanceOf[DoorOpen])
       if (isOpen) '-' else '+'
-      // TODO: encode item display in yaml
-      /*
-    case items.HoloNote => '!'
-    // Tiny components `
-    case items.MRAMChip => '`'
-    case items.Screw(_,_,_) => '`'
-    case items.Microprocessor => '`'
-    case items.TinyDCMotor => '`'
-    case items.LaserDiode => '`'
-    // Small components ◆
-    case items.HolographicProjector => CP437.Diamonds
-    case items.RechargeableBattery => CP437.Diamonds
-    case items.Magnet => CP437.Diamonds
-    case items.FlatMirror => CP437.Diamonds
-    case items.LaserPump => CP437.Diamonds
-    //
-    case items.SmallPlasticCasing => CP437.Bullet // ⊚
-    case items.CopperWire => CP437.Delta // δ
-    */
-    // ???
-    case _ => 2 // ☻
+    case other =>
+      Item.item_display(other.display)
   }
 
 
