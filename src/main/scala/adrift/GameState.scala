@@ -2,6 +2,9 @@ package adrift
 
 import adrift.Action._
 import adrift.items.Item
+import adrift.items.ItemKind
+import adrift.items.Tool
+import adrift.items.Operation
 
 import scala.collection.mutable
 
@@ -13,7 +16,7 @@ case class InHands(index: Int) extends ItemLocation
 case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buffer.empty)
 
 
-class GameState(width: Int, height: Int) {
+class GameState(width: Int, height: Int, data: Data) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(Terrain.EmptySpace)
   val furniture: Grid[Option[Furniture]] = new Grid[Option[Furniture]](width, height)(None)
   val items: Grid[Seq[Item]] = new Grid[Seq[Item]](width, height)(Seq.empty)
@@ -33,7 +36,7 @@ class GameState(width: Int, height: Int) {
         val item = removeItem(location)
         items(player) ++= item.parts
         message = Some(s"You take apart the ${item.kind.name}.")
-      case Assemble(item) => {
+      case Assemble(item,location) => {
         // if item in buildableItems() {   // handle in ui?
           items(player) :+= item
         // }
@@ -123,30 +126,51 @@ class GameState(width: Int, height: Int) {
     items(location.x, location.y) :+ item
   }
   def buildableItems(availableItems: Seq[Item]): Seq[Item] = {
-    val availableOps: Seq(Operation) = Seq()
-    for (item <- availableItems) match {
-      case t: Tool() =>  availableOps :+ t.provides()
+    val availableOps: Seq[Operation] = Seq()
+    for (item <- availableItems) item match {
+      case t: Tool =>  availableOps :+ t.provides
       case _ => 
     }
-    var itemIndex: Map(ItemKind,Int) = Map()
-    foreach (item<-availableItems) {
-      if itemIndex.keys.contains(item.kind) {
-        itemIndex(item.kind) += 1
-      } else {
-        itemIndex = itemIndex + (item.kind -> 1)
+    var itemIndex: Map[ItemKind,Int] = Map()
+    availableItems foreach { 
+      case (item) => {
+        if (itemIndex.contains(item.kind)) {
+          val qty: Int = itemIndex(item.kind) + 1
+          itemIndex = itemIndex - item.kind
+          itemIndex = itemIndex + (item.kind -> qty)
+        } else {
+          itemIndex = itemIndex + (item.kind -> 1)
+        }
       }
     }
-    val constructable: Seq(ItemKind) = Data.items.values.filter(i => i.parts.len>0)
-    def buildable(item: ItemKind, available: Map(ItemKind,Int)): Boolean = {
-      // Call this function recursively on the parts of the item
-      if item 
-
-      item.parts.flatmap(((kind,qty),op) => {
-        if availableOps.contains(op) {
-          if available.keys.contains(kind)  
+    // val constructable: Seq[ItemKind] = data.items.values.filter(i => i.parts.length>0)
+    def buildable(item: ItemKind, available: Map[ItemKind,Int]): Boolean = {
+      if (item.parts.length == 0) {
+        if (available.contains(item)) {
+          return true
+        } else {
+          return false
         }
-        })
+      }
+      // Call this function recursively on the parts of the item
+      item.parts.map { case ((kind: ItemKind, qty: Int), op: Operation) => {
+        var q: Int = qty
+        if (availableOps.contains(op)) {
+          if (buildable(kind, available)) {
+            q = q-1
+          } else {
+            return false 
+          }
+          if (q<0) {
+            return false
+          }
+        } else {
+          return false
+        }
+      }}
+      true
     }
+  availableItems.filter(item => buildable(item.kind,itemIndex))
   }
 
 }

@@ -162,7 +162,7 @@ case class WorldGen(data: Data) {
     val random = new Random(51)
     val width = 40
     val height = 40
-    val state = new GameState(width * 6, height * 6)
+    val state = new GameState(width * 6, height * 6, data)
     for ((x, y) <- state.map.indices) {
       state.map(x, y) = Terrain.Wall
     }
@@ -293,7 +293,7 @@ case class WorldGen(data: Data) {
 
     // now let's turn that into a map.
 
-    val state = new GameState(rooms.width * 6, rooms.height * 6)
+    val state = new GameState(rooms.width * 6, rooms.height * 6, data)
     for (y <- 0 until rooms.height; x <- 0 until rooms.width) {
       for (dy <- 1 to 5; dx <- 1 to 5) {
         state.map(x*6 + dx, y*6 + dy) = Terrain.Floor
@@ -342,7 +342,7 @@ case class WorldGen(data: Data) {
 
 
   def generateWorld3: GameState = {
-    val state = new GameState(2048, 128)
+    val state = new GameState(2048, 128, data)
     val random = new scala.util.Random(42)
 
     /*
