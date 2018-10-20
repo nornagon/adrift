@@ -60,9 +60,6 @@ case class WorldGen(data: Data) {
         val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
         val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
         s.map(tx, ty) = data.terrain(terrain)
-        for (f <- d("furniture").flatMap(_.asString)) {
-          s.furniture(tx, ty) = Some(Furniture.Desk)
-        }
       }
     }
 
@@ -149,7 +146,7 @@ case class WorldGen(data: Data) {
             state.map(x + dx, y) = data.terrain("wall")
           }
           state.map(x + 3, y) = data.terrain("floor")
-          state.furniture(x + 3, y) = Some(Furniture.AutomaticDoor())
+          state.items(x + 3, y) :+= generateItem(data.items("automatic door"))
         case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = data.terrain("floor")
@@ -166,7 +163,7 @@ case class WorldGen(data: Data) {
             state.map(x, y + dy) = data.terrain("wall")
           }
           state.map(x, y + 3) = data.terrain("floor")
-          state.furniture(x, y + 3) = Some(Furniture.AutomaticDoor())
+          state.items(x, y + 3) :+= generateItem(data.items("automatic door"))
         case Open | Internal(_, _) =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = data.terrain("floor")
@@ -197,6 +194,6 @@ case class WorldGen(data: Data) {
   }
 
   def generateItem(itemKind: ItemKind): Item = {
-    Item(itemKind, Seq.empty, itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) })
+    Item(itemKind, mutable.Buffer.empty, itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) })
   }
 }

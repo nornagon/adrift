@@ -1,7 +1,7 @@
 package adrift
 
 import adrift.Action._
-import adrift.items.Item
+import adrift.items.{DoorOpen, Item}
 
 import scala.collection.mutable
 
@@ -15,7 +15,6 @@ case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buf
 
 class GameState(data: Data, width: Int, height: Int) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  val furniture: Grid[Option[Furniture]] = new Grid[Option[Furniture]](width, height)(None)
   val items: Grid[Seq[Item]] = new Grid[Seq[Item]](width, height)(Seq.empty)
   var player: (Int, Int) = (0, 0)
   val hands = Container(maxItems = 2)
@@ -62,26 +61,32 @@ class GameState(data: Data, width: Int, height: Int) {
 
   def openNearbyDoors(): Unit = {
     for (x <- player._1 - 6 to player._1 + 6; y <- player._2 - 6 to player._2 + 6) {
-      for (f <- furniture.get(x, y).flatten) {
-        f match {
-          case door: Furniture.AutomaticDoor =>
-            if (!door.open && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
-              door.open = true
-            } else if (door.open && ((x - player._1).abs > 2 || (y - player._2).abs > 2)) {
-              door.open = false
-            }
-          case _ =>
+      for (i <- items(x, y); if i.kind.name == "automatic door") {
+        val isOpen = i.conditions.exists(_.isInstanceOf[DoorOpen])
+        if (!isOpen && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
+          i.conditions.append(DoorOpen())
+        } else if (isOpen && ((x - player._1).abs > 2 || (y - player._2).abs > 2)) {
+          i.conditions.remove(i.conditions.indexWhere(_.isInstanceOf[DoorOpen]))
         }
       }
     }
   }
 
   def canWalk(x: Int, y: Int): Boolean = {
-    map.get(x, y).exists(_.walkable) && furniture.get(x, y).flatten.forall(_.walkable)
+    map.get(x, y).exists(_.walkable)// && items(x, y).forall(_.walkable)
+  }
+
+  def itemIsOpaque(item: Item): Boolean = {
+    item.kind.name match {
+      case "automatic door" =>
+        !item.conditions.exists(_.isInstanceOf[DoorOpen])
+      case _ =>
+        false
+    }
   }
 
   def isOpaque(x: Int, y: Int): Boolean = {
-    map.get(x, y).exists(_.opaque) || furniture.get(x, y).flatten.exists(_.opaque)
+    map.get(x, y).exists(_.opaque) || items(x, y).exists(itemIsOpaque)
   }
 
   private var visible = Set.empty[(Int, Int)]

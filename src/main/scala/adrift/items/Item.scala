@@ -59,7 +59,7 @@ Less simple:
 case class ItemKind(
   name: String,
   description: String,
-  parts: Seq[((ItemKind, Int), Operation)]
+  parts: Seq[((ItemKind, Int), Operation)],
 )
 
 trait ItemCondition {
@@ -68,14 +68,13 @@ trait ItemCondition {
 
 case class Item(
   kind: ItemKind,
-  conditions: Seq[ItemCondition],
+  conditions: mutable.Buffer[ItemCondition],
   parts: Seq[Item]
 ) {
   def functional: Boolean = conditions.forall(_.functional) && parts.forall(_.functional)
 }
-case object Item 
-  {
-  val item_display:Map[String,Int] = Map(
+object Item {
+  val item_display: Map[String, Int] = Map(
     "SMALL_TOOL" -> 0x74,       // t
     "TOOL" -> 0x54 ,            // T
     "RAW_THIN" -> 0x09 ,        // ○ 
@@ -102,8 +101,8 @@ case object Item
     "LARGE_EQUIPMENT" -> 0xF0 , // ≡
     "HUMAN_EQUIPMENT" -> 0xE9 , // Θ
     "CLOTHING" -> 0x43          // C
-    )
-  }
+  )
+}
 
 
 case class Charge(kwh: Double, maxKwh: Double) extends ItemCondition {
@@ -113,6 +112,7 @@ case class BrokenWire() extends ItemCondition
 case class Cracked() extends ItemCondition
 case class BurntOut() extends ItemCondition
 case class Rusted() extends ItemCondition
+case class DoorOpen() extends ItemCondition
 
 
 trait Tool {

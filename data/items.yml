@@ -491,3 +491,12 @@
   name: flat mirror
   description: A small mirror. Your face looks strange, as if it belongs to someone else.
   display: OPTICAL
+
+#
+# Furniture
+#
+
+- type: item
+  name: automatic door
+  description: All the doors on the ship sense your coming and going and glide open silently.
+  display: DOOR

@@ -16,7 +16,7 @@ object YamlObject {
   case class ItemKind(
     name: String,
     description: String,
-    parts: Seq[ItemPart] = Seq.empty
+    parts: Seq[ItemPart] = Seq.empty,
   ) extends YamlObject
 
   case class ItemPart(

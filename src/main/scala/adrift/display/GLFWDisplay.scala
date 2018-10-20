@@ -2,7 +2,7 @@ package adrift.display
 
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift._
-import adrift.items.Item
+import adrift.items.{DoorOpen, Item}
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -68,6 +68,9 @@ object Appearance {
   }
 
   def charForItem(item: Item): Int = item.kind match {
+    case k if k.name == "automatic door" =>
+      val isOpen = item.conditions.exists(_.isInstanceOf[DoorOpen])
+      if (isOpen) '-' else '+'
       // TODO: encode item display in yaml
       /*
     case items.HoloNote => '!'
@@ -91,21 +94,13 @@ object Appearance {
     case _ => 2 // ☻
   }
 
-  def charForFurniture(furniture: Furniture): Int = furniture match {
-    case Furniture.AutomaticDoor(false) => '+'
-    case Furniture.AutomaticDoor(true) => '-'
-    case Furniture.Desk => '='
-  }
 
   def charAtPosition(state: GameState, x: Int, y: Int): Int = {
     if (x == state.player._1 && y == state.player._2) '@'
     else if (state.map.contains(x, y)) {
       val items = state.items(x, y)
-      val furniture = state.furniture(x, y)
       if (items.nonEmpty) {
         charForItem(items.last)
-      } else if (furniture.nonEmpty) {
-        charForFurniture(furniture.get)
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
           if (state.map.contains(x, y) && state.isVisible(x, y))
@@ -134,7 +129,7 @@ object Appearance {
     if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
     } else {
-      state.map(position).toString
+      state.map(position).name
     }
   }
 }
@@ -386,14 +381,12 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
         (1, 1)
 
     val terrain = state.map(x, y)
-    val furniture = state.furniture(x, y)
     val items = state.items(x, y)
 
     renderer.frame(
       left = anchor._1, top = anchor._2,
       width = width,
       lines = Seq(terrain.toString) ++
-        furniture.map(_.toString) ++
         items.take(9).map(_.kind.name) ++
         (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
     )
