@@ -1,21 +1,3 @@
-- type: terrain
-  name: empty space
-  opaque: false
-  walkable: false
-  display: SPACE
-
-- type: terrain
-  name: floor
-  opaque: false
-  walkable: true
-  display: FLOOR
-
-- type: terrain
-  name: wall
-  opaque: true
-  walkable: false
-  display: WALL
-
 - type: room
   name: quarters
   rotatable: true
