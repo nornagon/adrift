@@ -519,9 +519,9 @@
 - type: item
   name: desk
   description: desk
-  display: HUMAN_EQUIPMENT
+  display: DESK
 
 - type: item
   name: chair
   description: chair
-  display: HUMAN_EQUIPMENT
+  display: CHAIR

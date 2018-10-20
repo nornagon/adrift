@@ -102,7 +102,9 @@ object Item {
     "MEDIUM_EQUIPMENT" -> 0x3D ,// =
     "LARGE_EQUIPMENT" -> 0xF0 , // ≡
     "HUMAN_EQUIPMENT" -> 0xE9 , // Θ
-    "CLOTHING" -> 0x43          // C
+    "CLOTHING" -> 0x43,         // C
+    "CHAIR" -> 0xD2,            // ╥
+    "DESK" -> 0xD1,             // ╤
   )
 }
 
