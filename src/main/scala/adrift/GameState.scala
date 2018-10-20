@@ -102,6 +102,7 @@ class GameState(width: Int, height: Int, data: Data) {
     })
     visible = newVisible.toSet
   }
+
   def isVisible(x: Int, y: Int): Boolean = isVisible((x, y))
   def isVisible(p: (Int, Int)): Boolean = visible contains p
 
@@ -122,16 +123,20 @@ class GameState(width: Int, height: Int, data: Data) {
       hands.contents.remove(index)
       item
   }
+
   def addItem(item: Item, location: OnFloor) = {
     items(location.x, location.y) :+ item
   }
-  def buildableItems(availableItems: Seq[Item]): Seq[Item] = {
+
+  def buildableItems(availableItems: Seq[Item]): Seq[ItemKind] = {
+    // First put together a list of operations we can do with the tools in our area
     val availableOps: Seq[Operation] = Seq()
     for (item <- availableItems) item match {
       case t: Tool =>  availableOps :+ t.provides
       case _ => 
     }
-    var itemIndex: Map[ItemKind,Int] = Map()
+    // Make a map of the available item kinds and quantities
+    var itemIndex: mutable.Map[ItemKind, Int] = mutable.Map()
     availableItems foreach { 
       case (item) => {
         if (itemIndex.contains(item.kind)) {
@@ -143,34 +148,37 @@ class GameState(width: Int, height: Int, data: Data) {
         }
       }
     }
+    // recursively go through each kind of item and 
     // val constructable: Seq[ItemKind] = data.items.values.filter(i => i.parts.length>0)
-    def buildable(item: ItemKind, available: Map[ItemKind,Int]): Boolean = {
-      if (item.parts.length == 0) {
-        if (available.contains(item)) {
+    
+    def buildable(item: ItemKind): Boolean = {
+      if (itemIndex.contains(item)) {
+        val qty = itemIndex(item)
+        if (qty > 0) {
+          itemIndex -= item
+          itemIndex += (item -> (qty - 1))
           return true
         } else {
           return false
         }
       }
-      // Call this function recursively on the parts of the item
-      item.parts.map { case ((kind: ItemKind, qty: Int), op: Operation) => {
-        var q: Int = qty
+      // Call this function recursively on the parts of the item to see if each subpart is buildable
+      for (((kind: ItemKind, qty: Int), op: Operation) <- item.parts) {
         if (availableOps.contains(op)) {
-          if (buildable(kind, available)) {
-            q = q-1
-          } else {
-            return false 
-          }
-          if (q<0) {
-            return false
+          var q = qty
+          while (q > 0) {
+            if (buildable(kind)) {
+              q = q - 1
+            } else {
+              return false
+            }
           }
         } else {
           return false
         }
-      }}
+      }
       true
     }
-  availableItems.filter(item => buildable(item.kind,itemIndex))
+    data.items.values.toSeq.filter(itemkind => buildable(itemkind))
   }
-
 }
