@@ -33,6 +33,7 @@ object YamlObject {
     flippable: Boolean = false,
     layout: String,
     defs: Map[String, JsonObject] = Map.empty,
+    default_terrain: String = "floor",
     items: Seq[JsonObject] = Seq.empty,
     connections: Map[String, String] = Map.empty,
   )
@@ -40,7 +41,8 @@ object YamlObject {
 
 case class Data(
   items: Map[String, ItemKind],
-  rooms: Map[String, YamlObject.RoomDef]
+  rooms: Map[String, YamlObject.RoomDef],
+  terrain: Map[String, Terrain],
 )
 
 object Data {
@@ -69,9 +71,17 @@ object Data {
         case (k, v) => assert(v.length == 1); k -> v.head
       }
 
+    val terrain: Map[String, Terrain] = ymls("terrain")
+      .map(obj => obj.as[Terrain]
+        .fold(ex => throw new RuntimeException(s"Failed to parse terrain: $obj", ex), identity))
+      .groupBy(_.name).map {
+        case (k, v) => assert(v.length == 1); k -> v.head
+      }
+
     Data(
       items,
       rooms,
+      terrain
     )
   }
 

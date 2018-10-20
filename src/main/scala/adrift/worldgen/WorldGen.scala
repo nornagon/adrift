@@ -56,10 +56,13 @@ case class WorldGen(data: Data) {
     def doFill(s: GameState, xf: (Int, Int) => (Int, Int)): Unit = {
       for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex) {
         val (tx, ty) = xf(x, y)
-        if (cell == '.')
-          s.map(tx, ty) = Terrain.Floor
-        else
-          s.map(tx, ty) = Terrain.Wall
+        val cellChar = cell.toChar.toString
+        val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
+        val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
+        s.map(tx, ty) = data.terrain(terrain)
+        for (f <- d("furniture").flatMap(_.asString)) {
+          s.furniture(tx, ty) = Some(Furniture.Desk)
+        }
       }
     }
 
@@ -124,9 +127,9 @@ case class WorldGen(data: Data) {
     val random = new Random(52)
     val width = 40
     val height = 40
-    val state = new GameState(width * 6, height * 6)
+    val state = new GameState(data, width * 6, height * 6)
     for ((x, y) <- state.map.indices) {
-      state.map(x, y) = Terrain.Wall
+      state.map(x, y) = data.terrain("wall")
     }
     val tiles = new RoomTiles(rooms)
     val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
@@ -134,39 +137,39 @@ case class WorldGen(data: Data) {
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
-      state.map(x, y) = Terrain.Wall
+      state.map(x, y) = data.terrain("wall")
       // top wall
       room.up match {
         case Wall =>
           for (dx <- 1 to 5) {
-            state.map(x + dx, y) = Terrain.Wall
+            state.map(x + dx, y) = data.terrain("wall")
           }
         case Door =>
           for (dx <- 1 to 5) {
-            state.map(x + dx, y) = Terrain.Wall
+            state.map(x + dx, y) = data.terrain("wall")
           }
-          state.map(x + 3, y) = Terrain.Floor
+          state.map(x + 3, y) = data.terrain("floor")
           state.furniture(x + 3, y) = Some(Furniture.AutomaticDoor())
         case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
-            state.map(x + dx, y) = Terrain.Floor
+            state.map(x + dx, y) = data.terrain("floor")
           }
       }
       // left wall
       room.left match {
         case Wall =>
           for (dy <- 1 to 5) {
-            state.map(x, y + dy) = Terrain.Wall
+            state.map(x, y + dy) = data.terrain("wall")
           }
         case Door =>
           for (dy <- 1 to 5) {
-            state.map(x, y + dy) = Terrain.Wall
+            state.map(x, y + dy) = data.terrain("wall")
           }
-          state.map(x, y + 3) = Terrain.Floor
+          state.map(x, y + 3) = data.terrain("floor")
           state.furniture(x, y + 3) = Some(Furniture.AutomaticDoor())
         case Open | Internal(_, _) =>
           for (dy <- 1 to 5) {
-            state.map(x, y + dy) = Terrain.Floor
+            state.map(x, y + dy) = data.terrain("floor")
           }
       }
       // center

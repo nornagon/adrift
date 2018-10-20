@@ -13,8 +13,8 @@ case class InHands(index: Int) extends ItemLocation
 case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buffer.empty)
 
 
-class GameState(width: Int, height: Int) {
-  val map: Grid[Terrain] = new Grid[Terrain](width, height)(Terrain.EmptySpace)
+class GameState(data: Data, width: Int, height: Int) {
+  val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   val furniture: Grid[Option[Furniture]] = new Grid[Option[Furniture]](width, height)(None)
   val items: Grid[Seq[Item]] = new Grid[Seq[Item]](width, height)(Seq.empty)
   var player: (Int, Int) = (0, 0)

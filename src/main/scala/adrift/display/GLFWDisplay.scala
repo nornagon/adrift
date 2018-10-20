@@ -40,14 +40,9 @@ object CP437 {
 }
 
 object Appearance {
-  def charForTerrain(terrain: Terrain): Int = terrain match {
-    case Terrain.EmptySpace => ' '
-    case Terrain.Floor => '.'
-    case Terrain.Grass => ','
-    case Terrain.TreeOak => CP437.Spades
-    case Terrain.TreeFicus => CP437.Clubs
-    case Terrain.GlassWall => CP437.LightShade
-    case Terrain.Wall => '#'
+  def charForTerrain(terrain: Terrain): Int = terrain.display match {
+    case "FLOOR" => '.'
+    case "SPACE" => ' '
   }
 
   def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain): Int = {
@@ -117,18 +112,18 @@ object Appearance {
             Some(state.map((x, y)))
           else None
         }
-        state.map(x, y) match {
-          case Terrain.Wall =>
+        state.map(x, y).display match {
+          case "WALL" =>
             val left = apparent(x - 1, y)
             val up = apparent(x, y - 1)
             val right = apparent(x + 1, y)
             val down = apparent(x, y + 1)
             charForWall(state.map(x, y),
-              left.getOrElse(Terrain.EmptySpace),
-              up.getOrElse(Terrain.EmptySpace),
-              right.getOrElse(Terrain.EmptySpace),
-              down.getOrElse(Terrain.EmptySpace))
-          case other => charForTerrain(other)
+              left.orNull,
+              up.orNull,
+              right.orNull,
+              down.orNull)
+          case _ => charForTerrain(state.map(x, y))
         }
       }
     } else ' '

@@ -1,8 +1,20 @@
 - type: terrain
+  name: empty space
+  opaque: false
+  walkable: false
+  display: SPACE
+
+- type: terrain
   name: floor
+  opaque: false
+  walkable: true
+  display: FLOOR
 
 - type: terrain
   name: wall
+  opaque: true
+  walkable: false
+  display: WALL
 
 - type: room
   name: quarters
@@ -15,7 +27,7 @@
     dc...
     d....
   connections:
-    down: DOOR
+    0,0 down: DOOR
   default_terrain: floor
   defs:
     .: { terrain: floor }
@@ -38,6 +50,8 @@
     ...........
     ...........
     ...........
+  defs:
+    .: { terrain: floor }
   connections:
     "0,0 down": DOOR
   rotatable: true
@@ -49,13 +63,15 @@
     ...........
     ...........
     ...........
-    ....x......
-    .....x.....
-    ......x....
-    .......x...
     ...........
     ...........
     ...........
+    ...........
+    ...........
+    ...........
+    ...........
+  defs:
+    .: { terrain: floor }
   connections:
     "0,1 down": DOOR
   rotatable: true
@@ -68,6 +84,8 @@
     .....
     .....
     .....
+  defs: &corridor-defs
+    .: { terrain: floor }
   connections:
     0,0 left: OPEN
     0,0 right: OPEN
@@ -76,6 +94,7 @@
 - type: room
   name: corridor with door
   layout: *corridor-layout
+  defs: *corridor-defs
   connections:
     0,0 left: OPEN
     0,0 up: DOOR
@@ -85,6 +104,7 @@
 - type: room
   name: corridor T
   layout: *corridor-layout
+  defs: *corridor-defs
   connections:
     0,0 left: OPEN
     0,0 right: OPEN
@@ -94,6 +114,7 @@
 - type: room
   name: corridor X
   layout: *corridor-layout
+  defs: *corridor-defs
   connections:
     0,0 left: OPEN
     0,0 right: OPEN
@@ -104,6 +125,7 @@
 - type: room
   name: corridor end
   layout: *corridor-layout
+  defs: *corridor-defs
   connections:
     0,0 left: OPEN
   rotatable: true
