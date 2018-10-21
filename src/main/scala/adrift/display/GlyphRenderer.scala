@@ -65,10 +65,17 @@ class GlyphRenderer(
     }
   }
 
-  def drawString(x: Int, y: Int, s: String, maxWidth: Int = 0): Unit = {
+  def drawString(
+    x: Int,
+    y: Int,
+    s: String,
+    maxWidth: Int = 0,
+    fg: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f),
+    bg: (Float, Float, Float, Float) = (0f, 0f, 0f, 1f)
+  ): Unit = {
     for ((c, i) <- s.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return
-      drawChar(font, x + i, y, c)
+      drawChar(font, x + i, y, c, fg, bg)
     }
   }
 

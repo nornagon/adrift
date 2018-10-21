@@ -49,7 +49,7 @@
     .: { terrain: floor }
     =: { items: [ bed ] }
     -: { terrain: wall }
-    d: { items: [ desk ] }
+    d: { items: { each: [ desk, {group: small tools} ] } }
     c: { items: [ chair ] }
     D: { items: [ closet ] }
     t: { items: [ side table ] }
@@ -145,6 +145,14 @@
   connections:
     0,0 left: OPEN
   rotatable: true
+
+- type: item_group
+  name: small tools
+  choose:
+    - screwdriver
+    - hand-held hammer
+    - box cutter
+    - soldering iron
 
 - type: item_group
   name: clothing

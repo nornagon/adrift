@@ -18,7 +18,7 @@ object YamlObject {
     description: String,
     parts: Seq[ItemPart] = Seq.empty,
     provides: Seq[String] = Seq.empty,
-    display: String,
+    display: String = "UNDEFINED",
   )
 
   case class ItemPart(

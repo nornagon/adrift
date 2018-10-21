@@ -132,6 +132,24 @@ class GameState(data: Data, width: Int, height: Int) {
     items(location.x, location.y) :+ item
   }
 
+  def nearbyItems: Seq[(Item, ItemLocation)] = {
+    val nearbyItems = mutable.Buffer.empty[(Item, ItemLocation)]
+    for (dy <- -2 to 2; dx <- -2 to 2) {
+      val is = items(player._1 + dx, player._2 + dy)
+      if (is.nonEmpty) {
+        nearbyItems ++= is.zipWithIndex.map { case (item, i) => (item, OnFloor(player._1 + dx, player._2 + dy, i)) }
+      }
+    }
+    nearbyItems ++ inHandItems
+  }
+
+  def inHandItems: Seq[(Item, ItemLocation)] = {
+    hands.contents.zipWithIndex.map {
+      case (item, i) => (item, InHands(i))
+    }
+  }
+
+
   def buildableItems(availableItems: Seq[Item]): Seq[ItemKind] = {
     // First put together a list of operations we can do with the tools in our area
     var availableOps: Seq[ItemOperation] = Seq()

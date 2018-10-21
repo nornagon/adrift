@@ -1,8 +1,8 @@
 package adrift.display
 
-import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift._
-import adrift.items.{DoorOpen, Item}
+import adrift.display.glutil.{Image, SpriteBatch, Texture}
+import adrift.items.{DoorOpen, Item, ItemOperation}
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -120,6 +120,66 @@ trait Screen {
   def render(renderer: GlyphRenderer): Unit
 }
 
+class DisassembleScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLocation) extends Screen {
+  var button = 0
+
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT)
+      key match {
+        case GLFW_KEY_L | GLFW_KEY_RIGHT => button = (button + 1) % 2
+        case GLFW_KEY_H | GLFW_KEY_LEFT => button = (button - 1 + 2) % 2
+        case GLFW_KEY_ENTER =>
+          display.popScreen()
+          if (button == 1) {
+            display.popScreen()
+            display.pushAction(Action.Disassemble(itemLocation))
+          } else {
+          }
+        case _ =>
+      }
+  }
+
+  private val anchor = (8, 5)
+  override def render(renderer: GlyphRenderer): Unit = {
+    val item = state.itemAtLocation(itemLocation)
+
+    //val tools = Seq("screwdriver", "modular rod")
+    val operations = item.kind.parts.map(_._2).toSet
+    val relevantTools = state.nearbyItems.filter(tool => tool._1.kind.provides.toSet.intersect(operations).nonEmpty)
+    val tools = operations.toSeq.sorted(Ordering.by((i: ItemOperation) => i.id)).map { op =>
+      op -> relevantTools.find { case (i, _) => i.kind.provides.contains(op) }
+    }
+
+    val parts = item.parts.groupBy(_.kind)
+
+    val lines =
+      s"""Disassemble ${item.kind.name}?
+         |
+         |Tools available:
+         |
+         |${
+        tools.map {
+          case (op, Some((i, loc))) => s"  ${i.kind.name}"
+          case (op, None) => s"  <missing ${op.id}>"
+        }.mkString("\n")}
+         |
+         |Recovery:
+         |
+         |${parts.map({ case (kind, is) => s"  ${is.size} x ${kind.name}"}).mkString("\n")}
+         |
+         |
+       """.stripMargin.split('\n').init
+
+    renderer.frame(left = anchor._1, top = anchor._2, width = 40, lines = lines)
+    renderer.drawString(anchor._1 + 2, anchor._2 + lines.length,
+      if (button == 0) "[Nevermind]" else " Nevermind ",
+      fg=if (button == 0) (1f, 1f, 1f, 1f) else (0.5f, 0.5f, 0.5f, 1f))
+    renderer.drawString(anchor._1 + 15, anchor._2 + lines.length,
+      if (button == 1) "[Disassemble]" else " Disassemble ",
+      fg=if (button == 1) (1f, 1f, 1f, 1f) else (0.5f, 0.5f, 0.5f, 1f))
+  }
+}
+
 class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLocation) extends Screen {
   def item: Item = state.itemAtLocation(itemLocation)
   private val anchor = (5, 3)
@@ -127,8 +187,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
     if (action == GLFW_PRESS) {
       key match {
         case GLFW_KEY_D if (mods & GLFW_MOD_SHIFT) != 0 =>
-          display.pushAction(Action.Disassemble(itemLocation))
-          display.popScreen()
+          if (item.parts.nonEmpty)
+            display.pushScreen(new DisassembleScreen(display, state, itemLocation))
         case _ =>
       }
     }
@@ -153,26 +213,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLo
 }
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  def nearbyItems: Seq[(Item, ItemLocation)] = {
-    val player = state.player
-    val nearbyItems = mutable.Buffer.empty[(Item, ItemLocation)]
-    for (dy <- -2 to 2; dx <- -2 to 2) {
-      val items = state.items(player._1 + dx, player._2 + dy)
-      if (items.nonEmpty) {
-        nearbyItems ++= items.zipWithIndex.map { case (item, i) => (item, OnFloor(player._1 + dx, player._2 + dy, i)) }
-      }
-    }
-    nearbyItems ++ inHandItems
-  }
-
-  def inHandItems: Seq[(Item, ItemLocation)] = {
-    state.hands.contents.zipWithIndex.map {
-      case (item, i) => (item, InHands(i))
-    }
-  }
-
   var selectedIdx = 0
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    val nearbyItems = state.nearbyItems
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
       key match {
         case GLFW_KEY_J | GLFW_KEY_DOWN => selectedIdx = (selectedIdx + 1) % nearbyItems.size
@@ -191,6 +234,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
+    val nearbyItems = state.nearbyItems
     val anchor = (1, 1)
     val width = 30
     renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
