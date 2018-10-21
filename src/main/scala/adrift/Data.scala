@@ -19,6 +19,7 @@ object YamlObject {
     parts: Seq[ItemPart] = Seq.empty,
     provides: Seq[String] = Seq.empty,
     display: String,
+    affixed: Boolean = false,
   )
 
   case class ItemPart(
@@ -132,7 +133,8 @@ object Data {
               ((itemForId(p.`type`), p.count), operations(p.disassembled_with) /* TODO */ )
             },
             i.provides.map {op => operations(op)},
-            display = i.display
+            display = i.display,
+            affixed = i.affixed
           )
         }
       )

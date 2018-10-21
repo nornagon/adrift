@@ -40,7 +40,9 @@ class GameState(data: Data, width: Int, height: Int) {
         // }
       }
       case PickUp(location) =>
-        if (hands.contents.size < hands.maxItems) {
+        if (itemAtLocation(location).kind.affixed) {
+          message = Some("You can't pick that up.")
+        } else if (hands.contents.size < hands.maxItems) {
           val item = removeItem(location)
           hands.contents.append(item)
           message = Some(s"You pick up the ${item.kind.name}.")

@@ -480,6 +480,7 @@
     - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
     - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
   display: DOOR
+  affixed: true
 
 - type: item
   name: manual door

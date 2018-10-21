@@ -61,7 +61,8 @@ case class ItemKind(
   description: String,
   parts: Seq[((ItemKind, Int), ItemOperation)],
   provides: Seq[ItemOperation],
-  display: String
+  display: String,
+  affixed: Boolean,
 )
 
 trait ItemCondition {
