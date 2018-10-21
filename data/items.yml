@@ -60,7 +60,7 @@
   display: RAW_THIN
 
 - type: item
-  name: electrical insulator
+  name: electric insulator
   description: A few meters of ship-standard insulator material.
   display: RAW_THIN
 
@@ -376,7 +376,7 @@
   name: local motion sensor
   description: A device capable of sensing motion in a small area.
   parts:
-    - {type: laser_diode, count: 2, disassembled_with: SCREWING}
+    - {type: laser diode, count: 2, disassembled_with: SCREWING}
     - {type: micro e-board, count: 2, disassembled_with: SCREWING}
     - {type: flex component, count: 12, disassembled_with: SOLDERING}
     - {type: Y1 mirror, count: 4, disassembled_with: SCREWING}
@@ -489,7 +489,7 @@
   parts:
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
     - {type: B-size frame, count: 1, disassembled_with: SCREWING}
-    - {type: mini e-board, count: 1, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
     - {type: flex component, count: 12, disassembled_with: SOLDERING}
     - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
     - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
@@ -621,6 +621,7 @@
     - { type: cooling_unit, count: 1, disassembled_with: SCREWING}
     - { type: C-size frame, count: 1, disassembled_with: SCREWING} 
     - { type: type IIA screw, count: 8, disassembled_with: SCREWING} 
+  display: MEDIUM_EQUIPMENT
 
 
 - type: item
@@ -699,7 +700,7 @@
    - {type: micro e-board, count: 4, disassembled_with: SCREWING}
    - {type: flat_display, count: 2, disassembled_with: SCREWING}
    - {type: B-size modular rod, count: 2, disassembled_with: SCREWING}
-   - {type: B-size modular plate, count: 1, disassembled_with: SCREWING}
+   - {type: B-size modular panel, count: 1, disassembled_with: SCREWING}
    - {type: C-size modular rod, count: 1, disassembled_with: SCREWING}
   display: SMALL_EQUIPMENT
 
@@ -709,6 +710,11 @@
   parts: 
    - {type: medium wheel, count: 4, disassembled_with: SCREWING}
    - {type: C-size modular rod, count: 4, disassembled_with: SCREWING}
-   - {type: D-size modular plate, count: 1, disassembled_with: SCREWING}
-   - {type: C-size modular frame, count: 1, disassembled_with: SCREWING}
+   - {type: D-size modular panel, count: 1, disassembled_with: SCREWING}
+   - {type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: LARGE_EQUIPMENT
+
+- type: item
+  name: medium wheel
+  description: A WHEEL.
+  display: SMALL_EQUIPMENT
