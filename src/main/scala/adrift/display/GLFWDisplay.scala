@@ -126,8 +126,10 @@ class GLFWDisplay extends Display {
   private var spriteBatch: SpriteBatch = _
   private var lastState: GameState = _
   private val pendingActions = mutable.Buffer.empty[Action]
-  val windowWidthChars = 80*2
-  val windowHeightChars = 48*2
+  val windowWidthChars = 80
+  val windowHeightChars = 48
+  val screenCharWidth = 16
+  val screenCharHeight = 16
 
   private val screens = mutable.ListBuffer.empty[Screen]
 
@@ -205,10 +207,6 @@ class GLFWDisplay extends Display {
   }
 
   def render(state: GameState): Unit = {
-    val windowWidthChars = 80*2
-    val windowHeightChars = 48*2
-    val screenCharWidth = 16/2
-    val screenCharHeight = 16/2
     val worldHeightChars = windowHeightChars - 1
     val wBuf = BufferUtils.createIntBuffer(1)
     val hBuf = BufferUtils.createIntBuffer(1)
