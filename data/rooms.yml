@@ -1,4 +1,38 @@
 - type: room
+  name: crypods
+  rotatable: true
+  layout: |
+    .....
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    .....
+  defs:
+    .: {}
+    O: { items: [cryocasket] }
+    T: {} # { items: [cryo-display] }
+  connections:
+    0,0 up: DOOR
+
+- type: room
   name: quarters
   rotatable: true
   flippable: true

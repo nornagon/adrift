@@ -27,7 +27,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     down: ConnectionType,
     rotatable: Boolean = false,
     rotation: Int = 0,
-    fill: Option[(GameState, (Int, Int) => (Int, Int)) => Unit]
+    fill: Option[(GameState, (Int, Int) => (Int, Int)) => Unit],
   ) {
     def rotated: Room = copy(
       left = up.rotated,
@@ -96,7 +96,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
         up = up,
         down = down,
         rotatable = rd.rotatable,
-        fill = if (x == 0 && y == 0) Some(doFill _) else None
+        fill = if (x == 0 && y == 0) Some(doFill _) else None,
       )
     }
   }
