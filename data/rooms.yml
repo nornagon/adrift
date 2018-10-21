@@ -125,33 +125,33 @@
 - type: item_group
   name: shirt
   choose:
-    - { item: t-shirt }
-    - { item: dress shirt }
-    - { item: long-sleeve uniform shirt }
+    - t-shirt
+    - dress shirt
+    - long-sleeve uniform shirt
 
 - type: item_group
   name: pants
   choose:
-    - { item: jeans }
+    - jeans
 
 - type: item_group
   name: dress
   choose:
-    - { item: long skirt }
+    - long skirt
 
 - type: item_group
   name: work clothes
   choose:
-    - { item: pair of overalls }
+    - pair of overalls
 
 - type: item_group
   name: underwear
   choose:
-    - { item: briefs }
+    - briefs
 
 - type: item_group
   name: bedding
   choose:
-    - { item: bedsheet }
-    - { item: duvet }
-    - { item: pillow }
+    - bedsheet
+    - duvet
+    - pillow
