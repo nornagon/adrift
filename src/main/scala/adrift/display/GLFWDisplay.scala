@@ -79,7 +79,7 @@ object Appearance {
   def charAtPosition(state: GameState, x: Int, y: Int): Int = {
     if (x == state.player._1 && y == state.player._2) '@'
     else if (state.map.contains(x, y)) {
-      val items = state.items(x, y)
+      val items = state.items.lookup(OnFloor(x, y))
       if (items.nonEmpty) {
         charForItem(items.last)
       } else {
@@ -106,7 +106,7 @@ object Appearance {
   }
 
   def messageAtCell(state: GameState, position: (Int, Int)): String = {
-    val items = state.items(position)
+    val items = state.items.lookup(OnFloor(position._1, position._2))
     if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
     } else {

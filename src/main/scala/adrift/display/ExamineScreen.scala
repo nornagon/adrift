@@ -1,18 +1,17 @@
 package adrift.display
 
 import adrift.items.Item
-import adrift.{GameState, ItemLocation}
+import adrift.GameState
 import org.lwjgl.glfw.GLFW._
 
-class ExamineScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLocation) extends Screen {
-  def item: Item = state.itemAtLocation(itemLocation)
+class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
   private val anchor = (5, 3)
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS) {
       key match {
         case GLFW_KEY_D if (mods & GLFW_MOD_SHIFT) != 0 =>
           if (item.parts.nonEmpty)
-            display.pushScreen(new DisassembleScreen(display, state, itemLocation))
+            display.pushScreen(new DisassembleScreen(display, state, item))
         case _ =>
       }
     }

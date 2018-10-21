@@ -1,9 +1,5 @@
 package adrift.items
 
-import java.io.Reader
-
-import io.circe.Json
-
 import scala.collection.mutable
 
 /*
@@ -75,8 +71,15 @@ case class Item(
   parts: Seq[Item]
 ) {
   def functional: Boolean = conditions.forall(_.functional) && parts.forall(_.functional)
+  val id = Item.nextId
+  override def hashCode(): Int = id
+  override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
+
+  override def toString: String = s"Item(id=$id, kind=${kind.name})"
 }
 object Item {
+  private var _nextId = 1
+  def nextId: Int = { _nextId += 1; _nextId }
   val item_display: Map[String, Int] = Map(
     "DOOR" -> 0x2B,             // +
     "SMALL_TOOL" -> 0x74,       // t

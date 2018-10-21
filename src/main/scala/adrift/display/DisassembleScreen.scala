@@ -1,18 +1,16 @@
 package adrift.display
 
-import adrift.items.ItemOperation
-import adrift.{Action, GameState, ItemLocation}
+import adrift.items.{Item, ItemOperation}
+import adrift.{Action, GameState}
 import org.lwjgl.glfw.GLFW._
 
-class DisassembleScreen(display: GLFWDisplay, state: GameState, itemLocation: ItemLocation) extends Screen {
+class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
   var button = 0
 
-  val item = state.itemAtLocation(itemLocation)
-
   val operations = item.kind.parts.map(_._2).toSet
-  val relevantTools = state.nearbyItems.filter(tool => tool._1.kind.provides.toSet.intersect(operations).nonEmpty)
+  val relevantTools = state.nearbyItems.filter(tool => tool.kind.provides.toSet.intersect(operations).nonEmpty)
   val tools = operations.toSeq.sorted(Ordering.by((i: ItemOperation) => i.id)).map { op =>
-    op -> relevantTools.find { case (i, _) => i.kind.provides.contains(op) }
+    op -> relevantTools.find { _.kind.provides.contains(op) }
   }
 
   val canDisassemble = tools.forall(_._2.nonEmpty)
@@ -27,7 +25,7 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, itemLocation: It
             if (canDisassemble) {
               display.popScreen()
               display.popScreen()
-              display.pushAction(Action.Disassemble(itemLocation))
+              display.pushAction(Action.Disassemble(item))
             }
           } else {
             display.popScreen()
@@ -48,7 +46,7 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, itemLocation: It
          |
          |${
         tools.map {
-          case (op, Some((i, loc))) => s"  ${i.kind.name}"
+          case (op, Some(i)) => s"  ${i.kind.name}"
           case (op, None) => s"  <missing ${op.id}>"
         }.mkString("\n")}
          |

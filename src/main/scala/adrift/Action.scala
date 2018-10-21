@@ -1,14 +1,14 @@
 package adrift
-import adrift.items.ItemKind
+import adrift.items.{Item, ItemKind}
 sealed trait Action {
 
 }
 
 object Action {
   case class PlayerMove(dx: Int, dy: Int) extends Action
-  case class Disassemble(itemLocation: ItemLocation) extends Action
-  case class Assemble(item: ItemKind, componentLocations: Seq[ItemLocation]) extends Action
-  case class PickUp(itemLocation: ItemLocation) extends Action
-  case class PutDown(itemLocation: ItemLocation) extends Action
+  case class Disassemble(item: Item) extends Action
+  case class Assemble(item: ItemKind, components: Seq[Item]) extends Action
+  case class PickUp(item: Item) extends Action
+  case class PutDown(item: Item) extends Action
   case object Quit extends Action
 }

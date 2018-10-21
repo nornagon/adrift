@@ -1,6 +1,6 @@
 package adrift.display
 
-import adrift.GameState
+import adrift.{GameState, OnFloor}
 import org.lwjgl.glfw.GLFW._
 
 class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
@@ -33,12 +33,12 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
         (1, 1)
 
     val terrain = state.map(x, y)
-    val items = state.items(x, y)
+    val items = state.items.lookup(OnFloor(x, y))
 
     renderer.frame(
       left = anchor._1, top = anchor._2,
       width = width,
-      lines = Seq(terrain.toString) ++
+      lines = Seq(terrain.name) ++
         items.take(9).map(_.kind.name) ++
         (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
     )

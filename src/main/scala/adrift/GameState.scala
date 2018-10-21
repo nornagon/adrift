@@ -7,17 +7,47 @@ import adrift.items.ItemOperation
 
 import scala.collection.mutable
 
-sealed trait ItemLocation
-case class OnFloor(x: Int, y: Int/* TODO: level? */, index: Int) extends ItemLocation
-case class InHands(index: Int) extends ItemLocation
-
-
 case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buffer.empty)
+
+sealed trait ItemLocation
+case class OnFloor(x: Int, y: Int) extends ItemLocation
+case class InHands() extends ItemLocation
+case class Inside(other: Item) extends ItemLocation
+case class Worn() extends ItemLocation
+
+class ItemDatabase {
+  private val locationsByItem = mutable.Map.empty[Item, ItemLocation]
+  private val itemsByLocation = mutable.Map.empty[ItemLocation, Seq[Item]].withDefault(_ => Seq.empty[Item])
+
+  def put(item: Item, location: ItemLocation): Unit = {
+    itemsByLocation(location) :+= item
+    locationsByItem(item) = location
+  }
+
+  def delete(item: Item): Unit = {
+    val loc = lookup(item)
+    locationsByItem -= item
+    println(s"Deleted $item")
+    itemsByLocation(loc) = itemsByLocation(loc).filter(_ != item)
+  }
+
+  def lookup(item: Item): ItemLocation = {
+    locationsByItem(item)
+  }
+  def lookup(location: ItemLocation): Seq[Item] = {
+    itemsByLocation(location)
+  }
+
+  def move(item: Item, location: ItemLocation): Unit = {
+    delete(item)
+    put(item, location)
+  }
+}
 
 
 class GameState(data: Data, width: Int, height: Int) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  val items: Grid[Seq[Item]] = new Grid[Seq[Item]](width, height)(Seq.empty)
+  val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
   val hands = Container(maxItems = 2)
 
@@ -31,37 +61,35 @@ class GameState(data: Data, width: Int, height: Int) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
 
-      case Disassemble(location) =>
-        val item = removeItem(location)
-        items(player) ++= item.parts
+      case Disassemble(item) =>
+        items.delete(item)
+        for (p <- item.parts) items.put(p, OnFloor(player._1, player._2))
         message = Some(s"You take apart the ${item.kind.name}.")
 
-      case Assemble(itemKind, componentLocations) =>
-        val componentItems = componentLocations.map(removeItem)
+      case Assemble(itemKind, components) =>
+        components.foreach(items.delete)
         val newItem = Item(
           kind = itemKind,
           conditions = mutable.Buffer.empty,
-          componentItems
+          components
         )
-        items(player) :+= newItem
+        items.put(newItem, OnFloor(player._1, player._2))
 
-      case PickUp(location) =>
-        if (itemAtLocation(location).kind.affixed) {
+      case PickUp(item) =>
+        if (item.kind.affixed) {
           message = Some("You can't pick that up.")
         } else if (hands.contents.size < hands.maxItems) {
-          val item = removeItem(location)
-          hands.contents.append(item)
+          items.move(item, InHands())
           message = Some(s"You pick up the ${item.kind.name}.")
         } else {
           message = Some("Your hands are full.")
         }
 
-      case PutDown(location) =>
-        location match {
-          case loc: InHands =>
-            val item = removeItem(loc)
-            items(player) :+= item
-            message = Some(s"You place the ${item.kind.name} on the ${map(player)}.")
+      case PutDown(item) =>
+        items.lookup(item) match {
+          case InHands() =>
+            items.move(item, OnFloor(player._1, player._2))
+            message = Some(s"You place the ${item.kind.name} on the ${map(player).name}.")
           case _ =>
             message = Some("You can't put that down.")
         }
@@ -77,7 +105,7 @@ class GameState(data: Data, width: Int, height: Int) {
 
   def openNearbyDoors(): Unit = {
     for (x <- player._1 - 6 to player._1 + 6; y <- player._2 - 6 to player._2 + 6) {
-      for (i <- items(x, y); if i.kind.name == "automatic door") {
+      for (i <- items.lookup(OnFloor(x, y)); if i.kind.name == "automatic door") {
         val isOpen = i.conditions.exists(_.isInstanceOf[DoorOpen])
         if (!isOpen && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
           i.conditions.append(DoorOpen())
@@ -102,7 +130,7 @@ class GameState(data: Data, width: Int, height: Int) {
   }
 
   def isOpaque(x: Int, y: Int): Boolean = {
-    map.get(x, y).exists(_.opaque) || items(x, y).exists(itemIsOpaque)
+    map.get(x, y).exists(_.opaque) || items.lookup(OnFloor(x, y)).exists(itemIsOpaque)
   }
 
   private var visible = Set.empty[(Int, Int)]
@@ -119,91 +147,69 @@ class GameState(data: Data, width: Int, height: Int) {
   def isVisible(x: Int, y: Int): Boolean = isVisible((x, y))
   def isVisible(p: (Int, Int)): Boolean = visible contains p
 
-  def itemAtLocation(location: ItemLocation): Item = location match {
-    case OnFloor(x, y, index) =>
-      items(x, y)(index)
-    case InHands(index) =>
-      hands.contents(index)
-  }
-
-  def removeItem(location: ItemLocation): Item = location match {
-    case OnFloor(x, y, index) =>
-      val item = items(x, y)(index)
-      items(x, y) = items(x, y).patch(index, Nil, 1)
-      item
-    case InHands(index) =>
-      val item = hands.contents(index)
-      hands.contents.remove(index)
-      item
-  }
-
-  def addItem(item: Item, location: OnFloor) = {
-    items(location.x, location.y) :+ item
-  }
-
-  def nearbyItems: Seq[(Item, ItemLocation)] = {
-    val nearbyItems = mutable.Buffer.empty[(Item, ItemLocation)]
+  def nearbyItems: Seq[Item] = {
+    val nearbyItems = mutable.Buffer.empty[Item]
     for (dy <- -2 to 2; dx <- -2 to 2) {
-      val is = items(player._1 + dx, player._2 + dy)
-      if (is.nonEmpty) {
-        nearbyItems ++= is.zipWithIndex.map { case (item, i) => (item, OnFloor(player._1 + dx, player._2 + dy, i)) }
-      }
+      val is = items.lookup(OnFloor(player._1 + dx, player._2 + dy))
+      nearbyItems ++= is
     }
-    nearbyItems ++ inHandItems
+    nearbyItems ++ hands.contents
   }
 
-  def inHandItems: Seq[(Item, ItemLocation)] = {
-    hands.contents.zipWithIndex.map {
-      case (item, i) => (item, InHands(i))
-    }
-  }
-
-
-  def buildableItems(availableItems: Seq[Item]): Seq[ItemKind] = {
+  def buildableItems(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
+    /*
     // First put together a list of operations we can do with the tools in our area
     var availableOps: Seq[ItemOperation] = Seq()
-    for (item <- availableItems) availableOps ++= item.kind.provides
+    for ((item, _) <- availableItems) availableOps ++= item.kind.provides
     // Make a map of the available item kinds and quantities
-    var itemIndex: mutable.Map[ItemKind, Int] = mutable.Map()
+    val itemIndex: mutable.Map[ItemKind, Seq[ItemLocation]] = mutable.Map()
     availableItems foreach {
-      case (item) => {
+      case (item, location) =>
         if (itemIndex.contains(item.kind)) {
-          val qty: Int = itemIndex(item.kind) + 1
-          itemIndex = itemIndex + (item.kind -> qty)
+          itemIndex(item.kind) = itemIndex(item.kind) :+ location
         } else {
-          itemIndex = itemIndex + (item.kind -> 1)
+          itemIndex(item.kind) = Seq(location)
         }
-      }
     }
 
-    def buildable(item: ItemKind, itemIndex: mutable.Map[ItemKind, Int]): Boolean = {
-      if (itemIndex.contains(item)) {
-        val qty = itemIndex(item)
-        if (qty > 0) {
-          itemIndex += (item -> (qty - 1))
-          return true
+    def buildable(itemKind: ItemKind, itemIndex: mutable.Map[ItemKind, Seq[ItemLocation]]): Option[Seq[ItemLocation]] = {
+      if (itemIndex.contains(itemKind)) {
+        val itemLocations = itemIndex(itemKind)
+        if (itemLocations.nonEmpty) {
+          val location = itemIndex(itemKind).head
+          itemIndex(itemKind) = itemIndex(itemKind).tail
+          return Some(Seq(location))
         } else {
-          return false
+          return None
         }
       }
-      if (item.parts.isEmpty) return false
+      if (itemKind.parts.isEmpty) return None
+      var locs = Seq.empty[ItemLocation]
       // Call this function recursively on the parts of the item to see if each subpart is buildable
-      for (((kind: ItemKind, qty: Int), op: ItemOperation) <- item.parts) {
+      for (((kind: ItemKind, qty: Int), op: ItemOperation) <- itemKind.parts) {
         if (availableOps.contains(op)) {
           var q = qty
           while (q > 0) {
-            if (buildable(kind, itemIndex)) {
-              q = q - 1
-            } else {
-              return false
+            buildable(kind, itemIndex) match {
+              case Some(componentLocations) =>
+                locs ++= componentLocations
+                q -= 1
+              case None =>
+                return None
             }
           }
         } else {
-          return false
+          return None
         }
       }
-      true
+      Some(locs)
     }
-    data.items.values.toSeq.filter(itemkind => buildable(itemkind, mutable.Map.empty ++ itemIndex))
+    data.items.values.toSeq
+      .map { kind => (kind, buildable(kind, mutable.Map.empty ++ itemIndex)) }
+      .collect {
+        case (kind, Some(locations)) => (kind, locations)
+      }
+      */
+    ???
   }
 }

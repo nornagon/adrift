@@ -66,7 +66,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           val items = table.sample()(random, data.itemGroups.mapValues(_.choose))
           items.foreach { item_kind_id =>
             val item_kind = data.items(item_kind_id)
-            s.items(tx, ty) :+= generateItem(item_kind)
+            s.items.put(generateItem(item_kind), OnFloor(tx, ty))
           }
         }
       }
@@ -154,7 +154,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
             state.map(x + dx, y) = data.terrain("wall")
           }
           state.map(x + 3, y) = data.terrain("floor")
-          state.items(x + 3, y) :+= generateItem(data.items("automatic door"))
+          state.items.put(generateItem(data.items("automatic door")), OnFloor(x + 3, y))
         case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = data.terrain("floor")
@@ -171,7 +171,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
             state.map(x, y + dy) = data.terrain("wall")
           }
           state.map(x, y + 3) = data.terrain("floor")
-          state.items(x, y + 3) :+= generateItem(data.items("automatic door"))
+          state.items.put(generateItem(data.items("automatic door")), OnFloor(x, y + 3))
         case Open | Internal(_, _) =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = data.terrain("floor")

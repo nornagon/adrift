@@ -13,13 +13,13 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case GLFW_KEY_K | GLFW_KEY_UP => selectedIdx = (selectedIdx + nearbyItems.size - 1) % nearbyItems.size
         case GLFW_KEY_E =>
           if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
-            display.pushScreen(new ExamineScreen(display, state, nearbyItems(selectedIdx)._2))
+            display.pushScreen(new ExamineScreen(display, state, nearbyItems(selectedIdx)))
         case GLFW_KEY_G =>
           if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
-            display.pushAction(Action.PickUp(nearbyItems(selectedIdx)._2))
+            display.pushAction(Action.PickUp(nearbyItems(selectedIdx)))
         case GLFW_KEY_D =>
-          if (selectedIdx >= 0 && selectedIdx < nearbyItems.size && nearbyItems(selectedIdx)._2.isInstanceOf[InHands])
-            display.pushAction(Action.PutDown(nearbyItems(selectedIdx)._2))
+          if (selectedIdx >= 0 && selectedIdx < nearbyItems.size && state.items.lookup(nearbyItems(selectedIdx)).isInstanceOf[InHands])
+            display.pushAction(Action.PutDown(nearbyItems(selectedIdx)))
         case _ =>
       }
   }
@@ -30,7 +30,8 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val width = 30
     renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
     renderer.drawString(anchor._1 + 1, anchor._2 + 1, "Nearby")
-    for (((item, pos), i) <- nearbyItems.zipWithIndex) {
+    for ((item, i) <- nearbyItems.zipWithIndex) {
+      val pos = state.items.lookup(item)
       renderer.drawString(anchor._1 + 2, anchor._2 + 2 + i, item.kind.name, maxWidth = width - 3 - 2)
       renderer.drawString(width - 2, anchor._2 + 2 + i, directionString(pos))
     }
@@ -40,7 +41,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   def directionString(pos: ItemLocation): String = {
     pos match {
-      case OnFloor(x, y, _) =>
+      case OnFloor(x, y) =>
         val dx = x - state.player._1
         val dy = y - state.player._2
         if (dx < 0) {
@@ -56,8 +57,12 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
           else if (dy == 0) "E"
           else "SE"
         }
-      case InHands(_) =>
+      case InHands() =>
         "H"
+      case Inside(other) =>
+        directionString(state.items.lookup(other))
+      case Worn() =>
+        "W"
     }
   }
 }
