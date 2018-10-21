@@ -83,7 +83,6 @@ object Data {
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1); k -> v.head
       }
-    println(itemGroups("clothing").choose.sample()(new util.Random(), itemGroups.mapValues(_.choose)))
 
     val rooms = ymls("room")
       .map(obj => obj.as[YamlObject.RoomDef]
