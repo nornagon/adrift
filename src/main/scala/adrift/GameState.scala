@@ -30,15 +30,21 @@ class GameState(data: Data, width: Int, height: Int) {
         if (canWalk(player._1 + dx, player._2 + dy)) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
+
       case Disassemble(location) =>
         val item = removeItem(location)
         items(player) ++= item.parts
         message = Some(s"You take apart the ${item.kind.name}.")
-      case Assemble(item,location) => {
-        // if item in buildableItems() {   // handle in ui?
-          items(player) :+= item
-        // }
-      }
+
+      case Assemble(itemKind, componentLocations) =>
+        val componentItems = componentLocations.map(removeItem)
+        val newItem = Item(
+          kind = itemKind,
+          conditions = mutable.Buffer.empty,
+          componentItems
+        )
+        items(player) :+= newItem
+
       case PickUp(location) =>
         if (itemAtLocation(location).kind.affixed) {
           message = Some("You can't pick that up.")
@@ -49,6 +55,7 @@ class GameState(data: Data, width: Int, height: Int) {
         } else {
           message = Some("Your hands are full.")
         }
+
       case PutDown(location) =>
         location match {
           case loc: InHands =>
@@ -179,6 +186,7 @@ class GameState(data: Data, width: Int, height: Int) {
           return false
         }
       }
+      if (item.parts.isEmpty) return false
       // Call this function recursively on the parts of the item to see if each subpart is buildable
       for (((kind: ItemKind, qty: Int), op: ItemOperation) <- item.parts) {
         if (availableOps.contains(op)) {
@@ -196,6 +204,6 @@ class GameState(data: Data, width: Int, height: Int) {
       }
       true
     }
-    data.items.values.toSeq.filter(itemkind => buildable(itemkind, itemIndex))
+    data.items.values.toSeq.filter(itemkind => buildable(itemkind, mutable.Map.empty ++ itemIndex))
   }
 }

@@ -78,6 +78,7 @@ case class Item(
 }
 object Item {
   val item_display: Map[String, Int] = Map(
+    "DOOR" -> 0x2B,             // +
     "SMALL_TOOL" -> 0x74,       // t
     "TOOL" -> 0x54 ,            // T
     "RAW_THIN" -> 0x09 ,        // ○ 
