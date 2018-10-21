@@ -384,6 +384,7 @@
     - {type: Z1 lens, count: 2, disassembled_with: SCREWING}
     - {type: X1 lens, count: 4, disassembled_with: SCREWING}
     - {type: A-size frame, count: 1, disassembled_with: SCREWING}
+  display: MEDIUM_COMPONENT
 #
 # Fasteners
 #
