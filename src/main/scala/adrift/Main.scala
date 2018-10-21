@@ -5,9 +5,12 @@ import java.nio.file.Paths
 import adrift.display.{Display, GLFWDisplay}
 import adrift.worldgen.WorldGen
 
+import scala.util.Random
+
 object Main {
   def main(args: Array[String]): Unit = {
     val data = Data.parse(Paths.get("data"))
+    implicit val random = new Random(52)
     val state = WorldGen(data).generateWorld
     val display: Display = new GLFWDisplay
     display.init()

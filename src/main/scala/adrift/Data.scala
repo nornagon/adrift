@@ -1,8 +1,9 @@
 package adrift
 
-import java.nio.file.{FileSystems, Files, Path, PathMatcher}
+import java.nio.file.{FileSystems, Files, Path}
 import java.util.stream.Collectors
 
+import adrift.Population.Table
 import adrift.items.{ItemKind, ItemOperation}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
@@ -11,7 +12,6 @@ import io.circe.{Json, JsonObject, yaml}
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-sealed trait YamlObject
 object YamlObject {
   case class ItemKind(
     name: String,
@@ -19,12 +19,17 @@ object YamlObject {
     parts: Seq[ItemPart] = Seq.empty,
     provides: Seq[String] = Seq.empty,
     display: String,
-  ) extends YamlObject
+  )
 
   case class ItemPart(
     `type`: String,
     disassembled_with: String = "hand",
     count: Int = 1
+  )
+
+  case class ItemGroup(
+    name: String,
+    choose: Table[String]
   )
 
   case class RoomDef(
@@ -41,6 +46,7 @@ object YamlObject {
 
 case class Data(
   items: Map[String, ItemKind],
+  itemGroups: Map[String, YamlObject.ItemGroup],
   rooms: Map[String, YamlObject.RoomDef],
   terrain: Map[String, Terrain],
 )
@@ -71,6 +77,13 @@ object Data {
 
     val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
 
+    val itemGroups = ymls("item_group")
+      .map(obj => obj.as[YamlObject.ItemGroup]
+        .fold(ex => throw new RuntimeException(s"Failed to parse item_group: $obj", ex), identity))
+      .groupBy(_.name).map {
+        case (k, v) => assert(v.length == 1); k -> v.head
+      }
+
     val rooms = ymls("room")
       .map(obj => obj.as[YamlObject.RoomDef]
         .fold(ex => throw new RuntimeException(s"Failed to parse room: $obj", ex), identity))
@@ -88,6 +101,7 @@ object Data {
 
     Data(
       items,
+      itemGroups,
       rooms,
       terrain
     )

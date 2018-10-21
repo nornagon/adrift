@@ -1,20 +1,36 @@
-- type: terrain
-  name: empty space
-  opaque: false
-  walkable: false
-  display: SPACE
-
-- type: terrain
-  name: floor
-  opaque: false
-  walkable: true
-  display: FLOOR
-
-- type: terrain
-  name: wall
-  opaque: true
-  walkable: false
-  display: WALL
+- type: room
+  name: crypods
+  rotatable: true
+  layout: |
+    .....
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    .....
+  defs:
+    .: {}
+    O: { items: [cryocasket] }
+    T: {} # { items: [cryo-display] }
+  connections:
+    0,0 up: DOOR
 
 - type: room
   name: quarters
@@ -143,13 +159,33 @@
 - type: item_group
   name: shirt
   choose:
-    - { item: t-shirt }
-    - { item: dress shirt }
-    - { item: long-sleeve uniform shirt }
+    - t-shirt
+    - dress shirt
+    - long-sleeve uniform shirt
+
+- type: item_group
+  name: pants
+  choose:
+    - jeans
+
+- type: item_group
+  name: dress
+  choose:
+    - long skirt
+
+- type: item_group
+  name: work clothes
+  choose:
+    - pair of overalls
+
+- type: item_group
+  name: underwear
+  choose:
+    - briefs
 
 - type: item_group
   name: bedding
   choose:
-    - { item: bedsheet }
-    - { item: duvet }
-    - { item: pillow }
+    - bedsheet
+    - duvet
+    - pillow

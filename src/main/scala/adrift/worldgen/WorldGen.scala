@@ -1,5 +1,6 @@
 package adrift.worldgen
 
+import adrift.Population.Table
 import adrift._
 import adrift.items.{Item, ItemKind}
 import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
@@ -7,7 +8,7 @@ import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 import scala.collection.mutable
 import scala.util.Random
 
-case class WorldGen(data: Data) {
+case class WorldGen(data: Data)(implicit random: Random) {
   sealed trait ConnectionType {
     def rotated: ConnectionType = this
   }
@@ -26,7 +27,7 @@ case class WorldGen(data: Data) {
     down: ConnectionType,
     rotatable: Boolean = false,
     rotation: Int = 0,
-    fill: Option[(GameState, (Int, Int) => (Int, Int)) => Unit]
+    fill: Option[(GameState, (Int, Int) => (Int, Int)) => Unit],
   ) {
     def rotated: Room = copy(
       left = up.rotated,
@@ -60,10 +61,13 @@ case class WorldGen(data: Data) {
         val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
         val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
         s.map(tx, ty) = data.terrain(terrain)
-        val items = d("items").flatMap(_.asArray).getOrElse(Seq.empty)
-        items.foreach { item_kind_id =>
-          val item_kind = data.items(item_kind_id.asString.get)
-          s.items(tx, ty) :+= generateItem(item_kind)
+        val itemTable = d("items").map(_.as[Table[String]].getOrElse(throw new RuntimeException(s"Failed to parse items")))
+        itemTable.foreach { table =>
+          val items = table.sample()(random, data.itemGroups.mapValues(_.choose))
+          items.foreach { item_kind_id =>
+            val item_kind = data.items(item_kind_id)
+            s.items(tx, ty) :+= generateItem(item_kind)
+          }
         }
       }
     }
@@ -92,7 +96,7 @@ case class WorldGen(data: Data) {
         up = up,
         down = down,
         rotatable = rd.rotatable,
-        fill = if (x == 0 && y == 0) Some(doFill _) else None
+        fill = if (x == 0 && y == 0) Some(doFill _) else None,
       )
     }
   }
@@ -126,7 +130,6 @@ case class WorldGen(data: Data) {
   }
 
   def generateWorld: GameState = {
-    val random = new Random(52)
     val width = 40
     val height = 40
     val state = new GameState(data, width * 6, height * 6)
