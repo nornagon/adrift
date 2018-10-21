@@ -460,6 +460,12 @@
     - { type: "E-size modular panel", count: 6, disassembled_with: SCREWING }
   display: LARGE_BOX
 
+- type: item
+  name: medium wheel
+  description: A standard passive caster-style equipment wheel. Like on a shopping cart.
+  display: LARGE_COMPONENT
+
+
 # Ship furniture / fixtures
 
 - type: item
@@ -713,8 +719,3 @@
    - {type: D-size modular panel, count: 1, disassembled_with: SCREWING}
    - {type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: LARGE_EQUIPMENT
-
-- type: item
-  name: medium wheel
-  description: A WHEEL.
-  display: SMALL_EQUIPMENT
