@@ -68,6 +68,7 @@ class GameState(data: Data, width: Int, height: Int) {
           components
         )
         items.put(newItem, OnFloor(player._1, player._2))
+        message = Some(s"You make a ${newItem.kind.name}.")
 
       case PickUp(item) =>
         if (item.kind.affixed) {
