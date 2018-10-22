@@ -5,8 +5,6 @@ import adrift.items.{DoorOpen, Item, ItemKind}
 
 import scala.collection.mutable
 
-case class Container(maxItems: Int, contents: mutable.Buffer[Item] = mutable.Buffer.empty)
-
 sealed trait ItemLocation
 case class OnFloor(x: Int, y: Int) extends ItemLocation
 case class InHands() extends ItemLocation
@@ -46,7 +44,6 @@ class GameState(data: Data, width: Int, height: Int) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
-  val hands = Container(maxItems = 2)
 
   var message: Option[String] = None
 
@@ -75,9 +72,8 @@ class GameState(data: Data, width: Int, height: Int) {
       case PickUp(item) =>
         if (item.kind.affixed) {
           message = Some("You can't pick that up.")
-        } else if (hands.contents.size < hands.maxItems) {
+        } else if (items.lookup(InHands()).size < 2) {
           items.move(item, InHands())
-          hands.contents.append(item)
           message = Some(s"You pick up the ${item.kind.name}.")
         } else {
           message = Some("Your hands are full.")
@@ -87,7 +83,6 @@ class GameState(data: Data, width: Int, height: Int) {
         items.lookup(item) match {
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
-            hands.contents.remove(hands.contents.indexOf(item))
             message = Some(s"You place the ${item.kind.name} on the ${map(player).name}.")
           case _ =>
             message = Some("You can't put that down.")
@@ -147,12 +142,14 @@ class GameState(data: Data, width: Int, height: Int) {
   def isVisible(p: (Int, Int)): Boolean = visible contains p
 
   def nearbyItems: Seq[Item] = {
-    val nearbyItems = mutable.Buffer.empty[Item]
-    for (dy <- -2 to 2; dx <- -2 to 2) {
-      val is = items.lookup(OnFloor(player._1 + dx, player._2 + dy))
-      nearbyItems ++= is
-    }
-    nearbyItems ++ hands.contents
+    val onFloor = for {
+      dy <- -2 to 2
+      dx <- -2 to 2
+      loc = OnFloor(player._1 + dx, player._2 + dy)
+      if isVisible(loc.x, loc.y)
+      i <- items.lookup(loc)
+    } yield i
+    onFloor ++ items.lookup(InHands())
   }
 
   def buildableItems2(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
