@@ -5,7 +5,7 @@ import adrift.items.Item
 import org.lwjgl.glfw.GLFW._
 
 class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  val buildable = state.buildableItems(state.nearbyItems)
+  val buildable = state.buildableItems2(state.nearbyItems)
 
   var selectedIdx = 0
 
@@ -16,11 +16,10 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case GLFW_KEY_K | GLFW_KEY_UP => selectedIdx = (selectedIdx + buildable.size - 1) % buildable.size
         case GLFW_KEY_ENTER =>
 
-          val (kind, locations) = buildable(selectedIdx)
+          val (kind, components) = buildable(selectedIdx)
 
-          display.pushAction(
-            Action.Assemble(kind, locations)
-          )
+          display.pushAction(Action.Assemble(kind, components))
+          display.popScreen()
         case _ =>
       }
   }

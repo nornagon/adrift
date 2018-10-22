@@ -1,9 +1,7 @@
 package adrift
 
 import adrift.Action._
-import adrift.items.{DoorOpen, Item}
-import adrift.items.ItemKind
-import adrift.items.ItemOperation
+import adrift.items.{DoorOpen, Item, ItemKind}
 
 import scala.collection.mutable
 
@@ -27,7 +25,6 @@ class ItemDatabase {
   def delete(item: Item): Unit = {
     val loc = lookup(item)
     locationsByItem -= item
-    println(s"Deleted $item")
     itemsByLocation(loc) = itemsByLocation(loc).filter(_ != item)
   }
 
@@ -80,6 +77,7 @@ class GameState(data: Data, width: Int, height: Int) {
           message = Some("You can't pick that up.")
         } else if (hands.contents.size < hands.maxItems) {
           items.move(item, InHands())
+          hands.contents.append(item)
           message = Some(s"You pick up the ${item.kind.name}.")
         } else {
           message = Some("Your hands are full.")
@@ -89,6 +87,7 @@ class GameState(data: Data, width: Int, height: Int) {
         items.lookup(item) match {
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
+            hands.contents.remove(hands.contents.indexOf(item))
             message = Some(s"You place the ${item.kind.name} on the ${map(player).name}.")
           case _ =>
             message = Some("You can't put that down.")
@@ -154,6 +153,25 @@ class GameState(data: Data, width: Int, height: Int) {
       nearbyItems ++= is
     }
     nearbyItems ++ hands.contents
+  }
+
+  def buildableItems2(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
+    def isBuildable(kind: ItemKind): Option[Seq[Item]] = {
+      val partsByKind = kind.parts.groupBy(_._1._1).map {
+        case (partKind, xs) =>
+          val qty = xs.map(_._1._2).sum
+          val parts = availableItems.filter(_.kind == partKind).take(qty)
+          val ops = xs.map(_._2).distinct
+          if (parts.size == qty && ops.forall(op => availableItems.exists(i => i.kind.provides.contains(op))))
+            Some(parts)
+          else None
+      }.toSeq
+      if (partsByKind.forall(_.nonEmpty))
+        Some(partsByKind.flatten.flatten)
+      else
+        None
+    }
+    (for (kind <- data.items.values; if kind.parts.nonEmpty; parts <- isBuildable(kind)) yield (kind, parts))(collection.breakOut)
   }
 
   def buildableItems(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
