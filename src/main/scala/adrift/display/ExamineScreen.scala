@@ -26,11 +26,13 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
       width = width,
       title = item.kind.name,
       lines = descriptionLines ++
-        Seq("", "Parts:") ++
-        itemsByKind.map {
-          case (kind, items) if items.size == 1 => kind.name
-          case (kind, items) => s"${items.size} x ${kind.name}"
-        }
+        (if (item.parts.nonEmpty)
+          Seq("", "Parts:") ++
+          itemsByKind.map {
+            case (kind, items) if items.size == 1 => kind.name
+            case (kind, items) => s"${items.size} x ${kind.name}"
+          }
+        else Seq.empty)
     )
   }
 }
