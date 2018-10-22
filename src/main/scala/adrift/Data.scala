@@ -130,7 +130,7 @@ object Data {
             i.name,
             i.description,
             i.parts.map { p =>
-              ((itemForId(p.`type`), p.count), operations(p.disassembled_with) /* TODO */ )
+              ((itemForId(p.`type`), p.count), operations(p.disassembled_with))
             },
             i.provides.map {op => operations(op)},
             display = i.display,

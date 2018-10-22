@@ -39,14 +39,27 @@ object CP437 {
   val Delta = 235
 }
 
+sealed trait Dir
+object Dir {
+  case object N extends Dir
+  case object NE extends Dir
+  case object E extends Dir
+  case object SE extends Dir
+  case object S extends Dir
+  case object SW extends Dir
+  case object W extends Dir
+  case object NW extends Dir
+}
+
 object Appearance {
   def charForTerrain(terrain: Terrain): Int = terrain.display match {
     case "FLOOR" => '.'
     case "SPACE" => ' '
   }
 
-  def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain): Int = {
+  def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain, viewingFrom: Dir): Int = {
     import CP437.BoxDrawing._
+    import Dir._
     (left == center, up == center, right == center, down == center) match {
       case (false, false, false, false) => 254
       case (false, false, false, true)
@@ -59,11 +72,37 @@ object Appearance {
       case (false, true, true, false) => _UR_
       case (true, true, false, false) => LU__
       case (true, false, false, true) => L__D
-      case (true, true, true, false) => LUR_
-      case (true, true, false, true) => LU_D
-      case (true, false, true, true) => L_RD
-      case (false, true, true, true) => _URD
-      case (true, true, true, true) => LURD
+      case (true, true, true, false) =>
+        viewingFrom match {
+          case NE | N | E => _UR_
+          case NW | W => LU__
+          case SW | S | SE => L_R_
+        }
+      case (true, true, false, true) =>
+        viewingFrom match {
+          case NW | N | W => LU__
+          case SW | S => L__D
+          case E | NE | SE => _U_D
+        }
+      case (true, false, true, true) =>
+        viewingFrom match {
+          case SW | S | W => L__D
+          case SE | E => __RD
+          case N | NW | NE => L_R_
+        }
+      case (false, true, true, true) =>
+        viewingFrom match {
+          case NE | N | E => _UR_
+          case SE | S => __RD
+          case W | NW | SW => _U_D
+        }
+      case (true, true, true, true) =>
+        viewingFrom match {
+          case NE | N => _UR_
+          case SE | E => __RD
+          case NW | W => LU__
+          case SW | S => L__D
+        }
     }
   }
 
@@ -84,21 +123,36 @@ object Appearance {
         charForItem(items.last)
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
-          if (state.map.contains(x, y) && state.isVisible(x, y))
+          if (state.map.contains(x, y))
             Some(state.map((x, y)))
           else None
         }
         state.map(x, y).display match {
           case "WALL" =>
+            import Dir._
             val left = apparent(x - 1, y)
             val up = apparent(x, y - 1)
             val right = apparent(x + 1, y)
             val down = apparent(x, y + 1)
+            val (px, py) = state.player
+            val viewedFrom = if (px < x) {
+              if (py < y) NW
+              else if (py == y) W
+              else SW
+            } else if (px == x) {
+              if (py < y) N
+              else S
+            } else {
+              if (py < y) NE
+              else if (py == y) E
+              else SE
+            }
             charForWall(state.map(x, y),
               left.orNull,
               up.orNull,
               right.orNull,
-              down.orNull)
+              down.orNull,
+              viewedFrom)
           case _ => charForTerrain(state.map(x, y))
         }
       }
