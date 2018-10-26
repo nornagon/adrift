@@ -88,10 +88,11 @@ object Item {
 case class Charge(kwh: Double, maxKwh: Double) extends ItemCondition {
   override def functional: Boolean = kwh > 0
 }
-case class BrokenWire() extends ItemCondition
-case class Cracked() extends ItemCondition
-case class BurntOut() extends ItemCondition
-case class Rusted() extends ItemCondition
 case class DoorOpen() extends ItemCondition
 
+case object Broken extends ItemCondition {
+  override def functional: Boolean = false
+}
+
+/** Some action that you can do with an item, e.g. PRYING or WELDING */
 case class ItemOperation(id: String)

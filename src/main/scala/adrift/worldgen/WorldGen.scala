@@ -132,7 +132,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
   def generateWorld: GameState = {
     val width = 40
     val height = 40
-    val state = new GameState(data, width * 6, height * 6)
+    val state = new GameState(data, width * 6, height * 6, new Random())
     for ((x, y) <- state.map.indices) {
       state.map(x, y) = data.terrain("wall")
     }

@@ -1,9 +1,10 @@
 package adrift
 
 import adrift.Action._
-import adrift.items.{DoorOpen, Item, ItemKind}
+import adrift.items.{Broken, DoorOpen, Item, ItemKind}
 
 import scala.collection.mutable
+import scala.util.Random
 
 sealed trait ItemLocation
 case class OnFloor(x: Int, y: Int) extends ItemLocation
@@ -40,7 +41,7 @@ class ItemDatabase {
 }
 
 
-class GameState(val data: Data, width: Int, height: Int) {
+class GameState(val data: Data, width: Int, height: Int, random: Random) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
@@ -57,7 +58,10 @@ class GameState(val data: Data, width: Int, height: Int) {
 
       case Disassemble(item) =>
         items.delete(item)
-        for (p <- item.parts) items.put(p, OnFloor(player._1, player._2))
+        for (p <- item.parts) {
+          items.put(p, OnFloor(player._1, player._2))
+          smash(p)
+        }
         message = Some(s"You take apart the ${item.kind.name}.")
 
       case Assemble(itemKind, components) =>
@@ -73,11 +77,11 @@ class GameState(val data: Data, width: Int, height: Int) {
       case PickUp(item) =>
         if (item.kind.affixed) {
           message = Some("You can't pick that up.")
-        } else if (items.lookup(InHands()).size < 2) {
+        } else if (items.lookup(InHands()).size >= 2) {
+          message = Some("Your hands are full.")
+        } else {
           items.move(item, InHands())
           message = Some(s"You pick up the ${item.kind.name}.")
-        } else {
-          message = Some("Your hands are full.")
         }
 
       case PutDown(item) =>
@@ -108,6 +112,19 @@ class GameState(val data: Data, width: Int, height: Int) {
           i.conditions.remove(i.conditions.indexWhere(_.isInstanceOf[DoorOpen]))
         }
       }
+    }
+  }
+
+  def smash(p: Item): Unit = {
+    if (p.parts.isEmpty) {
+      if (random.nextFloat() < 0.1) {
+        p.conditions.append(Broken)
+      }
+    } else {
+      // a case should protect its insides from smashing
+      // bigger parts should be smashed first
+      // delicate components should be damaged more easily
+      p.parts.foreach(smash)
     }
   }
 

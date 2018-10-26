@@ -1,6 +1,7 @@
 package adrift.display
 
 import adrift._
+import adrift.items.Broken
 import org.lwjgl.glfw.GLFW._
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
@@ -32,7 +33,10 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     renderer.drawString(anchor._1 + 1, anchor._2 + 1, "Nearby")
     for ((item, i) <- nearbyItems.zipWithIndex) {
       val pos = state.items.lookup(item)
-      renderer.drawString(anchor._1 + 2, anchor._2 + 2 + i, item.kind.name, maxWidth = width - 3 - 2)
+      var name = item.kind.name
+      if (item.conditions.contains(Broken))
+        name += " (broken)"
+      renderer.drawString(anchor._1 + 2, anchor._2 + 2 + i, name, maxWidth = width - 3 - 2)
       renderer.drawString(width - 2, anchor._2 + 2 + i, directionString(pos))
     }
     if (nearbyItems.nonEmpty)
