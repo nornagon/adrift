@@ -666,7 +666,7 @@
   display: TOOL
 
 - type: item
-  name: scisors
+  name: scissors
   description: Dual space-grade blades provide a safe way to cut a wide variety of materials. Running disabled while these are in your hands.
   parts: 
    - { type: type IIA screw, count: 1, disassembled_with: SCREWING}
@@ -676,7 +676,7 @@
 
 - type: item
   name: scis
-  description: Half a scisors. Usually considered more useful when joined with another scis.
+  description: Half a scissors. Usually considered more useful when joined with another scis.
   display: SMALL_TOOL
   provides: [ CUTTING ]
 
