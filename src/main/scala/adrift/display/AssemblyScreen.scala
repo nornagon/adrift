@@ -1,7 +1,6 @@
 package adrift.display
 
 import adrift.{Action, GameState}
-import adrift.items.Item
 import org.lwjgl.glfw.GLFW._
 
 class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
@@ -32,8 +31,9 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
       title = "Assemble what?",
       lines =
         buildable.zipWithIndex.map { case ((k, _), i) =>
-          val selector = if (i == selectedIdx) "> " else "  "
-          s"$selector${Item.item_display(k.display).toChar} ${k.name}"
+          val selector = if (i == selectedIdx) ">" else " "
+          val (char, fg, bg) = state.data.display.getDisplay(k.display)
+          s"$selector $char ${k.name}"
         }
     )
   }

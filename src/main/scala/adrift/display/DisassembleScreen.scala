@@ -1,7 +1,7 @@
 package adrift.display
 
 import adrift.items.{Item, ItemOperation}
-import adrift.{Action, GameState}
+import adrift.{Action, Color, GameState}
 import org.lwjgl.glfw.GLFW._
 
 class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
@@ -57,20 +57,20 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) exte
          |
        """.stripMargin.split('\n').init
 
-    object Color {
-      val UIDisabled = (0.5f, 0f, 0f, 1f)
-      val UIActiveDisabled = (1f, 0f, 0f, 1f)
+    object UIColor {
+      val UIDisabled = Color(0.5f, 0f, 0f, 1f)
+      val UIActiveDisabled = Color(1f, 0f, 0f, 1f)
     }
 
     renderer.frame(left = anchor._1, top = anchor._2, width = 40, lines = lines)
     renderer.drawString(anchor._1 + 2, anchor._2 + lines.length,
       if (button == 0) "[Nevermind]" else " Nevermind ",
-      fg=if (button == 0) (1f, 1f, 1f, 1f) else (0.5f, 0.5f, 0.5f, 1f))
+      fg=if (button == 0) Color(1f, 1f, 1f, 1f) else Color(0.5f, 0.5f, 0.5f, 1f))
     renderer.drawString(anchor._1 + 15, anchor._2 + lines.length,
       if (button == 1) "[Disassemble]" else " Disassemble ",
       fg=if (button == 1)
-        if (canDisassemble) (1f, 1f, 1f, 1f) else Color.UIActiveDisabled
+        if (canDisassemble) Color(1f, 1f, 1f, 1f) else UIColor.UIActiveDisabled
       else
-        if (canDisassemble) (0.5f, 0.5f, 0.5f, 1f) else Color.UIDisabled)
+        if (canDisassemble) Color(0.5f, 0.5f, 0.5f, 1f) else UIColor.UIDisabled)
   }
 }

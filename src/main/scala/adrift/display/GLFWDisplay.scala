@@ -52,15 +52,13 @@ object Dir {
 }
 
 object Appearance {
-  def charForTerrain(terrain: Terrain): Int = terrain.display match {
-    case "FLOOR" => '.'
-    case "SPACE" => ' '
-  }
+  def charForTerrain(state: GameState, terrain: Terrain): (Char, Color, Color) =
+    state.data.display.getDisplay(terrain.display)
 
-  def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain, viewingFrom: Dir): Int = {
+  def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain, viewingFrom: Dir): Char = {
     import CP437.BoxDrawing._
     import Dir._
-    (left == center, up == center, right == center, down == center) match {
+    ((left == center, up == center, right == center, down == center) match {
       case (false, false, false, false) => 254
       case (false, false, false, true)
         | (false, true, false, false)
@@ -103,24 +101,25 @@ object Appearance {
           case NW | W => LU__
           case SW | S => L__D
         }
-    }
+    }).toChar
   }
 
-  def charForItem(item: Item): Int = item.kind match {
+  def charForItem(state: GameState, item: Item): (Char, Color, Color) = item.kind match {
     case k if k.name == "automatic door" =>
       val isOpen = item.conditions.exists(_.isInstanceOf[DoorOpen])
-      if (isOpen) '-' else '+'
+      val (_, fg, bg) = state.data.display.getDisplay("DOOR")
+      if (isOpen) ('-', fg, bg) else ('+', fg, bg)
     case other =>
-      Item.item_display(other.display)
+      state.data.display.getDisplay(other.display)
   }
 
 
-  def charAtPosition(state: GameState, x: Int, y: Int): Int = {
-    if (x == state.player._1 && y == state.player._2) '@'
+  def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {
+    if (x == state.player._1 && y == state.player._2) state.data.display.getDisplay("PLAYER")
     else if (state.map.contains(x, y)) {
       val items = state.items.lookup(OnFloor(x, y))
       if (items.nonEmpty) {
-        charForItem(items.last)
+        charForItem(state, items.last)
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
           if (state.map.contains(x, y))
@@ -147,16 +146,17 @@ object Appearance {
               else if (py == y) E
               else SE
             }
-            charForWall(state.map(x, y),
+            val (_, fg, bg) = state.data.display.getDisplay("WALL")
+            (charForWall(state.map(x, y),
               left.orNull,
               up.orNull,
               right.orNull,
               down.orNull,
-              viewedFrom)
-          case _ => charForTerrain(state.map(x, y))
+              viewedFrom), fg, bg)
+          case _ => charForTerrain(state, state.map(x, y))
         }
       }
-    } else ' '
+    } else (' ', Color.Black, Color.Black)
   }
 
   def messageAtCell(state: GameState, position: (Int, Int)): String = {
@@ -312,11 +312,11 @@ class GLFWDisplay extends Display {
   ): Unit = {
     for (y <- top until bottom; x <- left until right) {
       if (state.isVisible(x, y)) {
-        val char = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char)
+        val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
+        renderer.drawChar(font, x - left, y - top, char, fg, bg)
       } else {
-        val char = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, fg = (0.0f, 0.1f, 0.05f, 1.0f))
+        val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
+        renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
     }
   }

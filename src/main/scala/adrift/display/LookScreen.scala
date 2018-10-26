@@ -1,6 +1,6 @@
 package adrift.display
 
-import adrift.{GameState, OnFloor}
+import adrift.{Color, GameState, OnFloor}
 import org.lwjgl.glfw.GLFW._
 
 class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
@@ -22,9 +22,9 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    val char = Appearance.charAtPosition(state, x, y)
+    val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
     val (left, right, top, bottom) = display.cameraBounds(state)
-    renderer.drawChar(display.font, x - left, y - top, char, fg=(0, 0, 0, 1), bg=(1,1,1,1))
+    renderer.drawChar(display.font, x - left, y - top, char, fg=Color.Black, bg=Color.White)
     val width = 20
     val anchor =
       if (x - left <= (right - left) / 2 - 1)

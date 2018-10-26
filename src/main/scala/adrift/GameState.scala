@@ -40,7 +40,7 @@ class ItemDatabase {
 }
 
 
-class GameState(data: Data, width: Int, height: Int) {
+class GameState(val data: Data, width: Int, height: Int) {
   val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)

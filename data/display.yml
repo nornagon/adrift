@@ -1,0 +1,83 @@
+- type: display
+  palette:
+    # https://lospec.com/palette-list/matriax8c, by Davit Masia.
+    white: "#f0f0dc"
+    yellow: "#fac800"
+    green: "#10c840"
+    blue: "#00a0c8"
+    red: "#d24040"
+    brown: "#a0694b"
+    gray: "#736464"
+    black: "#101820"
+  default:
+    fg: white
+    bg: black
+  categories:
+    PLAYER:
+      char: "@"
+      fg: brown
+    FLOOR:
+      char: " "
+    WALL:
+      char: "\u00C5" # ┼
+    DOOR:
+      char: "\u002B" # +
+    SMALL_TOOL:
+      char: "\u0074" # t
+      bg: gray
+    TOOL:
+      char: "\u0054" # T
+    RAW_THIN:
+      char: "\u0009" # ○
+    RAW_ROD:
+      char: "\u007C" # |
+    RAW_BLOCK:
+      char: "\u0023" # #
+    RAW_PLATE:
+      char: "\u0004" # ♦
+    RAW_CLOTH:
+      char: "\u00B0" # ░
+    OPTICAL:
+      char: "\u0028" # (
+    SMALL_BOX:
+      char: "\u006E" # n
+    MEDIUM_BOX:
+      char: "\u00EF" # ∩
+    LARGE_BOX:
+      char: "\u0055" # U
+    SMALL_PLATE:
+      char: "\u00A9" # ⌐
+    MEDIUM_PLATE:
+      char: "\u00E2" # Γ
+    LARGE_PLATE:
+      char: "\u004C" # L
+    SMALL_COMPONENT:
+      char: "\u00FA" # ·
+    MEDIUM_COMPONENT:
+      char: "\u00F9" # ∙
+    LARGE_COMPONENT:
+      char: "\u00F8" # °
+    SMALL_ROD:
+      char: "\u0027" # '
+    MEDIUM_ROD:
+      char: "\u0021" # !
+    LARGE_ROD:
+      char: "\u002F" # /
+    SMALL_PART:
+      char: "\u0087" # ç
+    SMALL_EQUIPMENT:
+      char: "\u002D" # -
+    MEDIUM_EQUIPMENT:
+      char: "\u003D" # =
+    LARGE_EQUIPMENT:
+      char: "\u00F0" # ≡
+    HUMAN_EQUIPMENT:
+      char: "\u00E9" # Θ
+    CLOTHING:
+      char: "\u0043" # C
+    CHAIR:
+      char: "\u00D2" # ╥
+      fg: brown
+    DESK:
+      char: "\u00D1" # ╤
+      fg: brown

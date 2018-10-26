@@ -1,5 +1,6 @@
 package adrift.display.glutil
 
+import adrift.Color
 import org.lwjgl.opengl.GL11._
 import org.lwjgl.opengl.GL20._
 
@@ -101,7 +102,7 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
     srcHeight: Float,
     dstX: Float,
     dstY: Float,
-    color: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f)
+    color: Color = Color.White
   ): Unit =
     drawRegion(tex, srcX, srcY, srcWidth, srcHeight, dstX, dstY, srcWidth, srcHeight, color)
 
@@ -115,7 +116,7 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
     dstY: Float,
     dstWidth: Float,
     dstHeight: Float,
-    color: (Float, Float, Float, Float)
+    color: Color
   ): Unit = {
     val u = srcX / tex.width
     val v = srcY / tex.height
@@ -134,7 +135,7 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
     v: Float,
     u2: Float,
     v2: Float,
-    color: (Float, Float, Float, Float)
+    color: Color
   ): Unit = {
     checkFlush(tex)
 
@@ -150,10 +151,10 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
     val x4 = x
     val y4 = y + height
 
-    val r = color._1
-    val g = color._2
-    val b = color._3
-    val a = color._4
+    val r = color.r
+    val g = color.g
+    val b = color.b
+    val a = color.a
 
     vertex(x1, y1, r, g, b, a, u, v)
     vertex(x2, y2, r, g, b, a, u2, v)

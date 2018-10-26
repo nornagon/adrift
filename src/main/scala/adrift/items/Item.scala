@@ -65,52 +65,23 @@ trait ItemCondition {
   def functional: Boolean = false
 }
 
+class ItemId(val id: Int) extends AnyVal
+
 case class Item(
   kind: ItemKind,
   conditions: mutable.Buffer[ItemCondition],
   parts: Seq[Item]
 ) {
   def functional: Boolean = conditions.forall(_.functional) && parts.forall(_.functional)
-  val id = Item.nextId
-  override def hashCode(): Int = id
+  val id: ItemId = Item.nextId
+  override def hashCode(): Int = id.id
   override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
 
   override def toString: String = s"Item(id=$id, kind=${kind.name})"
 }
 object Item {
   private var _nextId = 1
-  def nextId: Int = { _nextId += 1; _nextId }
-  val item_display: Map[String, Int] = Map(
-    "DOOR" -> 0x2B,             // +
-    "SMALL_TOOL" -> 0x74,       // t
-    "TOOL" -> 0x54 ,            // T
-    "RAW_THIN" -> 0x09 ,        // ○ 
-    "RAW_ROD" -> 0x7C ,         // |
-    "RAW_BLOCK" -> 0x23 ,       // #
-    "RAW_PLATE" -> 0x04 ,       // ♦
-    "RAW_CLOTH" -> 0xB0 ,       // ░
-    "OPTICAL" -> 0x28 ,         // (
-    "SMALL_BOX" -> 0x6E ,       // n
-    "MEDIUM_BOX" -> 0xEF ,      // ∩
-    "LARGE_BOX" -> 0x55 ,       // U
-    "SMALL_PLATE" -> 0xA9 ,     // ⌐
-    "MEDIUM_PLATE" -> 0xE2 ,    // Γ
-    "LARGE_PLATE" -> 0x4C ,     // L
-    "SMALL_COMPONENT" -> 0xFA , // ·
-    "MEDIUM_COMPONENT" -> 0xF9 ,// ∙
-    "LARGE_COMPONENT" -> 0xF8 , // °
-    "SMALL_ROD" -> 0x27 ,       // '
-    "MEDIUM_ROD" -> 0x21 ,      // !
-    "LARGE_ROD" -> 0x2F ,       // /
-    "SMALL_PART" -> 0x87 ,      // ç
-    "SMALL_EQUIPMENT" -> 0x2D , // -
-    "MEDIUM_EQUIPMENT" -> 0x3D ,// =
-    "LARGE_EQUIPMENT" -> 0xF0 , // ≡
-    "HUMAN_EQUIPMENT" -> 0xE9 , // Θ
-    "CLOTHING" -> 0x43,         // C
-    "CHAIR" -> 0xD2,            // ╥
-    "DESK" -> 0xD1,             // ╤
-  )
+  def nextId: ItemId = { _nextId += 1; new ItemId(_nextId) }
 }
 
 

@@ -1,5 +1,6 @@
 package adrift.display
 
+import adrift.Color
 import adrift.display.glutil.{SpriteBatch, Texture}
 
 import scala.collection.mutable
@@ -20,10 +21,10 @@ class GlyphRenderer(
     x: Int,
     y: Int,
     c: Int,
-    fg: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f),
-    bg: (Float, Float, Float, Float) = (0f, 0f, 0f, 1f)
+    fg: Color = Color.White,
+    bg: Color = Color.Black
   ): Unit = {
-    if (bg._4 != 0) {
+    if (bg.a != 0) {
       val cx = 0xdb % tilesPerRow
       val cy = 0xdb / tilesPerRow
       spriteBatch.drawRegion(
@@ -70,8 +71,8 @@ class GlyphRenderer(
     y: Int,
     s: String,
     maxWidth: Int = 0,
-    fg: (Float, Float, Float, Float) = (1f, 1f, 1f, 1f),
-    bg: (Float, Float, Float, Float) = (0f, 0f, 0f, 1f)
+    fg: Color = Color.White,
+    bg: Color = Color.Black
   ): Unit = {
     for ((c, i) <- s.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return

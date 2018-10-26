@@ -7,10 +7,11 @@ import adrift.Population.Table
 import adrift.items.{ItemKind, ItemOperation}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
-import io.circe.{Json, JsonObject, yaml}
+import io.circe._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.util.matching.Regex
 
 object YamlObject {
   case class ItemKind(
@@ -50,7 +51,52 @@ case class Data(
   itemGroups: Map[String, YamlObject.ItemGroup],
   rooms: Map[String, YamlObject.RoomDef],
   terrain: Map[String, Terrain],
+  display: DisplayData,
 )
+
+case class Color(r: Float, g: Float, b: Float, a: Float)
+object Color {
+  val hexColor: Regex = raw"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?".r
+  implicit val decoder: Decoder[Color] = { (h: HCursor) =>
+    h.as[String].flatMap {
+      case hexColor(r, g, b, null) =>
+        Right(Color(
+          Integer.parseUnsignedInt(r, 16) / 255f,
+          Integer.parseUnsignedInt(g, 16) / 255f,
+          Integer.parseUnsignedInt(b, 16) / 255f,
+          1f
+        ))
+      case hexColor(r, g, b, a) =>
+        Right(Color(
+          Integer.parseUnsignedInt(r, 16) / 255f,
+          Integer.parseUnsignedInt(g, 16) / 255f,
+          Integer.parseUnsignedInt(b, 16) / 255f,
+          Integer.parseUnsignedInt(a, 16) / 255f
+        ))
+      case other => Left(DecodingFailure(s"Failed to parse color: '$other'", h.history))
+    }
+  }
+  val White = Color(1f, 1f, 1f, 1f)
+  val Black = Color(0f, 0f, 0f, 1f)
+}
+
+case class DisplayProps(
+  char: Char = '.',
+  fg: String = "default",
+  bg: String = "default",
+)
+case class DisplayData(
+  palette: Map[String, Color],
+  default: DisplayProps,
+  categories: Map[String, DisplayProps]
+) {
+  def getDisplay(category: String): (Char, Color, Color) = {
+    val DisplayProps(char, fgName, bgName) = categories(category)
+    val fg = palette(if (fgName == "default") default.fg else fgName)
+    val bg = palette(if (bgName == "default") default.bg else bgName)
+    (char, fg, bg)
+  }
+}
 
 object Data {
   implicit private val configuration: Configuration = Configuration.default.withDefaults
@@ -99,12 +145,18 @@ object Data {
         case (k, v) => assert(v.length == 1); k -> v.head
       }
 
+    val display: DisplayData = {
+      val displays = ymls("display")
+      assert(displays.size == 1, "Must have exactly one display object")
+      displays.head.as[DisplayData].fold(throw _, identity)
+    }
 
     Data(
       items,
       itemGroups,
       rooms,
-      terrain
+      terrain,
+      display
     )
   }
 
