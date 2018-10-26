@@ -4,7 +4,7 @@ import java.nio.file.{FileSystems, Files, Path}
 import java.util.stream.Collectors
 
 import adrift.Population.Table
-import adrift.items.{ItemKind, ItemOperation}
+import adrift.items.{Behavior, ItemKind, ItemOperation}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe._
@@ -21,6 +21,7 @@ object YamlObject {
     provides: Seq[String] = Seq.empty,
     display: String,
     affixed: Boolean = false,
+    behavior: Seq[JsonObject] = Seq.empty,
   )
 
   case class ItemPart(
@@ -178,6 +179,11 @@ object Data {
       lazyMap.getOrElseUpdate(
         id, {
           val i = itemsById(id)
+          val behaviorGenerators = i.behavior.map { obj =>
+            val behaviorType = obj.keys.head
+            val args = obj(behaviorType).get
+            () => Behavior.decoders(behaviorType).decodeJson(args).fold(throw _, identity)
+          }
           ItemKind(
             i.name,
             i.description,
@@ -186,7 +192,8 @@ object Data {
             },
             i.provides.map {op => operations(op)},
             display = i.display,
-            affixed = i.affixed
+            affixed = i.affixed,
+            behaviors = behaviorGenerators
           )
         }
       )

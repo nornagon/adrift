@@ -1,7 +1,6 @@
 package adrift
 
-import adrift.Action._
-import adrift.items.{Broken, DoorOpen, Item, ItemKind}
+import adrift.items._
 
 import scala.collection.mutable
 import scala.util.Random
@@ -34,6 +33,8 @@ class ItemDatabase {
     itemsByLocation(location)
   }
 
+  def all: Iterable[Item] = locationsByItem.keys
+
   def move(item: Item, location: ItemLocation): Unit = {
     delete(item)
     put(item, location)
@@ -51,12 +52,12 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   def receive(action: Action): Unit = {
     message = None
     action match {
-      case PlayerMove(dx, dy) =>
+      case Action.PlayerMove(dx, dy) =>
         if (canWalk(player._1 + dx, player._2 + dy)) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
 
-      case Disassemble(item) =>
+      case Action.Disassemble(item) =>
         items.delete(item)
         for (p <- item.parts) {
           items.put(p, OnFloor(player._1, player._2))
@@ -64,17 +65,18 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         }
         message = Some(s"You take apart the ${item.kind.name}.")
 
-      case Assemble(itemKind, components) =>
+      case Action.Assemble(itemKind, components) =>
         components.foreach(items.delete)
         val newItem = Item(
           kind = itemKind,
           conditions = mutable.Buffer.empty,
-          components
+          components,
+          behaviors = mutable.Buffer.empty
         )
         items.put(newItem, OnFloor(player._1, player._2))
         message = Some(s"You make a ${newItem.kind.name}.")
 
-      case PickUp(item) =>
+      case Action.PickUp(item) =>
         if (item.kind.affixed) {
           message = Some("You can't pick that up.")
         } else if (items.lookup(InHands()).size >= 2) {
@@ -84,7 +86,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
           message = Some(s"You pick up the ${item.kind.name}.")
         }
 
-      case PutDown(item) =>
+      case Action.PutDown(item) =>
         items.lookup(item) match {
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
@@ -92,27 +94,31 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
           case _ =>
             message = Some("You can't put that down.")
         }
-      case Quit =>
+      case Action.Quit =>
     }
+    items.all.foreach(sendMessage(_, Tick))
+    recalculateFOV()
+  }
+
+  def sendMessage(item: Item, message: Message): Unit = {
+    item.behaviors.foreach(_.receive(this, item, message))
+  }
+
+  def broadcastToLocation(location: ItemLocation, message: Message): Unit = {
+    items.lookup(location).foreach(sendMessage(_, message))
   }
 
   def movePlayer(x: Int, y: Int): Unit = {
     player = (x, y)
-    openNearbyDoors()
-    recalculateFOV()
+    broadcastPlayerMoved()
   }
 
-  def openNearbyDoors(): Unit = {
-    for (x <- player._1 - 6 to player._1 + 6; y <- player._2 - 6 to player._2 + 6) {
-      for (i <- items.lookup(OnFloor(x, y)); if i.kind.name == "automatic door") {
-        val isOpen = i.conditions.exists(_.isInstanceOf[DoorOpen])
-        if (!isOpen && (x - player._1).abs < 2 && (y - player._2).abs < 2) {
-          i.conditions.append(DoorOpen())
-        } else if (isOpen && ((x - player._1).abs > 2 || (y - player._2).abs > 2)) {
-          i.conditions.remove(i.conditions.indexWhere(_.isInstanceOf[DoorOpen]))
-        }
-      }
-    }
+  def broadcastPlayerMoved(): Unit = {
+    for {
+      y <- player._2 - 2 to player._2 + 2
+      x <- player._1 - 2 to player._1 + 2
+      if isVisible(x, y)
+    } broadcastToLocation(OnFloor(x, y), PlayerMove(x, y))
   }
 
   def smash(p: Item): Unit = {
@@ -133,12 +139,9 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   def itemIsOpaque(item: Item): Boolean = {
-    item.kind.name match {
-      case "automatic door" =>
-        !item.conditions.exists(_.isInstanceOf[DoorOpen])
-      case _ =>
-        false
-    }
+    val opq = IsOpaque()
+    sendMessage(item, opq)
+    opq.opaque
   }
 
   def isOpaque(x: Int, y: Int): Boolean = {
@@ -146,7 +149,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   private var visible = Set.empty[(Int, Int)]
-  private def recalculateFOV(): Unit = {
+  def recalculateFOV(): Unit = {
     val newVisible = mutable.Set.empty[(Int, Int)]
     newVisible += player
     val opaque = (dx: Int, dy: Int) => isOpaque(player._1 + dx, player._2 + dy)

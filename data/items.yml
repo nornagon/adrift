@@ -470,17 +470,31 @@
 
 - type: item
   name: automatic door
-  description: A standard sturdy, motion-sensitive door. It opens and closes almost silently
+  description: A standard sturdy door. It opens and closes almost silently.
   parts:
-    - {type: local motion sensor, count: 2, disassembled_with: SCREWING}
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
     - {type: micro e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 6, disassembled_with: SOLDERING}
+    - {type: flex component, count: 2, disassembled_with: SOLDERING}
     - {type: C-size stepper motor, count: 2, disassembled_with: SCREWING}
     - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
     - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
   display: DOOR
   affixed: true
+  behavior:
+    - DoorOpener: {}
+
+- type: item
+  name: mounted presence sensor
+  description: A small dark panel hides a device that can sense the presence of humans.
+  display: OPTICAL
+  parts:
+    - { type: local motion sensor, disassembled_with: SCREWING }
+    - { type: ship power adapter, disassembled_with: SOLDERING }
+    - { type: micro e-board, disassembled_with: SCREWING }
+    - { type: A-size frame, disassembled_with: SCREWING }
+    - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
+  behavior:
+    - MotionSensor: { radius: 2 }
 
 - type: item
   name: manual door

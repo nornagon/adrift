@@ -2,7 +2,7 @@ package adrift.display
 
 import adrift._
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
-import adrift.items.{DoorOpen, Item, ItemOperation}
+import adrift.items.Item
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -104,14 +104,8 @@ object Appearance {
     }).toChar
   }
 
-  def charForItem(state: GameState, item: Item): (Char, Color, Color) = item.kind match {
-    case k if k.name == "automatic door" =>
-      val isOpen = item.conditions.exists(_.isInstanceOf[DoorOpen])
-      val (_, fg, bg) = state.data.display.getDisplay("DOOR")
-      if (isOpen) ('-', fg, bg) else ('+', fg, bg)
-    case other =>
-      state.data.display.getDisplay(other.display)
-  }
+  def charForItem(state: GameState, item: Item): (Char, Color, Color) =
+    state.data.display.getDisplay(item.kind.display)
 
 
   def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {

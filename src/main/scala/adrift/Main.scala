@@ -12,6 +12,7 @@ object Main {
     val data = Data.parse(Paths.get("data"))
     implicit val random: Random = new Random(52)
     val state = WorldGen(data).generateWorld
+    state.recalculateFOV()
     val display: Display = new GLFWDisplay
     display.init()
     display.update(state)

@@ -1,5 +1,7 @@
 package adrift.items
 
+import adrift.{GameState, OnFloor}
+
 import scala.collection.mutable
 
 /*
@@ -59,6 +61,7 @@ case class ItemKind(
   provides: Seq[ItemOperation],
   display: String,
   affixed: Boolean,
+  behaviors: Seq[() => Behavior]
 )
 
 trait ItemCondition {
@@ -66,29 +69,29 @@ trait ItemCondition {
 }
 
 class ItemId(val id: Int) extends AnyVal
+object ItemId {
+  private var _nextId = 1
+  def next: ItemId = { _nextId += 1; new ItemId(_nextId) }
+}
 
 case class Item(
   kind: ItemKind,
   conditions: mutable.Buffer[ItemCondition],
-  parts: Seq[Item]
+  parts: Seq[Item],
+  behaviors: mutable.Buffer[Behavior]
 ) {
   def functional: Boolean = conditions.forall(_.functional) && parts.forall(_.functional)
-  val id: ItemId = Item.nextId
+  val id: ItemId = ItemId.next
   override def hashCode(): Int = id.id
   override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
 
   override def toString: String = s"Item(id=$id, kind=${kind.name})"
-}
-object Item {
-  private var _nextId = 1
-  def nextId: ItemId = { _nextId += 1; new ItemId(_nextId) }
 }
 
 
 case class Charge(kwh: Double, maxKwh: Double) extends ItemCondition {
   override def functional: Boolean = kwh > 0
 }
-case class DoorOpen() extends ItemCondition
 
 case object Broken extends ItemCondition {
   override def functional: Boolean = false
@@ -96,3 +99,69 @@ case object Broken extends ItemCondition {
 
 /** Some action that you can do with an item, e.g. PRYING or WELDING */
 case class ItemOperation(id: String)
+
+trait Message
+case class PlayerMove(x: Int, y: Int) extends Message
+case object Activate extends Message
+case object Deactivate extends Message
+case object Tick extends Message
+case class IsOpaque(var opaque: Boolean = false) extends Message
+
+trait Behavior {
+  def receive(state: GameState, self: Item, message: Message): Unit
+}
+
+object Behavior {
+  import cats.syntax.functor._
+  import io.circe.Decoder
+  import io.circe.generic.extras.auto._
+  import io.circe.generic.extras.Configuration
+  implicit private val configuration: Configuration = Configuration.default.withDefaults
+
+  val decoders: Map[String, Decoder[Behavior]] = Map(
+    "MotionSensor" -> Decoder[MotionSensor].widen,
+    "DoorOpener" -> Decoder[DoorOpener].widen,
+  )
+}
+
+case class MotionSensor(radius: Int, timer: Int = 6) extends Behavior {
+  private var activeTicks = 0
+
+  override def receive(state: GameState, self: Item, message: Message): Unit = message match {
+    case PlayerMove(x, y) =>
+      val loc = state.items.lookup(self)
+      loc match {
+        case OnFloor(ix, iy) =>
+          if ((x - ix).abs + (y - iy).abs <= radius) {
+            if (activeTicks == 0)
+              state.broadcastToLocation(loc, Activate)
+            activeTicks = timer
+          }
+        case _ =>
+      }
+    case Tick if activeTicks > 0 =>
+      activeTicks -= 1
+      if (activeTicks == 0) {
+        state.broadcastToLocation(state.items.lookup(self), Deactivate)
+      }
+    case _ =>
+  }
+}
+
+case class DoorOpener() extends Behavior {
+  var isOpen: Boolean = false
+
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case Activate if !isOpen =>
+      isOpen = true
+    case Deactivate =>
+      isOpen = false
+    case msg: IsOpaque =>
+      msg.opaque = !isOpen
+    case _ =>
+  }
+}

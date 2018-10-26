@@ -155,6 +155,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           }
           state.map(x + 3, y) = data.terrain("floor")
           state.items.put(generateItem(data.items("automatic door")), OnFloor(x + 3, y))
+          state.items.put(generateItem(data.items("mounted presence sensor")), OnFloor(x + 3, y))
         case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = data.terrain("floor")
@@ -172,6 +173,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           }
           state.map(x, y + 3) = data.terrain("floor")
           state.items.put(generateItem(data.items("automatic door")), OnFloor(x, y + 3))
+          state.items.put(generateItem(data.items("mounted presence sensor")), OnFloor(x, y + 3))
         case Open | Internal(_, _) =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = data.terrain("floor")
@@ -202,6 +204,11 @@ case class WorldGen(data: Data)(implicit random: Random) {
   }
 
   def generateItem(itemKind: ItemKind): Item = {
-    Item(itemKind, mutable.Buffer.empty, itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) })
+    Item(
+      itemKind,
+      mutable.Buffer.empty,
+      itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) },
+      behaviors = mutable.Buffer.empty ++ itemKind.behaviors.map(_())
+    )
   }
 }
