@@ -1,11 +1,18 @@
 package adrift.display
 
 import adrift._
-import adrift.items.Broken
+import adrift.items.{Broken, Item}
 import org.lwjgl.glfw.GLFW._
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   var selectedIdx = 0
+  def selectedItem: Option[Item] = {
+    val nearbyItems = state.nearbyItems
+    if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
+      Some(nearbyItems(selectedIdx))
+    else None
+  }
+
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     val nearbyItems = state.nearbyItems
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
@@ -29,6 +36,20 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val nearbyItems = state.nearbyItems
     val anchor = (1, 1)
     val width = 30
+    selectedItem foreach { item =>
+      val loc = state.items.lookup(item)
+      val (left, _, top, _) = display.cameraBounds(state)
+      loc match {
+        case OnFloor(x, y) =>
+          val (char, _, _) = Appearance.charForItem(state, item)
+          renderer.drawChar(display.font, x - left, y - top, char, fg=Color.Black, bg=Color.White)
+        case InHands() | Worn() =>
+          val (char, _, _) = Appearance.charForItem(state, item)
+          renderer.drawChar(display.font, state.player._1 - left, state.player._2 - top, char, fg=Color.Black, bg=Color.White)
+        case Inside(otherItem) =>
+          // TODO: recursively find the location of otherItem until something is worn, in hands, or on the floor.
+      }
+    }
     renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
     renderer.drawString(anchor._1 + 1, anchor._2 + 1, "Nearby")
     for ((item, i) <- nearbyItems.zipWithIndex) {
