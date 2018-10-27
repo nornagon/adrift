@@ -60,7 +60,6 @@ case class ItemKind(
   parts: Seq[((ItemKind, Int), ItemOperation)],
   provides: Seq[ItemOperation],
   display: String,
-  affixed: Boolean,
   behaviors: Seq[() => Behavior]
 )
 
@@ -107,6 +106,7 @@ case object Deactivate extends Message
 case object Tick extends Message
 case class IsOpaque(var opaque: Boolean = false) extends Message
 case class IsWalkable(var walkable: Boolean = true) extends Message
+case class PickUp(var ok: Boolean = true) extends Message
 
 trait Behavior {
   def receive(state: GameState, self: Item, message: Message): Unit
@@ -122,6 +122,7 @@ object Behavior {
   val decoders: Map[String, Decoder[Behavior]] = Map(
     "MotionSensor" -> Decoder[MotionSensor].widen,
     "DoorOpener" -> Decoder[DoorOpener].widen,
+    "Affixed" -> Decoder[Affixed].widen,
   )
 }
 
@@ -165,6 +166,17 @@ case class DoorOpener() extends Behavior {
       msg.opaque = !isOpen
     case msg: IsWalkable =>
       msg.walkable = isOpen
+    case _ =>
+  }
+}
+
+case class Affixed() extends Behavior {
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case p: PickUp => p.ok = false
     case _ =>
   }
 }

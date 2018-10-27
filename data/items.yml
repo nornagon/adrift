@@ -479,8 +479,8 @@
     - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
     - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
   display: DOOR
-  affixed: true
   behavior:
+    - Affixed: {}
     - DoorOpener: {}
 
 - type: item
@@ -494,6 +494,7 @@
     - { type: A-size frame, disassembled_with: SCREWING }
     - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
   behavior:
+    - Affixed: {}
     - MotionSensor: { radius: 2 }
 
 - type: item

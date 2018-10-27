@@ -20,7 +20,6 @@ object YamlObject {
     parts: Seq[ItemPart] = Seq.empty,
     provides: Seq[String] = Seq.empty,
     display: String,
-    affixed: Boolean = false,
     behavior: Seq[JsonObject] = Seq.empty,
   )
 
@@ -192,7 +191,6 @@ object Data {
             },
             i.provides.map {op => operations(op)},
             display = i.display,
-            affixed = i.affixed,
             behaviors = behaviorGenerators
           )
         }

@@ -77,7 +77,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         message = Some(s"You make a ${newItem.kind.name}.")
 
       case Action.PickUp(item) =>
-        if (item.kind.affixed) {
+        if (!sendMessage(item, PickUp()).ok) {
           message = Some("You can't pick that up.")
         } else if (items.lookup(InHands()).size >= 2) {
           message = Some("Your hands are full.")
@@ -100,8 +100,9 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     recalculateFOV()
   }
 
-  def sendMessage(item: Item, message: Message): Unit = {
+  def sendMessage[Msg <: Message](item: Item, message: Msg): Msg = {
     item.behaviors.foreach(_.receive(this, item, message))
+    message
   }
 
   def broadcastToLocation(location: ItemLocation, message: Message): Unit = {
