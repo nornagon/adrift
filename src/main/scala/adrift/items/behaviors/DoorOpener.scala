@@ -1,6 +1,7 @@
 package adrift.items.behaviors
 
 import adrift.GameState
+import adrift.items.Message.{Activate, Deactivate, IsOpaque, IsWalkable}
 import adrift.items._
 
 case class DoorOpener() extends Behavior {

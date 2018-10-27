@@ -77,7 +77,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         message = Some(s"You make a ${newItem.kind.name}.")
 
       case Action.PickUp(item) =>
-        if (!sendMessage(item, PickUp()).ok) {
+        if (!sendMessage(item, Message.PickUp()).ok) {
           message = Some("You can't pick that up.")
         } else if (items.lookup(InHands()).size >= 2) {
           message = Some("Your hands are full.")
@@ -96,7 +96,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         }
       case Action.Quit =>
     }
-    items.all.foreach(sendMessage(_, Tick))
+    items.all.foreach(sendMessage(_, Message.Tick))
     recalculateFOV()
   }
 
@@ -119,7 +119,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
       y <- player._2 - 2 to player._2 + 2
       x <- player._1 - 2 to player._1 + 2
       if isVisible(x, y)
-    } broadcastToLocation(OnFloor(x, y), PlayerMove(x, y))
+    } broadcastToLocation(OnFloor(x, y), Message.PlayerMove(x, y))
   }
 
   def smash(p: Item): Unit = {
@@ -136,13 +136,13 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   def itemIsOpaque(item: Item): Boolean = {
-    val m = IsOpaque()
+    val m = Message.IsOpaque()
     sendMessage(item, m)
     m.opaque
   }
 
   def itemIsWalkable(item: Item): Boolean = {
-    val m = IsWalkable()
+    val m = Message.IsWalkable()
     sendMessage(item, m)
     m.walkable
   }

@@ -1,5 +1,6 @@
 package adrift.items.behaviors
 
+import adrift.items.Message.{Activate, Deactivate, PlayerMove, Tick}
 import adrift.{GameState, OnFloor}
 import adrift.items._
 

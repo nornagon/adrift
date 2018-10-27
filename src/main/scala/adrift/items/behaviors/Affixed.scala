@@ -1,7 +1,8 @@
 package adrift.items.behaviors
 
 import adrift.GameState
-import adrift.items.{Behavior, Item, Message, PickUp}
+import adrift.items.Message.PickUp
+import adrift.items.{Behavior, Item, Message}
 
 case class Affixed() extends Behavior {
   override def receive(
