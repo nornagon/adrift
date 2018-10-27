@@ -1,0 +1,42 @@
+#
+# Tools
+#
+
+- type: item
+  name: screwdriver
+  description: A standard K35 screwdriver, like you'd find in a koligan.
+  provides: [ SCREWING ]
+  display: SMALL_TOOL
+
+- type: item
+  name: hand-held hammer
+  description: A largely obsolete device, the hand-held hammer consists of a rigid handle and weighted head.
+  parts:
+    - { type: wooden rod, disassembled_with: HAMMERING }
+    - { type: chunk of steel, disassembled_with: HAMMERING }
+  provides: [ HAMMERING ]
+  display: SMALL_TOOL
+
+- type: item
+  name: crowbar
+  description: Used during the invasion by many as a last-ditch weapon. The weight is comforting, and it's a practical tool too.
+  provides: [ PRYING ]
+  display: TOOL
+
+- type: item
+  name: multi-wrench
+  description: Twisting the knob adjusts the grip size.  This is pretty much only useful for adding or removing bolts.
+  provides: [ BOLT_TURNING ]
+  display: TOOL
+
+- type: item
+  name: box cutter
+  description: A sharp, virtually unbreakable tungsteel blade makes this a great tool or, in a pinch, a weapon.
+  provides: [ CUTTING ]
+  display: SMALL_TOOL
+
+- type: item
+  name: soldering iron
+  description: An RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components.
+  provides: [ SOLDERING ]
+  display: SMALL_TOOL

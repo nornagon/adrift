@@ -1,0 +1,56 @@
+
+
+#
+# Raw Materials
+#
+- type: item
+  name: copper wire
+  description: A few meters of thin copper wire.
+  display: RAW_THIN
+
+- type: item
+  name: electric insulator
+  description: A few meters of ship-standard insulator material.
+  display: RAW_THIN
+
+- type: item
+  name: wooden rod
+  description: A foot-long cylinder of dead tree. The tree was probably grown on Earth... it's nice to hold a piece of home in your hands.
+  display: RAW_ROD
+
+- type: item
+  name: chunk of steel
+  description: It feels cold and heavy in your hand.
+  display: RAW_BLOCK
+
+- type: item
+  name: magnet
+  description: A permanent ferrite magnet. It'd stick to your refrigerator.
+  display: RAW_BLOCK
+
+- type: item
+  name: glass plate
+  description: A small glass plate. Maybe for a small window, display screen or mirror.
+  display: RAW_PLATE
+
+- type: item
+  name: aluminum foil
+  description: A small sheet of aluminum foil. Wrap a burrito or make something shiny.
+  display: RAW_PLATE
+
+- type: item
+  name: sheet metal
+  description: A small sheet of some steel alloy. Make a box or plate from it.
+  display: RAW_PLATE
+
+- type: item
+  name: nylon thread
+  description: A few meters of nylon thread.
+  display: RAW_THIN
+
+- type: item
+  name: synthetic fabric rag
+  description: A small section of synthetic fabric. It's extremely light and strong.
+  parts:
+    - { type: nylon thread, count: 8, disassembled_with: CUTTING }
+  display: RAW_CLOTH

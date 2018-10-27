@@ -1,0 +1,18 @@
+#
+# Fasteners
+#
+
+- { type: item, display: SMALL_PART, name: "type IA screw", description: "A small, carbon-printed type IA screw, like you'd find in any cheap device these days." }
+- { type: item, display: SMALL_PART, name: "type IIA screw", description: "A carbon-printed type IIA screw, mostly used for small high quality components." }
+- { type: item, display: SMALL_PART, name: "type IIIA screw", description: "A carbon-printed type IIIA screw, for ultimate precision in micro devices." }
+- { type: item, display: SMALL_PART, name: "type IB screw", description: "A carbon-printed type IB screw, used when you need to hold large things together, but not too well." }
+- { type: item, display: SMALL_PART, name: "type IIB screw", description: "A carbon-printed type IIB screw, the standard in affixing human-scale objects." }
+- { type: item, display: SMALL_PART, name: "type IIIB screw", description: "A carbon-printed type IIIB screw, for maximum strength and precision in large objects." }
+- { type: item, display: SMALL_PART, name: "type IC screw", description: "A carbon-printed type IC screw, for bolting together huge plastic crap." }
+- { type: item, display: SMALL_PART, name: "type IIC screw", description: "A carbon-printed type IIC screw, for holding an engine in a car or similar applications." }
+- { type: item, display: SMALL_PART, name: "type IIIC screw", description: "A carbon-printed type IIIC screw, for when you need to keep the wings on your supersonic fighter." }
+
+- type: item
+  name: fastener
+  description: A small metal connector, with two parts easily attached and detached from one another by hand.
+  display: SMALL_PART

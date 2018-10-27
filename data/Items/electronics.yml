@@ -1,0 +1,96 @@
+#
+# Electronic parts
+#
+
+
+- type: item
+  name: power cable
+  description: The ubiquitous 8-conductor thumb-thick black cable that snakes throughout the ship.
+  parts:
+    - {type: copper wire, count: 8, disassembled_with: CUTTING}
+    - {type: electric insulator, count: 1, disassembled_with: CUTTING}
+  display: RAW_THIN
+
+- type: item
+  name: ship power adapter
+  description: A box of electronics to adapt from ship power to any other kind of power supply.
+  parts:
+    - { type: micro e-board, count: 1, disassembled_with: SCREWING }
+    - { type: flex component, count: 21, disassembled_with: SOLDERING }
+    - { type: microprocessor, count: 1, disassembled_with: SOLDERING }
+  display: MEDIUM_BOX
+
+
+- { type: item, name: "M3A power supply", description: "Ptronics smallest power supply is perfect for a phone or cat toy.", display: SMALL_BOX}
+- { type: item, name: "M5A power supply", description: "Another small supply from Ptronics with more voltage and small amps.", display: SMALL_BOX }
+- { type: item, name: "M7A power supply", description: "A small high voltage power supply.", display: SMALL_BOX }
+- { type: item, name: "M3C power supply", description: "MegaMicro made this supply to fill a gap in Ptronics line of power supplies.", display: MEDIUM_BOX }
+- { type: item, name: "M5C power supply", description: "Ptronics most popular power supply. Used as bricks in some countries.", display: MEDIUM_BOX }
+- { type: item, name: "M7C power supply", description: "If you touch this power supply wrong, you'll probably die.", display: MEDIUM_BOX }
+- { type: item, name: "M3E power supply", description: "A beefy low voltage, high amperage supply from your friends at Ptronics.", display: LARGE_BOX }
+- { type: item, name: "M5E power supply", description: "An off-brand copy of the popular Ptronics M5E unit... someone was trying to save money here.", display: LARGE_BOX }
+- { type: item, name: "M7E power supply", description: "This beast of a power supply compensates for inefficiency with even more power.", display: LARGE_BOX }
+
+- type: item
+  name: flat_display
+  description: flexible modular electronic display medium. Opto-electronic connector cable transmits power, data and illumination.
+  display: SMALL_PLATE
+
+- type: item
+  name: micro e-board
+  description: A small modular electronics substrate.
+  display: SMALL_PLATE
+- type: item
+  name: standard e-board
+  description: A normal modular electronics substrate.
+  display: MEDIUM_PLATE
+- type: item
+  name: mega e-board
+  description: A huge modular electronics substrate.
+  display: LARGE_PLATE
+
+- type: item
+  name: flex component
+  description: A single part that can serve as any of a huge number of possible electronic components depending on how it's configured.
+  display: SMALL_COMPONENT
+
+- type: item
+  name: tiny DC motor
+  description: A small DC motor. Could be from a remote-controlled toy or something.
+  parts:
+    - { type: copper wire, count: 2, disassembled_with: CUTTING }
+    - { type: magnet, count: 1, disassembled_with: HANDLING }
+  display: SMALL_COMPONENT
+
+- type: item
+  name: B-size stepper motor
+  description: A capable motor used in factory equipment and home products alike.
+  display: MEDIUM_COMPONENT
+- type: item
+  name: C-size stepper motor
+  description: A motor this size puts out more force than a human can.
+  display: MEDIUM_COMPONENT
+- type: item
+  name: D-size stepper motor
+  description: A heavy-duty motor for massive precision applications.
+  display: LARGE_COMPONENT
+
+- type: item
+  name: MRAM chip
+  description: A magnetic memory chip. You'd need to attach it to a computer to read or write its contents.
+  display: SMALL_COMPONENT
+
+- type: item
+  name: microprocessor
+  description: "The part number is written on the chip: BCM2837RIFBG."
+  display: SMALL_COMPONENT
+
+- type: item
+  name: laser diode
+  description: A weak laser diode. Probably still shouldn't look directly into it, though.
+  display: SMALL_COMPONENT
+
+- type: item
+  name: rechargeable battery
+  description: A rechargeable copper foam substrate battery. Popular in RC toys. Safe and long-lasting.
+  display: SMALL_COMPONENT

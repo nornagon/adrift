@@ -1,0 +1,70 @@
+# miscelaneous items that don't belong to a particular room or category
+
+- type: item
+  name: automatic door
+  description: A standard sturdy door. It opens and closes almost silently.
+  parts:
+    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
+    - {type: flex component, count: 2, disassembled_with: SOLDERING}
+    - {type: C-size stepper motor, count: 2, disassembled_with: SCREWING}
+    - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
+    - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
+  display: DOOR
+  behavior:
+    - Affixed: {}
+    - DoorOpener: {}
+
+- type: item
+  name: mounted presence sensor
+  description: A small dark panel hides a device that can sense the presence of humans.
+  display: OPTICAL
+  parts:
+    - { type: local motion sensor, disassembled_with: SCREWING }
+    - { type: ship power adapter, disassembled_with: SOLDERING }
+    - { type: micro e-board, disassembled_with: SCREWING }
+    - { type: A-size frame, disassembled_with: SCREWING }
+    - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
+  behavior:
+    - Affixed: {}
+    - MotionSensor: { radius: 2 }
+
+- type: item
+  name: manual door
+  description: A standard sturdy, manually operated door.
+  parts:
+    - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
+    - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
+  display: DOOR
+
+- type: item
+  name: bulkhead door
+  description: A heavy-duty, externally actuated door for containing reactor breaches or the cold void.
+  parts:
+    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
+    - {type: flex component, count: 12, disassembled_with: SOLDERING}
+    - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
+    - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
+    - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
+  display: DOOR
+
+- type: item
+  name: local motion sensor
+  description: A device capable of sensing motion in a small area.
+  parts:
+    - {type: laser diode, count: 2, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 2, disassembled_with: SCREWING}
+    - {type: flex component, count: 12, disassembled_with: SOLDERING}
+    - {type: Y1 mirror, count: 4, disassembled_with: SCREWING}
+    - {type: W1 mirror, count: 2, disassembled_with: SCREWING}
+    - {type: Z1 lens, count: 2, disassembled_with: SCREWING}
+    - {type: X1 lens, count: 4, disassembled_with: SCREWING}
+    - {type: A-size frame, count: 1, disassembled_with: SCREWING}
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: medium wheel
+  description: A standard passive caster-style equipment wheel. Like on a shopping cart.
+  display: LARGE_COMPONENT

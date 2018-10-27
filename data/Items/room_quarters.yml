@@ -1,0 +1,83 @@
+- type: item
+  name: holonote
+  description: A small cube that projects a 3D holographic message. A novelty, really, it's much easier to just write an e-mail.
+  parts:
+    - { type: rechargeable battery, disassembled_with: SCREWING }
+    - { type: holographic projector, disassembled_with: SCREWING }
+    - { type: A-size frame, disassembled_with: SCREWING }
+    - { type: microprocessor, disassembled_with: SOLDERING }
+    - { type: MRAM chip, disassembled_with: SOLDERING }
+    - { type: type IA screw, count: 6, disassembled_with: SCREWING }
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: holographic projector
+  description: A laser array and an assortment of spinning mirrors, capable of producing an ethereal full-color 3-dimensional image.
+  parts:
+    - { type: laser diode, count: 3, disassembled_with: SOLDERING }
+    - { type: flat mirror, disassembled_with: SCREWING }
+    - { type: tiny DC motor, disassembled_with: SOLDERING }
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: minifridge
+  description: A small food-grade refrigerator for keeping your lunch in
+  parts:
+    - { type: cooling_unit, count: 1, disassembled_with: SCREWING}
+    - { type: C-size frame, count: 1, disassembled_with: SCREWING}
+    - { type: type IIA screw, count: 8, disassembled_with: SCREWING}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: backpack
+  description: A light textile bag that straps close to the body. It has a lot of pockets.
+  parts:
+    - { type: synthetic fabric rag, count: 4, disassembled_with: CUTTING }
+    - { type: nylon thread, count: 2, disassembled_with: CUTTING }
+    - { type: fastener, count: 2, disassembled_with: CUTTING }
+  display: CLOTHING
+
+- type: item
+  name: flat mirror
+  description: A small mirror. Your face looks strange, as if it belongs to someone else.
+  display: OPTICAL
+
+- type: item
+  name: bed
+  description: bed
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: closet
+  description: closet
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: side table
+  description: side table
+  parts:
+  - {type: drawer, count: 3, disassembled_with: SCREWING}
+  - {type: C-size frame, count: 2, disassembled_with: SCREWING}
+  display: DESK
+
+- type: item
+  name: desk
+  description: A modular alum-composite structural desk.  Designed for maximum productivity. Under normal conditions.
+  parts:
+  - {type: D-size frame, count: 1, disassembled_with: SCREWING}
+  - {type: C-size modular panel, count: 3, disassembled_with: SCREWING}
+  - {type: C-size modular rod, count: 4, disassembled_with: SCREWING}
+  - {type: drawer, count: 3, disassembled_with: SCREWING}
+  display: DESK
+
+- type: item
+  name: drawer
+  description: Is it a drawer once you've pulled it out of the furniture?  Is it just a weird box?
+  parts:
+  - {type: B-size frame, count: 1, disassembled_with: SCREWING}
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: chair
+  description: A sleek alum-composite adjustable chair. Great for when you need to take a break.
+  display: CHAIR

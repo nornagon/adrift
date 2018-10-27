@@ -1,0 +1,170 @@
+#
+# Optical components
+#
+- type: item
+  name: Z1 lens
+  description: The smallest most concave module-compatible lens available.
+  display: OPTICAL
+- type: item
+  name: Z2 lens
+  description: A small, maximally concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Z3 lens
+  description: A medium sized, maximally concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Z4 lens
+  description: A large, maximally concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Z5 lens
+  description: A huge, maximally concave module-compatible lens.
+  display: OPTICAL
+
+- type: item
+  name: Y1 lens
+  description: A teeny-tiny, concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Y2 lens
+  description: A small, concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Y3 lens
+  description: A medium sized, concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Y4 lens
+  description: A large, concave module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: Y5 lens
+  description: A huge, concave module-compatible lens.
+  display: OPTICAL
+
+- type: item
+  name: X1 lens
+  description: The smallest convex module-compatible lens available.
+  display: OPTICAL
+- type: item
+  name: X2 lens
+  description: A small, convex module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: X3 lens
+  description: A medium sized, convex module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: X4 lens
+  description: A large, convex module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: X5 lens
+  description: A huge, convex module-compatible lens.
+  display: OPTICAL
+
+- type: item
+  name: W1 lens
+  description: The smallest maximally convex module-compatible lens available.
+  display: OPTICAL
+- type: item
+  name: W2 lens
+  description: A small, maximally convex module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: W3 lens
+  description: A medium sized, maximally convex module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: W4 lens
+  description: A large, maximally convex module-compatible lens.
+  display: OPTICAL
+- type: item
+  name: W5 lens
+  description: A huge, maximally convex module-compatible lens.
+  display: OPTICAL
+
+- type: item
+  name: Z1 mirror
+  description: The smallest most concave module-compatible mirror available.
+  display: OPTICAL
+- type: item
+  name: Z2 mirror
+  description: A small, maximally concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Z3 mirror
+  description: A medium sized, maximally concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Z4 mirror
+  description: A large, maximally concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Z5 mirror
+  description: A huge, maximally concave module-compatible mirror.
+  display: OPTICAL
+
+- type: item
+  name: Y1 mirror
+  description: A teeny-tiny, concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Y2 mirror
+  description: A small, concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Y3 mirror
+  description: A medium sized, concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Y4 mirror
+  description: A large, concave module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: Y5 mirror
+  description: A huge, concave module-compatible mirror.
+  display: OPTICAL
+
+- type: item
+  name: X1 mirror
+  description: The smallest convex module-compatible mirror available.
+  display: OPTICAL
+- type: item
+  name: X2 mirror
+  description: A small, convex module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: X3 mirror
+  description: A medium sized, convex module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: X4 mirror
+  description: A large, convex module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: X5 mirror
+  description: A huge, convex module-compatible mirror.
+  display: OPTICAL
+
+- type: item
+  name: W1 mirror
+  description: The smallest maximally convex module-compatible mirror available.
+  display: OPTICAL
+- type: item
+  name: W2 mirror
+  description: A small, maximally convex module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: W3 mirror
+  description: A medium sized, maximally convex module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: W4 mirror
+  description: A large, maximally convex module-compatible mirror.
+  display: OPTICAL
+- type: item
+  name: W5 mirror
+  description: A huge, maximally convex module-compatible mirror.
+  display: OPTICAL

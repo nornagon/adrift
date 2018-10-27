@@ -1,0 +1,55 @@
+#
+# Modular structural item pieces
+#
+
+- { type: item, display: SMALL_PLATE, name: "A-size modular panel", description: "A variable-size modular panel used in constructing micro-scale structural frames." }
+- { type: item, display: MEDIUM_PLATE, name: "B-size modular panel", description: "A variable-size modular panel used in constructing small structural frames." }
+- { type: item, display: MEDIUM_PLATE, name: "C-size modular panel", description: "A variable-size modular panel used in constructing breadbox-sized structural frames." }
+- { type: item, display: MEDIUM_PLATE, name: "D-size modular panel", description: "A variable-size modular panel used in constructing large structural frames." }
+- { type: item, display: LARGE_PLATE, name: "E-size modular panel", description: "A variable-size modular panel used in constructing colossal structural frames." }
+
+- { type: item, display: SMALL_ROD, name: "A-size modular rod", description: "A variable-length modular rod used in constructing micro-scale structural frames" }
+- { type: item, display: MEDIUM_ROD, name: "B-size modular rod", description: "A variable-length modular rod used in constructing small structural frames" }
+- { type: item, display: MEDIUM_ROD, name: "C-size modular rod", description: "A variable-length modular rod used in constructing breadbox-sized structural frames" }
+- { type: item, display: MEDIUM_ROD, name: "D-size modular rod", description: "A variable-length modular rod used in constructing large structural frames" }
+- { type: item, display: LARGE_ROD, name: "E-size modular rod", description: "A variable-length modular rod used in constructing colossal structural frames" }
+
+- type: item
+  name: A-size frame
+  description: A micro-scale structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "A-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "A-size modular panel", count: 6, disassembled_with: SCREWING }
+  display: SMALL_BOX
+
+- type: item
+  name: B-size frame
+  description: A small structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "B-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "B-size modular panel", count: 6, disassembled_with: SCREWING }
+  display: MEDIUM_BOX
+
+- type: item
+  name: C-size frame
+  description: A structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "C-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "C-size modular panel", count: 6, disassembled_with: SCREWING }
+  display: MEDIUM_BOX
+
+- type: item
+  name: D-size frame
+  description: A large structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "D-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "D-size modular panel", count: 6, disassembled_with: SCREWING }
+  display: MEDIUM_BOX
+
+- type: item
+  name: E-size frame
+  description: A massive structural frame for holding mechanical and electrical components.
+  parts:
+    - { type: "E-size modular rod", count: 12, disassembled_with: SCREWING }
+    - { type: "E-size modular panel", count: 6, disassembled_with: SCREWING }
+  display: LARGE_BOX

@@ -1,0 +1,51 @@
+- type: item
+  name: medical cabinet
+  description: A cabinet with a bright red cross painted on the front. Probably contains medical supplies
+  parts:
+    - { type: type IIB screw, count: 4, disassembled_with: SCREWING}
+    - { type: C-size frame, count: 1, disassembled_with: SCREWING}
+  display: DESK
+
+- type: item
+  name: hypospray
+  description: Through the small glass you can see a swirling foggy substance. There's a dispense button on the back.
+  parts: {}
+  display: SMALL_TOOL
+
+- type: item
+  name: dermal regenerator
+  description: Remember when you had an owie as a kid and mom used that massive buzzing D.R. to fix it? This is like that, but smaller.
+  parts: {}
+  display: TOOL
+  provides: [ GLUING ]
+
+- type: item
+  name: scissors
+  description: Dual space-grade blades provide a safe way to cut a wide variety of materials. Running disabled while these are in your hands.
+  parts:
+   - { type: type IIA screw, count: 1, disassembled_with: SCREWING}
+   - { type: scis, count: 2, disassembled_with: SCREWING}
+  display: SMALL_TOOL
+  provides: [ CUTTING ]
+
+- type: item
+  name: scis
+  description: Half a scissors. Usually considered more useful when joined with another scis.
+  display: SMALL_TOOL
+  provides: [ CUTTING ]
+
+- type: item
+  name: scalpel
+  description: A medical grade tungsteel blade good at getting into tight corners.
+  provides: [ CUTTING ]
+  display: SMALL_TOOL
+
+- type: item
+  name: gurney
+  description: Four wheels support an adjustable-height alum-composite bed.  Great for hauling people or large equipment around.
+  parts:
+   - {type: medium wheel, count: 4, disassembled_with: SCREWING}
+   - {type: C-size modular rod, count: 4, disassembled_with: SCREWING}
+   - {type: D-size modular panel, count: 1, disassembled_with: SCREWING}
+   - {type: C-size frame, count: 1, disassembled_with: SCREWING}
+  display: LARGE_EQUIPMENT
