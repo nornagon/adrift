@@ -1,7 +1,5 @@
 package adrift.items
 
-import adrift.{GameState, OnFloor}
-
 import scala.collection.mutable
 
 /*
@@ -99,84 +97,3 @@ case object Broken extends ItemCondition {
 /** Some action that you can do with an item, e.g. PRYING or WELDING */
 case class ItemOperation(id: String)
 
-trait Message
-case class PlayerMove(x: Int, y: Int) extends Message
-case object Activate extends Message
-case object Deactivate extends Message
-case object Tick extends Message
-case class IsOpaque(var opaque: Boolean = false) extends Message
-case class IsWalkable(var walkable: Boolean = true) extends Message
-case class PickUp(var ok: Boolean = true) extends Message
-
-trait Behavior {
-  def receive(state: GameState, self: Item, message: Message): Unit
-}
-
-object Behavior {
-  import cats.syntax.functor._
-  import io.circe.Decoder
-  import io.circe.generic.extras.auto._
-  import io.circe.generic.extras.Configuration
-  implicit private val configuration: Configuration = Configuration.default.withDefaults
-
-  val decoders: Map[String, Decoder[Behavior]] = Map(
-    "MotionSensor" -> Decoder[MotionSensor].widen,
-    "DoorOpener" -> Decoder[DoorOpener].widen,
-    "Affixed" -> Decoder[Affixed].widen,
-  )
-}
-
-case class MotionSensor(radius: Int, timer: Int = 6) extends Behavior {
-  private var activeTicks = 0
-
-  override def receive(state: GameState, self: Item, message: Message): Unit = message match {
-    case PlayerMove(x, y) =>
-      val loc = state.items.lookup(self)
-      loc match {
-        case OnFloor(ix, iy) =>
-          if ((x - ix).abs + (y - iy).abs <= radius) {
-            if (activeTicks == 0)
-              state.broadcastToLocation(loc, Activate)
-            activeTicks = timer
-          }
-        case _ =>
-      }
-    case Tick if activeTicks > 0 =>
-      activeTicks -= 1
-      if (activeTicks == 0) {
-        state.broadcastToLocation(state.items.lookup(self), Deactivate)
-      }
-    case _ =>
-  }
-}
-
-case class DoorOpener() extends Behavior {
-  var isOpen: Boolean = false
-
-  override def receive(
-    state: GameState,
-    self: Item,
-    message: Message
-  ): Unit = message match {
-    case Activate if !isOpen =>
-      isOpen = true
-    case Deactivate =>
-      isOpen = false
-    case msg: IsOpaque =>
-      msg.opaque = !isOpen
-    case msg: IsWalkable =>
-      msg.walkable = isOpen
-    case _ =>
-  }
-}
-
-case class Affixed() extends Behavior {
-  override def receive(
-    state: GameState,
-    self: Item,
-    message: Message
-  ): Unit = message match {
-    case p: PickUp => p.ok = false
-    case _ =>
-  }
-}
