@@ -134,14 +134,20 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     }
   }
 
-  def canWalk(x: Int, y: Int): Boolean = {
-    map.get(x, y).exists(_.walkable)// && items(x, y).forall(_.walkable)
+  def itemIsOpaque(item: Item): Boolean = {
+    val m = IsOpaque()
+    sendMessage(item, m)
+    m.opaque
   }
 
-  def itemIsOpaque(item: Item): Boolean = {
-    val opq = IsOpaque()
-    sendMessage(item, opq)
-    opq.opaque
+  def itemIsWalkable(item: Item): Boolean = {
+    val m = IsWalkable()
+    sendMessage(item, m)
+    m.walkable
+  }
+
+  def canWalk(x: Int, y: Int): Boolean = {
+    map.get(x, y).exists(_.walkable) && items.lookup(OnFloor(x, y)).forall(itemIsWalkable)
   }
 
   def isOpaque(x: Int, y: Int): Boolean = {

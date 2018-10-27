@@ -106,6 +106,7 @@ case object Activate extends Message
 case object Deactivate extends Message
 case object Tick extends Message
 case class IsOpaque(var opaque: Boolean = false) extends Message
+case class IsWalkable(var walkable: Boolean = true) extends Message
 
 trait Behavior {
   def receive(state: GameState, self: Item, message: Message): Unit
@@ -162,6 +163,8 @@ case class DoorOpener() extends Behavior {
       isOpen = false
     case msg: IsOpaque =>
       msg.opaque = !isOpen
+    case msg: IsWalkable =>
+      msg.walkable = isOpen
     case _ =>
   }
 }
