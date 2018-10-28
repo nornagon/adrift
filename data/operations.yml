@@ -17,6 +17,9 @@
   id: SOLDERING
 
 - type: operation
+  id: WELDING
+
+- type: operation
   id: HANDLING
 
 - type: operation

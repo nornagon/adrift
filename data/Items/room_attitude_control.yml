@@ -22,7 +22,7 @@
     - {type: thruster controller, count: 1, disassembled_with: SCREWING}
     - {type: pressure sensor, count: 4, disassembled_with: SCREWING}
     - {type: temperature sensor, count: 4, disassembled_with: SCREWING}
-    display: LARGE_EQUIPMENT
+  display: LARGE_EQUIPMENT
 
 - type: item
   name: thruster controller
@@ -30,10 +30,23 @@
   parts:
     - {type: A-size frame, count: 1, disassembled_with: SOLDERING}
     - {type: microcontroller, count: 1, disassembled_with: SOLDERING}
-    - {type: normal e-board, count: 1, disassembled_with: SCREWING}
+    - {type: standard e-board, count: 1, disassembled_with: SCREWING}
     - {type: flex component, count: 12, disassembled_with: SOLDERING}
     - {type: M5A power supply, count: 1, disassembled_with: SCREWING}
   display: SMALL_EQUIPMENT
+
+- type: item
+  name: pressure sensor
+  description: a silver button, threaded on the side with a lock ring. comms over hull-bus.
+  parts: {}
+  display: SMALL_COMPONENT
+
+- type: item
+  name: temperature sensor
+  description: capable of surviving and reporting temperatures of near absolute zero to several thousand C, and could be mistaken for a grain of rice.
+  parts: {}
+  display: SMALL_COMPONENT
+
 
 - type: item
   name: small bell nozzle
@@ -51,8 +64,8 @@
   name: turbopump
   description: ceramic vanes and a magnetic-vacuum bearing indicate this was designed for operation only in space, not atmosphere
   parts:
-    -{type: pump vane, count: 12, disassembled_with: BOLT_TURNING}
-    -{type: mag-vac bearing, count: 2, disassembled_with: PRYING}
+    - {type: pump vane, count: 12, disassembled_with: BOLT_TURNING}
+    - {type: mag-vac bearing, count: 2, disassembled_with: PRYING}
   display: MEDIUM_EQUIPMENT
 
 - type: item

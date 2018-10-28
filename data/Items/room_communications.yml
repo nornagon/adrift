@@ -32,10 +32,3 @@
   parts:
     - {}
   display: MEDIUM_EQUIPMENT
-
-- type: item
-  name: laser transmitter
-  description: communications are unfortunately, traditionally limited by the speed of light.
-  parts:
-    - {}
-  display: MEDIUM_EQUIPMENT

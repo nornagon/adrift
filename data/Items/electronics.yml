@@ -86,6 +86,11 @@
   display: SMALL_COMPONENT
 
 - type: item
+  name: microcontroller
+  description: a simple real-time board for simple logic
+  display: SMALL_COMPONENT
+
+- type: item
   name: laser diode
   description: A weak laser diode. Probably still shouldn't look directly into it, though.
   display: SMALL_COMPONENT
