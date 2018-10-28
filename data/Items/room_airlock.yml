@@ -1,0 +1,22 @@
+- type: item
+  name: spacesuit
+  description: a snug, armored, human casing with integrated atmosphere and waste processing systems
+  parts:
+    - { type: suit atmosphere processor, disassembled_with: HANDLING }
+    - { type: suit waste processor, disassembled_with: HANDLING }
+    - { type: inner body sleeve, disassembled_with: HANDLING }
+    - { type: helmet, disassembled_with: HANDLING }
+    - { type: armor plating, disassembled_with: HANDLING }
+    - { type: mag boots, disassembled_with: HANDLING }
+  display: HUMAN_EQUIPMENT
+
+- type: item
+  name: hull welder
+  description: a massive system for adding and removing hull plates
+  parts:
+    - {}
+  provides: [ WELDING, CUTTING ]
+  display: LARGE_EQUIPMENT
+
+
+

@@ -1,0 +1,68 @@
+- type: item
+  name: attitude control panel
+  description: control panel for viewing and adjusting the attitude control systems on the ship
+  parts:
+    - {}
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: gyro-system
+  description: a massive modular high-speed gyroscope with a series of vacuum bearings used to help rotate the ship
+  parts:
+    - {}
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: attitude thruster
+  description: dozens of these thruster packs are scattered about the hull of the ship and are used to help maintain spin and orientation
+  parts:
+    - {type: small combustion chamber, count: 4, disassembled_with: BOLT_TURNING}
+    - {type: small bell nozzle, count: 4, disassembled_with: BOLT_TURNING}
+    - {type: turbopump, count: 1, disassembled_with: BOLT_TURNING}
+    - {type: thruster controller, count: 1, disassembled_with: SCREWING}
+    - {type: pressure sensor, count: 4, disassembled_with: SCREWING}
+    - {type: temperature sensor, count: 4, disassembled_with: SCREWING}
+    display: LARGE_EQUIPMENT
+
+- type: item
+  name: thruster controller
+  description: the electronics to run and control the attitude thrusters
+  parts:
+    - {type: A-size frame, count: 1, disassembled_with: SOLDERING}
+    - {type: microcontroller, count: 1, disassembled_with: SOLDERING}
+    - {type: normal e-board, count: 1, disassembled_with: SCREWING}
+    - {type: flex component, count: 12, disassembled_with: SOLDERING}
+    - {type: M5A power supply, count: 1, disassembled_with: SCREWING}
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: small bell nozzle
+  description: It would make a great art-deco coffee cup if it didn't have that hole in the bottom to connect to the combustion chamber
+  parts: {}
+  display: LARGE_COMPONENT
+
+- type: item
+  name: small combustion chamber
+  description: The metal has a rosy glow to it and it rings when tapped with a fingernail.
+  parts: {}
+  display: LARGE_COMPONENT
+
+- type: item
+  name: turbopump
+  description: ceramic vanes and a magnetic-vacuum bearing indicate this was designed for operation only in space, not atmosphere
+  parts:
+    -{type: pump vane, count: 12, disassembled_with: BOLT_TURNING}
+    -{type: mag-vac bearing, count: 2, disassembled_with: PRYING}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: pump vane
+  description: pure white and perfectly smooth.  Looks like an alien ear or ritual knife. One edge is surprisingly sharp.
+  parts: {}
+  display: SMALL_PART
+
+- type: item
+  name: mag-vac bearing
+  description: a chrome donut.  You know there's a seam somewhere because the inside spins separately from the outside, but you can't find it.
+  parts: {}
+  display: LARGE_COMPONENT

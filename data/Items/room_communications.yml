@@ -1,0 +1,41 @@
+- type: item
+  name: communication control panel
+  description: A classic Buck-Yee comms controller; an all-time easy-to-repair and modify classic
+  parts:
+    - {}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: laser transmitter
+  description: communications are unfortunately, traditionally limited by the speed of light.
+  parts:
+    - {}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: radio transmitter
+  description: mostly used for talking to the ship maintenance drones or external service personnel.
+  parts:
+    - {}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: radio signal amplifier
+  description: takes in a signal and some power and spits out a much brighter signal
+  parts:
+    - {}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: antenna gimbal
+  description: lasers and narrow-beam radio transmitters like to point at their targets. precision motors and bearings are required.
+  parts:
+    - {}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: laser transmitter
+  description: communications are unfortunately, traditionally limited by the speed of light.
+  parts:
+    - {}
+  display: MEDIUM_EQUIPMENT

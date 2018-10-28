@@ -11,13 +11,14 @@
   description: Through the small glass you can see a swirling foggy substance. There's a dispense button on the back.
   parts: {}
   display: SMALL_TOOL
+  provides: [ BIO-HEAL ]
 
 - type: item
   name: dermal regenerator
   description: Remember when you had an owie as a kid and mom used that massive buzzing D.R. to fix it? This is like that, but smaller.
   parts: {}
   display: TOOL
-  provides: [ GLUING ]
+  provides: [ BIO-BOND ]
 
 - type: item
   name: scissors

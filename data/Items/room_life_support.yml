@@ -1,0 +1,54 @@
+- type: item
+  name: air purification
+  description: a system for removing a variety of toxins and neutralizing infectious agents from the air
+  parts:
+    - {}
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: air mix system
+  description: keeps the ratios of O2, N2 and CO2 suitable for human and plant life
+  parts:
+    - {}
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: oxygen tank
+  description: a big canister for storing and transporting life-giving oxygen.
+  parts:
+    - {}
+  display: LARGE_ROD
+
+- type: item
+  name: CO2 tank
+  description: a canister designed for transporting solid carbon dioxide pellets
+  parts:
+    - {}
+  display: LARGE_ROD
+
+- type: item
+  name: nitrogen tank
+  description: a double-walled vac system for moving liquid nitrogen. Built-in optional gassifier.
+  parts:
+    - {}
+  display: LARGE_ROD
+
+- type: item
+  name: hydrogen tank
+  description: grown from a crystal seed, this tank can sustain impossible pressures without leaking. It's transparent, so you can see the baby-blue liquid hydrogen inside.
+  parts:
+    - {}
+  display: LARGE_ROD
+
+- type: item
+  name: water purification
+  description: the best way to make sure water is just water is to decompose and recompose it.  Then add in some salts an minerals
+  parts: {}
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: sewage decomposition
+  description: laser-catylized reactions break sewage waste down into constituent materials and store it in tanks for reuse
+  parts: {}
+  display: LARGE_EQUIPMENT
+

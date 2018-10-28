@@ -20,4 +20,7 @@
   id: HANDLING
 
 - type: operation
-  id: GLUING
+  id: BIO-BOND
+
+- type: operation
+  id: BIO-HEAL
