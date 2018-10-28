@@ -119,7 +119,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
       y <- player._2 - 2 to player._2 + 2
       x <- player._1 - 2 to player._1 + 2
       if isVisible(x, y)
-    } broadcastToLocation(OnFloor(x, y), Message.PlayerMove(x, y))
+    } broadcastToLocation(OnFloor(x, y), Message.PlayerMove(player._1, player._2))
   }
 
   def smash(p: Item): Unit = {

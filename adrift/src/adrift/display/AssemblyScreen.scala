@@ -32,7 +32,7 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
       lines =
         buildable.zipWithIndex.map { case ((k, _), i) =>
           val selector = if (i == selectedIdx) ">" else " "
-          val (char, fg, bg) = state.data.display.getDisplay(k.display)
+          val (char, fg, bg, _) = state.data.display.getDisplay(k.display)
           s"$selector $char ${k.name}"
         }
     )

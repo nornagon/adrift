@@ -27,7 +27,7 @@
     - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
   behavior:
     - Affixed: {}
-    - MotionSensor: { radius: 2 }
+    - MotionSensor: { radius: 1 }
 
 - type: item
   name: manual door

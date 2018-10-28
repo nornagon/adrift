@@ -12,16 +12,23 @@
   default:
     fg: white
     bg: black
+    layer: 0
   categories:
     PLAYER:
       char: "@"
       fg: brown
+      layer: 50
     FLOOR:
       char: " "
+      layer: -50
     WALL:
       char: "\u00C5" # ┼
-    DOOR:
+    DOOR_CLOSED:
       char: "\u002B" # +
+      layer: 10
+    DOOR_OPEN:
+      char: "-"
+      layer: 10
     SMALL_TOOL:
       char: "\u0074" # t
       bg: gray
@@ -78,6 +85,8 @@
     CHAIR:
       char: "\u00D2" # ╥
       fg: brown
+      layer: -1
     DESK:
       char: "\u00D1" # ╤
       fg: brown
+      layer: -1

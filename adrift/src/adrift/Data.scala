@@ -84,17 +84,18 @@ case class DisplayProps(
   char: Char = '.',
   fg: String = "default",
   bg: String = "default",
+  layer: Int = 0,
 )
 case class DisplayData(
   palette: Map[String, Color],
   default: DisplayProps,
   categories: Map[String, DisplayProps]
 ) {
-  def getDisplay(category: String): (Char, Color, Color) = {
-    val DisplayProps(char, fgName, bgName) = categories(category)
+  def getDisplay(category: String): (Char, Color, Color, Int) = {
+    val DisplayProps(char, fgName, bgName, layer) = categories(category)
     val fg = palette(if (fgName == "default") default.fg else fgName)
     val bg = palette(if (bgName == "default") default.bg else bgName)
-    (char, fg, bg)
+    (char, fg, bg, layer)
   }
 }
 

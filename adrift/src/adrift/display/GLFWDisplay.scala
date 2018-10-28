@@ -2,7 +2,7 @@ package adrift.display
 
 import adrift._
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
-import adrift.items.Item
+import adrift.items.{Item, Message}
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -52,8 +52,10 @@ object Dir {
 }
 
 object Appearance {
-  def charForTerrain(state: GameState, terrain: Terrain): (Char, Color, Color) =
-    state.data.display.getDisplay(terrain.display)
+  def charForTerrain(state: GameState, terrain: Terrain): (Char, Color, Color) = {
+    val (char, fg, bg, _) = state.data.display.getDisplay(terrain.display)
+    (char, fg, bg)
+  }
 
   def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain, viewingFrom: Dir): Char = {
     import CP437.BoxDrawing._
@@ -104,16 +106,19 @@ object Appearance {
     }).toChar
   }
 
-  def charForItem(state: GameState, item: Item): (Char, Color, Color) =
-    state.data.display.getDisplay(item.kind.display)
+  def charForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
+    state.data.display.getDisplay(state.sendMessage(item, Message.Display(item.kind.display)).display)
 
 
   def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {
-    if (x == state.player._1 && y == state.player._2) state.data.display.getDisplay("PLAYER")
-    else if (state.map.contains(x, y)) {
+    if (x == state.player._1 && y == state.player._2) {
+      val (char, fg, bg, _) = state.data.display.getDisplay("PLAYER")
+      (char, fg, bg)
+    } else if (state.map.contains(x, y)) {
       val items = state.items.lookup(OnFloor(x, y))
       if (items.nonEmpty) {
-        charForItem(state, items.last)
+        val (char, fg, bg, _) = items.map(i => charForItem(state, i)).maxBy(_._4)
+        (char, fg, bg)
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
           if (state.map.contains(x, y))
@@ -140,7 +145,7 @@ object Appearance {
               else if (py == y) E
               else SE
             }
-            val (_, fg, bg) = state.data.display.getDisplay("WALL")
+            val (_, fg, bg, _) = state.data.display.getDisplay("WALL")
             (charForWall(state.map(x, y),
               left.orNull,
               up.orNull,

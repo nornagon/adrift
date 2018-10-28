@@ -10,4 +10,5 @@ object Message {
   case class IsOpaque(var opaque: Boolean = false) extends Message
   case class IsWalkable(var walkable: Boolean = true) extends Message
   case class PickUp(var ok: Boolean = true) extends Message
+  case class Display(var display: String) extends Message
 }
