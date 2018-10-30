@@ -54,3 +54,8 @@
   parts:
     - { type: nylon thread, count: 8, disassembled_with: CUTTING }
   display: RAW_CLOTH
+
+- type: item
+  name: flanged hose
+  description: a flexible length of rubberized hose with standard screw-together couplings on the end
+  display: RAW_THIN

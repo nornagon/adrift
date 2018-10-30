@@ -1,22 +1,109 @@
 - type: item
   name: spacesuit
-  description: a snug, armored, human casing with integrated atmosphere and waste processing systems
-  parts: {}
-#    - { type: suit atmosphere processor, disassembled_with: HANDLING }
-#    - { type: suit waste processor, disassembled_with: HANDLING }
-#    - { type: inner body sleeve, disassembled_with: HANDLING }
-#    - { type: helmet, disassembled_with: HANDLING }
-#    - { type: armor plating, disassembled_with: HANDLING }
-#    - { type: mag boots, disassembled_with: HANDLING }
+  description: a snug, armored, human casing with integrated atmosphere and waste processing systems designed for hand assembly
+  parts:
+    - { type: suit atmosphere processor, disassembled_with: HANDLING }
+    - { type: suit waste processor, disassembled_with: HANDLING }
+    - { type: battery pack, disassembled_with: HANDLING }
+    - { type: inner body sleeve, disassembled_with: HANDLING }
+    - { type: helmet, disassembled_with: HANDLING }
+    - { type: armor plating, disassembled_with: HANDLING }
+    - { type: mag boots, disassembled_with: HANDLING }
   display: HUMAN_EQUIPMENT
 
 - type: item
-  name: hull welder
-  description: a massive system for adding and removing hull plates
+  name: suit atmosphere processor
+  description: a miniaturized atmosphere recycling system. There's some sort of goop in the packs
   parts:
-    - {}
-  provides: [ WELDING, CUTTING ]
-  display: LARGE_EQUIPMENT
+    - { type: mouthpiece, count: 1, disassembled_with: HANDLING}
+    - { type: CO2 cartridge, count: 2, disassembled_with: BOLT_TURNING}
+    - { type: small oxygen tank, disassembled_with: BOLT_TURNING}
+    - { type: gas controller, disassembled_with: SCREWING}
+    - { type: flanged hose, disassembled_with: SCREWING}
+    - { type: small valve, count: 2,  disassembled_with: SCREWING}
+    - { type: B-size frame, disassembled_with: SCREWING}
+  display: MEDIUM_EQUIPMENT
 
+- type: item
+  name: mouthpiece
+  description: a soft conforming cup that fits over your mouth and nose
+  display: SMALL_PART
 
+- type: item
+  name: CO2 cartridge
+  description: as the gel absorbs CO2, it turns from bright green to sky blue, so you can qualitatively tell how much time you have left
+  display: SMALL_ROD
 
+- type: item
+  name: small oxygen tank
+  description: looks like steel. you can feel something sloshing around inside
+  display: SMALL_ROD
+
+- type: item
+  name: gas controller
+  description: a small tube connects to the air intake. electrical terminals for valves and power decorate the other side.
+  parts:
+   - { type: A-size frame, disassembled_with: SCREWING}
+   - { type: gas sensor, disassembled_with: SOLDERING}
+   - { type: standard e-board, disassembled_with: SCREWING}
+   - { type: flex component, count: 8, disassembled_with: SOLDERING}
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: gas sensor
+  description: a micro spectrographic unit provides the composition of a gas sample
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: small valve
+  description: about the size of the last knuckle on your pinky, this variable control valve has an option for electrical actuation
+  display: SMALL_PART
+
+- type: item
+  name: suit waste processor
+  description: pee and poop in, clean water and stored waste out.
+  parts:
+   - { type: groin adapter, disassembled_with: HANDLING }
+   - { type: liquid filter unit, disassembled_with: BOLT_TURNING }
+   - { type: solid waste unit, disassembled_with: BOLT_TURNING }
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: groin adapter
+  description: rubber underwear with suction ports and disconnect fittings
+  display: SMALL_PART
+
+- type: item
+  name: liquid filter unit
+  description: turns pee and sweat into warm gatorade
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: solid waste unit
+  description: provides suction to remove solid waste, then dehydrates and stores it for reuse at the farms.
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: battery pack
+  description: a bunch of batteries held together with some space-rated glue
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: inner body sleeve
+  description: a synthread sock for your body
+  display: CLOTHING
+
+- type: item
+  name: mag boots
+  description: magnets let you walk on any ferrous material in zero g, like the hull of the ship.
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: helmet
+  description: when you go outside, don't forget your hat.
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: armor plating
+  description: layers of tungsteel foil provide some protection from micrometeoroids 
+  display: SMALL_EQUIPMENT
