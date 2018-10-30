@@ -160,13 +160,16 @@ object WaveFunctionCollapse {
 
     val solver = model.getSolver
     solver.setSearch(
-      new IntStrategy(
-        tiles,
-        new FirstFail(model),
-        new IntDomainRandom(random.nextLong)
-      ),
-      new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
-      //new GraphStrategy(connectivity)
+      Search.lastConflict(
+        Search.sequencer(
+          new IntStrategy(
+            tiles,
+            new FirstFail(model),
+            new IntDomainRandom(random.nextLong)
+          ),
+          new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
+        )
+      )
     )
 
     def printGraph(v: Array[Array[Boolean]]): Unit = {

@@ -36,6 +36,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
       down = left.rotated,
       rotation = (rotation + 1) % 4
     )
+
+    override def toString: String = s"Room($name, left=$left, right=$right, up=$up, down=$down)"
   }
 
   def conn(s: String): ConnectionType = s match {
@@ -45,19 +47,30 @@ case class WorldGen(data: Data)(implicit random: Random) {
   }
 
   val rooms = data.rooms.values.toList.flatMap { rd =>
-    val layout = rd.layout.split("\n").map(_.chars.toArray)
-    assert(layout.length > 0, s"${rd.name}: empty layout")
-    assert(layout.forall(_.length == layout(0).length), s"${rd.name}: mismatched layout")
-    // valid room dimensions: 5, 11, 17, 23
-    // i.e. v = k*6-1
-    //  ==> (v+1) / 6 = k
-    assert((layout.length + 1) / 6 * 6 == layout.length + 1, s"${rd.name}: non-multiple-of-5 layout")
-    assert((layout(0).length + 1) / 6 * 6 == layout(0).length + 1, s"${rd.name}: non-multiple-of-5 layout")
+    val layout = rd.layout.split("\n")
+    assert(layout.nonEmpty, s"${rd.name}: empty layout")
+    assert((layout.length + 1) / 6 * 6 == layout.length + 1, s"${rd.name}: rooms are 5 tiles + 1 tile for the wall")
+    val tilesX = (layout.map(_.length).max + 1) / 6
+    val tilesY = (layout.length + 1) / 6
 
-    def doFill(s: GameState, xf: (Int, Int) => (Int, Int)): Unit = {
-      for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex) {
-        val (tx, ty) = xf(x, y)
-        val cellChar = cell.toChar.toString
+    // set of x,y tiles that are present in this layout. each coordinate in this set is a 5x5 "room"
+    //
+    // really need better terminology to distinguish between map tiles (1x1 character), room tiles (5x5 chunks) and-
+    // rooms (collections of 5x5 chunks)
+    val tiles = mutable.Set.empty[(Int, Int)]
+    def getLayout(rx: Int, ry: Int): Char = {
+      val line = layout(ry*6)
+      if (rx*6 >= line.length) ' ' else line(rx*6)
+    }
+    for (ry <- 0 until tilesY; rx <- 0 until tilesX) {
+      val isDefined = !getLayout(rx, ry).isSpaceChar
+      if (isDefined) tiles.add((rx, ry))
+    }
+
+    def doFill(x0: Int, y0: Int)(s: GameState, xf: (Int, Int) => (Int, Int)): Unit = {
+      for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex; if !cell.isSpaceChar) {
+        val (tx, ty) = xf(x - x0*6, y - y0*6)
+        val cellChar = cell.toString
         val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
         val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
         s.map(tx, ty) = data.terrain(terrain)
@@ -72,21 +85,22 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
     }
 
-    for (y <- 0 until (layout.length + 1) / 6; x <- 0 until (layout(0).length + 1) / 6) yield {
+    var hitFirst = false
+    for (y <- 0 until tilesY; x <- 0 until tilesX; if tiles((x, y))) yield {
       val left = rd.connections.get(s"$x,$y left").map(conn).getOrElse {
-        if (x == 0) Wall
+        if (!tiles((x-1, y))) Wall
         else Internal(s"${rd.name} ${x-1},$y h")
       }
       val right = rd.connections.get(s"$x,$y right").map(conn).getOrElse {
-        if (x == layout(0).length / 5 - 1) Wall
+        if (!tiles((x+1, y))) Wall
         else Internal(s"${rd.name} $x,$y h")
       }
       val up = rd.connections.get(s"$x,$y up").map(conn).getOrElse {
-        if (y == 0) Wall
+        if (!tiles((x, y-1))) Wall
         else Internal(s"${rd.name} $x,${y-1} v")
       }
       val down = rd.connections.get(s"$x,$y down").map(conn).getOrElse {
-        if (y == layout.length / 5 - 1) Wall
+        if (!tiles((x, y+1))) Wall
         else Internal(s"${rd.name} $x,$y v")
       }
       Room(
@@ -96,7 +110,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
         up = up,
         down = down,
         rotatable = rd.rotatable,
-        fill = if (x == 0 && y == 0) Some(doFill _) else None,
+        fill = if (!hitFirst) { hitFirst = true; Some(doFill(x, y) _) } else None,
       )
     }
   }
