@@ -1,4 +1,21 @@
 - type: room
+  name: airlock
+  rotatable: true
+  layout: |
+    .....
+    S...S
+    S...S
+    ....T
+    .....
+  defs:
+    .: {}
+    T: { items: { group: small tools } }
+    S: { items: spacesuit}
+  connections:
+    0,0 up: DOOR
+
+
+- type: room
   name: non-rectangular room test
   rotatable: true
   layout: |2
