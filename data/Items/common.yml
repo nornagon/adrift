@@ -1,4 +1,4 @@
-# miscelaneous items that don't belong to a particular room or category
+# miscellaneous items that don't belong to a particular room or category
 
 - type: item
   name: automatic door
@@ -10,7 +10,7 @@
     - {type: C-size stepper motor, count: 2, disassembled_with: SCREWING}
     - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
     - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
-  display: DOOR
+  display: DOOR_CLOSED
   behavior:
     - Affixed: {}
     - DoorOpener: {}
@@ -35,7 +35,7 @@
   parts:
     - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
     - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
-  display: DOOR
+  display: DOOR_CLOSED
 
 - type: item
   name: bulkhead door
@@ -48,7 +48,7 @@
     - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
     - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
     - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
-  display: DOOR
+  display: DOOR_CLOSED
 
 - type: item
   name: local motion sensor

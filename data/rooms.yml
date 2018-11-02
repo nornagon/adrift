@@ -1,4 +1,23 @@
 - type: room
+  name: hull section
+  layout: |
+    .................
+    .................
+    .................
+    .................
+    -----------------
+  defs:
+    .: {}
+    -: { terrain: wall }
+  connections:
+    0,0 up: OPEN
+    1,0 up: OPEN
+    2,0 up: OPEN
+    0,0 down: SPACE
+    1,0 down: SPACE
+    2,0 down: SPACE
+
+- type: room
   name: airlock
   rotatable: true
   layout: |
@@ -7,12 +26,21 @@
     S...S
     ....T
     .....
+    --+--
+    .....
+    .....
+    .....
+    .....
+    .....
   defs:
     .: {}
+    -: { terrain: wall }
+    +: { items: { each: [bulkhead door] } }
     T: { items: { group: small tools } }
-    S: { items: spacesuit}
+    S: { items: spacesuit }
   connections:
     0,0 up: DOOR
+    0,1 down: SPACE
 
 
 - type: room
@@ -170,6 +198,17 @@
   rotatable: true
 
 - type: room
+  name: corridor T with door
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: OPEN
+    0,0 right: OPEN
+    0,0 up: OPEN
+    0,0 down: DOOR
+  rotatable: true
+
+- type: room
   name: corridor X
   layout: *corridor-layout
   defs: *corridor-defs
@@ -186,6 +225,33 @@
   defs: *corridor-defs
   connections:
     0,0 left: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor end with door
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: OPEN
+    0,0 right: DOOR
+  rotatable: true
+
+- type: room
+  name: corridor end with door on left
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: OPEN
+    0,0 down: DOOR
+  rotatable: true
+
+- type: room
+  name: corridor end with door on right
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: OPEN
+    0,0 up: DOOR
   rotatable: true
 
 - type: item_group

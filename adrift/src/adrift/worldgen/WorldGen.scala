@@ -11,10 +11,12 @@ import scala.util.Random
 case class WorldGen(data: Data)(implicit random: Random) {
   sealed trait ConnectionType {
     def rotated: ConnectionType = this
+    def isConnected: Boolean = true
   }
   case object Open extends ConnectionType
-  case object Wall extends ConnectionType
+  case object Wall extends ConnectionType { override def isConnected: Boolean = false }
   case object Door extends ConnectionType
+  case object Space extends ConnectionType { override def isConnected: Boolean = false }
   case class Internal(s: String, r: Int = 0) extends ConnectionType {
     override def rotated: Internal = copy(r = (r + 1) % 4)
   }
@@ -43,7 +45,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
   def conn(s: String): ConnectionType = s match {
     case "DOOR" => Door
     case "OPEN" => Open
-    case _ => Wall
+    case "WALL" => Wall
+    case "SPACE" => Space
   }
 
   val rooms = data.rooms.values.toList.flatMap { rd =>
@@ -129,18 +132,18 @@ case class WorldGen(data: Data)(implicit random: Random) {
     override def allowedHorizontal(left: Int, right: Int): Boolean =
       if (left == -1) expanded(right).left == Wall
       else if (right == -1) expanded(left).right == Wall
-      else expanded(left).right == expanded(right).left
+      else expanded(left).right == expanded(right).left && expanded(left).right != Space
 
     override def allowedVertical(top: Int, bottom: Int): Boolean =
       if (top == -1) expanded(bottom).up == Wall
-      else if (bottom == -1) expanded(top).down == Wall
-      else expanded(top).down == expanded(bottom).up
+      else if (bottom == -1) expanded(top).down == Space
+      else expanded(top).down == expanded(bottom).up && expanded(top).down != Space
 
     override def connectedHorizontal(left: Int, right: Int): Boolean =
-      expanded(left).right != Wall
+      expanded(left).right.isConnected
 
     override def connectedVertical(top: Int, bottom: Int): Boolean =
-      expanded(top).down != Wall
+      expanded(top).down.isConnected
   }
 
   def generateWorld: GameState = {
@@ -170,7 +173,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           state.map(x + 3, y) = data.terrain("floor")
           state.items.put(generateItem(data.items("automatic door")), OnFloor(x + 3, y))
           state.items.put(generateItem(data.items("mounted presence sensor")), OnFloor(x + 3, y))
-        case Open | Internal(_, _) =>
+        case Open | Internal(_, _) | Space =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = data.terrain("floor")
           }
@@ -188,7 +191,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           state.map(x, y + 3) = data.terrain("floor")
           state.items.put(generateItem(data.items("automatic door")), OnFloor(x, y + 3))
           state.items.put(generateItem(data.items("mounted presence sensor")), OnFloor(x, y + 3))
-        case Open | Internal(_, _) =>
+        case Open | Internal(_, _) | Space =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = data.terrain("floor")
           }
