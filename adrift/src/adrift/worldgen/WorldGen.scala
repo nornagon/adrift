@@ -135,7 +135,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       else expanded(left).right == expanded(right).left && expanded(left).right != Space
 
     override def allowedVertical(top: Int, bottom: Int): Boolean =
-      if (top == -1) expanded(bottom).up == Wall
+      if (top == -1) expanded(bottom).up == Space
       else if (bottom == -1) expanded(top).down == Space
       else expanded(top).down == expanded(bottom).up && expanded(top).down != Space
 
