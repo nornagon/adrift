@@ -255,6 +255,14 @@
     0,0 up: DOOR
   rotatable: true
 
+
+- type: item_group
+  name: automatic door
+  choose:
+    each:
+      - automatic door
+      - mounted presence sensor
+
 - type: item_group
   name: small tools
   choose:

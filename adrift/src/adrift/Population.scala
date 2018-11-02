@@ -149,6 +149,7 @@ object Population {
       _ <- c.downField("group").up.as[TableGroup[T]].left
       _ <- c.downField("item").up.as[TableItem[T]].left
       _ <- c.downField("each").up.as[TableEach[T]].left
+      _ <- c.downField("choose").up.as[TableChoose[T]].left
       _ <- c.downField("repeat").up.as[TableRepeat[T]].left
       _ <- c.downField("optional").up.as[TableOptional[T]].left
     } yield DecodingFailure(s"Unknown table type: ${c.focus}", c.history)

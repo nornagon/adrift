@@ -1,6 +1,7 @@
 package adrift.worldgen
 
 import adrift.Population.Table
+import adrift.YamlObject.ItemGroup
 import adrift._
 import adrift.items.{Item, ItemKind}
 import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
@@ -171,8 +172,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
             state.map(x + dx, y) = data.terrain("wall")
           }
           state.map(x + 3, y) = data.terrain("floor")
-          state.items.put(generateItem(data.items("automatic door")), OnFloor(x + 3, y))
-          state.items.put(generateItem(data.items("mounted presence sensor")), OnFloor(x + 3, y))
+          generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x + 3, y)))
         case Open | Internal(_, _) | Space =>
           for (dx <- 1 to 5) {
             state.map(x + dx, y) = data.terrain("floor")
@@ -189,8 +189,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
             state.map(x, y + dy) = data.terrain("wall")
           }
           state.map(x, y + 3) = data.terrain("floor")
-          state.items.put(generateItem(data.items("automatic door")), OnFloor(x, y + 3))
-          state.items.put(generateItem(data.items("mounted presence sensor")), OnFloor(x, y + 3))
+          generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x, y + 3)))
         case Open | Internal(_, _) | Space =>
           for (dy <- 1 to 5) {
             state.map(x, y + dy) = data.terrain("floor")
@@ -220,6 +219,11 @@ case class WorldGen(data: Data)(implicit random: Random) {
     state
   }
 
+  def generateItem(itemGroup: ItemGroup): Seq[Item] = {
+    data.itemGroups("automatic door").choose.sample()(random, data.itemGroups.mapValues(_.choose)).map { itemId =>
+      generateItem(data.items(itemId))
+    }
+  }
   def generateItem(itemKind: ItemKind): Item = {
     Item(
       itemKind,
