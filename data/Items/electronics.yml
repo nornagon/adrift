@@ -99,3 +99,5 @@
   name: rechargeable battery
   description: A rechargeable copper foam substrate battery. Popular in RC toys. Safe and long-lasting.
   display: SMALL_COMPONENT
+  behavior:
+    - HoldsCharge: { maxCharge: 1000 }

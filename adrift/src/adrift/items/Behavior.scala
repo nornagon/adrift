@@ -18,6 +18,9 @@ object Behavior {
     "MotionSensor" -> Decoder[MotionSensor].widen,
     "DoorOpener" -> Decoder[DoorOpener].widen,
     "Affixed" -> Decoder[Affixed].widen,
+    "Tool" -> Decoder[Tool].widen,
+    "HoldsCharge" -> Decoder[HoldsCharge].widen,
+    "UsesElectricity" -> Decoder[UsesElectricity].widen,
   )
 }
 

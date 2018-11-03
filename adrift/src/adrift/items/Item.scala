@@ -56,14 +56,9 @@ case class ItemKind(
   name: String,
   description: String,
   parts: Seq[((ItemKind, Int), ItemOperation)],
-  provides: Seq[ItemOperation],
   display: String,
   behaviors: Seq[() => Behavior]
 )
-
-trait ItemCondition {
-  def functional: Boolean = false
-}
 
 class ItemId(val id: Int) extends AnyVal
 object ItemId {
@@ -73,25 +68,14 @@ object ItemId {
 
 case class Item(
   kind: ItemKind,
-  conditions: mutable.Buffer[ItemCondition],
-  parts: Seq[Item],
+  var parts: Seq[Item],
   behaviors: mutable.Buffer[Behavior]
 ) {
-  def functional: Boolean = conditions.forall(_.functional) && parts.forall(_.functional)
   val id: ItemId = ItemId.next
   override def hashCode(): Int = id.id
   override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
 
   override def toString: String = s"Item(id=$id, kind=${kind.name})"
-}
-
-
-case class Charge(kwh: Double, maxKwh: Double) extends ItemCondition {
-  override def functional: Boolean = kwh > 0
-}
-
-case object Broken extends ItemCondition {
-  override def functional: Boolean = false
 }
 
 /** Some action that you can do with an item, e.g. PRYING or WELDING */

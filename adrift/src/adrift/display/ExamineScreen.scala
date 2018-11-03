@@ -18,7 +18,6 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    val itemsByKind = item.parts.groupBy(_.kind)
     val width = 30
     val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
     renderer.frame(
@@ -28,9 +27,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
       lines = descriptionLines ++
         (if (item.parts.nonEmpty)
           Seq("", "Parts:") ++
-          itemsByKind.map {
-            case (kind, items) if items.size == 1 => kind.name
-            case (kind, items) => s"${items.size} x ${kind.name}"
+          item.parts.groupBy(state.itemDisplayName).map {
+            case (displayName, items) if items.size == 1 => displayName
+            case (displayName, items) => s"${items.size} x $displayName"
           }
         else Seq.empty)
     )

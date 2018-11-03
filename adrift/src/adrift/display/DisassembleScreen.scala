@@ -1,5 +1,6 @@
 package adrift.display
 
+import adrift.items.behaviors.Tool
 import adrift.items.{Item, ItemOperation}
 import adrift.{Action, Color, GameState}
 import org.lwjgl.glfw.GLFW._
@@ -8,9 +9,12 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) exte
   var button = 0
 
   val operations = item.kind.parts.map(_._2).toSet
-  val relevantTools = state.nearbyItems.filter(tool => tool.kind.provides.toSet.intersect(operations).nonEmpty)
+  val relevantTools = state.nearbyItems.filter(tool =>
+    tool.behaviors.collect { case t: Tool => t.op }.toSet
+      .intersect(operations.map(_.id))
+      .nonEmpty)
   val tools = operations.toSeq.sorted(Ordering.by((i: ItemOperation) => i.id)).map { op =>
-    op -> relevantTools.find { _.kind.provides.contains(op) }
+    op -> relevantTools.find { _.behaviors.exists { case t: Tool if t.op == op.id => true; case _ => false } }
   }
 
   val canDisassemble = tools.forall(_._2.nonEmpty)

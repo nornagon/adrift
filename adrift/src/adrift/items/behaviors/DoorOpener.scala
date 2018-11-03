@@ -13,9 +13,11 @@ case class DoorOpener() extends Behavior {
     message: Message
   ): Unit = message match {
     case Activate if !isOpen =>
-      isOpen = true
+      if (state.sendMessage(self, Message.IsFunctional()).functional)
+        isOpen = true
     case Deactivate =>
-      isOpen = false
+      if (state.sendMessage(self, Message.IsFunctional()).functional)
+        isOpen = false
     case msg: IsOpaque =>
       msg.opaque = !isOpen
     case msg: IsWalkable =>

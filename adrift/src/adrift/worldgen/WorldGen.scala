@@ -226,9 +226,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
   }
   def generateItem(itemKind: ItemKind): Item = {
     Item(
-      itemKind,
-      mutable.Buffer.empty,
-      itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) },
+      kind = itemKind,
+      parts = itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) },
       behaviors = mutable.Buffer.empty ++ itemKind.behaviors.map(_())
     )
   }

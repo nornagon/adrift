@@ -1,6 +1,7 @@
 package adrift
 
 import adrift.items._
+import adrift.items.behaviors.{PartiallyDisassembled, Tool}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -58,19 +59,32 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         }
 
       case Action.Disassemble(item) =>
-        items.delete(item)
-        for (p <- item.parts) {
-          items.put(p, OnFloor(player._1, player._2))
-          smash(p)
+        var anyRemoved = false
+        item.parts = item.parts.filter { p =>
+          val disassembleOp = item.kind.parts.find(_._1._1 == p.kind).get._2
+          val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
+          if (tool.nonEmpty) {
+            items.put(p, OnFloor(player._1, player._2))
+            anyRemoved = true
+          }
+          tool.isEmpty
         }
-        message = Some(s"You take apart the ${item.kind.name}.")
+
+        if (item.parts.isEmpty) {
+          items.delete(item)
+          message = Some(s"You take apart the ${item.kind.name}.")
+        } else if (anyRemoved) {
+          item.behaviors.append(PartiallyDisassembled())
+          message = Some(s"You weren't able to completely take apart the ${item.kind.name}.")
+        } else {
+          message = Some(s"You don't have the tools to do that.")
+        }
 
       case Action.Assemble(itemKind, components) =>
         components.foreach(items.delete)
         val newItem = Item(
           kind = itemKind,
-          conditions = mutable.Buffer.empty,
-          components,
+          parts = components,
           behaviors = mutable.Buffer.empty
         )
         items.put(newItem, OnFloor(player._1, player._2))
@@ -109,6 +123,20 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     items.lookup(location).foreach(sendMessage(_, message))
   }
 
+  def broadcastToParts[Msg <: Message](item: Item, message: Msg): Msg = {
+    item.parts.foreach(sendMessage(_, message))
+    message
+  }
+
+  def itemDisplayName(item: Item): String = {
+    var name = item.kind.name
+    val conditions = sendMessage(item, Message.VisibleConditions()).conditions
+    if (conditions.nonEmpty)
+      name += s" (${conditions.mkString(", ")})"
+    name
+  }
+
+
   def movePlayer(x: Int, y: Int): Unit = {
     player = (x, y)
     broadcastPlayerMoved()
@@ -125,7 +153,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   def smash(p: Item): Unit = {
     if (p.parts.isEmpty) {
       if (random.nextFloat() < 0.1) {
-        p.conditions.append(Broken)
+        //p.conditions.append(Broken)
       }
     } else {
       // a case should protect its insides from smashing
@@ -187,7 +215,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
           val qty = xs.map(_._1._2).sum
           val parts = availableItems.filter(_.kind == partKind).take(qty)
           val ops = xs.map(_._2).distinct
-          if (parts.size == qty && ops.forall(op => availableItems.exists(i => i.kind.provides.contains(op))))
+          if (parts.size == qty && ops.forall(op => availableItems.exists(_.behaviors.exists { case t: Tool if t.op == op.id => true; case _ => false })))
             Some(parts)
           else None
       }.toSeq

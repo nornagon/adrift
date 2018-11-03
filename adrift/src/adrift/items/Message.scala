@@ -11,4 +11,14 @@ object Message {
   case class IsWalkable(var walkable: Boolean = true) extends Message
   case class PickUp(var ok: Boolean = true) extends Message
   case class Display(var display: String) extends Message
+
+  case class VisibleConditions(var conditions: Seq[String] = Seq.empty) extends Message
+
+  case class UseTool(op: ItemOperation, var ok: Boolean = false) extends Message
+  case class ToolUsed(op: ItemOperation) extends Message
+
+  case class IsFunctional(var functional: Boolean = true) extends Message
+
+  case class DrawCharge(amount: Int, var ok: Boolean = true) extends Message
+  case class ChargeAvailable(amount: Int, var ok: Boolean = false) extends Message
 }

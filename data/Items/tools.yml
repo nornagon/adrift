@@ -5,8 +5,9 @@
 - type: item
   name: screwdriver
   description: A standard K35 screwdriver, like you'd find in a koligan.
-  provides: [ SCREWING ]
   display: SMALL_TOOL
+  behavior:
+    - Tool: { op: SCREWING }
 
 - type: item
   name: hand-held hammer
@@ -38,7 +39,17 @@
 - type: item
   name: soldering iron
   description: An RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components.
-  provides: [ SOLDERING ]
+  display: SMALL_TOOL
+  parts:
+    - { type: rechargeable battery, disassembled_with: HANDLING }
+    - { type: empty soldering iron, disassembled_with: HANDLING }
+  behavior:
+    - UsesElectricity: { perUse: 300 }
+    - Tool: { op: SOLDERING, level: 3 }
+
+- type: item
+  name: empty soldering iron
+  description: A soldering iron without a battery.
   display: SMALL_TOOL
 
 - type: item

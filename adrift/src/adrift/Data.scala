@@ -181,6 +181,8 @@ object Data {
           val i = itemsById(id)
           val behaviorGenerators = i.behavior.map { obj =>
             val behaviorType = obj.keys.head
+            if (!Behavior.decoders.contains(behaviorType))
+              throw new RuntimeException(s"Behavior $behaviorType isn't decodable")
             val args = obj(behaviorType).get
             () => Behavior.decoders(behaviorType).decodeJson(args).fold(throw _, identity)
           }
@@ -190,7 +192,6 @@ object Data {
             i.parts.map { p =>
               ((itemForId(p.`type`), p.count), operations(p.disassembled_with))
             },
-            i.provides.map {op => operations(op)},
             display = i.display,
             behaviors = behaviorGenerators
           )
