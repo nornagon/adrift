@@ -32,7 +32,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
       else
         (1, 1)
 
-    val terrain = state.map(x, y)
+    val terrain = state.terrain(x, y)
     val items = state.items.lookup(OnFloor(x, y))
 
     renderer.frame(

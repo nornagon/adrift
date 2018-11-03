@@ -114,18 +114,18 @@ object Appearance {
     if (x == state.player._1 && y == state.player._2) {
       val (char, fg, bg, _) = state.data.display.getDisplay("PLAYER")
       (char, fg, bg)
-    } else if (state.map.contains(x, y)) {
+    } else if (state.terrain.contains(x, y)) {
       val items = state.items.lookup(OnFloor(x, y))
       if (items.nonEmpty) {
         val (char, fg, bg, _) = items.map(i => charForItem(state, i)).maxBy(_._4)
         (char, fg, bg)
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
-          if (state.map.contains(x, y))
-            Some(state.map((x, y)))
+          if (state.terrain.contains(x, y))
+            Some(state.terrain((x, y)))
           else None
         }
-        state.map(x, y).display match {
+        state.terrain(x, y).display match {
           case "WALL" =>
             import Dir._
             val left = apparent(x - 1, y)
@@ -146,13 +146,13 @@ object Appearance {
               else SE
             }
             val (_, fg, bg, _) = state.data.display.getDisplay("WALL")
-            (charForWall(state.map(x, y),
+            (charForWall(state.terrain(x, y),
               left.orNull,
               up.orNull,
               right.orNull,
               down.orNull,
               viewedFrom), fg, bg)
-          case _ => charForTerrain(state, state.map(x, y))
+          case _ => charForTerrain(state, state.terrain(x, y))
         }
       }
     } else (' ', Color.Black, Color.Black)
@@ -163,7 +163,7 @@ object Appearance {
     if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
     } else {
-      state.map(position).name
+      state.terrain(position).name
     }
   }
 }

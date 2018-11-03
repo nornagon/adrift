@@ -77,7 +77,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
         val cellChar = cell.toString
         val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
         val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
-        s.map(tx, ty) = data.terrain(terrain)
+        s.terrain(tx, ty) = data.terrain(terrain)
         val itemTable = d("items").map(_.as[Table[String]].getOrElse(throw new RuntimeException(s"Failed to parse items")))
         itemTable.foreach { table =>
           val items = table.sample()(random, data.itemGroups.mapValues(_.choose))
@@ -151,8 +151,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val width = 40
     val height = 40
     val state = new GameState(data, width * 6, height * 6, new Random())
-    for ((x, y) <- state.map.indices) {
-      state.map(x, y) = data.terrain("wall")
+    for ((x, y) <- state.terrain.indices) {
+      state.terrain(x, y) = data.terrain("wall")
     }
     val tiles = new RoomTiles(rooms)
     val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
@@ -160,39 +160,39 @@ case class WorldGen(data: Data)(implicit random: Random) {
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
-      state.map(x, y) = data.terrain("wall")
+      state.terrain(x, y) = data.terrain("wall")
       // top wall
       room.up match {
         case Wall =>
           for (dx <- 1 to 5) {
-            state.map(x + dx, y) = data.terrain("wall")
+            state.terrain(x + dx, y) = data.terrain("wall")
           }
         case Door =>
           for (dx <- 1 to 5) {
-            state.map(x + dx, y) = data.terrain("wall")
+            state.terrain(x + dx, y) = data.terrain("wall")
           }
-          state.map(x + 3, y) = data.terrain("floor")
+          state.terrain(x + 3, y) = data.terrain("floor")
           generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x + 3, y)))
         case Open | Internal(_, _) | Space =>
           for (dx <- 1 to 5) {
-            state.map(x + dx, y) = data.terrain("floor")
+            state.terrain(x + dx, y) = data.terrain("floor")
           }
       }
       // left wall
       room.left match {
         case Wall =>
           for (dy <- 1 to 5) {
-            state.map(x, y + dy) = data.terrain("wall")
+            state.terrain(x, y + dy) = data.terrain("wall")
           }
         case Door =>
           for (dy <- 1 to 5) {
-            state.map(x, y + dy) = data.terrain("wall")
+            state.terrain(x, y + dy) = data.terrain("wall")
           }
-          state.map(x, y + 3) = data.terrain("floor")
+          state.terrain(x, y + 3) = data.terrain("floor")
           generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x, y + 3)))
         case Open | Internal(_, _) | Space =>
           for (dy <- 1 to 5) {
-            state.map(x, y + dy) = data.terrain("floor")
+            state.terrain(x, y + dy) = data.terrain("floor")
           }
       }
       // center

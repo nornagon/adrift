@@ -44,7 +44,7 @@ class ItemDatabase {
 
 
 class GameState(val data: Data, width: Int, height: Int, random: Random) {
-  val map: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
+  val terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
 
@@ -104,7 +104,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         items.lookup(item) match {
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
-            message = Some(s"You place the ${item.kind.name} on the ${map(player).name}.")
+            message = Some(s"You place the ${item.kind.name} on the ${terrain(player).name}.")
           case _ =>
             message = Some("You can't put that down.")
         }
@@ -176,11 +176,11 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   def canWalk(x: Int, y: Int): Boolean = {
-    map.get(x, y).exists(_.walkable) && items.lookup(OnFloor(x, y)).forall(itemIsWalkable)
+    terrain.get(x, y).exists(_.walkable) && items.lookup(OnFloor(x, y)).forall(itemIsWalkable)
   }
 
   def isOpaque(x: Int, y: Int): Boolean = {
-    map.get(x, y).exists(_.opaque) || items.lookup(OnFloor(x, y)).exists(itemIsOpaque)
+    terrain.get(x, y).exists(_.opaque) || items.lookup(OnFloor(x, y)).exists(itemIsOpaque)
   }
 
   private var visible = Set.empty[(Int, Int)]
