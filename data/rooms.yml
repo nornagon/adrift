@@ -1,4 +1,49 @@
 - type: room
+  name: hull section
+  rotatable: true
+  layout: |
+    .................
+    .................
+    .................
+    .................
+    -----------------
+  defs:
+    .: {}
+    -: { terrain: wall }
+  connections:
+    0,0 up: OPEN
+    1,0 up: OPEN
+    2,0 up: OPEN
+    0,0 down: SPACE
+    1,0 down: SPACE
+    2,0 down: SPACE
+
+- type: room
+  name: airlock
+  rotatable: true
+  layout: |
+    .....
+    S...S
+    S...S
+    ....T
+    .....
+    --+--
+    .....
+    .....
+    .....
+    .....
+    .....
+  defs:
+    .: {}
+    -: { terrain: wall }
+    +: { items: { each: [bulkhead door] } }
+    T: { items: { group: small tools } }
+    S: { items: spacesuit }
+  connections:
+    0,0 up: DOOR
+    0,1 down: SPACE
+
+- type: room
   name: air mix room
   rotatable: true
   layout: |2
@@ -27,6 +72,7 @@
     N: { items: [nitrogen tank] }
   connections:
     1,0 up: DOOR
+
 - type: room
   name: crypods
   rotatable: true
