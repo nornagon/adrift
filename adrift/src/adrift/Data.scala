@@ -129,21 +129,21 @@ object Data {
       .map(obj => obj.as[YamlObject.ItemGroup]
         .fold(ex => throw new RuntimeException(s"Failed to parse item_group: $obj", ex), identity))
       .groupBy(_.name).map {
-        case (k, v) => assert(v.length == 1); k -> v.head
+        case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head
       }
 
     val rooms = ymls("room")
       .map(obj => obj.as[YamlObject.RoomDef]
         .fold(ex => throw new RuntimeException(s"Failed to parse room: $obj", ex), identity))
       .groupBy(_.name).map {
-        case (k, v) => assert(v.length == 1); k -> v.head
+        case (k, v) => assert(v.length == 1, s"More than one room with name $k"); k -> v.head
       }
 
     val terrain: Map[String, Terrain] = ymls("terrain")
       .map(obj => obj.as[Terrain]
         .fold(ex => throw new RuntimeException(s"Failed to parse terrain: $obj", ex), identity))
       .groupBy(_.name).map {
-        case (k, v) => assert(v.length == 1); k -> v.head
+        case (k, v) => assert(v.length == 1, s"More than one terrain with name $k"); k -> v.head
       }
 
     val display: DisplayData = {
