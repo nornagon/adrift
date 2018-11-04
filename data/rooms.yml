@@ -115,7 +115,7 @@
     ==.DD
     t....
     ---..
-    dc...
+    dc..o
     d....
   connections:
     0,0 down: DOOR
@@ -128,6 +128,7 @@
     c: { items: [ chair ] }
     D: { items: [ closet ] }
     t: { items: [ side table ] }
+    o: { items: { each: [ ship power outlet, thick power cable ] } }
   items:
     - area: "0,0-1,0"
       group: bedding

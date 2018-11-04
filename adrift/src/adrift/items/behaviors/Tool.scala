@@ -45,7 +45,6 @@ case class HoldsCharge(maxCharge: Int) extends Behavior {
       if (t.ok)
         currentCharge -= t.amount
     case t: Message.ChargeAvailable =>
-      println(s"$this got $t, current = $currentCharge")
       t.ok ||= currentCharge >= t.amount
     case t: Message.VisibleConditions =>
       t.conditions :+= s"${(currentCharge * 100f / maxCharge).round}% charged"

@@ -3,6 +3,7 @@ package adrift.display
 import adrift._
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift.items.{Item, Message}
+import adrift.items.behaviors
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -39,16 +40,34 @@ object CP437 {
   val Delta = 235
 }
 
-sealed trait Dir
+sealed trait Dir {
+  def opposite: Dir
+}
 object Dir {
-  case object N extends Dir
-  case object NE extends Dir
-  case object E extends Dir
-  case object SE extends Dir
-  case object S extends Dir
-  case object SW extends Dir
-  case object W extends Dir
-  case object NW extends Dir
+  case object N extends Dir { override def opposite: Dir = S }
+  case object NE extends Dir { override def opposite: Dir = SW }
+  case object E extends Dir { override def opposite: Dir = W }
+  case object SE extends Dir { override def opposite: Dir = NW }
+  case object S extends Dir { override def opposite: Dir = N }
+  case object SW extends Dir { override def opposite: Dir = NE }
+  case object W extends Dir { override def opposite: Dir = E }
+  case object NW extends Dir { override def opposite: Dir = SE }
+
+  /** dir of b from a */
+  def from(a: (Int, Int), b: (Int, Int)): Dir = {
+    if (a._1 < b._1) {
+      if (a._2 < b._2) NW
+      else if (a._2 == b._2) W
+      else SW
+    } else if (a._1 == b._1) {
+      if (a._2 < b._2) N
+      else S
+    } else {
+      if (a._2 < b._2) NE
+      else if (a._2 == b._2) E
+      else SE
+    }
+  }
 }
 
 object Appearance {
@@ -106,9 +125,30 @@ object Appearance {
     }).toChar
   }
 
-  def charForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
-    state.data.display.getDisplay(state.sendMessage(item, Message.Display(item.kind.display)).display)
+  def charForCable(state: GameState, unrolledItem: Item): (Char, Color, Color) = {
+    val OnFloor(x, y) = state.items.lookup(unrolledItem)
+    val unrolled = unrolledItem.behaviors.collectFirst { case u: behaviors.Unrolled => u }.get
+    val prevDir = Dir.from(unrolled.fromCell, (x, y))
+    val nextDir = unrolled.toCell.map(Dir.from(_, (x, y))).getOrElse(prevDir.opposite)
+    import Dir._
+    import CP437.BoxDrawing._
+    val char = (prevDir, nextDir) match {
+      case (N, S) | (S, N) => _U_D
+      case (E, W) | (W, E) => L_R_
+      case (N, E) | (E, N) => _UR_
+      case (N, W) | (W, N) => LU__
+      case (S, W) | (W, S) => L__D
+      case (S, E) | (E, S) => __RD
+      case _ => ???
+    }
+    val (_, fg, bg, _) = charForItem(state, unrolledItem)
+    (char.toChar, fg, bg)
+  }
 
+  def charForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
+    state.data.display.getDisplay(displayForItem(state, item))
+  def displayForItem(state: GameState, item: Item): String =
+    state.sendMessage(item, Message.Display(item.kind.display)).display
 
   def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {
     if (x == state.player._1 && y == state.player._2) {
@@ -117,8 +157,15 @@ object Appearance {
     } else if (state.terrain.contains(x, y)) {
       val items = state.items.lookup(OnFloor(x, y))
       if (items.nonEmpty) {
-        val (char, fg, bg, _) = items.map(i => charForItem(state, i)).maxBy(_._4)
-        (char, fg, bg)
+        // reversed so that we get the _last_ item in the list that has the highest layer instead of the _first_.
+        // stuff you drop later should be displayed on top.
+        val topItem = items.reverse.maxBy(charForItem(state, _)._4)
+        if (topItem.behaviors.exists(_.isInstanceOf[behaviors.Unrolled]))
+          charForCable(state, topItem)
+        else {
+          val (char, fg, bg, _) = charForItem(state, topItem)
+          (char, fg, bg)
+        }
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
           if (state.terrain.contains(x, y))
@@ -127,24 +174,11 @@ object Appearance {
         }
         state.terrain(x, y).display match {
           case "WALL" =>
-            import Dir._
             val left = apparent(x - 1, y)
             val up = apparent(x, y - 1)
             val right = apparent(x + 1, y)
             val down = apparent(x, y + 1)
-            val (px, py) = state.player
-            val viewedFrom = if (px < x) {
-              if (py < y) NW
-              else if (py == y) W
-              else SW
-            } else if (px == x) {
-              if (py < y) N
-              else S
-            } else {
-              if (py < y) NE
-              else if (py == y) E
-              else SE
-            }
+            val viewedFrom = Dir.from(state.player, (x, y))
             val (_, fg, bg, _) = state.data.display.getDisplay("WALL")
             (charForWall(state.terrain(x, y),
               left.orNull,

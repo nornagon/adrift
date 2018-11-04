@@ -101,3 +101,25 @@
   display: SMALL_COMPONENT
   behavior:
     - HoldsCharge: { maxCharge: 1000 }
+
+
+- type: item
+  name: ship power outlet
+  description: A standard 3-prong plug. You'd think it'd be something fancy and space-age, but you know? If it ain't broke, don't fix it.
+  display: OUTLET
+  behavior:
+    - Affixed: {}
+
+- type: item
+  name: thick power cable
+  description: AWG 3, good for up to 1kA before it fuses.
+  display: CABLE
+  parts:
+    - { type: thick power cable section, count: 10, disassembled_with: CUTTING }
+  behavior:
+    - Cable: {}
+
+- type: item
+  name: thick power cable section
+  description: A meter or so of thick power cable.
+  display: CABLE

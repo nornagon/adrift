@@ -34,6 +34,8 @@ class ItemDatabase {
     itemsByLocation(location)
   }
 
+  def exists(item: Item): Boolean = locationsByItem.contains(item)
+
   def all: Iterable[Item] = locationsByItem.keys
 
   def move(item: Item, location: ItemLocation): Unit = {
@@ -96,18 +98,31 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         } else if (items.lookup(InHands()).size >= 2) {
           message = Some("Your hands are full.")
         } else {
-          items.move(item, InHands())
-          message = Some(s"You pick up the ${item.kind.name}.")
+          val pickedUpItem = sendMessage(item, Message.PickedUp(item)).item
+          items.move(pickedUpItem, InHands())
+          message = Some(s"You pick up the ${pickedUpItem.kind.name}.")
         }
 
       case Action.PutDown(item) =>
         items.lookup(item) match {
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
+            sendMessage(item, Message.Dropped())
             message = Some(s"You place the ${item.kind.name} on the ${terrain(player).name}.")
           case _ =>
             message = Some("You can't put that down.")
         }
+
+      case Action.Plug(item, into) =>
+        items.lookup(item) match {
+          case InHands() =>
+            sendMessage(item, Message.PlugInto(into))
+            sendMessage(into, Message.PluggedBy(item))
+            message = Some(s"You plug the ${itemDisplayName(item)} into the ${itemDisplayName(into)}.")
+          case _ =>
+            message = Some("You need to pick it up first.")
+        }
+
       case Action.Quit =>
     }
     items.all.foreach(sendMessage(_, Message.Tick))
@@ -138,7 +153,9 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
 
 
   def movePlayer(x: Int, y: Int): Unit = {
+    val oldPos = player
     player = (x, y)
+    items.lookup(InHands()).foreach(sendMessage(_, Message.Hauled(from = oldPos, to = player)))
     broadcastPlayerMoved()
   }
 

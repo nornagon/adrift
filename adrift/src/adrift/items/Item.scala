@@ -75,7 +75,7 @@ case class Item(
   override def hashCode(): Int = id.id
   override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
 
-  override def toString: String = s"Item(id=$id, kind=${kind.name})"
+  override def toString: String = s"Item(id=${id.id}, kind=${kind.name})"
 }
 
 /** Some action that you can do with an item, e.g. PRYING or WELDING */

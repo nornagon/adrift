@@ -4,6 +4,40 @@ import adrift._
 import adrift.items.{Item, Message}
 import org.lwjgl.glfw.GLFW._
 
+class PlugScreen(display: GLFWDisplay, state: GameState, plugee: Item) extends Screen {
+  var selectedIdx = 0
+
+  val pluggableItems = state.items.lookup(OnFloor(state.player._1, state.player._2)).filter(_ != plugee)
+
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+      key match {
+        case GLFW_KEY_J | GLFW_KEY_DOWN => selectedIdx = (selectedIdx + 1) % pluggableItems.size
+        case GLFW_KEY_K | GLFW_KEY_UP => selectedIdx = (selectedIdx + pluggableItems.size - 1) % pluggableItems.size
+        case GLFW_KEY_ENTER =>
+          if (selectedIdx >= 0 && selectedIdx < pluggableItems.size) {
+            display.pushAction(Action.Plug(plugee, pluggableItems(selectedIdx)))
+            display.popScreen()
+            display.popScreen()
+          }
+        case _ =>
+      }
+    }
+  }
+
+  override def render(renderer: GlyphRenderer): Unit = {
+    renderer.frame(
+      width = 40,
+      title = "Plug into what?",
+      lines =
+        pluggableItems.zipWithIndex.map { case (item, i) =>
+          val selector = if (i == selectedIdx) ">" else " "
+          s"$selector ${state.itemDisplayName(item)}"
+        }
+    )
+  }
+}
+
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   var selectedIdx = 0
   def selectedItem: Option[Item] = {
@@ -28,6 +62,9 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case GLFW_KEY_D =>
           if (selectedIdx >= 0 && selectedIdx < nearbyItems.size && state.items.lookup(nearbyItems(selectedIdx)).isInstanceOf[InHands])
             display.pushAction(Action.PutDown(nearbyItems(selectedIdx)))
+        case GLFW_KEY_P =>
+          if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
+            display.pushScreen(new PlugScreen(display, state, nearbyItems(selectedIdx)))
         case _ =>
       }
   }

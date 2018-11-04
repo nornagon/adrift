@@ -26,7 +26,7 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) exte
         case GLFW_KEY_H | GLFW_KEY_LEFT => button = (button - 1 + 2) % 2
         case GLFW_KEY_ENTER =>
           if (button == 1) {
-            if (canDisassemble) {
+            if (canDisassemble || true) {
               display.popScreen()
               display.popScreen()
               display.pushAction(Action.Disassemble(item))

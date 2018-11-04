@@ -25,7 +25,7 @@ object YamlObject {
 
   case class ItemPart(
     `type`: String,
-    disassembled_with: String = "hand",
+    disassembled_with: String = "HANDLING",
     count: Int = 1
   )
 
@@ -190,7 +190,7 @@ object Data {
             i.name,
             i.description,
             i.parts.map { p =>
-              ((itemForId(p.`type`), p.count), operations(p.disassembled_with))
+              ((itemForId(p.`type`), p.count), operations.getOrElse(p.disassembled_with, throw new RuntimeException(s"item '${i.name}' specified an operation '${p.disassembled_with}' which doesn't seem to exist")))
             },
             display = i.display,
             behaviors = behaviorGenerators

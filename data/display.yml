@@ -90,3 +90,9 @@
       char: "\u00D1" # ╤
       fg: brown
       layer: -1
+    OUTLET:
+      char: "\u00A7" # º
+      fg: yellow
+    CABLE:
+      char: "-"
+      fg: red

@@ -10,5 +10,6 @@ object Action {
   case class Assemble(item: ItemKind, components: Seq[Item]) extends Action
   case class PickUp(item: Item) extends Action
   case class PutDown(item: Item) extends Action
+  case class Plug(item: Item, into: Item) extends Action
   case object Quit extends Action
 }
