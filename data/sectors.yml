@@ -2,7 +2,6 @@
   name: crew
   rooms: 
   - {room: quarters, number: "10-20"}
-  - {room: air mix room, number: "10-20"}
   - {room: hall, number: "5-10"}
 
 - type: sector
@@ -13,12 +12,12 @@
   - {room: airlock, number: "7-10"}
 
 - type: sector
-  name: hallways
-  rooms: 
-  - {room: hull_section, number: "unlimited"}
-  - {room: corridor, number: "unlimited"}
-  - {room: corridor with door, number: "unlimited"}
-  - {room: corridor T, number: "unlimited"}
-  - {room: corridor x, number: "unlimited"}
-  - {room: corridor end, number: "unlimited"}
-  - {room: , number: "unlimited"}
+  name: everything
+  rooms:
+  - {room: hull section}
+  - {room: hull section 2}
+  - {room: corridor}
+  - {room: corridor with door}
+  - {room: corridor T}
+  - {room: corridor X}
+  - {room: corridor end}

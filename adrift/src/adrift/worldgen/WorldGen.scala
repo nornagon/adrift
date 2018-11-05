@@ -119,7 +119,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     }
   }
 
-  class RoomTiles(rooms: Seq[Room]) extends GraphTileSet {
+  class RoomTiles(rooms: Seq[Room], sectors: Seq[Sector]) extends GraphTileSet {
     val expanded: Seq[Room] = rooms.flatMap {
       case r if r.rotatable =>
         Stream.iterate(r, 4)(_.rotated)
@@ -145,16 +145,64 @@ case class WorldGen(data: Data)(implicit random: Random) {
 
     override def connectedVertical(top: Int, bottom: Int): Boolean =
       expanded(top).down.isConnected
+
+    override def allowedAt(x: Int, y: Int, t: Int): Boolean = {
+      val ss = sectors.filter(_.areas.exists(_.contains(x, y)))
+      val roomName = expanded(t).name
+      ss.exists(s =>
+        data.sectors(s.zone).rooms.exists(_.room == roomName))
+    }
   }
 
-  def generateWorld: GameState = {
-    val width = 40
-    val height = 40
-    val state = new GameState(data, width * 6, height * 6, new Random())
+  case class SectorArea(
+    x: Int, y: Int, width: Int, height: Int
+  ) {
+    def contains(tx: Int, ty: Int): Boolean = tx >= x && tx < x + width && ty >= y && ty < y + height
+  }
+  case class Sector(
+    areas: Seq[SectorArea],
+    zone: String
+  )
+  case class ShipSchematic(
+    size: (Int, Int),
+    sectors: Seq[Sector]
+  )
+
+  def generateSchematic(): ShipSchematic = {
+    ShipSchematic(
+      size = (50, 30),
+      sectors = Seq(
+        Sector(
+          zone = "crew",
+          areas = Seq(
+            SectorArea(0, 0, 50, 22)
+          )
+        ),
+        Sector(
+          zone = "engineering",
+          areas = Seq(
+            SectorArea(0, 18, 50, 12)
+          )
+        ),
+        Sector(
+          zone = "everything",
+          areas = Seq(
+            SectorArea(0, 0, 50, 30)
+          )
+        )
+      )
+    )
+  }
+
+  def generateWorld: GameState = generateDetails(generateSchematic())
+
+  def generateDetails(schematic: ShipSchematic): GameState = {
+    val (width, height) = schematic.size
+    val state = new GameState(data, width * 6, height * 6, new Random(random.nextLong()))
     for ((x, y) <- state.terrain.indices) {
       state.terrain(x, y) = data.terrain("wall")
     }
-    val tiles = new RoomTiles(rooms)
+    val tiles = new RoomTiles(rooms, schematic.sectors)
     val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
     val ss = s.get
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {

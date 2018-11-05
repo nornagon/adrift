@@ -32,6 +32,8 @@ object WaveFunctionCollapse {
     def connectedHorizontal(left: Int, right: Int): Boolean
     /** true if the player can navigate from |top| to |bottom| */
     def connectedVertical(top: Int, bottom: Int): Boolean
+
+    def allowedAt(x: Int, y: Int, t: Int): Boolean
   }
 
   val display = Map(
@@ -142,6 +144,8 @@ object WaveFunctionCollapse {
         model.member(tiles(y*width+x), topEdgeAllowed).post()
       if (y == height - 1)
         model.member(tiles(y*width+x), bottomEdgeAllowed).post()
+      val allowedInThisSector: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedAt(x, y, t)) yield t)(collection.breakOut)
+      model.member(tiles(y * width + x), allowedInThisSector).post()
       if (x < width - 1) {
         val connectedRight = model.isEdge(connectivity, y*width+x, y*width+x+1)
         model.table(

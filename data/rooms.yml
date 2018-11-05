@@ -19,6 +19,24 @@
     2,0 down: SPACE
 
 - type: room
+  name: hull section 2
+  rotatable: true
+  layout: |
+    ...........
+    ...........
+    ...........
+    ...........
+    -----------
+  defs:
+    .: {}
+    -: { terrain: wall }
+  connections:
+    0,0 up: OPEN
+    1,0 up: OPEN
+    0,0 down: SPACE
+    1,0 down: SPACE
+
+- type: room
   name: airlock
   rotatable: true
   layout: |

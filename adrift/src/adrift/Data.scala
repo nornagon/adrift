@@ -44,6 +44,15 @@ object YamlObject {
     items: Seq[JsonObject] = Seq.empty,
     connections: Map[String, String] = Map.empty,
   )
+
+  case class SectorRoom(
+    room: String,
+  )
+
+  case class SectorDef(
+    name: String,
+    rooms: Seq[SectorRoom]
+  )
 }
 
 case class Data(
@@ -51,6 +60,7 @@ case class Data(
   itemGroups: Map[String, YamlObject.ItemGroup],
   rooms: Map[String, YamlObject.RoomDef],
   terrain: Map[String, Terrain],
+  sectors: Map[String, YamlObject.SectorDef],
   display: DisplayData,
 )
 
@@ -146,6 +156,13 @@ object Data {
         case (k, v) => assert(v.length == 1, s"More than one terrain with name $k"); k -> v.head
       }
 
+    val sectors: Map[String, YamlObject.SectorDef] = ymls("sector")
+      .map(obj => obj.as[YamlObject.SectorDef]
+        .fold(ex => throw new RuntimeException(s"Failed to parse sector: $obj", ex), identity))
+      .groupBy(_.name).map {
+      case (k, v) => assert(v.length == 1, s"More than one sector with name $k"); k -> v.head
+    }
+
     val display: DisplayData = {
       val displays = ymls("display")
       assert(displays.size == 1, "Must have exactly one display object")
@@ -157,6 +174,7 @@ object Data {
       itemGroups,
       rooms,
       terrain,
+      sectors,
       display
     )
   }
