@@ -21,4 +21,5 @@
   name: elevator wall
   opaque: true
   walkable: false
+  connects: true
   display: ELEVATOR_WALL
