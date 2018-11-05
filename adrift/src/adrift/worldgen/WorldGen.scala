@@ -169,28 +169,37 @@ case class WorldGen(data: Data)(implicit random: Random) {
   )
 
   def generateSchematic(): ShipSchematic = {
-    ShipSchematic(
-      size = (50, 30),
-      sectors = Seq(
+    import RandomImplicits._
+    val (width, height) = (51, 30)
+
+    val sectors = (for (d <- 0 until 3) yield {
+      val l = (width / 3) * d
+      val r = l + width / 3
+      val cut = random.between((height * 0.3).round.toInt, (height * 0.7).round.toInt)
+      Seq(
         Sector(
           zone = "crew",
-          areas = Seq(
-            SectorArea(0, 0, 50, 22)
-          )
+          areas = Seq(SectorArea(l, 0, r-l, cut + 2))
         ),
         Sector(
           zone = "engineering",
-          areas = Seq(
-            SectorArea(0, 18, 50, 12)
-          )
-        ),
+          areas = Seq(SectorArea(l, cut - 2, r-l, height - cut + 2))
+        )
+      )
+    }).flatten
+
+    println(sectors)
+
+    ShipSchematic(
+      size = (width, height),
+      sectors = Seq(
         Sector(
           zone = "everything",
           areas = Seq(
-            SectorArea(0, 0, 50, 30)
+            SectorArea(0, 0, width, height)
           )
         )
-      )
+      ) ++ sectors
     )
   }
 
