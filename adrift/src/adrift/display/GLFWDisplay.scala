@@ -172,21 +172,23 @@ object Appearance {
             Some(state.terrain((x, y)))
           else None
         }
-        state.terrain(x, y).display match {
-          case "WALL" =>
-            val left = apparent(x - 1, y)
-            val up = apparent(x, y - 1)
-            val right = apparent(x + 1, y)
-            val down = apparent(x, y + 1)
-            val viewedFrom = Dir.from(state.player, (x, y))
-            val (_, fg, bg, _) = state.data.display.getDisplay("WALL")
-            (charForWall(state.terrain(x, y),
-              left.orNull,
-              up.orNull,
-              right.orNull,
-              down.orNull,
-              viewedFrom), fg, bg)
-          case _ => charForTerrain(state, state.terrain(x, y))
+
+        val terrain = state.terrain(x, y)
+        if (terrain.connects) {
+          val left = apparent(x - 1, y)
+          val up = apparent(x, y - 1)
+          val right = apparent(x + 1, y)
+          val down = apparent(x, y + 1)
+          val viewedFrom = Dir.from(state.player, (x, y))
+          val (_, fg, bg, _) = state.data.display.getDisplay(terrain.display)
+          (charForWall(terrain,
+            left.orNull,
+            up.orNull,
+            right.orNull,
+            down.orNull,
+            viewedFrom), fg, bg)
+        } else {
+          charForTerrain(state, terrain)
         }
       }
     } else (' ', Color.Black, Color.Black)
