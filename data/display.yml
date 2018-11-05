@@ -7,7 +7,9 @@
     blue: "#00a0c8"
     red: "#d24040"
     brown: "#a0694b"
+    light_gray: "#a39494"
     gray: "#736464"
+    dark_gray: "#432424"
     black: "#101820"
   default:
     fg: white
@@ -21,6 +23,9 @@
     FLOOR:
       char: " "
       layer: -50
+    ELEVATOR_WALL:
+      char: "\u00C5" # ┼
+      fg: light_gray
     WALL:
       char: "\u00C5" # ┼
     DOOR_CLOSED:

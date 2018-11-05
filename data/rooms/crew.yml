@@ -1,0 +1,81 @@
+
+- type: room
+  name: quarters
+  rotatable: true
+  flippable: true
+  layout: |
+    ==.DD
+    t....
+    ---..
+    dc..o
+    d....
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs:
+    .: { terrain: floor }
+    =: { items: [ bed ] }
+    -: { terrain: wall }
+    d: { items: { each: [ desk, {group: small tools} ] } }
+    c: { items: [ chair ] }
+    D: { items: [ closet ] }
+    t: { items: [ side table ] }
+    o: { items: { each: [ ship power outlet, thick power cable ] } }
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: hall
+  layout: |
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+  defs:
+    .: { terrain: floor }
+  connections:
+    "0,1 down": DOOR
+  rotatable: true
+
+- type: room
+  name: crypods
+  rotatable: true
+  layout: |
+    .....
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    .....
+  defs:
+    .: {}
+    O: { items: [cryocasket] }
+    T: {} # { items: [cryo-display] }
+  connections:
+    0,0 up: DOOR

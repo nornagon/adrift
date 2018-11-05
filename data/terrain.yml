@@ -15,3 +15,9 @@
   opaque: true
   walkable: false
   display: WALL
+
+- type: terrain
+  name: elevator wall
+  opaque: true
+  walkable: false
+  display: ELEVATOR_WALL
