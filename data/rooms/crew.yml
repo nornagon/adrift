@@ -1,4 +1,3 @@
-
 - type: room
   name: quarters
   rotatable: true
@@ -12,7 +11,7 @@
   connections:
     0,0 down: DOOR
   default_terrain: floor
-  defs:
+  defs: &defs-quarters
     .: { terrain: floor }
     =: { items: [ bed ] }
     -: { terrain: wall }
@@ -21,6 +20,44 @@
     D: { items: [ closet ] }
     t: { items: [ side table ] }
     o: { items: { each: [ ship power outlet, thick power cable ] } }
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: quarters 2
+  rotatable: true
+  flippable: true
+  layout: |
+    D.ddd
+    D..c.
+    .....
+    =-...
+    =-...
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs: *defs-quarters
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: twin quarters
+  rotatable: true
+  flippable: true
+  layout: |
+    =tddD
+    =.c..
+    ....D
+    =..cd
+    =t..d
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs: *defs-quarters
   items:
     - area: "0,0-1,0"
       group: bedding
