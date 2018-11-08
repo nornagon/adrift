@@ -188,8 +188,6 @@ case class WorldGen(data: Data)(implicit random: Random) {
       )
     }).flatten
 
-    println(sectors)
-
     ShipSchematic(
       size = (width, height),
       sectors = Seq(
