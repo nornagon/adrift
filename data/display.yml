@@ -101,3 +101,6 @@
     CABLE:
       char: "-"
       fg: red
+    BED:
+      char: "\u00A4" # ñ
+      fg: light_gray

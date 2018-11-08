@@ -45,7 +45,7 @@
 - type: item
   name: bed
   description: bed
-  display: HUMAN_EQUIPMENT
+  display: BED
 
 - type: item
   name: closet
