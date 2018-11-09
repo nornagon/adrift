@@ -64,6 +64,43 @@
       count: 2
 
 - type: room
+  name: observation deck
+  rotatable: false
+  flippable: false
+  layout: |
+    ///////////////////////
+    .......................
+    ...............t.......
+    .h.cc.h........tttttttt
+    .h....h........s.s.s.s.
+    ..h..h.................
+    .......................
+    .......................
+    .......................
+    .......................
+    .......................
+  connections:
+    0,0 left: WALL
+    3,0 right: WALL
+    0,0 up: SPACE
+    1,0 up: SPACE
+    2,0 up: SPACE
+    3,0 up: SPACE
+    0,1 down: OPEN
+    1,1 down: OPEN
+    2,1 down: OPEN
+    3,1 down: OPEN
+    0,1 left: OPEN
+    3,1 right: OPEN
+  defs:
+    .: { terrain: floor }
+    /: { terrain: transparent polycarbonate window }
+    h: { items: [chair] }
+    t: {} #{ items: [counter] }
+    s: {} #{ items: [metal stool] }
+    c: {} #{ items: [low metal table] }
+
+- type: room
   name: hall
   layout: |
     ...........

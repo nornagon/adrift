@@ -23,3 +23,9 @@
   walkable: false
   connects: true
   display: ELEVATOR_WALL
+
+- type: terrain
+  name: transparent polycarbonate window
+  opaque: false
+  walkable: false
+  display: WINDOW

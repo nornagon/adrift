@@ -11,6 +11,7 @@
     gray: "#736464"
     dark_gray: "#432424"
     black: "#101820"
+    true black: "#000000"
   default:
     fg: white
     bg: black
@@ -104,3 +105,11 @@
     BED:
       char: "\u00A4" # ñ
       fg: light_gray
+    WINDOW:
+      char: "/"
+      bg: blue
+      fg: black
+    SPACE:
+      char: " "
+      bg: true black
+      fg: true black

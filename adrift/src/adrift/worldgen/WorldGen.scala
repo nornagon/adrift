@@ -228,9 +228,13 @@ case class WorldGen(data: Data)(implicit random: Random) {
           }
           state.terrain(x + 3, y) = data.terrain("floor")
           generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x + 3, y)))
-        case Open | Internal(_, _) | Space =>
+        case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
             state.terrain(x + dx, y) = data.terrain("floor")
+          }
+        case Space =>
+          for (dx <- 1 to 5) {
+            state.terrain(x + dx, y) = data.terrain("empty space")
           }
       }
       // left wall
@@ -250,7 +254,6 @@ case class WorldGen(data: Data)(implicit random: Random) {
             state.terrain(x, y + dy) = data.terrain("floor")
           }
       }
-      // center
     }
     for (ty <- 0 until height; tx <- 0 until width) {
       val room = ss(tx)(ty)
