@@ -186,7 +186,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           areas = Seq(SectorArea(l, cut - 2, r-l, height - cut + 2))
         )
       )
-    }).flatten
+    }).flatten ++ Seq(Sector(zone="interdeck", areas = Seq(SectorArea(0,12,width, 5))))
 
     ShipSchematic(
       size = (width, height),

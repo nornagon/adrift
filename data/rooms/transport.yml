@@ -13,8 +13,11 @@
     ...........
     ...........
   defs:
+    "-": { terrain: wall }
+    "|": { terrain: wall }
     .: { terrain: floor }
     E: { terrain: elevator wall }
+    +: { items: {group: automatic door}}
 
   connections:
     "0,1 down": DOOR

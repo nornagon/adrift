@@ -15,6 +15,11 @@
   - {room: airlock, number: "7-10"}
 
 - type: sector
+  name: interdeck
+  rooms: 
+  - {room: elevator, number: 4}
+
+- type: sector
   name: everything
   rooms:
   - {room: hull section}
