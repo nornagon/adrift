@@ -67,3 +67,23 @@
     "0,0 down": DOOR
   rotatable: true
 
+
+- type: room
+  name: electronics shop
+  layout: |
+    e.TTT
+    ee.C.
+    ee..t
+    ee..t
+    .....
+  defs:
+    .: { terrain: floor }
+    C: { items: [chair] }
+    T: { items: [desk] }
+    t: { items: [screwdriver, { choose: [soldering iron, soldering iron, empty soldering iron]} ] }
+    e: { items: { group: electronic equipment } }
+  
+  connections:
+    "0,0 down": DOOR
+  rotatable: true
+

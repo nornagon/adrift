@@ -13,6 +13,7 @@
   - {room: cryopods, number: "10-20"}
   - {room: air mix room, number: "5-10"}
   - {room: airlock, number: "7-10"}
+  - {room: electronics shop}
 
 - type: sector
   name: interdeck

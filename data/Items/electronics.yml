@@ -7,8 +7,6 @@
   name: power cable
   description: The ubiquitous 8-conductor thumb-thick black cable that snakes throughout the ship.
   parts:
-    - {type: copper wire, count: 8, disassembled_with: CUTTING}
-    - {type: electric insulator, count: 1, disassembled_with: CUTTING}
   display: RAW_THIN
 
 - type: item

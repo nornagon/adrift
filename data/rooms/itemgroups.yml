@@ -57,3 +57,56 @@
     - bedsheet
     - duvet
     - pillow
+
+- type: item_group
+  name: electronic equipment
+  choose:
+    - { group: small electronics}
+    - { group: power systems}
+    - { group: control systems}
+
+- type: item_group
+  name: small electronics
+  choose: { each: [ group: eboards, group: flex component pile ] }
+
+
+- type: item_group
+  name: eboards
+  choose: [micro e-board, standard e-board, mega e-board ]
+
+
+- type: item_group
+  name: flex component pile
+  choose:
+    each:
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+    - flex component
+
+- type: item_group
+  name: power systems
+  choose:
+    - ship power adapter
+    - power cable
+    - M3A power supply 
+    - M5A power supply 
+    - M7A power supply 
+    - M3C power supply 
+    - M5C power supply 
+    - M7C power supply 
+    - M3E power supply 
+    - M5E power supply 
+    - M7E power supply
+    - rechargeable battery
+
+- type: item_group
+  name: control systems
+  choose: 
+   - microcontroller
