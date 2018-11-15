@@ -91,8 +91,9 @@ object WaveFunctionCollapse {
     model.nbConnectedComponents(connectivity, model.intVar(1)).post()
 
     // these variables represent what tile is placed at each location
-    val tiles = Array.tabulate(width * height) { _ =>
-      model.intVar(0, gts.size)
+    val tiles = Array.tabulate(width * height) { i =>
+      val (y, x) = (i / width, i % width)
+      model.intVar(s"T[$x,$y]", 0, gts.size)
     }
 
     /*
@@ -147,14 +148,16 @@ object WaveFunctionCollapse {
       val allowedInThisSector: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedAt(x, y, t)) yield t)(collection.breakOut)
       model.member(tiles(y * width + x), allowedInThisSector).post()
       if (x < width - 1) {
-        val connectedRight = model.isEdge(connectivity, y*width+x, y*width+x+1)
+        val connectedRight = model.boolVar(s"edge([$x,$y] - [${x+1},$y])")
+        model.edgeChanneling(connectivity, connectedRight, y*width+x, y*width+x+1).post()
         model.table(
           Array(tiles(y * width + x), tiles(y * width + x + 1), connectedRight),
           allowedHorizontal
         ).post()
       }
       if (y < height - 1) {
-        val connectedDown = model.isEdge(connectivity, y*width+x, (y+1)*width+x)
+        val connectedDown = model.boolVar(s"edge([$x,$y] - [$x,${y+1}])")
+        model.edgeChanneling(connectivity, connectedDown, y*width+x, (y+1)*width+x).post()
         model.table(
           Array(tiles(y * width + x), tiles((y+1) * width + x), connectedDown),
           allowedVertical
@@ -172,7 +175,8 @@ object WaveFunctionCollapse {
             new IntDomainRandom(random.nextLong)
           ),
           new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
-        )
+        ),
+        5
       )
     )
 
@@ -202,7 +206,7 @@ object WaveFunctionCollapse {
         }
       })
     }
-    //solver.setLubyRestart(500, new FailCounter(model, 1000), 500)
+    //solver.setGeometricalRestart(2, 1.5, new FailCounter(model, 5000), 100)
     solver.limitTime("10s")
 
     if (solver.solve()) {
