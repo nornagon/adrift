@@ -170,7 +170,9 @@ case class WorldGen(data: Data)(implicit random: Random) {
 
   def generateSchematic(): ShipSchematic = {
     import RandomImplicits._
-    val (width, height) = (51, 30)
+    // width and height both need to be multiples of 5 for superblocks to work
+    // width needs to be a multiple of three to fit the three sectors defined below
+    val (width, height) = (5*3*4, 5*3*3)
 
     val sectors = (for (d <- 0 until 3) yield {
       val l = (width / 3) * d
@@ -201,6 +203,119 @@ case class WorldGen(data: Data)(implicit random: Random) {
     )
   }
 
+  case class Superblock(
+    name: String,
+    left: Seq[Set[ConnectionType]],
+    right: Seq[Set[ConnectionType]],
+    top: Seq[Set[ConnectionType]],
+    bottom: Seq[Set[ConnectionType]],
+  )
+  object Superblock {
+    def allowedHorizontal(left: Superblock, right: Superblock): Boolean =
+      left.right.zip(right.left).forall { case (l, r) => l.exists(r) }
+    def allowedVertical(top: Superblock, bottom: Superblock): Boolean =
+      top.bottom.zip(bottom.top).forall { case (l, r) => l.exists(r) }
+  }
+
+  case class SuperblockTiles(blocks: Seq[Superblock]) extends GraphTileSet {
+    override def size: Int = blocks.size
+
+    /** true if |left| can be placed to the left of |right| */
+    override def allowedHorizontal(left: Int, right: Int): Boolean =
+      if (left < 0) blocks(right).left.forall(_.contains(Wall))
+      else if (right < 0) blocks(left).right.forall(_.contains(Wall))
+      else Superblock.allowedHorizontal(blocks(left), blocks(right)) && blocks(left).right.forall(_.exists(_ != Space))
+
+    /** true if |top| can be placed above |bottom| */
+    override def allowedVertical(top: Int, bottom: Int): Boolean =
+      if (top < 0) blocks(bottom).top.forall(_.contains(Space))
+      else if (bottom < 0) blocks(top).bottom.forall(_.contains(Space))
+      else Superblock.allowedVertical(blocks(top), blocks(bottom)) && blocks(top).bottom.forall(_.exists(_ != Space))
+
+    /** true if the player can navigate from |left| to |right| */
+    override def connectedHorizontal(left: Int, right: Int): Boolean =
+      blocks(left).right.exists(_.exists(_.isConnected))
+
+    /** true if the player can navigate from |top| to |bottom| */
+    override def connectedVertical(top: Int, bottom: Int): Boolean =
+      blocks(top).bottom.exists(_.exists(_.isConnected))
+
+    override def allowedAt(x: Int, y: Int, t: Int): Boolean = true
+    def interpret(result: Seq[Seq[Int]]): Seq[Seq[Superblock]] = result.map(_.map(blocks))
+  }
+
+  val superblockTiles = {
+    val wall: Set[ConnectionType] = Set(Wall)
+    val space: Set[ConnectionType] = Set(Space)
+    val conn: Set[ConnectionType] = Set(Door, Open)
+    val `+` = Superblock(
+      "+",
+      left = Seq(wall, wall, conn, wall, wall),
+      right = Seq(wall, wall, conn, wall, wall),
+      top = Seq(wall, wall, conn, wall, wall),
+      bottom = Seq(wall, wall, conn, wall, wall)
+    )
+    val `|` = Superblock(
+      "|",
+      left = Seq(wall, wall, wall, wall, wall),
+      right = Seq(wall, wall, wall, wall, wall),
+      top = Seq(wall, wall, conn, wall, wall),
+      bottom = Seq(wall, wall, conn, wall, wall)
+    )
+    val `-` = Superblock(
+      "-",
+      left = Seq(wall, wall, conn, wall, wall),
+      right = Seq(wall, wall, conn, wall, wall),
+      top = Seq(wall, wall, wall, wall, wall),
+      bottom = Seq(wall, wall, wall, wall, wall)
+    )
+    val T = Superblock(
+      "T",
+      left = Seq(wall, wall, conn, wall, wall),
+      right = Seq(wall, wall, conn, wall, wall),
+      top = Seq(wall, wall, wall, wall, wall),
+      bottom = Seq(wall, wall, conn, wall, wall)
+    )
+    val Tup = Superblock(
+      "_|_",
+      left = Seq(wall, wall, conn, wall, wall),
+      right = Seq(wall, wall, conn, wall, wall),
+      top = Seq(wall, wall, conn, wall, wall),
+      bottom = Seq(wall, wall, wall, wall, wall)
+    )
+    val Tleft = Superblock(
+      "|-",
+      left = Seq(wall, wall, wall, wall, wall),
+      right = Seq(wall, wall, conn, wall, wall),
+      top = Seq(wall, wall, conn, wall, wall),
+      bottom = Seq(wall, wall, conn, wall, wall)
+    )
+    val Tright = Superblock(
+      "-|",
+      left = Seq(wall, wall, conn, wall, wall),
+      right = Seq(wall, wall, wall, wall, wall),
+      top = Seq(wall, wall, conn, wall, wall),
+      bottom = Seq(wall, wall, conn, wall, wall)
+    )
+    val spaceUp = Superblock(
+      "|",
+      left = Seq(wall, wall, wall, wall, wall),
+      right = Seq(wall, wall, wall, wall, wall),
+      top = Seq(space, space, space, space, space),
+      bottom = Seq(wall, wall, conn, wall, wall)
+    )
+    val spaceDown = Superblock(
+      "|",
+      left = Seq(wall, wall, wall, wall, wall),
+      right = Seq(wall, wall, wall, wall, wall),
+      top = Seq(wall, wall, conn, wall, wall),
+      bottom = Seq(space, space, space, space, space)
+    )
+
+    val blocks = Seq(`+`, `|`, `-`, T, Tleft, Tright, Tup, spaceUp, spaceDown)
+    SuperblockTiles(blocks)
+  }
+
   def generateWorld: GameState = generateDetails(generateSchematic())
 
   def generateDetails(schematic: ShipSchematic): GameState = {
@@ -209,9 +324,25 @@ case class WorldGen(data: Data)(implicit random: Random) {
     for ((x, y) <- state.terrain.indices) {
       state.terrain(x, y) = data.terrain("wall")
     }
-    val tiles = new RoomTiles(rooms, schematic.sectors)
-    val s = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret)
-    val ss = s.get
+    val superblocks = WaveFunctionCollapse.graphSolve(superblockTiles, width / 5, height / 5, random).map(superblockTiles.interpret).get
+    val tiles = new RoomTiles(rooms, schematic.sectors) {
+      override def allowedAt(x: Int, y: Int, t: Int): Boolean = {
+        super.allowedAt(x, y, t) && {
+          var a = true
+          val superblock = superblocks(x / 5)(y / 5)
+          if (x % 5 == 0)
+            a &&= superblock.left(y % 5).contains(expanded(t).left)
+          if (x % 5 == 4)
+            a &&= superblock.right(y % 5).contains(expanded(t).right)
+          if (y % 5 == 0)
+            a &&= superblock.top(x % 5).contains(expanded(t).up)
+          if (y % 5 == 4)
+            a &&= superblock.bottom(x % 5).contains(expanded(t).down)
+          a
+        }
+      }
+    }
+    val ss = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret).get
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
