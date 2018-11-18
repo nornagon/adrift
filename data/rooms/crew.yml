@@ -64,6 +64,25 @@
       count: 2
 
 - type: room
+  name: break room
+  rotatable: true
+  flippable: true
+  layout: |
+    .c..H
+    ctc..
+    ctc.d
+    .c...
+    .....
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs:
+    c: { items: [ chair ] }
+    t: { items: [ table ] }
+#    d: { items: [ display ] }
+#    H: { items: [ food paste dispenser ] }
+
+- type: room
   name: observation deck
   rotatable: false
   flippable: false
