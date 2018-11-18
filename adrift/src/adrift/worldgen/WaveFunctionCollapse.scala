@@ -207,7 +207,8 @@ object WaveFunctionCollapse {
       })
     }
     //solver.setGeometricalRestart(2, 1.5, new FailCounter(model, 5000), 100)
-    solver.limitTime("10s")
+    //solver.limitTime("30s")
+    solver.limitNode(10000)
 
     if (solver.solve()) {
       solver.printStatistics()
