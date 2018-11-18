@@ -43,7 +43,10 @@ object YamlObject {
     default_terrain: String = "floor",
     items: Seq[JsonObject] = Seq.empty,
     connections: Map[String, String] = Map.empty,
-  )
+  ) {
+    for (line <- layout.lines; char <- line; if !char.isSpaceChar)
+      assert(defs.contains(char.toString), s"'$char' not present in defs of room '$name'")
+  }
 
   case class SectorRoom(
     room: String,
