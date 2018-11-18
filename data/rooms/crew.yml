@@ -77,8 +77,11 @@
     0,0 down: DOOR
   default_terrain: floor
   defs:
+    .: {}
     c: { items: [ chair ] }
     t: { items: [ table ] }
+    d: {}
+    H: {}
 #    d: { items: [ display ] }
 #    H: { items: [ food paste dispenser ] }
 

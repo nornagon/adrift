@@ -81,3 +81,8 @@
   name: chair
   description: A sleek alum-composite adjustable chair. Great for when you need to take a break.
   display: CHAIR
+
+- type: item
+  name: table
+  description: For some reason this table has a wood-veneer surface, as if the architects thought you needed to be reminded of home.
+  display: DESK
