@@ -38,6 +38,8 @@
     SMALL_TOOL:
       char: "\u0074" # t
       bg: gray
+    LIQUID:
+      char: "\u00F7" # ≈
     TOOL:
       char: "\u0054" # T
     RAW_THIN:

@@ -4,6 +4,11 @@
 # Raw Materials
 #
 - type: item
+  name: nutrient paste
+  description: Like dog food, but for people.
+  display: LIQUID
+
+- type: item
   name: copper wire
   description: A few meters of thin copper wire.
   display: RAW_THIN
