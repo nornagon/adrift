@@ -22,6 +22,9 @@ object Behavior {
     "HoldsCharge" -> Decoder[HoldsCharge].widen,
     "UsesElectricity" -> Decoder[UsesElectricity].widen,
     "Cable" -> Decoder[Cable].widen,
+    "ProvidesShipPower" -> Decoder[ProvidesShipPower].widen,
+    "GeneratesShipPower" -> Decoder[GeneratesShipPower].widen,
+    "Socket" -> Decoder[Socket].widen
   )
 }
 

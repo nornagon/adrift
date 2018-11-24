@@ -23,11 +23,12 @@ object Message {
   case class ChargeAvailable(amount: Int, var ok: Boolean = false) extends Message
 
   case class PlugInto(item: Item) extends Message
-  case class PluggedBy(item: Item) extends Message
+  case class Unplugged() extends Message
+  case class CanReceivePlug(plugShape: String, var ok: Boolean = false) extends Message
+  case class CanPlugInto(item: Item, var ok: Boolean = false) extends Message
 
   case class Hauled(from: (Int, Int), to: (Int, Int)) extends Message
 
   case class PickedUp(var item: Item) extends Message
   case class Dropped() extends Message
-
 }

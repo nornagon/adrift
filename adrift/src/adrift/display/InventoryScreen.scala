@@ -7,7 +7,12 @@ import org.lwjgl.glfw.GLFW._
 class PlugScreen(display: GLFWDisplay, state: GameState, plugee: Item) extends Screen {
   var selectedIdx = 0
 
-  val pluggableItems = state.items.lookup(OnFloor(state.player._1, state.player._2)).filter(_ != plugee)
+  val pluggableItems = (state.items.lookup(OnFloor(state.player._1, state.player._2)) ++
+    Seq((0, -1), (-1, 0), (1, 0), (0, 1)).flatMap {
+      case (dx, dy) => state.items.lookup(OnFloor(state.player._1 + dx, state.player._2 + dy))
+    })
+    .filter(_ != plugee)
+    .filter(i => state.sendMessage(plugee, Message.CanPlugInto(i)).ok)
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {

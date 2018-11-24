@@ -25,9 +25,13 @@ case class UsesElectricity(perUse: Int) extends Behavior {
     message: Message
   ): Unit = message match {
     case t: Message.IsFunctional =>
-      t.functional &&= state.broadcastToParts(self, Message.ChargeAvailable(amount = perUse)).ok
+      t.functional &&= state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok
     case t: Message.ToolUsed =>
-      state.broadcastToParts(self, Message.DrawCharge(amount = perUse))
+      state.sendMessage(self, Message.DrawCharge(amount = perUse))
+    case t: Message.ChargeAvailable =>
+      state.broadcastToParts(self, t)
+    case t: Message.DrawCharge =>
+      state.broadcastToParts(self, t)
     case _ =>
   }
 }

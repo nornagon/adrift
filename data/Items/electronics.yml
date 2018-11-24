@@ -115,9 +115,17 @@
   parts:
     - { type: thick power cable section, count: 10, disassembled_with: CUTTING }
   behavior:
-    - Cable: {}
+    - Cable: { plugShape: power }
 
 - type: item
   name: thick power cable section
   description: A meter or so of thick power cable.
   display: CABLE
+
+- type: item
+  name: secondary ship power generator
+  description: temporary test item for testing ship power components
+  display: LARGE_EQUIPMENT
+  behavior:
+    - GeneratesShipPower: { circuit: secondary, amountPerTick: 50 }
+    - Affixed: {}

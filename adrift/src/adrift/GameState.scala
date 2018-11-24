@@ -44,11 +44,20 @@ class ItemDatabase {
   }
 }
 
+case class Circuit(name: String, max: Int, var stored: Int) {
+  def add(amount: Int): Unit = stored = math.min(max, stored + amount)
+}
 
 class GameState(val data: Data, width: Int, height: Int, random: Random) {
   val terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
+
+  lazy val circuits: mutable.Map[String, Circuit] = mutable.Map.empty[String, Circuit].withDefault { k =>
+    val c = Circuit(k, 500, 500)
+    circuits(k) = c
+    c
+  }
 
   var message: Option[String] = None
 
@@ -117,7 +126,6 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
         items.lookup(item) match {
           case InHands() =>
             sendMessage(item, Message.PlugInto(into))
-            sendMessage(into, Message.PluggedBy(item))
             message = Some(s"You plug the ${itemDisplayName(item)} into the ${itemDisplayName(into)}.")
           case _ =>
             message = Some("You need to pick it up first.")
@@ -126,6 +134,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
       case Action.Quit =>
     }
     items.all.foreach(sendMessage(_, Message.Tick))
+    circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
     recalculateFOV()
   }
 
