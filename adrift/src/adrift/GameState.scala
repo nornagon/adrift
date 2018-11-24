@@ -130,7 +130,11 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   def sendMessage[Msg <: Message](item: Item, message: Msg): Msg = {
-    item.behaviors.foreach(_.receive(this, item, message))
+    // copy the behavior list so that behaviors removed during processing won't affect iteration
+    val behaviorsCopy = Seq.empty ++ item.behaviors
+    for (b <- behaviorsCopy) {
+      b.receive(this, item, message)
+    }
     message
   }
 
