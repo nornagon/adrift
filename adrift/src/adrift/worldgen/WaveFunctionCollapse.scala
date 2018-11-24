@@ -181,16 +181,18 @@ object WaveFunctionCollapse {
     )
 
     def printGraph(v: Array[Array[Boolean]]): Unit = {
+      var s = ""
       for (y <- 0 until height) {
         for (x <- 0 until width) {
           val connectedRight = x < width - 1 && v(y * width + x)(y * width + x + 1)
           val connectedDown = y < height - 1 && v(y * width + x)((y + 1) * width + x)
           val connectedLeft = x > 0 && v(y * width + x)(y * width + x - 1)
           val connectedUp = y > 0 && v(y * width + x)((y - 1) * width + x)
-          print(display(connectedLeft, connectedUp, connectedRight, connectedDown))
+          s += display(connectedLeft, connectedUp, connectedRight, connectedDown)
         }
-        println()
+        s += "\n"
       }
+      print(s)
     }
 
 
