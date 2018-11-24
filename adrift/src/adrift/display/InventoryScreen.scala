@@ -70,6 +70,9 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case GLFW_KEY_P =>
           if (selectedIdx >= 0 && selectedIdx < nearbyItems.size)
             display.pushScreen(new PlugScreen(display, state, nearbyItems(selectedIdx)))
+        case GLFW_KEY_X =>
+          println(nearbyItems(selectedIdx))
+          println(nearbyItems(selectedIdx).behaviors)
         case _ =>
       }
   }
