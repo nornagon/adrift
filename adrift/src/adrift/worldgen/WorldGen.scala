@@ -409,7 +409,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
   }
 
   def generateItem(itemGroup: ItemGroup): Seq[Item] = {
-    data.itemGroups("automatic door").choose.sample()(random, data.itemGroups.mapValues(_.choose)).map { itemId =>
+    itemGroup.choose.sample()(random, data.itemGroups.mapValues(_.choose)).map { itemId =>
       generateItem(data.items(itemId))
     }
   }
