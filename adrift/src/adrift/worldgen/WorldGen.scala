@@ -152,6 +152,13 @@ case class WorldGen(data: Data)(implicit random: Random) {
       ss.exists(s =>
         data.sectors(s.zone).rooms.exists(_.room == roomName))
     }
+
+    override def weight(t: Int): Double = {
+      if (expanded(t).name.contains("corridor"))
+        0.1
+      else
+        1
+    }
   }
 
   case class SectorArea(

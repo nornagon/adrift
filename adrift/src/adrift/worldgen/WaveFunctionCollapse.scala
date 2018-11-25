@@ -6,10 +6,11 @@ import org.chocosolver.solver._
 import org.chocosolver.solver.constraints.extension.Tuples
 import org.chocosolver.solver.search.loop.monitors.{IMonitorOpenNode, ISearchMonitor}
 import org.chocosolver.solver.search.strategy.Search
-import org.chocosolver.solver.search.strategy.selectors.values.IntDomainRandom
+import org.chocosolver.solver.search.strategy.selectors.values.{IntDomainRandom, IntValueSelector}
 import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail
 import org.chocosolver.solver.search.strategy.strategy.IntStrategy
 import org.chocosolver.solver.trace.LogStatEveryXXms
+import org.chocosolver.solver.variables.IntVar
 import org.chocosolver.util.objects.graphs.UndirectedGraph
 import org.chocosolver.util.objects.setDataStructures.SetType
 
@@ -34,6 +35,8 @@ object WaveFunctionCollapse {
     def connectedVertical(top: Int, bottom: Int): Boolean
 
     def allowedAt(x: Int, y: Int, t: Int): Boolean
+
+    def weight(t: Int): Double = 1
   }
 
   val display = Map(
@@ -161,7 +164,7 @@ object WaveFunctionCollapse {
           new IntStrategy(
             tiles,
             new FirstFail(model),
-            new IntDomainRandom(random.nextLong)
+            new IntDomainWeightedRandom(random, gts.weight)
           ),
           new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
         ),
@@ -259,5 +262,22 @@ object WaveFunctionCollapse {
     if (solver.solve()) {
       Some(Seq.tabulate(width, height) { (x, y) => grid(y * width + x).getValue })
     } else None
+  }
+}
+
+
+class IntDomainWeightedRandom(rand: Random, weighting: Int => Double) extends IntValueSelector {
+  import adrift.RandomImplicits._
+  override def selectValue(iv: IntVar): Int = {
+    val vals = new Array[Int](iv.getDomainSize)
+    val ub = iv.getUB
+    var i = iv.getLB
+    var j = 0
+    while (i <= ub) {
+      vals(j) = i
+      i = iv.nextValue(i)
+      j += 1
+    }
+    rand.chooseFrom(vals)(weighting)
   }
 }

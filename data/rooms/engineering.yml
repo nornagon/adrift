@@ -110,7 +110,7 @@
   defs:
     .: { terrain: floor }
     -: { terrain: wall }
-    +: { items: door }
+    +: { items: automatic door }
     G: { items: gyro-system }
     A: { items: attitude thruster }
     P: { items: attitude control panel }  
