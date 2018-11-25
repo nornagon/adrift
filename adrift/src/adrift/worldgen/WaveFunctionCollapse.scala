@@ -96,23 +96,6 @@ object WaveFunctionCollapse {
       model.intVar(s"T[$x,$y]", 0, gts.size)
     }
 
-    /*
-    for (x <- 0 until width) {
-      for (y <- 0 until height / 2 - 1) {
-        val oppY = height - 1 - y
-        val northV = model.isEdge(connectivity, y*width+x, (y+1)*width+x)
-        val southV = model.isEdge(connectivity, oppY*width+x, (oppY-1)*width+x)
-        model.arithm(northV, "=", southV).post()
-
-        if (x < width-1) {
-          val northH = model.isEdge(connectivity, y * width + x, y * width + x + 1)
-          val southH = model.isEdge(connectivity, oppY * width + x, oppY * width + x + 1)
-          model.arithm(northH, "=", southH).post()
-        }
-      }
-    }
-    */
-
     // this represents the allowed tuples of (left, right, isConnected)
     // e.g. if a tuple (0, 3, true) is present in the set, it means tile 3
     // is allowed to be to the right of tile 0, and those tiles are
@@ -188,7 +171,11 @@ object WaveFunctionCollapse {
           val connectedDown = y < height - 1 && v(y * width + x)((y + 1) * width + x)
           val connectedLeft = x > 0 && v(y * width + x)(y * width + x - 1)
           val connectedUp = y > 0 && v(y * width + x)((y - 1) * width + x)
-          s += display(connectedLeft, connectedUp, connectedRight, connectedDown)
+          val tile = tiles(y * width + x)
+          if (tile.getDomainSize > 1) {
+            s += ((tile.getDomainSize / gts.size.toFloat) * 10).toInt.toString
+          } else
+            s += display(connectedLeft, connectedUp, connectedRight, connectedDown)
         }
         s += "\n"
       }
