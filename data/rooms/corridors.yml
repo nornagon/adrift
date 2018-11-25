@@ -59,16 +59,19 @@
     0,0 down: WALL
   rotatable: true
 
-- type: room
-  name: corridor 4_1d
-  layout: *corridor-layout
-  defs: *corridor-defs
-  connections:
-    0,0 left: DOOR
-    0,0 up: WALL
-    0,0 right: WALL
-    0,0 down: WALL
-  rotatable: true
+# unnecessary #
+#=============#
+# - type: room
+#   name: corridor 4_1d
+#   layout: *corridor-layout
+#   defs: *corridor-defs
+#   connections:
+#     0,0 left: DOOR
+#     0,0 up: WALL
+#     0,0 right: WALL
+#     0,0 down: WALL
+#   rotatable: true
+#=============#
 
 - type: room
   name: corridor 3_3d

@@ -28,12 +28,12 @@
   rooms:
   - {room: hull section}
   - {room: hull section 2}
-  - {room: corridor }
+  - {room: corridor}
   - {room: corridor 4_4d}
   - {room: corridor 4_3d}
   - {room: corridor 4_2d_a}
   - {room: corridor 4_2d_b}
-  - {room: corridor 4_1d}
+  # - {room: corridor 4_1d}
   - {room: corridor 3_3d}
   - {room: corridor 3_2d_a}
   - {room: corridor 3_2d_b}
