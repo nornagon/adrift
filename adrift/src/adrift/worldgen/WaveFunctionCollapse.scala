@@ -144,7 +144,8 @@ object WaveFunctionCollapse {
         model.edgeChanneling(connectivity, connectedRight, y*width+x, y*width+x+1).post()
         model.table(
           Array(tiles(y * width + x), tiles(y * width + x + 1), connectedRight),
-          allowedHorizontal
+          allowedHorizontal,
+          "GACSTR+"
         ).post()
       }
       if (y < height - 1) {
@@ -152,7 +153,8 @@ object WaveFunctionCollapse {
         model.edgeChanneling(connectivity, connectedDown, y*width+x, (y+1)*width+x).post()
         model.table(
           Array(tiles(y * width + x), tiles((y+1) * width + x), connectedDown),
-          allowedVertical
+          allowedVertical,
+          "GACSTR+"
         ).post()
       }
     }
