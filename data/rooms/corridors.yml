@@ -10,47 +10,255 @@
     .: { terrain: floor }
   connections:
     0,0 left: OPEN
-    0,0 right: OPEN
-  rotatable: true
-
-- type: room
-  name: corridor with door
-  layout: *corridor-layout
-  defs: *corridor-defs
-  connections:
-    0,0 left: OPEN
-    0,0 up: DOOR
-    0,0 right: OPEN
-  rotatable: true
-
-- type: room
-  name: corridor T
-  layout: *corridor-layout
-  defs: *corridor-defs
-  connections:
-    0,0 left: OPEN
-    0,0 right: OPEN
     0,0 up: OPEN
-  rotatable: true
-
-- type: room
-  name: corridor X
-  layout: *corridor-layout
-  defs: *corridor-defs
-  connections:
-    0,0 left: OPEN
     0,0 right: OPEN
-    0,0 up: OPEN
     0,0 down: OPEN
   rotatable: true
 
 - type: room
-  name: corridor end
+  name: corridor 4_4d
   layout: *corridor-layout
   defs: *corridor-defs
   connections:
-    0,0 left: OPEN
+    0,0 left: DOOR
+    0,0 up: DOOR
+    0,0 right: DOOR
+    0,0 down: DOOR
   rotatable: true
+
+- type: room
+  name: corridor 4_3d
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: DOOR
+    0,0 right: DOOR
+    0,0 down: WALL
+  rotatable: true
+
+- type: room
+  name: corridor 4_2d_a
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: WALL
+    0,0 right: DOOR
+    0,0 down: WALL
+  rotatable: true
+
+- type: room
+  name: corridor 4_2d_b
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: DOOR
+    0,0 right: WALL
+    0,0 down: WALL
+  rotatable: true
+
+- type: room
+  name: corridor 4_1d
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: WALL
+    0,0 right: WALL
+    0,0 down: WALL
+  rotatable: true
+
+- type: room
+  name: corridor 3_3d
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: DOOR
+    0,0 right: DOOR
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_2d_a
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: DOOR
+    0,0 right: WALL
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_2d_b
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: WALL
+    0,0 right: DOOR
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_2d_c
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: DOOR
+    0,0 right: DOOR
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_1d_a
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: WALL
+    0,0 right: DOOR
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_1d_b
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: DOOR
+    0,0 right: WALL
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_1d_c
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: WALL
+    0,0 right: WALL
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 3_0d
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: WALL
+    0,0 right: WALL
+    0,0 down: OPEN
+  rotatable: true
+
+
+- type: room
+  name: corridor 2_2d_a
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: DOOR
+    0,0 right: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 2_2d_b
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: OPEN
+    0,0 right: DOOR
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 2_1d_a
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: WALL
+    0,0 right: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 2_1d_b
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: DOOR
+    0,0 right: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 2_1d_c
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: OPEN
+    0,0 right: WALL
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 2_0d_a
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: OPEN
+    0,0 right: WALL
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 2_0d_b
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: WALL
+    0,0 right: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
+
+- type: room
+  name: corridor 1_1d
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: DOOR
+    0,0 up: OPEN
+    0,0 right: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
+- type: room
+  name: corridor 1_0d
+  layout: *corridor-layout
+  defs: *corridor-defs
+  connections:
+    0,0 left: WALL
+    0,0 up: OPEN
+    0,0 right: OPEN
+    0,0 down: OPEN
+  rotatable: true
+
 
 - type: room
   name: hull section

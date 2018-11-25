@@ -28,8 +28,26 @@
   rooms:
   - {room: hull section}
   - {room: hull section 2}
-  - {room: corridor}
-  - {room: corridor with door}
-  - {room: corridor T}
-  - {room: corridor X}
-  - {room: corridor end}
+  - {room: corridor }
+  - {room: corridor 4_4d}
+  - {room: corridor 4_3d}
+  - {room: corridor 4_2d_a}
+  - {room: corridor 4_2d_b}
+  - {room: corridor 4_1d}
+  - {room: corridor 3_3d}
+  - {room: corridor 3_2d_a}
+  - {room: corridor 3_2d_b}
+  - {room: corridor 3_2d_c}
+  - {room: corridor 3_1d_a}
+  - {room: corridor 3_1d_b}
+  - {room: corridor 3_1d_c}
+  - {room: corridor 3_0d}
+  - {room: corridor 2_2d_a}
+  - {room: corridor 2_2d_b}
+  - {room: corridor 2_1d_a}
+  - {room: corridor 2_1d_b}
+  - {room: corridor 2_1d_c}
+  - {room: corridor 2_0d_a}
+  - {room: corridor 2_0d_b}
+  - {room: corridor 1_1d}
+  - {room: corridor 1_0d}

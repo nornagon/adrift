@@ -6,7 +6,7 @@ object adrift extends ScalaModule {
   val lwjglVersion = "3.1.2"
   override def forkArgs = if (System.getProperty("os.name") startsWith "Mac")
     Seq("-XstartOnFirstThread")
-  else Seq.empty[String]
+  else Seq("-Xmx12g")
   override def scalaVersion = "2.12.4"
   override def ivyDeps = Agg(
     ivy"org.choco-solver:choco-solver:4.0.6",
