@@ -81,9 +81,43 @@
     C: { items: [chair] }
     T: { items: [desk] }
     t: { items: [screwdriver, { choose: [soldering iron, soldering iron, empty soldering iron]} ] }
-    e: { items: { group: electronic equipment } }
-  
+    e: { items: { group: electronic equipment } }  
   connections:
     "0,0 down": DOOR
+  rotatable: true
+
+- type: room
+  name: ADC hub
+  layout: |2
+          .....
+          .....
+          ..G..
+          .....
+          .....
+          --+--
+    .....-.....-.....
+    .....-..P..-.....
+    ..G..+..A..+..G..
+    .....-.....-.....
+    .....-.....-.....
+    --------+--------
+          .....
+          .....
+          ..G..
+          .....
+          .....
+
+  defs:
+    .: { terrain: floor }
+    -: { terrain: wall }
+    +: { items: door }
+    G: { items: gyro-system }
+    A: { items: attitude thruster }
+    P: { items: attitude control panel }  
+  connections:
+    1,0 up: DOOR
+    0,1 left: DOOR
+    2,1 right: DOOR
+    1,2 down: DOOR
   rotatable: true
 
