@@ -163,8 +163,10 @@ object Data {
       .map(obj => obj.as[YamlObject.SectorDef]
         .fold(ex => throw new RuntimeException(s"Failed to parse sector: $obj", ex), identity))
       .groupBy(_.name).map {
-      case (k, v) => assert(v.length == 1, s"More than one sector with name $k"); k -> v.head
-    }
+        case (k, v) => assert(v.length == 1, s"More than one sector with name $k"); k -> v.head
+      }
+    for ((name, sd) <- sectors; r <- sd.rooms)
+      assert(rooms.contains(r.room), s"Sector '$name' references room '${r.room}', but that room doesn't exist")
 
     val display: DisplayData = {
       val displays = ymls("display")
