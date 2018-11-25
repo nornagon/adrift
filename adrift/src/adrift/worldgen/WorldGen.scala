@@ -324,7 +324,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
     for ((x, y) <- state.terrain.indices) {
       state.terrain(x, y) = data.terrain("wall")
     }
-    val superblocks = WaveFunctionCollapse.graphSolve(superblockTiles, width / 5, height / 5, random).map(superblockTiles.interpret).get
+    val superblocks = WaveFunctionCollapse.graphSolve(superblockTiles, width / 5, height / 5, random)
+      .map(superblockTiles.interpret).get
     val tiles = new RoomTiles(rooms, schematic.sectors) {
       override def allowedAt(x: Int, y: Int, t: Int): Boolean = {
         super.allowedAt(x, y, t) && {
@@ -343,6 +344,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
     }
     val ss = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret).get
+    println(s"Room type counts: ${ss.flatten.groupBy(_.name).mapValues(_.size)}")
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
