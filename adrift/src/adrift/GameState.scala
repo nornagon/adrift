@@ -53,6 +53,8 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
 
+  var walkThroughWalls = false
+
   lazy val circuits: mutable.Map[String, Circuit] = mutable.Map.empty[String, Circuit].withDefault { k =>
     val c = Circuit(k, 500, 500)
     circuits(k) = c
@@ -65,7 +67,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     message = None
     action match {
       case Action.PlayerMove(dx, dy) =>
-        if (canWalk(player._1 + dx, player._2 + dy)) {
+        if (canWalk(player._1 + dx, player._2 + dy) || walkThroughWalls) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
 

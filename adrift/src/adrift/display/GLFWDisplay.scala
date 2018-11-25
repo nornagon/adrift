@@ -206,6 +206,7 @@ object Appearance {
 
 trait Screen {
   def key(key: Int, scancode: Int, action: Int, mods: Int): Unit
+  def char(char: Int): Unit = {}
   def render(renderer: GlyphRenderer): Unit
 }
 
@@ -248,6 +249,12 @@ class GLFWDisplay extends Display {
     if (window == 0)
       throw new RuntimeException("Failed to create GLFW window")
 
+    glfwSetCharCallback(window, (window: Long, char: Int) => {
+      if (screens.nonEmpty) {
+        screens.last.char(char)
+      }
+    })
+
     glfwSetKeyCallback(window, (window: Long, key: Int, scancode: Int, action: Int, mods: Int) => {
       if (screens.nonEmpty) {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -269,6 +276,7 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_N => pendingActions.append(Action.PlayerMove(1, 1))
             case GLFW_KEY_I => pushScreen(new InventoryScreen(this, lastState))
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
+            case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
             case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))
             case _ =>
           }
