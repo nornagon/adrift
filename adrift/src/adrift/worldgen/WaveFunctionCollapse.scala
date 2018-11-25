@@ -56,7 +56,7 @@ object WaveFunctionCollapse {
     (true , true , true , true ) -> "┼",
   )
 
-  def graphSolve(gts: GraphTileSet, width: Int, height: Int, random: Random): Option[Seq[Seq[Int]]] = {
+  def graphSolve(gts: GraphTileSet, width: Int, height: Int, random: Random, mustConnect: ((Int, Int), (Int, Int)) => Boolean = (_, _) => false): Option[Seq[Seq[Int]]] = {
     val model = new GraphModel()
     // lb is the lower bound of the graph, i.e. everything in |lb| must be in the final graph
     val lb = new UndirectedGraph(
@@ -65,6 +65,14 @@ object WaveFunctionCollapse {
       SetType.SMALLBIPARTITESET, // experimentally much faster than the default BITSET
       /* allNodes = */ true
     )
+    for (y <- 0 until height) {
+      for (x <- 0 until width) {
+        if (x < width - 1 && mustConnect((x, y), (x+1, y)))
+          lb.addEdge(y*width+x, y*width+x+1)
+        if (y < height - 1 && mustConnect((x, y), (x, y+1)))
+          lb.addEdge(y*width+x, (y+1)*width+x)
+      }
+    }
     // ub is the upper bound, i.e. no edge or node that isn't in |ub| can be in the final graph
     val ub = new UndirectedGraph(
       model,
@@ -75,12 +83,10 @@ object WaveFunctionCollapse {
     // adjacency: at most, each room is connected to all its neighbors.
     for (y <- 0 until height) {
       for (x <- 0 until width) {
-        if (x < width - 1) {
+        if (x < width - 1)
           ub.addEdge(y*width+x, y*width+x+1)
-        }
-        if (y < height - 1) {
+        if (y < height - 1)
           ub.addEdge(y*width+x, (y+1)*width+x)
-        }
       }
     }
     // this variable will hold the connectivity of our map

@@ -324,7 +324,9 @@ case class WorldGen(data: Data)(implicit random: Random) {
     for ((x, y) <- state.terrain.indices) {
       state.terrain(x, y) = data.terrain("wall")
     }
-    val superblocks = WaveFunctionCollapse.graphSolve(superblockTiles, width / 5, height / 5, random)
+    val superblocks = WaveFunctionCollapse.graphSolve(superblockTiles, width / 5, height / 5, random, mustConnect = { (a, b) =>
+      a._1 == b._1 && a._1 == width / 5 / 2 || (a._2 == b._2 && a._2 > 0 && a._2 < height / 5 - 1)
+    })
       .map(superblockTiles.interpret).get
     val tiles = new RoomTiles(rooms, schematic.sectors) {
       override def allowedAt(x: Int, y: Int, t: Int): Boolean = {
