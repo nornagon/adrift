@@ -353,7 +353,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
     }
     val ss = WaveFunctionCollapse.graphSolve(tiles, width, height, random).map(tiles.interpret).get
-    println(s"Room type counts: ${ss.flatten.groupBy(_.name).mapValues(_.size)}")
+    println(s"Room type counts: ${ss.flatten.groupBy(_.name).filter(!_._1.contains("corridor")).mapValues(_.size)}")
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
