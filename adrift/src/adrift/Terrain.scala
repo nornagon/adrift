@@ -5,5 +5,6 @@ case class Terrain(
   walkable: Boolean,
   opaque: Boolean,
   connects: Boolean = false,
-  display: String
+  display: String,
+  heatTransfer: Double = 0.01
 )

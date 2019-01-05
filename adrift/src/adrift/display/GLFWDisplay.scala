@@ -1,6 +1,7 @@
 package adrift.display
 
 import adrift._
+import adrift.display.CP437.BoxDrawing
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift.items.{Item, Message}
 import adrift.items.behaviors
@@ -361,6 +362,7 @@ class GLFWDisplay extends Display {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
+      renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, Color(state.heat(x, y).toFloat, 0, 0, 0.3f), bg = Color(0f, 0f, 0f, 0f))
     }
   }
 

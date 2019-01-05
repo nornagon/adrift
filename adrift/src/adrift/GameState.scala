@@ -50,6 +50,7 @@ case class Circuit(name: String, max: Int, var stored: Int) {
 
 class GameState(val data: Data, width: Int, height: Int, random: Random) {
   val terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
+  val heat: Grid[Double] = new Grid[Double](width, height)(random.nextDouble())
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
 
@@ -138,6 +139,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     items.all.foreach(sendMessage(_, Message.Tick))
     circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
     recalculateFOV()
+    updateHeat()
   }
 
   def sendMessage[Msg <: Message](item: Item, message: Msg): Msg = {
@@ -308,5 +310,27 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
       }
       */
     ???
+  }
+
+  def updateHeat(): Unit = {
+    heat(player) += 0.5
+    import RandomImplicits._
+    def moveHeat(a: (Int, Int), b: (Int, Int), t: Double): Unit = {
+      val ha = heat.getOrElse(a, 0)
+      val hb = heat.getOrElse(b, 0)
+      val d = (ha - hb) * t
+      if (heat.contains(a)) heat(a) -= d
+      if (heat.contains(b)) heat(b) += d
+    }
+    for (_ <- 0 until (width * height * 0.1).round.toInt) {
+      val x = random.between(0, width)
+      val y = random.between(0, height)
+      // update the cell (x, y)
+
+      moveHeat((x, y), (x-1, y), terrain(x, y).heatTransfer)
+      moveHeat((x, y), (x+1, y), terrain(x, y).heatTransfer)
+      moveHeat((x, y), (x, y-1), terrain(x, y).heatTransfer)
+      moveHeat((x, y), (x, y+1), terrain(x, y).heatTransfer)
+    }
   }
 }

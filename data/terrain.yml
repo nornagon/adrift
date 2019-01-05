@@ -9,6 +9,7 @@
   opaque: false
   walkable: true
   display: FLOOR
+  heatTransfer: 0.4
 
 - type: terrain
   name: wall
@@ -16,6 +17,7 @@
   walkable: false
   connects: true
   display: WALL
+  heatTransfer: 0.001
 
 - type: terrain
   name: elevator wall
