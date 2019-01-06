@@ -362,7 +362,12 @@ class GLFWDisplay extends Display {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
-      renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, Color(state.heat(x, y).toFloat, 0, 0, 0.3f), bg = Color(0f, 0f, 0f, 0f))
+      val heat = state.heat(x, y)
+      val color = if (heat > 273)
+        Color((1 - math.exp(-(heat - 273)/50)).toFloat, 0, 0, 0.3f)
+      else
+        Color(0, 0, (1 - math.exp((heat - 273)/50)).toFloat, 0.3f)
+      renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
     }
   }
 

@@ -5,6 +5,7 @@ import adrift.items.behaviors.{PartiallyDisassembled, Tool}
 
 import scala.collection.mutable
 import scala.util.Random
+import RandomImplicits._
 
 sealed trait ItemLocation
 case class OnFloor(x: Int, y: Int) extends ItemLocation
@@ -50,7 +51,7 @@ case class Circuit(name: String, max: Int, var stored: Int) {
 
 class GameState(val data: Data, width: Int, height: Int, random: Random) {
   val terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  val heat: Grid[Double] = new Grid[Double](width, height)(random.nextDouble())
+  val heat: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 280d))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
 
@@ -313,7 +314,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   def updateHeat(): Unit = {
-    heat(player) += 0.5
+    heat(player) += 5
     import RandomImplicits._
     def moveHeat(a: (Int, Int), b: (Int, Int), t: Double): Unit = {
       val ha = heat.getOrElse(a, 0)
