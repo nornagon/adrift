@@ -6,5 +6,5 @@ case class Terrain(
   opaque: Boolean,
   connects: Boolean = false,
   display: String,
-  heatTransfer: Double = 0.01
+  heatCapacity: Double = 1d,
 )

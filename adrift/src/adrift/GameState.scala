@@ -51,9 +51,10 @@ case class Circuit(name: String, max: Int, var stored: Int) {
 
 class GameState(val data: Data, width: Int, height: Int, random: Random) {
   val terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  val heat: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 280d))
+  val temperature: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 280d))
   val items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
+  var bodyTemp: Double = 310
 
   var walkThroughWalls = false
 
@@ -313,25 +314,48 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     ???
   }
 
-  def updateHeat(): Unit = {
-    heat(player) += 5
-    import RandomImplicits._
-    def moveHeat(a: (Int, Int), b: (Int, Int), t: Double): Unit = {
-      val ha = heat.getOrElse(a, 0)
-      val hb = heat.getOrElse(b, 0)
-      val d = (ha - hb) * t
-      if (heat.contains(a)) heat(a) -= d
-      if (heat.contains(b)) heat(b) += d
-    }
-    for (_ <- 0 until (width * height * 0.1).round.toInt) {
-      val x = random.between(0, width)
-      val y = random.between(0, height)
-      // update the cell (x, y)
+  def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
+    val terA = terrain.getOrElse(a, data.terrain("empty space"))
+    val terB = terrain.getOrElse(b, data.terrain("empty space"))
+    val ca = terA.heatCapacity
+    val cb = terB.heatCapacity
 
-      moveHeat((x, y), (x-1, y), terrain(x, y).heatTransfer)
-      moveHeat((x, y), (x+1, y), terrain(x, y).heatTransfer)
-      moveHeat((x, y), (x, y-1), terrain(x, y).heatTransfer)
-      moveHeat((x, y), (x, y+1), terrain(x, y).heatTransfer)
+    val ka = terA.name match { case "floor" => 1; case _ => 0.1 }
+    val kb = terB.name match { case "floor" => 1; case _ => 0.1 }
+
+    val ta = temperature.getOrElse(a, 250d)
+    val tb = temperature.getOrElse(b, 250d)
+    assert(ta >= 0)
+    assert(tb >= 0)
+    val w = (ta - tb) * ka * kb
+    val dq = w * dt
+    if (temperature.contains(a)) temperature(a) -= dq / ca
+    if (temperature.contains(b)) temperature(b) += dq / cb
+  }
+
+  def updateHeat(): Unit = {
+    temperature(player) += 5
+    import RandomImplicits._
+    def randomAdj(p: (Int, Int)): (Int, Int) = {
+      val (x, y) = p
+      random.between(0, 4) match {
+        case 0 => (x - 1, y)
+        case 1 => (x + 1, y)
+        case 2 => (x, y - 1)
+        case 3 => (x, y + 1)
+      }
     }
+    for (_ <- 0 until (width * height * 0.4).round.toInt) {
+      val a = (random.between(0, width), random.between(0, height))
+      val b = randomAdj(a)
+      val ca = terrain.get(a).map(_.heatCapacity).getOrElse(1d)
+      val cb = terrain.get(b).map(_.heatCapacity).getOrElse(1)
+      moveHeat(dt = 0.05, a, b)
+    }
+    /*
+    for (y <- 0 until height; x <- 0 until width) {
+      updateHeat(x, y)
+    }
+    */
   }
 }
