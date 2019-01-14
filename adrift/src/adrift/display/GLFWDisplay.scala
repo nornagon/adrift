@@ -200,7 +200,7 @@ object Appearance {
     if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
     } else {
-      state.terrain(position).name
+      f"${state.terrain(position).name} (${state.temperature(position) - 273}%.1f C)"
     }
   }
 }
@@ -336,6 +336,7 @@ class GLFWDisplay extends Display {
     renderWorld(state, renderer, left, right, top, bottom)
     val message = state.message.getOrElse(Appearance.messageAtCell(state, state.player))
     renderer.drawString(0, worldHeightChars, message)
+    renderer.drawString(windowWidthChars - 10, worldHeightChars, f"${state.bodyTemp - 273}%.1f C")
 
     for (screen <- screens) {
       screen.render(renderer)

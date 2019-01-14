@@ -7,4 +7,7 @@ case class Terrain(
   connects: Boolean = false,
   display: String,
   heatCapacity: Double = 1d,
-)
+  heatTransfer: Double = 1d,
+) {
+  require(0 <= heatTransfer && heatTransfer <= 1, s"heatTransfer must be between 0 and 1")
+}

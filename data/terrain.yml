@@ -3,6 +3,7 @@
   opaque: false
   walkable: false
   display: SPACE
+  heatTransfer: 0
 
 - type: terrain
   name: floor
@@ -18,6 +19,7 @@
   connects: true
   display: WALL
   heatCapacity: 10
+  heatTransfer: 0.1
 
 - type: terrain
   name: elevator wall

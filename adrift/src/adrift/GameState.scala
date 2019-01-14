@@ -315,26 +315,18 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   }
 
   def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
-    val terA = terrain.getOrElse(a, data.terrain("empty space"))
-    val terB = terrain.getOrElse(b, data.terrain("empty space"))
-    val ca = terA.heatCapacity
-    val cb = terB.heatCapacity
-
-    val ka = terA.name match { case "floor" => 1; case _ => 0.1 }
-    val kb = terB.name match { case "floor" => 1; case _ => 0.1 }
-
-    val ta = temperature.getOrElse(a, 250d)
-    val tb = temperature.getOrElse(b, 250d)
-    assert(ta >= 0)
-    assert(tb >= 0)
-    val w = (ta - tb) * ka * kb
+    val terA = terrain(a)
+    val terB = terrain(b)
+    val ta = temperature(a)
+    val tb = temperature(b)
+    val k = terA.heatTransfer * terB.heatTransfer
+    val w = (ta - tb) * k
     val dq = w * dt
-    if (temperature.contains(a)) temperature(a) -= dq / ca
-    if (temperature.contains(b)) temperature(b) += dq / cb
+    if (temperature.contains(a)) temperature(a) -= dq / terA.heatCapacity
+    if (temperature.contains(b)) temperature(b) += dq / terB.heatCapacity
   }
 
-  def updateHeat(): Unit = {
-    temperature(player) += 5
+  def updateHeat(dt: Double = 0.05): Unit = {
     import RandomImplicits._
     def randomAdj(p: (Int, Int)): (Int, Int) = {
       val (x, y) = p
@@ -348,14 +340,16 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
     for (_ <- 0 until (width * height * 0.4).round.toInt) {
       val a = (random.between(0, width), random.between(0, height))
       val b = randomAdj(a)
-      val ca = terrain.get(a).map(_.heatCapacity).getOrElse(1d)
-      val cb = terrain.get(b).map(_.heatCapacity).getOrElse(1)
-      moveHeat(dt = 0.05, a, b)
+      if (temperature.contains(a) && temperature.contains(b))
+        moveHeat(dt, a, b)
     }
-    /*
-    for (y <- 0 until height; x <- 0 until width) {
-      updateHeat(x, y)
-    }
-    */
+
+    val playerHeatCapacity = 4
+    val playerTileTemp = temperature(player)
+    val k = 0.01
+    val w = (bodyTemp - playerTileTemp) * k
+    val dq = w * dt
+    bodyTemp -= dq / playerHeatCapacity
+    temperature(player) += dq / terrain(player).heatCapacity
   }
 }
