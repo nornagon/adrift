@@ -115,6 +115,9 @@
     BED:
       char: "\u00A4" # ñ
       fg: light_gray
+    VENT:
+      char: "\u009B" # ¢
+      fg: light_gray
     WINDOW:
       char: "/"
       bg: blue

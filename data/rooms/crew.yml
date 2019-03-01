@@ -3,7 +3,7 @@
   rotatable: true
   flippable: true
   layout: |
-    ==.DD
+    ==VDD
     t....
     ---..
     dc..o
@@ -13,6 +13,7 @@
   default_terrain: floor
   defs: &defs-quarters
     .: { terrain: floor }
+    V: { items: [ heating vent ] }
     =: { items: [ bed ] }
     -: { terrain: wall }
     d: { items: { each: [ desk, {group: small tools} ] } }

@@ -1,0 +1,10 @@
+- type: item
+  name: heating vent
+  description: A metal grate with adjustable louvres. Out of the grate blows a steady breeze of slightly warm air.
+  parts:
+    - {type: B-size modular panel, count: 2, disassembled_with: SCREWING}
+    - {type: D-size modular rod, count: 1, disassembled_with: SCREWING}
+  display: VENT
+  behavior:
+    - Affixed: {}
+    - Heater: {}
