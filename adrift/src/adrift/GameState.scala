@@ -342,6 +342,20 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
       val b = randomAdj(a)
       if (temperature.contains(a) && temperature.contains(b))
         moveHeat(dt, a, b)
+      if (terrain(a).name == "floor" && random.oneIn(2)) {
+        var p = a
+        for (_ <- 1 to random.between(2, 8)) {
+          val test = randomAdj(p)
+          if (canWalk(test._1, test._2)) {
+            p = test
+          }
+        }
+        if (p != a) {
+          val tmp = temperature(p)
+          temperature(p) = temperature(a)
+          temperature(a) = tmp
+        }
+      }
     }
 
     val playerHeatCapacity = 4
