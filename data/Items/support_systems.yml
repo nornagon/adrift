@@ -8,3 +8,13 @@
   behavior:
     - Affixed: {}
     - Heater: {}
+
+- type: item
+  name: thermostat
+  description: A small metal panel with a sensor and a temperature readout. Somehow always seems to be at the wrong setting.
+  parts:
+    - {type: B-size modular panel, count: 1, disassembled_with: SCREWING}
+  display: SMALL_PART
+  behavior:
+    - Affixed: {}
+    - Thermostat: {targetTemp: 294, hysteresis: 4}
