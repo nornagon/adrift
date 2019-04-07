@@ -6,6 +6,8 @@ import adrift.items.behaviors.{PartiallyDisassembled, Tool}
 import scala.collection.mutable
 import scala.util.Random
 import RandomImplicits._
+import io.circe.Decoder.Result
+import io.circe.{Decoder, HCursor, Json}
 
 sealed trait ItemLocation
 case class OnFloor(x: Int, y: Int) extends ItemLocation
@@ -49,21 +51,142 @@ case class Circuit(name: String, max: Int, var stored: Int) {
   def add(amount: Int): Unit = stored = math.min(max, stored + amount)
 }
 
-class GameState(val data: Data, width: Int, height: Int, random: Random) {
-  val terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  val temperature: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 280d))
-  val items: ItemDatabase = new ItemDatabase
+object Serialization {
+  import io.circe.Encoder
+  implicit def encodeGrid[T: Encoder]: Encoder[Grid[T]] = (a: Grid[T]) => Json.obj(
+    "width" -> Json.fromInt(a.width),
+    "height" -> Json.fromInt(a.height),
+    "cells" -> Json.fromValues(a.cells.map(c => implicitly[Encoder[T]].apply(c)))
+  )
+  implicit val encodeTerrain: Encoder[Terrain] = (t: Terrain) => Json.fromString(t.name)
+  implicit val encodeLocation: Encoder[ItemLocation] = {
+    case OnFloor(x: Int, y: Int) => Json.obj(
+      "where" -> Json.fromString("OnFloor"), "x" -> Json.fromInt(x), "y" -> Json.fromInt(y))
+    case InHands() => Json.obj("where" -> Json.fromString("InHands"))
+    case Inside(other: Item) => Json.obj("where" -> Json.fromString("Inside"), "container" -> Json.fromInt(other.id.id))
+    case Worn() => Json.obj("where" -> Json.fromString("Worn"))
+  }
+  implicit val encodeBehavior: Encoder[Behavior] = (b: Behavior) => Behavior.encodeBehavior.apply(b)
+  implicit val encodeItem: Encoder[Item] = (item: Item) => {
+    Json.obj(
+      "id" -> Json.fromInt(item.id.id),
+      "kind" -> Json.fromString(item.kind.name),
+      "parts" -> Json.fromValues(item.parts.map(part => encodeItem.apply(part))),
+      "behaviors" -> Json.fromValues(item.behaviors.map(behavior => encodeBehavior.apply(behavior)))
+    )
+  }
+  implicit val encodeItems: Encoder[ItemDatabase] = (db: ItemDatabase) => {
+    Json.fromValues(db.all.map(item => Json.obj(
+      "loc" -> encodeLocation.apply(db.lookup(item)),
+      "item" -> encodeItem.apply(item)
+    )))
+  }
+  implicit val encodeGameState: Encoder[GameState] = (state: GameState) => {
+    Json.obj(
+      "terrain" -> encodeGrid[Terrain].apply(state.terrain),
+      "temperature" -> encodeGrid[Double].apply(state.temperature),
+      "items" -> encodeItems.apply(state.items),
+      "player" -> Encoder.encodeTuple2[Int, Int].apply(state.player),
+      "bodyTemp" -> Json.fromDoubleOrNull(state.bodyTemp),
+    )
+  }
+
+  def save(state: GameState): Json = encodeGameState.apply(state)
+
+  implicit def decodeTerrain(implicit data: Data): Decoder[Terrain] = (c: HCursor) => c.as[String].map(data.terrain)
+  implicit def decodeGrid[T: Decoder]: Decoder[Grid[T]] = (c: HCursor) => {
+    for {
+      width <- c.get[Int]("width")
+      height <- c.get[Int]("height")
+      cells <- c.get[Vector[T]]("cells")
+    } yield {
+      val iter = cells.iterator
+      new Grid[T](width, height)(iter.next())
+    }
+  }
+  implicit val decodeBehavior: Decoder[Behavior] = (c: HCursor) => {
+    val behaviorKind = c.keys.get.head
+    c.get[Behavior](behaviorKind)(Behavior.decoders(behaviorKind))
+  }
+  implicit def decodeItem(implicit data: Data): Decoder[Item] = (c: HCursor) => {
+    for {
+      id <- c.get[Int]("id")
+      kind <- c.get[String]("kind")
+      parts <- c.get[Seq[Item]]("parts")
+      behaviors <- c.get[mutable.Buffer[Behavior]]("behaviors")
+    } yield {
+      Item(data.items(kind), parts, behaviors, new ItemId(id))
+    }
+  }
+  implicit def decodeItems(implicit data: Data): Decoder[ItemDatabase] = (c: HCursor) => {
+    val db = new ItemDatabase
+    val locItems: Vector[(Json, Item)] = (for {
+      json <- c.values.get
+    } yield {
+      (for {
+        loc <- json.hcursor.get[Json]("loc")
+        item <- json.hcursor.get[Item]("item")
+      } yield (loc, item)).right.get
+    })(collection.breakOut)
+    val itemsById: Map[ItemId, Item] = locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
+    for ((loc, item) <- locItems) {
+      val locCur = loc.hcursor
+      val decodedLoc: ItemLocation = (for {
+        where <- locCur.get[String]("where")
+        r <- (where match {
+          case "OnFloor" =>
+            for {
+              x <- locCur.get[Int]("x")
+              y <- locCur.get[Int]("y")
+            } yield OnFloor(x, y)
+          case "InHands" => Right(InHands())
+          case "Inside" =>
+            for {
+              containerId <- locCur.get[Int]("container")
+            } yield Inside(itemsById(new ItemId(containerId)))
+          case "Worn" => Right(Worn())
+        }): Decoder.Result[ItemLocation]
+      } yield r).right.get
+      db.put(item, decodedLoc)
+    }
+    Right(db)
+  }
+  implicit def decodeGameState(implicit data: Data): Decoder[GameState] = (c: HCursor) => {
+    for {
+      terrain <- c.get[Grid[Terrain]]("terrain")
+      temperature <- c.get[Grid[Double]]("temperature")
+      items <- c.get[ItemDatabase]("items")
+      player <- c.get[(Int, Int)]("player")
+      bodyTemp <- c.get[Double]("bodyTemp")
+    } yield {
+      val state = new GameState(data, terrain.width, terrain.height, new Random())
+      state.terrain = terrain
+      state.temperature = temperature
+      state.items = items
+      state.player = player
+      state.bodyTemp = bodyTemp
+      state
+    }
+  }
+  def load(data: Data, json: Json): GameState = decodeGameState(data).decodeJson(json).getOrElse(throw new RuntimeException("couldn't load"))
+}
+
+class GameState(val data: Data, val width: Int, val height: Int, val random: Random) {
+  var terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
+  var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 280d))
+  var items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
   var bodyTemp: Double = 310
-
-  var walkThroughWalls = false
-  var showTempDebug = false
 
   lazy val circuits: mutable.Map[String, Circuit] = mutable.Map.empty[String, Circuit].withDefault { k =>
     val c = Circuit(k, 500, 500)
     circuits(k) = c
     c
   }
+
+  var walkThroughWalls = false
+  var showTempDebug = false
+
 
   var message: Option[String] = None
 

@@ -1,6 +1,7 @@
 package adrift
 
-import java.nio.file.Paths
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 
 import adrift.display.{Display, GLFWDisplay}
 import adrift.worldgen.WorldGen
@@ -15,8 +16,20 @@ object Main {
     //javax(); return
 
     val data = Data.parse(Paths.get("data"))
-    implicit val random: Random = new Random(52)
-    val state = WorldGen(data).generateWorld
+
+    val savePath = Paths.get("save.json")
+    val state =
+      if (Files.exists(savePath)) {
+        Serialization.load(data, io.circe.parser.parse(new String(Files.readAllBytes(savePath))).right.get)
+      } else {
+        implicit val random: Random = new Random(52)
+        val state = WorldGen(data).generateWorld
+        val start = System.nanoTime()
+        Files.write(savePath, Serialization.save(state).spaces2.getBytes(StandardCharsets.UTF_8))
+        println(f"Save took ${(System.nanoTime() - start) / 1e6}%.1f ms")
+        state
+      }
+
     state.recalculateFOV()
     val display: Display = new GLFWDisplay
     display.init()

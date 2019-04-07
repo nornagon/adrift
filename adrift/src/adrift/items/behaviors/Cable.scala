@@ -118,7 +118,7 @@ case class Unspooling() extends Behavior {
 case class PlugMessage(wrapped: Message, from: Item) extends Message
 
 case class Plugged(other: Item) extends Behavior {
-  var receiving = false
+  private var receiving = false // not serialized because it's only used during dispatch
   override def receive(
     state: GameState,
     self: Item,

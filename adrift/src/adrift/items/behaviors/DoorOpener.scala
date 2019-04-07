@@ -4,9 +4,9 @@ import adrift.GameState
 import adrift.items.Message._
 import adrift.items._
 
-case class DoorOpener() extends Behavior {
+case class DoorOpener(
   var isOpen: Boolean = false
-
+) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,

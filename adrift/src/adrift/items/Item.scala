@@ -69,9 +69,9 @@ object ItemId {
 case class Item(
   kind: ItemKind,
   var parts: Seq[Item],
-  behaviors: mutable.Buffer[Behavior]
+  behaviors: mutable.Buffer[Behavior],
+  id: ItemId = ItemId.next
 ) {
-  val id: ItemId = ItemId.next
   override def hashCode(): Int = id.id
   override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
 

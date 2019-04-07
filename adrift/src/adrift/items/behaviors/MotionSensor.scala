@@ -4,9 +4,7 @@ import adrift.items.Message.{Activate, Deactivate, PlayerMove, Tick}
 import adrift.{GameState, OnFloor}
 import adrift.items._
 
-case class MotionSensor(radius: Int, timer: Int = 6) extends Behavior {
-  private var activeTicks = 0
-
+case class MotionSensor(radius: Int, timer: Int = 6, var activeTicks: Int = 0) extends Behavior {
   override def receive(state: GameState, self: Item, message: Message): Unit = message match {
     case PlayerMove(x, y) =>
       val loc = state.items.lookup(self)
@@ -27,5 +25,3 @@ case class MotionSensor(radius: Int, timer: Int = 6) extends Behavior {
     case _ =>
   }
 }
-
-

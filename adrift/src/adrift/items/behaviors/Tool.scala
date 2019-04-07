@@ -36,9 +36,8 @@ case class UsesElectricity(perUse: Int) extends Behavior {
   }
 }
 
-case class HoldsCharge(maxCharge: Int) extends Behavior {
-  var currentCharge: Int = maxCharge
-
+case class HoldsCharge(maxCharge: Int, var currentCharge: Int = -1) extends Behavior {
+  if (currentCharge == -1) currentCharge = maxCharge
   override def receive(
     state: GameState,
     self: Item,

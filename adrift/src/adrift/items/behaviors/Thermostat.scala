@@ -24,8 +24,7 @@ case class Thermostat(targetTemp: Double, hysteresis: Double) extends Behavior {
   }
 }
 
-case class Heater() extends Behavior {
-  var active = true
+case class Heater(var active: Boolean = true) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,
