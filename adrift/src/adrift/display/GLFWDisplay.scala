@@ -200,7 +200,7 @@ object Appearance {
     if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
     } else {
-      f"${state.terrain(position).name} (${state.temperature(position) - 273}%.1f C)"
+      state.terrain(position).name + (if (state.showTempDebug) f" (${state.temperature(position) - 273}%.1f C)" else "")
     }
   }
 }
@@ -363,7 +363,7 @@ class GLFWDisplay extends Display {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
-      if (state.temperature.contains(x, y)) {
+      if (state.showTempDebug && state.temperature.contains(x, y)) {
         val temp = state.temperature(x, y)
         val color = if (temp > 273)
           Color((1 - math.exp(-(temp - 273)/30)).toFloat, 0, 0, 0.3f)

@@ -57,6 +57,7 @@ class GameState(val data: Data, width: Int, height: Int, random: Random) {
   var bodyTemp: Double = 310
 
   var walkThroughWalls = false
+  var showTempDebug = false
 
   lazy val circuits: mutable.Map[String, Circuit] = mutable.Map.empty[String, Circuit].withDefault { k =>
     val c = Circuit(k, 500, 500)
