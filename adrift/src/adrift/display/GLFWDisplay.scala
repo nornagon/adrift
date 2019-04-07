@@ -275,6 +275,10 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_U => pendingActions.append(Action.PlayerMove(1, -1))
             case GLFW_KEY_B => pendingActions.append(Action.PlayerMove(-1, 1))
             case GLFW_KEY_N => pendingActions.append(Action.PlayerMove(1, 1))
+            case _ =>
+          }
+        } else if (action == GLFW_RELEASE) {
+          key match {
             case GLFW_KEY_I => pushScreen(new InventoryScreen(this, lastState))
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
             case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
