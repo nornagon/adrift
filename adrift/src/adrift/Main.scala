@@ -20,7 +20,13 @@ object Main {
     val savePath = Paths.get("save.json")
     val state =
       if (Files.exists(savePath)) {
-        Serialization.load(data, io.circe.parser.parse(new String(Files.readAllBytes(savePath))).right.get)
+        val start = System.nanoTime()
+        val json = io.circe.parser.parse(new String(Files.readAllBytes(savePath))).right.get
+        println(f"Parse took ${(System.nanoTime() - start) / 1e6}%.1f ms")
+        val start2 = System.nanoTime()
+        val state = Serialization.load(data, json)
+        println(f"Load took ${(System.nanoTime() - start2) / 1e6}%.1f ms")
+        state
       } else {
         implicit val random: Random = new Random(52)
         val state = WorldGen(data).generateWorld

@@ -63,6 +63,7 @@ case class ItemKind(
 class ItemId(val id: Int) extends AnyVal
 object ItemId {
   private var _nextId = 1
+  def reset(nextId: Int): Unit = _nextId = nextId
   def next: ItemId = { _nextId += 1; new ItemId(_nextId) }
 }
 

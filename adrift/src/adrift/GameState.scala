@@ -118,55 +118,56 @@ object Serialization {
       Item(data.items(kind), parts, behaviors, new ItemId(id))
     }
   }
+  implicit def decodeItemLocation(implicit itemsById: Map[ItemId, Item]): Decoder[ItemLocation] = (h: HCursor) => {
+    for {
+      where <- h.get[String]("where")
+      r <- (where match {
+        case "OnFloor" =>
+          for {
+            x <- h.get[Int]("x")
+            y <- h.get[Int]("y")
+          } yield OnFloor(x, y)
+        case "InHands" => Right(InHands())
+        case "Inside" =>
+          for (containerId <- h.get[Int]("container")) yield Inside(itemsById(new ItemId(containerId)))
+        case "Worn" => Right(Worn())
+      }): Decoder.Result[ItemLocation]
+    } yield r
+  }
   implicit def decodeItems(implicit data: Data): Decoder[ItemDatabase] = (c: HCursor) => {
+    implicit val locItemDecoder = Decoder.forProduct2("loc", "item")((loc: Json, item: Item) => (loc, item))
+    val locItems = c.as[Vector[(Json, Item)]].right.get
+    implicit val itemsById: Map[ItemId, Item] = locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
+
+    ItemId.reset(locItems.view.map(_._2.id.id).max)
+
     val db = new ItemDatabase
-    val locItems: Vector[(Json, Item)] = (for {
-      json <- c.values.get
-    } yield {
-      (for {
-        loc <- json.hcursor.get[Json]("loc")
-        item <- json.hcursor.get[Item]("item")
-      } yield (loc, item)).right.get
-    })(collection.breakOut)
-    val itemsById: Map[ItemId, Item] = locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
     for ((loc, item) <- locItems) {
-      val locCur = loc.hcursor
-      val decodedLoc: ItemLocation = (for {
-        where <- locCur.get[String]("where")
-        r <- (where match {
-          case "OnFloor" =>
-            for {
-              x <- locCur.get[Int]("x")
-              y <- locCur.get[Int]("y")
-            } yield OnFloor(x, y)
-          case "InHands" => Right(InHands())
-          case "Inside" =>
-            for {
-              containerId <- locCur.get[Int]("container")
-            } yield Inside(itemsById(new ItemId(containerId)))
-          case "Worn" => Right(Worn())
-        }): Decoder.Result[ItemLocation]
-      } yield r).right.get
+      val decodedLoc: ItemLocation = loc.as[ItemLocation].right.get
       db.put(item, decodedLoc)
     }
     Right(db)
   }
   implicit def decodeGameState(implicit data: Data): Decoder[GameState] = (c: HCursor) => {
-    for {
-      terrain <- c.get[Grid[Terrain]]("terrain")
-      temperature <- c.get[Grid[Double]]("temperature")
-      items <- c.get[ItemDatabase]("items")
-      player <- c.get[(Int, Int)]("player")
-      bodyTemp <- c.get[Double]("bodyTemp")
-    } yield {
-      val state = new GameState(data, terrain.width, terrain.height, new Random())
-      state.terrain = terrain
-      state.temperature = temperature
-      state.items = items
-      state.player = player
-      state.bodyTemp = bodyTemp
-      state
+    import io.circe.generic.semiauto._
+    case class GameStateSerialized(
+      terrain: Grid[Terrain],
+      temperature: Grid[Double],
+      items: ItemDatabase,
+      player: (Int, Int),
+      bodyTemp: Double
+    ) {
+      def toGameState: GameState = {
+        val state = new GameState(data, terrain.width, terrain.height, new Random())
+        state.terrain = terrain
+        state.temperature = temperature
+        state.items = items
+        state.player = player
+        state.bodyTemp = bodyTemp
+        state
+      }
     }
+    deriveDecoder[GameStateSerialized].map(_.toGameState).apply(c)
   }
   def load(data: Data, json: Json): GameState = decodeGameState(data).decodeJson(json).getOrElse(throw new RuntimeException("couldn't load"))
 }
