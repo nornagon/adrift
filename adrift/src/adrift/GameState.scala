@@ -50,9 +50,12 @@ case class Circuit(name: String, max: Int, var stored: Int) {
 }
 
 object Serialization {
-  import io.circe.{Decoder, Encoder, HCursor, Json}
   import java.io._
   import java.util.Base64
+
+  import io.circe.generic.semiauto._
+  import io.circe.syntax._
+  import io.circe.{Decoder, Encoder, HCursor, Json}
 
   case class GameStateSerialized(
     random: Random,
@@ -83,57 +86,32 @@ object Serialization {
     )
   }
 
-  implicit def encodeGrid[T: Encoder]: Encoder[Grid[T]] = (a: Grid[T]) => Json.obj(
-    "width" -> Json.fromInt(a.width),
-    "height" -> Json.fromInt(a.height),
-    "cells" -> Json.fromValues(a.cells.map(c => implicitly[Encoder[T]].apply(c)))
-  )
-  implicit val encodeTerrain: Encoder[Terrain] = (t: Terrain) => Json.fromString(t.name)
-  implicit val encodeLocation: Encoder[ItemLocation] = {
-    case OnFloor(x: Int, y: Int) => Json.obj(
-      "where" -> Json.fromString("OnFloor"), "x" -> Json.fromInt(x), "y" -> Json.fromInt(y))
-    case InHands() => Json.obj("where" -> Json.fromString("InHands"))
-    case Inside(other: Item) => Json.obj("where" -> Json.fromString("Inside"), "container" -> Json.fromInt(other.id.id))
-    case Worn() => Json.obj("where" -> Json.fromString("Worn"))
-  }
-  implicit val encodeBehavior: Encoder[Behavior] = (b: Behavior) => Behavior.encodeBehavior.apply(b)
-  implicit val encodeItem: Encoder[Item] = (item: Item) => {
-    Json.obj(
-      "id" -> Json.fromInt(item.id.id),
-      "kind" -> Json.fromString(item.kind.name),
-      "parts" -> Json.fromValues(item.parts.map(part => encodeItem.apply(part))),
-      "behaviors" -> Json.fromValues(item.behaviors.map(behavior => encodeBehavior.apply(behavior)))
-    )
-  }
-  implicit val encodeItems: Encoder[ItemDatabase] = (db: ItemDatabase) => {
-    Json.fromValues(db.all.map(item => Json.obj(
-      "loc" -> encodeLocation.apply(db.lookup(item)),
-      "item" -> encodeItem.apply(item)
-    )))
-  }
-  implicit val encodeRandom: Encoder[Random] = (r: Random) => {
+  def encodeByJavaSerialization[T <: Serializable]: Encoder[T] = (a: T) => {
     val bs = new ByteArrayOutputStream()
     val s = new ObjectOutputStream(bs)
-    s.writeObject(r)
+    s.writeObject(a)
     s.close()
     Json.fromString(Base64.getEncoder.encodeToString(bs.toByteArray))
   }
-  implicit val encodeGameState: Encoder[GameState] = (state: GameState) => {
-    import io.circe.generic.semiauto._
-    deriveEncoder[GameStateSerialized].apply(GameStateSerialized.fromGameState(state))
-  }
 
-  def save(state: GameState): Json = encodeGameState.apply(state)
-
-  implicit val decodeRandom: Decoder[Random] = (h: HCursor) => {
+  def decodeByJavaSerialization[T <: Serializable]: Decoder[T] = (h: HCursor) => {
     for (str <- h.as[String]) yield {
       val bs = new ByteArrayInputStream(Base64.getDecoder.decode(str))
       val s = new ObjectInputStream(bs)
-      s.readObject().asInstanceOf[scala.util.Random]
+      s.readObject().asInstanceOf[T]
     }
   }
-  implicit def decodeTerrain(implicit data: Data): Decoder[Terrain] = (c: HCursor) => c.as[String].map(data.terrain)
-  implicit def decodeGrid[T: Decoder]: Decoder[Grid[T]] = (c: HCursor) => {
+
+  implicit val encodeRandom: Encoder[Random] = encodeByJavaSerialization[Random]
+  implicit val decodeRandom: Decoder[Random] = decodeByJavaSerialization[Random]
+
+  implicit def encodeGrid[T: Encoder]: Encoder[Grid[T]] = (a: Grid[T]) =>
+    Json.obj(
+      "width" -> a.width.asJson,
+      "height" -> a.height.asJson,
+      "cells" -> a.cells.asJson
+    )
+  implicit def decodeGrid[T: Decoder]: Decoder[Grid[T]] = (c: HCursor) =>
     for {
       width <- c.get[Int]("width")
       height <- c.get[Int]("height")
@@ -142,12 +120,60 @@ object Serialization {
       val iter = cells.iterator
       new Grid[T](width, height)(iter.next())
     }
+
+  implicit val encodeTerrain: Encoder[Terrain] = (t: Terrain) => t.name.asJson
+  implicit def decodeTerrain(implicit data: Data): Decoder[Terrain] = (c: HCursor) => c.as[String].map(data.terrain)
+
+  implicit val encodeItemLocation: Encoder[ItemLocation] = {
+    case OnFloor(x: Int, y: Int) =>
+      Json.obj(
+        "where" -> "OnFloor".asJson,
+        "x" -> x.asJson,
+        "y" -> y.asJson
+      )
+    case InHands() =>
+      Json.obj("where" -> "InHands".asJson)
+    case Inside(other: Item) =>
+      Json.obj(
+        "where" -> "Inside".asJson,
+        "container" -> other.id.asJson
+      )
+    case Worn() =>
+      Json.obj("where" -> "Worn".asJson)
   }
+  implicit def decodeItemLocation(implicit itemsById: Map[ItemId, Item]): Decoder[ItemLocation] = (h: HCursor) =>
+    for {
+      where <- h.get[String]("where")
+      r <- where match {
+        case "OnFloor" =>
+          for {
+            x <- h.get[Int]("x")
+            y <- h.get[Int]("y")
+          } yield OnFloor(x, y)
+        case "InHands" =>
+          Right(InHands())
+        case "Inside" =>
+          for (containerId <- h.get[Int]("container")) yield Inside(itemsById(new ItemId(containerId)))
+        case "Worn" =>
+          Right(Worn())
+      }
+    } yield r
+
+  implicit val encodeBehavior: Encoder[Behavior] = Behavior.encodeBehavior
   implicit val decodeBehavior: Decoder[Behavior] = (c: HCursor) => {
     val behaviorKind = c.keys.get.head
     c.get[Behavior](behaviorKind)(Behavior.decoders(behaviorKind))
   }
-  implicit def decodeItem(implicit data: Data): Decoder[Item] = (c: HCursor) => {
+
+  implicit val encodeItemId: Encoder[ItemId] = Encoder[Int].contramap(_.id)
+  implicit val encodeItem: Encoder[Item] = (item: Item) =>
+    Json.obj(
+      "id" -> item.id.asJson,
+      "kind" -> item.kind.name.asJson,
+      "parts" -> item.parts.asJson,
+      "behaviors" -> item.behaviors.asJson
+    )
+  implicit def decodeItem(implicit data: Data): Decoder[Item] = (c: HCursor) =>
     for {
       id <- c.get[Int]("id")
       kind <- c.get[String]("kind")
@@ -156,42 +182,38 @@ object Serialization {
     } yield {
       Item(data.items(kind), parts, behaviors, new ItemId(id))
     }
-  }
-  implicit def decodeItemLocation(implicit itemsById: Map[ItemId, Item]): Decoder[ItemLocation] = (h: HCursor) => {
-    for {
-      where <- h.get[String]("where")
-      r <- (where match {
-        case "OnFloor" =>
-          for {
-            x <- h.get[Int]("x")
-            y <- h.get[Int]("y")
-          } yield OnFloor(x, y)
-        case "InHands" => Right(InHands())
-        case "Inside" =>
-          for (containerId <- h.get[Int]("container")) yield Inside(itemsById(new ItemId(containerId)))
-        case "Worn" => Right(Worn())
-      }): Decoder.Result[ItemLocation]
-    } yield r
+
+  implicit val encodeItems: Encoder[ItemDatabase] = (db: ItemDatabase) => {
+    Json.fromValues(db.all.map(item => Json.obj(
+      "loc" -> db.lookup(item).asJson,
+      "item" -> item.asJson
+    )))
   }
   implicit def decodeItems(implicit data: Data): Decoder[ItemDatabase] = (c: HCursor) => {
-    implicit val locItemDecoder = Decoder.forProduct2("loc", "item")((loc: Json, item: Item) => (loc, item))
+    implicit val locItemDecoder: Decoder[(Json, Item)] =
+      Decoder.forProduct2("loc", "item")((loc: Json, item: Item) => (loc, item))
     val locItems = c.as[Vector[(Json, Item)]].right.get
-    implicit val itemsById: Map[ItemId, Item] = locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
-
-    ItemId.reset(locItems.view.map(_._2.id.id).max)
+    implicit val itemsById: Map[ItemId, Item] =
+      locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
 
     val db = new ItemDatabase
     for ((loc, item) <- locItems) {
       val decodedLoc: ItemLocation = loc.as[ItemLocation].right.get
       db.put(item, decodedLoc)
     }
+
+    ItemId.reset(locItems.view.map(_._2.id.id).max)
+
     Right(db)
   }
-  implicit def decodeGameState(implicit data: Data): Decoder[GameState] = (c: HCursor) => {
-    import io.circe.generic.semiauto._
-    deriveDecoder[GameStateSerialized].map(_.toGameState(data)).apply(c)
-  }
-  def load(data: Data, json: Json): GameState = decodeGameState(data).decodeJson(json).getOrElse(throw new RuntimeException("couldn't load"))
+
+  implicit val encodeGameState: Encoder[GameState] =
+    deriveEncoder[GameStateSerialized].contramap(GameStateSerialized.fromGameState)
+  implicit def decodeGameState(implicit data: Data): Decoder[GameState] =
+    deriveDecoder[GameStateSerialized].map(_.toGameState(data))
+
+  def save(state: GameState): Json = Encoder[GameState].apply(state)
+  def load(implicit data: Data, json: Json): GameState = Decoder[GameState].decodeJson(json).right.get
 }
 
 class GameState(val data: Data, val width: Int, val height: Int, val random: Random) {
