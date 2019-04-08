@@ -1,13 +1,11 @@
 package adrift
 
+import adrift.RandomImplicits._
 import adrift.items._
 import adrift.items.behaviors.{PartiallyDisassembled, Tool}
 
 import scala.collection.mutable
 import scala.util.Random
-import RandomImplicits._
-import io.circe.Decoder.Result
-import io.circe.{Decoder, HCursor, Json}
 
 sealed trait ItemLocation
 case class OnFloor(x: Int, y: Int) extends ItemLocation
@@ -52,7 +50,39 @@ case class Circuit(name: String, max: Int, var stored: Int) {
 }
 
 object Serialization {
-  import io.circe.Encoder
+  import io.circe.{Decoder, Encoder, HCursor, Json}
+  import java.io._
+  import java.util.Base64
+
+  case class GameStateSerialized(
+    random: Random,
+    terrain: Grid[Terrain],
+    temperature: Grid[Double],
+    items: ItemDatabase,
+    player: (Int, Int),
+    bodyTemp: Double
+  ) {
+    def toGameState(data: Data): GameState = {
+      val state = new GameState(data, terrain.width, terrain.height, random)
+      state.terrain = terrain
+      state.temperature = temperature
+      state.items = items
+      state.player = player
+      state.bodyTemp = bodyTemp
+      state
+    }
+  }
+  object GameStateSerialized{
+    def fromGameState(state: GameState) = GameStateSerialized(
+      state.random,
+      state.terrain,
+      state.temperature,
+      state.items,
+      state.player,
+      state.bodyTemp
+    )
+  }
+
   implicit def encodeGrid[T: Encoder]: Encoder[Grid[T]] = (a: Grid[T]) => Json.obj(
     "width" -> Json.fromInt(a.width),
     "height" -> Json.fromInt(a.height),
@@ -81,18 +111,27 @@ object Serialization {
       "item" -> encodeItem.apply(item)
     )))
   }
+  implicit val encodeRandom: Encoder[Random] = (r: Random) => {
+    val bs = new ByteArrayOutputStream()
+    val s = new ObjectOutputStream(bs)
+    s.writeObject(r)
+    s.close()
+    Json.fromString(Base64.getEncoder.encodeToString(bs.toByteArray))
+  }
   implicit val encodeGameState: Encoder[GameState] = (state: GameState) => {
-    Json.obj(
-      "terrain" -> encodeGrid[Terrain].apply(state.terrain),
-      "temperature" -> encodeGrid[Double].apply(state.temperature),
-      "items" -> encodeItems.apply(state.items),
-      "player" -> Encoder.encodeTuple2[Int, Int].apply(state.player),
-      "bodyTemp" -> Json.fromDoubleOrNull(state.bodyTemp),
-    )
+    import io.circe.generic.semiauto._
+    deriveEncoder[GameStateSerialized].apply(GameStateSerialized.fromGameState(state))
   }
 
   def save(state: GameState): Json = encodeGameState.apply(state)
 
+  implicit val decodeRandom: Decoder[Random] = (h: HCursor) => {
+    for (str <- h.as[String]) yield {
+      val bs = new ByteArrayInputStream(Base64.getDecoder.decode(str))
+      val s = new ObjectInputStream(bs)
+      s.readObject().asInstanceOf[scala.util.Random]
+    }
+  }
   implicit def decodeTerrain(implicit data: Data): Decoder[Terrain] = (c: HCursor) => c.as[String].map(data.terrain)
   implicit def decodeGrid[T: Decoder]: Decoder[Grid[T]] = (c: HCursor) => {
     for {
@@ -150,24 +189,7 @@ object Serialization {
   }
   implicit def decodeGameState(implicit data: Data): Decoder[GameState] = (c: HCursor) => {
     import io.circe.generic.semiauto._
-    case class GameStateSerialized(
-      terrain: Grid[Terrain],
-      temperature: Grid[Double],
-      items: ItemDatabase,
-      player: (Int, Int),
-      bodyTemp: Double
-    ) {
-      def toGameState: GameState = {
-        val state = new GameState(data, terrain.width, terrain.height, new Random())
-        state.terrain = terrain
-        state.temperature = temperature
-        state.items = items
-        state.player = player
-        state.bodyTemp = bodyTemp
-        state
-      }
-    }
-    deriveDecoder[GameStateSerialized].map(_.toGameState).apply(c)
+    deriveDecoder[GameStateSerialized].map(_.toGameState(data)).apply(c)
   }
   def load(data: Data, json: Json): GameState = decodeGameState(data).decodeJson(json).getOrElse(throw new RuntimeException("couldn't load"))
 }
