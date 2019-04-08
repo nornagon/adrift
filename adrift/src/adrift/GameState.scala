@@ -305,6 +305,10 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
             message = Some("You need to pick it up first.")
         }
 
+      case Action.Wear(item) =>
+        items.move(item, Worn())
+        message = Some(s"You put on the ${item.kind.name}")
+
       case Action.Quit =>
     }
     items.all.foreach(sendMessage(_, Message.Tick))
@@ -404,7 +408,7 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
       if isVisible(loc.x, loc.y)
       i <- items.lookup(loc)
     } yield i
-    onFloor ++ items.lookup(InHands())
+    onFloor ++ items.lookup(InHands()) ++ items.lookup(Worn())
   }
 
   def buildableItems2(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {

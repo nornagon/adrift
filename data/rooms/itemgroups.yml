@@ -15,43 +15,6 @@
     - soldering iron
 
 - type: item_group
-  name: clothing
-  choose:
-    - { group: shirt }
-    - { group: pants }
-    - { group: dress }
-    - { group: shoes }
-    - { group: work clothes }
-    - { group: underwear }
-
-- type: item_group
-  name: shirt
-  choose:
-    - t-shirt
-    - dress shirt
-    - long-sleeve uniform shirt
-
-- type: item_group
-  name: pants
-  choose:
-    - jeans
-
-- type: item_group
-  name: dress
-  choose:
-    - long skirt
-
-- type: item_group
-  name: work clothes
-  choose:
-    - pair of overalls
-
-- type: item_group
-  name: underwear
-  choose:
-    - briefs
-
-- type: item_group
   name: bedding
   choose:
     - bedsheet
@@ -78,17 +41,7 @@
 - type: item_group
   name: flex component pile
   choose:
-    each:
-    - flex component
-    - flex component
-    - flex component
-    - flex component
-    - flex component
-    - flex component
-    - flex component
-    - flex component
-    - flex component
-    - flex component
+    - { repeat: flex component, count: 2d4 }
 
 - type: item_group
   name: power systems

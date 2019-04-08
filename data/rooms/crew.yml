@@ -18,7 +18,7 @@
     -: { terrain: wall }
     d: { items: { each: [ desk, {group: small tools} ] } }
     c: { items: [ chair ] }
-    D: { items: [ closet ] }
+    D: { items: { each: [ closet, {group: clothing} ] } }
     t: { items: [ side table ] }
     o: { items: { each: [ ship power outlet, thick power cable ] } }
   items:

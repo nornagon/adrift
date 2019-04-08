@@ -90,7 +90,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       case Inside(other) =>
         directionString(state.items.lookup(other))
       case Worn() =>
-        "W"
+        "WR"
     }
   }
 }

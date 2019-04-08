@@ -1,0 +1,93 @@
+- type: item_group
+  name: clothing
+  choose:
+    - { group: shirt }
+    - { group: pants }
+    - { group: dress }
+    #- { group: shoes }
+    - { group: work clothes }
+    - { group: underwear }
+
+- type: item_group
+  name: shirt
+  choose:
+    - t-shirt
+    - dress shirt
+    - long-sleeve uniform shirt
+
+- type: item_group
+  name: pants
+  choose:
+    - jeans
+
+- type: item_group
+  name: dress
+  choose:
+    - long skirt
+
+- type: item_group
+  name: work clothes
+  choose:
+    - pair of overalls
+
+- type: item_group
+  name: underwear
+  choose:
+    - briefs
+
+
+- type: item
+  name: t-shirt
+  description: A standard-issue IAC cotton tee. "One size fits all", my ass.
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [torso] }
+
+- type: item
+  name: dress shirt
+  description: A light blue button-down collared shirt. It's unclear what occasion the mission planners were envisioning we'd be "dressing" for.
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [torso, arms] }
+
+- type: item
+  name: long-sleeve uniform shirt
+  description: It has an IAC logo emblazoned on the breast.
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [torso, arms] }
+
+- type: item
+  name: jeans
+  description: Blue denim jeans, the American dream.
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [legs] }
+
+- type: item
+  name: long skirt
+  description: A calf-length pleated skirt.
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [legs] }
+
+- type: item
+  name: pair of overalls
+  description: Only slightly grease-stained.
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [torso, legs] }
+
+- type: item
+  name: briefs
+  description: They're not yours. Or maybe everything on the ship is yours?
+  display: CLOTHING
+  parts: []
+  behavior:
+    - Wearable: { location: [legs] }

@@ -31,4 +31,6 @@ object Message {
 
   case class PickedUp(var item: Item) extends Message
   case class Dropped() extends Message
+
+  case class CanWear(var ok: Boolean = false) extends Message
 }
