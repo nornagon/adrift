@@ -259,8 +259,8 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
           items.delete(item)
           message = Some(s"You take apart the ${item.kind.name}.")
         } else if (anyRemoved) {
+          message = Some(s"You weren't able to completely take apart the ${itemDisplayName(item)}.")
           item.behaviors.append(PartiallyDisassembled())
-          message = Some(s"You weren't able to completely take apart the ${item.kind.name}.")
         } else {
           message = Some(s"You don't have the tools to do that.")
         }
@@ -273,7 +273,7 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
           behaviors = mutable.Buffer.empty
         )
         items.put(newItem, OnFloor(player._1, player._2))
-        message = Some(s"You make a ${newItem.kind.name}.")
+        message = Some(s"You make a ${itemDisplayName(newItem)}.")
 
       case Action.PickUp(item) =>
         if (!sendMessage(item, Message.PickUp()).ok) {
@@ -283,7 +283,7 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
         } else {
           val pickedUpItem = sendMessage(item, Message.PickedUp(item)).item
           items.move(pickedUpItem, InHands())
-          message = Some(s"You pick up the ${pickedUpItem.kind.name}.")
+          message = Some(s"You pick up the ${itemDisplayName(pickedUpItem)}.")
         }
 
       case Action.PutDown(item) =>
@@ -291,7 +291,7 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
             sendMessage(item, Message.Dropped())
-            message = Some(s"You place the ${item.kind.name} on the ${terrain(player).name}.")
+            message = Some(s"You place the ${itemDisplayName(item)} on the ${terrain(player).name}.")
           case _ =>
             message = Some("You can't put that down.")
         }
@@ -307,7 +307,12 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
 
       case Action.Wear(item) =>
         items.move(item, Worn())
-        message = Some(s"You put on the ${item.kind.name}")
+        message = Some(s"You put on the ${itemDisplayName(item)}.")
+
+      case Action.TakeOff(item) =>
+        items.move(item, OnFloor(player._1, player._2))
+        sendMessage(item, Message.Dropped())
+        message = Some(s"You take off the ${itemDisplayName(item)}.")
 
       case Action.Quit =>
     }

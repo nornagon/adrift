@@ -1,7 +1,7 @@
 package adrift.display
 
 import adrift.items.{Item, Message}
-import adrift.{GameState, Action}
+import adrift.{GameState, Action, Worn}
 import org.lwjgl.glfw.GLFW._
 
 class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
@@ -15,6 +15,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
         case GLFW_KEY_W =>
           if (state.sendMessage(item, Message.CanWear()).ok) {
             display.pushAction(Action.Wear(item))
+            display.popScreen()
+          }
+        case GLFW_KEY_T =>
+          if (state.items.lookup(item).isInstanceOf[Worn]) {
+            display.pushAction(Action.TakeOff(item))
             display.popScreen()
           }
         case _ =>
