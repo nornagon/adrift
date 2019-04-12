@@ -326,8 +326,9 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     message
   }
 
-  def broadcastToLocation(location: ItemLocation, message: Message): Unit = {
+  def broadcastToLocation[Msg <: Message](location: ItemLocation, message: Msg): Msg = {
     items.lookup(location).foreach(sendMessage(_, message))
+    message
   }
 
   def broadcastToParts[Msg <: Message](item: Item, message: Msg): Msg = {
@@ -538,7 +539,8 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     val playerTileTemp = temperature(player)
     val k = 0.01
     val w = (bodyTemp - playerTileTemp) * k
-    val dq = w * dt
+
+    val dq = broadcastToLocation(Worn(), Message.LoseHeat(dq = w * dt)).dq
     bodyTemp -= dq / playerHeatCapacity
     temperature(player) += dq / terrain(player).heatCapacity
 
@@ -552,7 +554,10 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     // a test of "reasonableness" (standing in a cold corridor should cool you
     // down fairly quickly but not too quickly, standing next to a heater
     // should let your body warm back up and stay at 310 °K).
-    val maxMetabolismDq = 0.02
+    //
+    // TODO: metabolising to produce heat should take calories from stored
+    // energy once food is implemented
+    val maxMetabolismDq = 0.01
     val metabolismDq = math.max(0, math.min((310 - bodyTemp) * 0.9, maxMetabolismDq))
     bodyTemp += metabolismDq / playerHeatCapacity
   }

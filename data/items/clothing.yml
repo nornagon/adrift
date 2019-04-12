@@ -42,7 +42,7 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [torso] }
+    - Wearable: { location: [torso], warmth: 0.1 }
 
 - type: item
   name: dress shirt
@@ -50,7 +50,7 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [torso, arms] }
+    - Wearable: { location: [torso, arms], warmth: 0.2 }
 
 - type: item
   name: long-sleeve uniform shirt
@@ -58,7 +58,7 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [torso, arms] }
+    - Wearable: { location: [torso, arms], warmth: 0.2 }
 
 - type: item
   name: jeans
@@ -66,7 +66,7 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [legs] }
+    - Wearable: { location: [legs], warmth: 0.2 }
 
 - type: item
   name: long skirt
@@ -74,7 +74,7 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [legs] }
+    - Wearable: { location: [legs], warmth: 0.1 }
 
 - type: item
   name: pair of overalls
@@ -82,7 +82,7 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [torso, legs] }
+    - Wearable: { location: [torso, legs], warmth: 0.2 }
 
 - type: item
   name: briefs
@@ -90,4 +90,4 @@
   display: CLOTHING
   parts: []
   behavior:
-    - Wearable: { location: [legs] }
+    - Wearable: { location: [legs], warmth: 0.05 }
