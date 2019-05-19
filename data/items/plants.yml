@@ -5,11 +5,12 @@
   display: PLANT_BUSH
   behavior:
     - PerennialPlant:
+        carbonAbsorptionChance: 0.1
+        carbonAbsorptionChunk: 0.1
+        productionCarbonThreshold: 1
         produces:
-          - optional:
-              - { item: basil leaf, weight: 10 }
-              - basil flower
-            chance: 10
+          - { item: basil leaf, weight: 10 }
+          - basil flower
 
 - type: item
   name: basil leaf
