@@ -58,7 +58,15 @@ case class ItemKind(
   parts: Seq[((ItemKind, Int), ItemOperation)],
   display: String,
   behaviors: Seq[() => Behavior]
-)
+) {
+  def generateItem(): Item = {
+    Item(
+      kind = this,
+      parts = parts.flatMap { case ((part, count), operation) => Seq.fill(count)(part.generateItem()) },
+      behaviors = mutable.Buffer.empty ++ behaviors.map(_())
+    )
+  }
+}
 
 class ItemId(val id: Int) extends AnyVal
 object ItemId {

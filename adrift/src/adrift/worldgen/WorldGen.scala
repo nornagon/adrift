@@ -82,8 +82,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
         itemTable.foreach { table =>
           val items = table.sample()(random, data.itemGroups.mapValues(_.choose))
           items.foreach { item_kind_id =>
-            val item_kind = data.items(item_kind_id)
-            s.items.put(generateItem(item_kind), OnFloor(tx, ty))
+            val itemKind = data.items(item_kind_id)
+            s.items.put(itemKind.generateItem(), OnFloor(tx, ty))
           }
         }
       }
@@ -421,14 +421,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
 
   def generateItem(itemGroup: ItemGroup): Seq[Item] = {
     itemGroup.choose.sample()(random, data.itemGroups.mapValues(_.choose)).map { itemId =>
-      generateItem(data.items(itemId))
+      data.items(itemId).generateItem()
     }
-  }
-  def generateItem(itemKind: ItemKind): Item = {
-    Item(
-      kind = itemKind,
-      parts = itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) },
-      behaviors = mutable.Buffer.empty ++ itemKind.behaviors.map(_())
-    )
   }
 }

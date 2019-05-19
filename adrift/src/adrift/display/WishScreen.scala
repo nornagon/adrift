@@ -29,7 +29,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
             case setTemp(t) =>
               state.temperature(state.player) = t.toFloat
             case item(name) =>
-              val item = generateItem(state.data.items(name))
+              val item = state.data.items(name).generateItem()
               state.items.put(item, OnFloor(state.player._1, state.player._2))
             case _ =>
           }
@@ -37,14 +37,6 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case _ =>
       }
     }
-  }
-
-  def generateItem(itemKind: ItemKind): Item = {
-    Item(
-      kind = itemKind,
-      parts = itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) },
-      behaviors = mutable.Buffer.empty ++ itemKind.behaviors.map(_())
-    )
   }
 
   override def char(char: Int): Unit = {

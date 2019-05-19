@@ -126,3 +126,15 @@
       char: " "
       bg: true black
       fg: true black
+    PLANT_LEAF:
+      char: "\""
+      fg: green
+    SEED:
+      char: "\u00FA" # ·
+      fg: brown
+    PLANT_BUSH:
+      char: "*"
+      fg: green
+    FLOWER:
+      char: "*"
+      fg: yellow

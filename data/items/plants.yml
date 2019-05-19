@@ -1,0 +1,27 @@
+- type: item
+  name: basil plant
+  description: A leafy green plant whose leaves have a bitter flavor.
+  parts: []
+  display: PLANT_BUSH
+  behavior:
+    - PerennialPlant:
+        produces:
+          - optional:
+              - { item: basil leaf, weight: 10 }
+              - basil flower
+            chance: 10
+
+- type: item
+  name: basil leaf
+  description: A leaf with a bitter taste.
+  display: PLANT_LEAF
+
+- type: item
+  name: basil flower
+  description: A small white flower of the basil plant.
+  display: FLOWER
+
+- type: item
+  name: basil seed
+  description: A small black seed.
+  display: SEED
