@@ -218,6 +218,8 @@ class GLFWDisplay extends Display {
   private val pendingActions = mutable.Buffer.empty[Action]
   val windowWidthChars = 80
   val windowHeightChars = 48
+  val mapWidthChars = 60
+  val mapHeightChars = 48
   val screenCharWidth = 16
   val screenCharHeight = 16
 
@@ -295,16 +297,16 @@ class GLFWDisplay extends Display {
   }
 
   def cameraBounds(state: GameState): (Int, Int, Int, Int) = {
-    val worldHeightChars = windowHeightChars - 1
-    val left = state.player._1 - windowWidthChars/2
-    val right = left + windowWidthChars
-    val top = state.player._2 - worldHeightChars/2
+    val worldHeightChars = mapHeightChars - 1
+    val left = state.player._1 - mapWidthChars/2 - (windowWidthChars - mapWidthChars)
+    val right = left + mapWidthChars
+    val top = state.player._2 - mapHeightChars/2 - (windowWidthChars - mapWidthChars)
     val bottom = top + worldHeightChars
     (left, right, top, bottom)
   }
 
   def render(state: GameState): Unit = {
-    val worldHeightChars = windowHeightChars - 1
+    val worldHeightChars = mapHeightChars - 1
     val wBuf = BufferUtils.createIntBuffer(1)
     val hBuf = BufferUtils.createIntBuffer(1)
     glfwGetWindowSize(window, wBuf, hBuf)
@@ -325,14 +327,15 @@ class GLFWDisplay extends Display {
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-    val left = state.player._1 - windowWidthChars/2
-    val right = left + windowWidthChars
-    val top = state.player._2 - worldHeightChars/2
+    val left = state.player._1 - mapWidthChars/2
+    val right = left + mapWidthChars
+    val top = state.player._2 - mapHeightChars/2
     val bottom = top + worldHeightChars
 
     spriteBatch.begin()
 
     renderWorld(state, renderer, left, right, top, bottom)
+//    renderSidebar(state,renderer, sidebar_left,sidebar_right,sidebar_top,sidebar_bottom)
     val message = state.message.getOrElse(Appearance.messageAtCell(state, state.player))
     renderer.drawString(0, worldHeightChars, message)
 
@@ -362,6 +365,15 @@ class GLFWDisplay extends Display {
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
     }
+  }
+  private def renderSidebar(
+    state: GameState,
+    renderer: GlyphRenderer,
+    left: Int,
+    right: Int,
+    top: Int,
+    bottom: Int
+  ): Unit = {
   }
 
   override def update(state: GameState): Unit = {
