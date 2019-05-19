@@ -197,11 +197,18 @@ object Appearance {
 
   def messageAtCell(state: GameState, position: (Int, Int)): String = {
     val items = state.items.lookup(OnFloor(position._1, position._2))
-    if (items.nonEmpty) {
+    val debug =
+      if (state.showTempDebug)
+        f" (${state.temperature(position) - 273}%.1f C)"
+      else if (state.showGasDebug)
+        s" (${state.gasComposition(position)})"
+      else
+        ""
+    (if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
     } else {
-      state.terrain(position).name + (if (state.showTempDebug) f" (${state.temperature(position) - 273}%.1f C)" else "")
-    }
+      state.terrain(position).name
+    }) + debug
   }
 }
 
@@ -367,6 +374,13 @@ class GLFWDisplay extends Display {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
+
+      if (state.showGasDebug && state.gasComposition.contains(x, y)) {
+        val gc = state.gasComposition(x, y)
+        val color = Color(0, 0, gc.oxygen.toFloat / 15, 0.3f)
+        renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
+      }
+
       if (state.showTempDebug && state.temperature.contains(x, y)) {
         val temp = state.temperature(x, y)
         val color = if (temp > 273)

@@ -10,6 +10,13 @@
     - Tool: { op: SCREWING }
 
 - type: item
+  name: gas leak
+  description: A rift in the universe through which gas is pouring.
+  display: SMALL_TOOL
+  behavior:
+    - GasLeak: {}
+
+- type: item
   name: hand-held hammer
   description: A largely obsolete device, the hand-held hammer consists of a rigid handle and weighted head.
   parts:

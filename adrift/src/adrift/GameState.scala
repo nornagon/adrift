@@ -232,6 +232,7 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
 
   var walkThroughWalls = false
   var showTempDebug = false
+  var showGasDebug = false
 
 
   var message: Option[String] = None
@@ -320,7 +321,9 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     items.all.foreach(sendMessage(_, Message.Tick))
     circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
     recalculateFOV()
+    val start = System.nanoTime()
     updateHeat()
+    println(s"${(System.nanoTime() - start) / 1e6} ms")
   }
 
   def sendMessage[Msg <: Message](item: Item, message: Msg): Msg = {
@@ -506,7 +509,16 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     if (temperature.contains(b)) temperature(b) += dq / terB.heatCapacity
   }
 
-  def updateHeat(dt: Double = 0.05): Unit = {
+  def moveGas(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
+    val gca = gasComposition(a)
+    val gcb = gasComposition(b)
+    val w = (gca - gcb) * 0.5
+    val dpp = w * dt
+    gasComposition(a) -= dpp
+    gasComposition(b) += dpp
+  }
+
+  def updateHeat(dt: Double = 1): Unit = {
     import RandomImplicits._
     def randomAdj(p: (Int, Int)): (Int, Int) = {
       val (x, y) = p
@@ -520,8 +532,12 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     for (_ <- 0 until (width * height * 0.4).round.toInt) {
       val a = (random.between(0, width), random.between(0, height))
       val b = randomAdj(a)
-      if (temperature.contains(a) && temperature.contains(b))
-        moveHeat(dt, a, b)
+      if (temperature.contains(a) && temperature.contains(b)) {
+        moveHeat(dt / 20, a, b)
+        if (terrain(a).walkable && terrain(b).walkable) {
+          moveGas(dt, a, b)
+        }
+      }
       if (terrain(a).name == "floor" && random.oneIn(2)) {
         var p = a
         for (_ <- 1 to random.between(2, 8)) {
@@ -534,6 +550,9 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
           val tmp = temperature(p)
           temperature(p) = temperature(a)
           temperature(a) = tmp
+          val tmp2 = gasComposition(p)
+          gasComposition(p) = gasComposition(a)
+          gasComposition(a) = tmp2
         }
       }
     }
@@ -546,7 +565,7 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     val k = 0.01
     val w = (bodyTemp - playerTileTemp) * k
 
-    val dq = broadcastToLocation(Worn(), Message.LoseHeat(dq = w * dt)).dq
+    val dq = broadcastToLocation(Worn(), Message.LoseHeat(dq = w * dt / 20)).dq
     bodyTemp -= dq / playerHeatCapacity
     temperature(player) += dq / terrain(player).heatCapacity
 

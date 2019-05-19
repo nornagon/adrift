@@ -1,9 +1,15 @@
 package adrift.display
 
-import adrift.GameState
+import adrift.{GameState, OnFloor}
+import adrift.items.{Item, ItemKind}
 import org.lwjgl.glfw.GLFW
 
+import scala.collection.mutable
+
 class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
+  val setTemp = raw"settemp (-?[0-9.]+)".r
+  val setGas = raw"setgas (\S+) (-?[0-9.]+)".r
+  val item = raw"item (.+)".r
   var input = ""
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
@@ -16,12 +22,29 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               state.walkThroughWalls = !state.walkThroughWalls
             case "showtemp" =>
               state.showTempDebug = !state.showTempDebug
+            case "showgas" =>
+              state.showGasDebug = !state.showGasDebug
+            case setGas("oxygen", pp) =>
+              state.gasComposition(state.player) = state.gasComposition(state.player).copy(oxygen = pp.toFloat)
+            case setTemp(t) =>
+              state.temperature(state.player) = t.toFloat
+            case item(name) =>
+              val item = generateItem(state.data.items(name))
+              state.items.put(item, OnFloor(state.player._1, state.player._2))
             case _ =>
           }
           display.popScreen()
         case _ =>
       }
     }
+  }
+
+  def generateItem(itemKind: ItemKind): Item = {
+    Item(
+      kind = itemKind,
+      parts = itemKind.parts.flatMap { case ((part, count), operation) => Seq.fill(count)(generateItem(part)) },
+      behaviors = mutable.Buffer.empty ++ itemKind.behaviors.map(_())
+    )
   }
 
   override def char(char: Int): Unit = {

@@ -1,7 +1,7 @@
 package adrift
 
 
-case class GasComposition(val oxygen:Double, val carbonDioxide:Double, val nitrogen:Double) {
+case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) {
     def totalPressure(): Double = {
         oxygen+carbonDioxide+nitrogen
     }
