@@ -317,6 +317,8 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
         sendMessage(item, Message.Dropped())
         message = Some(s"You take off the ${itemDisplayName(item)}.")
 
+      case Action.Wait() =>
+
       case Action.Quit =>
     }
     items.all.foreach(sendMessage(_, Message.Tick))

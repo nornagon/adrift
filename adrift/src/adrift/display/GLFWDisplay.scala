@@ -282,6 +282,7 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_U => pendingActions.append(Action.PlayerMove(1, -1))
             case GLFW_KEY_B => pendingActions.append(Action.PlayerMove(-1, 1))
             case GLFW_KEY_N => pendingActions.append(Action.PlayerMove(1, 1))
+            case GLFW_KEY_PERIOD => pendingActions.append(Action.Wait())
             case _ =>
           }
         } else if (action == GLFW_RELEASE) {

@@ -13,5 +13,6 @@ object Action {
   case class Plug(item: Item, into: Item) extends Action
   case class Wear(item: Item) extends Action
   case class TakeOff(item: Item) extends Action
+  case class Wait() extends Action
   case object Quit extends Action
 }
