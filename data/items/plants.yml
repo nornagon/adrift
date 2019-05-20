@@ -14,7 +14,7 @@
 
 - type: item
   name: basil leaf
-  description: A leaf with a bitter taste.
+  description: A soft green leaf with a bitter taste.
   display: PLANT_LEAF
 
 - type: item
@@ -24,7 +24,7 @@
 
 - type: item
   name: basil seed
-  description: A small black seed.
+  description: A small smooth oval-shaped black seed.
   display: SEED
   behavior:
     - Seed:

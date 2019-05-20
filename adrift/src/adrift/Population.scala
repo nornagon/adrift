@@ -45,43 +45,65 @@ object Population {
     } yield err
   }
 
+  final case class Chance(chance: Double)
+
+  implicit val decodeChance: Decoder[Chance] = (c: HCursor) => {
+    for {
+      _ <- c.as[Double].map(Chance).left
+      err <- c.as[String].flatMap {
+        case percentageRegex(percentage) => Right(Chance(percentage.toDouble / 100))
+        case other => Left(DecodingFailure(s"Unparseable chance: '$other'", c.history))
+      }.left
+    } yield err
+  }
+
   /**
     * A population table, for generating (groups of) things, e.g. the contents of a wardrobe.
     * <p>
     * YAML form looks like:
     * <pre>
-    *   an equal choice between three items:
-    *     - foo
-    *     - bar
-    *     - baz
+    *   # a single item
+    *   "foo"
     *
-    *   cross-references:
-    *     - { group: a single item }
+    *   # an equal choice between three items
+    *   { choose: [foo, bar, baz] }
     *
-    *   a weighted choice, foo 3/4 bar 1/4:
-    *     - { item: foo, weight: 3 }
-    *     - bar
+    *   # an array is implicitly a choice, so this is the same as above
+    *   [ foo, bar, baz ]
     *
-    *   a single item: foo
+    *   # weighted choices, foo 3/4 bar 1/4
+    *   [ { item: foo, weight: 3 }, bar ]
     *
-    *   repeating things:
-    *     - { repeat: foo, count: 3d4 }
-    *     - count: 2-3
-    *       repeat:
+    *   # generate all subgroups instead of choosing one
+    *   { each: [foo, bar, baz] }
+    *
+    *   # repeating things
+    *   { repeat: foo, count: 3d4 }
+    *
+    *   # repeating a nested group
+    *   {
+    *     count: 2-3
+    *     repeat: {
+    *       choose:
     *         - foo
     *         - bar
     *         - baz
+    *     }
+    *   }
     *
-    *   optional things:
-    *     - { optional: foo, chance: 75 }
+    *   # optional things
+    *   { optional: foo, chance: 75% }
     *
-    *   composition:
-    *     each:
-    *       - { optional: { repeat: foo, count: 1-2 }, chance: 50 }
-    *       - choose:
-    *         - foo
-    *         - group: bar
-    *         - { repeat: baz, count: 2d3 }
+    *   # cross-reference to another table using the table context
+    *   { group: name of group }
+    *
+    *   # composing multiple techniques
+    *   each:
+    *     - { optional: { repeat: foo, count: 1-2 }, chance: 50% }
+    *     - choose:
+    *       - quux
+    *       - { group: bar, weight: 3 }
+    *       - { repeat: baz, count: 2d3 }
     * </pre>
     */
   type TableContext[T] = Map[String, Table[T]]
@@ -114,14 +136,16 @@ object Population {
       (1 to count.sample()) flatMap (_ => repeat.sample())
   }
 
-  case class TableOptional[T](chance: Int, optional: Table[T]) extends Table[T] {
+  case class TableOptional[T](chance: Chance, optional: Table[T]) extends Table[T] {
     override def sample()(implicit r: Random, ctx: TableContext[T]): Seq[T] =
-      if (r.nextDouble() * 100 < chance) optional.sample() else Seq.empty
+      if (r.nextDouble() < chance.chance) optional.sample() else Seq.empty
   }
 
   private val diceRegex = raw"""(\d+)d(\d+)""".r("numDice", "numSides")
   private val rangeRegex = raw"""(\d+)-(\d+)""".r("low", "high")
   private val intRegex = raw"""(\d+)""".r("num")
+
+  private val percentageRegex = raw"""(\d*\.?\d+)%""".r("percentage")
 
   import io.circe.generic.semiauto._
   def derivedTableItemDecoder[T](implicit d: Decoder[T]): Decoder[TableItem[T]] = deriveDecoder
