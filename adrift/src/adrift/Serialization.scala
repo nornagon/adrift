@@ -17,6 +17,7 @@ object Serialization {
     random: Random,
     terrain: Grid[Terrain],
     temperature: Grid[Double],
+    gasComposition: Grid[GasComposition],
     items: ItemDatabase,
     player: (Int, Int),
     bodyTemp: Double
@@ -36,6 +37,7 @@ object Serialization {
       state.random,
       state.terrain,
       state.temperature,
+      state.gasComposition,
       state.items,
       state.player,
       state.bodyTemp
@@ -79,6 +81,9 @@ object Serialization {
 
   implicit val encodeTerrain: Encoder[Terrain] = (t: Terrain) => t.name.asJson
   implicit def decodeTerrain(implicit data: Data): Decoder[Terrain] = (c: HCursor) => c.as[String].map(data.terrain)
+
+  implicit val encodeGasComposition: Encoder[GasComposition] = deriveEncoder
+  implicit val decodeGasComposition: Decoder[GasComposition] = deriveDecoder
 
   implicit val encodeItemLocation: Encoder[ItemLocation] = {
     case OnFloor(x: Int, y: Int) =>
@@ -169,5 +174,5 @@ object Serialization {
     deriveDecoder[GameStateSerialized].map(_.toGameState(data))
 
   def save(state: GameState): Json = Encoder[GameState].apply(state)
-  def load(implicit data: Data, json: Json): GameState = Decoder[GameState].decodeJson(json).right.get
+  def load(implicit data: Data, json: Json): GameState = Decoder[GameState].decodeJson(json).fold(e => throw new RuntimeException(s"Error loading save", e), c => c)
 }
