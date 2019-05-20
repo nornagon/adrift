@@ -32,6 +32,7 @@ object Behavior {
     "Wearable" -> Decoder[Wearable].widen,
     "GasLeak" -> Decoder[GasLeak].widen,
     "PerennialPlant" -> Decoder[PerennialPlant].widen,
+    "Seed" -> Decoder[Seed].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveEncoder
@@ -49,6 +50,7 @@ object Behavior {
     case b: Wearable => Encoder[Wearable].apply(b)
     case b: GasLeak => Encoder[GasLeak].apply(b)
     case b: PerennialPlant => Encoder[PerennialPlant].apply(b)
+    case b: Seed => Encoder[Seed].apply(b)
   }))
 }
 

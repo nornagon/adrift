@@ -26,3 +26,15 @@
   name: basil seed
   description: A small black seed.
   display: SEED
+  behavior:
+    - Seed:
+        growsInto: basil plant
+        germination:
+          minTemperature: 283
+          maxTemperature: 303
+          minPressure: 5
+          duration: 36
+        survival:
+          minTemperature: 200
+          maxTemperature: 340
+          minPressure: 1

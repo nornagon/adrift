@@ -218,7 +218,7 @@ object Serialization {
 
 class GameState(val data: Data, val width: Int, val height: Int, val random: Random) {
   var terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 280d))
+  var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(280d, 310d))
   var gasComposition: Grid[GasComposition] =
     new Grid[GasComposition](width,height)(GasComposition(oxygen = 4, nitrogen = 9, carbonDioxide = 1))
   var items: ItemDatabase = new ItemDatabase
