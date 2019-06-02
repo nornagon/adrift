@@ -3,6 +3,24 @@ package adrift.items.behaviors
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, Population}
 
+case class Live(on: Item) extends Message
+
+case class Leaf(chanceToDie: Double, becomes: String) extends Behavior {
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case Live(plant) =>
+      if (state.random.nextDouble() < chanceToDie) {
+        plant.parts = plant.parts.filter(_ ne self)
+        val result = state.data.items(becomes).generateItem()
+        state.items.put(result, state.items.lookup(plant))
+      }
+    case _ =>
+  }
+}
+
 case class PerennialPlant(
   produces: Population.Table[String],
   carbonAbsorptionChance: Double,
@@ -16,6 +34,7 @@ case class PerennialPlant(
     message: Message
   ): Unit = message match {
     case Message.Tick =>
+      state.broadcastToParts(self, Live(on = self))
       val pos = state.getItemTile(self)
       if (state.random.nextDouble() < carbonAbsorptionChance && state.gasComposition(pos).carbonDioxide >= carbonAbsorptionChunk) {
         state.gasComposition(pos) += GasComposition(oxygen = carbonAbsorptionChunk, carbonDioxide = -carbonAbsorptionChunk, nitrogen = 0)

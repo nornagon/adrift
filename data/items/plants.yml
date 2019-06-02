@@ -16,6 +16,13 @@
   name: basil leaf
   description: A soft green leaf with a bitter taste.
   display: PLANT_LEAF
+  behavior:
+    - Leaf: { chanceToDie: 0.01, becomes: withered leaf }
+
+- type: item
+  name: withered leaf
+  description: A dry, brown, dead leaf.
+  display: PLANT_DETRITUS
 
 - type: item
   name: basil flower
@@ -85,3 +92,8 @@
           minTemperature: 200
           maxTemperature: 340
           minPressure: 1
+
+- type: item
+  name: withered leaf
+  description: A brown and crumpled leaf. A miracle that it was ever able to live at all, out here.
+  display: PLANT_LEAF_DEAD
