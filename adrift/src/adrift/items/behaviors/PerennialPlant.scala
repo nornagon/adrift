@@ -3,8 +3,9 @@ package adrift.items.behaviors
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, Population}
 
-case class Live(on: Item) extends Message
+case class Live(on: Item, var light: Double) extends Message
 case class Grow(carbon: Double) extends Message
+case class Pollinate() extends Message
 
 case class Leaf(
   chanceToDie: Double,
@@ -17,18 +18,24 @@ case class Leaf(
     self: Item,
     message: Message
   ): Unit = message match {
-    case Live(plant) =>
+    case msg @ Live(plant, _) =>
       if (state.random.nextDouble() < chanceToDie) {
         plant.parts = plant.parts.filter(_ ne self)
         for (b <- state.sampleItem(becomes)) {
           state.items.put(b, state.items.lookup(plant))
         }
       } else {
-        val pos = state.getItemTile(plant)
-        if (state.random.nextDouble() < carbonAbsorptionChance && state.gasComposition(pos).carbonDioxide >= carbonAbsorptionChunk) {
-          state.gasComposition(pos) += GasComposition(oxygen = carbonAbsorptionChunk, carbonDioxide = -carbonAbsorptionChunk, nitrogen = 0)
-          state.sendMessage(plant, Grow(carbonAbsorptionChunk))
+        println(msg.light)
+        if (state.random.nextDouble() < msg.light) {
+          val pos = state.getItemTile(plant)
+          if (state.random.nextDouble() < carbonAbsorptionChance &&
+            state.gasComposition(pos).carbonDioxide >= carbonAbsorptionChunk) {
+            state.gasComposition(pos) +=
+              GasComposition(oxygen = carbonAbsorptionChunk, carbonDioxide = -carbonAbsorptionChunk, nitrogen = 0)
+            state.sendMessage(plant, Grow(carbonAbsorptionChunk))
+          }
         }
+        msg.light *= 0.95
       }
     case _ =>
   }
@@ -45,7 +52,7 @@ case class Flower(
     self: Item,
     message: Message
   ): Unit = message match {
-    case Live(plant) =>
+    case Live(plant, _) =>
       if (age <= lifetime) {
         age += 1
       } else {
@@ -56,6 +63,8 @@ case class Flower(
           }
         }
       }
+    case Pollinate() =>
+      fertilized = true
     case _ =>
   }
 }
@@ -71,13 +80,15 @@ case class PerennialPlant(
     message: Message
   ): Unit = message match {
     case Message.Tick =>
-      state.broadcastToParts(self, Live(on = self))
+      state.broadcastToParts(self, Live(on = self, light = 1))
       if (storedCarbon >= productionCarbonThreshold) {
         produce(state, self)
         storedCarbon -= productionCarbonThreshold
       }
     case Grow(carbon) =>
       storedCarbon += carbon
+    case Pollinate() =>
+      state.broadcastToParts(self, message)
     case _ =>
   }
 
