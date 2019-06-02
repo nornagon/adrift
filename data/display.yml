@@ -103,7 +103,7 @@
       fg: brown
       layer: -1
     DESK:
-      char: "\u00D1" # ╤
+      char: "\u00D1" # ╤data/display.yml
       fg: brown
       layer: -1
     OUTLET:
@@ -151,4 +151,5 @@
       char: "*"
       fg: yellow
     SMALL_FLYER:
-      char: "\u0F06" # %
+      char: "\uF6" # %
+      fg: gray
