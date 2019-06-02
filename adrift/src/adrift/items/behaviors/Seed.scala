@@ -15,7 +15,7 @@ case class Seed(
     self: Item,
     message: Message
   ): Unit = message match {
-    case Message.Tick =>
+    case Message.Tick if !dead =>
       val pos = state.getItemTile(self)
       val gas = state.gasComposition(pos)
       val temp = state.temperature(pos)

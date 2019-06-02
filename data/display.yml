@@ -129,6 +129,11 @@
     PLANT_LEAF:
       char: "\""
       fg: green
+      layer: -1
+    PLANT_LEAF_DEAD:
+      char: "\""
+      fg: green
+      layer: -1
     SEED:
       char: "\u00FA" # ·
       fg: brown
