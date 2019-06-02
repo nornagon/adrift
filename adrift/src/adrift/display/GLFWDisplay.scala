@@ -146,6 +146,8 @@ object Appearance {
     (char.toChar, fg, bg)
   }
 
+  def canonicalCharForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
+    state.data.display.getDisplay(item.kind.display)
   def charForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
     state.data.display.getDisplay(displayForItem(state, item))
   def displayForItem(state: GameState, item: Item): String =

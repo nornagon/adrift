@@ -1,7 +1,8 @@
 package adrift.items.behaviors
 
-import adrift.GameState
+import adrift.{GameState, OnFloor}
 import adrift.items.{Behavior, Item, Message}
+import adrift.RandomImplicits._
 
 case class Seed(
   growsInto: String,
@@ -36,6 +37,16 @@ case class Seed(
           state.items.delete(self)
           state.items.put(item, loc)
         }
+      }
+    case Live(plant, _) =>
+      if (state.random.nextDouble() < 0.1) {
+        val (x, y) = state.getItemTile(plant)
+        val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
+        val pos =
+          if (state.canWalk(x + dx, y + dy)) (x + dx, y + dy)
+          else (x, y)
+        plant.parts = plant.parts.filter(_ ne self)
+        state.items.put(self, OnFloor(pos._1, pos._2))
       }
     case _ =>
   }

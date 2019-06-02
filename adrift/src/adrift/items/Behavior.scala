@@ -35,6 +35,7 @@ object Behavior {
     "Seed" -> Decoder[Seed].widen,
     "Leaf" -> Decoder[Leaf].widen,
     "Flower" -> Decoder[Flower].widen,
+    "Pollinator" -> Decoder[Pollinator].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveEncoder
@@ -55,6 +56,7 @@ object Behavior {
     case b: Seed => Encoder[Seed].apply(b)
     case b: Leaf => Encoder[Leaf].apply(b)
     case b: Flower => Encoder[Flower].apply(b)
+    case b: Pollinator => Encoder[Pollinator].apply(b)
   }))
 }
 

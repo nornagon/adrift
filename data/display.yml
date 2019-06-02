@@ -151,5 +151,5 @@
       char: "*"
       fg: yellow
     SMALL_FLYER:
-      char: "\uF6" # %
+      char: "\u00F6" # %
       fg: gray

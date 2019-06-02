@@ -25,7 +25,6 @@ case class Leaf(
           state.items.put(b, state.items.lookup(plant))
         }
       } else {
-        println(msg.light)
         if (state.random.nextDouble() < msg.light) {
           val pos = state.getItemTile(plant)
           if (state.random.nextDouble() < carbonAbsorptionChance &&
@@ -58,9 +57,7 @@ case class Flower(
       } else {
         plant.parts = plant.parts.filter(_ ne self)
         if (fertilized) {
-          for (f <- state.sampleItem(fruit)) {
-            state.items.put(f, state.items.lookup(plant))
-          }
+          plant.parts ++= state.sampleItem(fruit)
         }
       }
     case Pollinate() =>
