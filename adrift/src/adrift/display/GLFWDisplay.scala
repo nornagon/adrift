@@ -157,10 +157,12 @@ object Appearance {
       (char, fg, bg)
     } else if (state.terrain.contains(x, y)) {
       val items = state.items.lookup(OnFloor(x, y))
+        .filter(item => displayForItem(state, item) != "INVISIBLE")
       if (items.nonEmpty) {
         // reversed so that we get the _last_ item in the list that has the highest layer instead of the _first_.
         // stuff you drop later should be displayed on top.
-        val topItem = items.reverse.maxBy(charForItem(state, _)._4)
+        val topItem = items.reverse
+          .maxBy(charForItem(state, _)._4)
         if (topItem.behaviors.exists(_.isInstanceOf[behaviors.Unrolled]))
           charForCable(state, topItem)
         else {
