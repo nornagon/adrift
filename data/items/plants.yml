@@ -17,17 +17,19 @@
   description: A soft green leaf with a bitter taste.
   display: PLANT_LEAF
   behavior:
-    - Leaf: { chanceToDie: 0.01, becomes: withered leaf }
+    - Leaf: { chanceToDie: 0.001, becomes: withered leaf }
 
 - type: item
   name: withered leaf
-  description: A dry, brown, dead leaf.
+  description: A dry, brown, dead leaf. A miracle that it was ever able to live at all, out here.
   display: PLANT_DETRITUS
 
 - type: item
   name: basil flower
   description: A small white flower of the basil plant.
   display: FLOWER
+  behavior:
+    - Flower: { lifetime: 600, fruit: { repeat: basil seed, count: 2d4 } }
 
 - type: item
   name: basil seed

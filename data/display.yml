@@ -133,7 +133,7 @@
       char: "/"
       fg: brown
       layer: -1
-    PLANT_LEAF_DEAD:
+    PLANT_DETRITUS:
       char: "\""
       fg: green
       layer: -1

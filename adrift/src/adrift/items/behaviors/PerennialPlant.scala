@@ -5,7 +5,7 @@ import adrift.{GameState, GasComposition, Population}
 
 case class Live(on: Item) extends Message
 
-case class Leaf(chanceToDie: Double, becomes: String) extends Behavior {
+case class Leaf(chanceToDie: Double, becomes: Population.Table[String]) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,
@@ -14,8 +14,35 @@ case class Leaf(chanceToDie: Double, becomes: String) extends Behavior {
     case Live(plant) =>
       if (state.random.nextDouble() < chanceToDie) {
         plant.parts = plant.parts.filter(_ ne self)
-        val result = state.data.items(becomes).generateItem()
-        state.items.put(result, state.items.lookup(plant))
+        for (b <- state.sampleItem(becomes)) {
+          state.items.put(b, state.items.lookup(plant))
+        }
+      }
+    case _ =>
+  }
+}
+
+case class Flower(
+  lifetime: Double,
+  fruit: Population.Table[String],
+  var age: Double = 0,
+  var fertilized: Boolean = false
+) extends Behavior {
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case Live(plant) =>
+      if (age <= lifetime) {
+        age += 1
+      } else {
+        plant.parts = plant.parts.filter(_ ne self)
+        if (fertilized) {
+          for (f <- state.sampleItem(fruit)) {
+            state.items.put(f, state.items.lookup(plant))
+          }
+        }
       }
     case _ =>
   }

@@ -159,6 +159,12 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
     }
   }
 
+  def sampleItem(table: Population.Table[String]): Seq[Item] = {
+    for {
+      itemKindName <- table.sample()(random, data.itemGroups.mapValues(_.choose))
+      itemKind = data.items(itemKindName)
+    } yield itemKind.generateItem()
+  }
 
   def movePlayer(x: Int, y: Int): Unit = {
     val oldPos = player
