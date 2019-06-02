@@ -4,8 +4,14 @@ import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, Population}
 
 case class Live(on: Item) extends Message
+case class Grow(carbon: Double) extends Message
 
-case class Leaf(chanceToDie: Double, becomes: Population.Table[String]) extends Behavior {
+case class Leaf(
+  chanceToDie: Double,
+  becomes: Population.Table[String],
+  carbonAbsorptionChance: Double,
+  carbonAbsorptionChunk: Double,
+) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,
@@ -16,6 +22,12 @@ case class Leaf(chanceToDie: Double, becomes: Population.Table[String]) extends 
         plant.parts = plant.parts.filter(_ ne self)
         for (b <- state.sampleItem(becomes)) {
           state.items.put(b, state.items.lookup(plant))
+        }
+      } else {
+        val pos = state.getItemTile(plant)
+        if (state.random.nextDouble() < carbonAbsorptionChance && state.gasComposition(pos).carbonDioxide >= carbonAbsorptionChunk) {
+          state.gasComposition(pos) += GasComposition(oxygen = carbonAbsorptionChunk, carbonDioxide = -carbonAbsorptionChunk, nitrogen = 0)
+          state.sendMessage(plant, Grow(carbonAbsorptionChunk))
         }
       }
     case _ =>
@@ -50,8 +62,6 @@ case class Flower(
 
 case class PerennialPlant(
   produces: Population.Table[String],
-  carbonAbsorptionChance: Double,
-  carbonAbsorptionChunk: Double,
   productionCarbonThreshold: Double,
   var storedCarbon: Double = 0,
 ) extends Behavior {
@@ -62,15 +72,12 @@ case class PerennialPlant(
   ): Unit = message match {
     case Message.Tick =>
       state.broadcastToParts(self, Live(on = self))
-      val pos = state.getItemTile(self)
-      if (state.random.nextDouble() < carbonAbsorptionChance && state.gasComposition(pos).carbonDioxide >= carbonAbsorptionChunk) {
-        state.gasComposition(pos) += GasComposition(oxygen = carbonAbsorptionChunk, carbonDioxide = -carbonAbsorptionChunk, nitrogen = 0)
-        storedCarbon += carbonAbsorptionChunk
-        if (storedCarbon >= productionCarbonThreshold) {
-          produce(state, self)
-          storedCarbon -= productionCarbonThreshold
-        }
+      if (storedCarbon >= productionCarbonThreshold) {
+        produce(state, self)
+        storedCarbon -= productionCarbonThreshold
       }
+    case Grow(carbon) =>
+      storedCarbon += carbon
     case _ =>
   }
 

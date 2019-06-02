@@ -7,6 +7,7 @@ case class Seed(
   growsInto: String,
   germination: Seed.Germination,
   survival: Seed.Survival,
+  initialCarbon: Double,
   var dead: Boolean = false,
   var germinationTimer: Double = 0,
 ) extends Behavior {
@@ -31,6 +32,7 @@ case class Seed(
         if (germinationTimer >= germination.duration) {
           val loc = state.items.lookup(self)
           val item = state.data.items(growsInto).generateItem()
+          state.sendMessage(item, Grow(carbon = 5))
           state.items.delete(self)
           state.items.put(item, loc)
         }

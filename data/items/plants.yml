@@ -5,8 +5,6 @@
   display: PLANT_BUSH
   behavior:
     - PerennialPlant:
-        carbonAbsorptionChance: 0.1
-        carbonAbsorptionChunk: 0.1
         productionCarbonThreshold: 1
         produces:
           - { item: basil leaf, weight: 10 }
@@ -17,7 +15,11 @@
   description: A soft green leaf with a bitter taste.
   display: PLANT_LEAF
   behavior:
-    - Leaf: { chanceToDie: 0.001, becomes: withered leaf }
+    - Leaf:
+        chanceToDie: 0.001
+        becomes: withered leaf
+        carbonAbsorptionChance: 0.1
+        carbonAbsorptionChunk: 0.1
 
 - type: item
   name: withered leaf
@@ -37,6 +39,7 @@
   display: SEED
   behavior:
     - Seed:
+        initialCarbon: 5
         growsInto: basil plant
         germination:
           minTemperature: 283
@@ -55,8 +58,6 @@
   display: PLANT_TREE
   behavior:
     - PerennialPlant:
-        carbonAbsorptionChance: 0.05
-        carbonAbsorptionChunk: 0.1
         productionCarbonThreshold: 1
         produces:
           - { item: apple leaf, weight: 40 }
@@ -67,6 +68,12 @@
   name: apple leaf
   description: A soft green leaf.
   display: PLANT_LEAF
+  behavior:
+    - Leaf:
+        chanceToDie: 0.001
+        becomes: withered leaf
+        carbonAbsorptionChance: 0.05
+        carbonAbsorptionChunk: 0.1
 
 - type: item
   name: apple branch
