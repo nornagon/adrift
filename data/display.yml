@@ -129,9 +129,16 @@
     PLANT_LEAF:
       char: "\""
       fg: green
+    PLANT_BRANCH:
+      char: "/"
+      fg: brown
     SEED:
       char: "\u00FA" # ·
       fg: brown
+    PLANT_TREE:
+      char: "Y"
+      fg: brown
+      bg: green
     PLANT_BUSH:
       char: "*"
       fg: green
