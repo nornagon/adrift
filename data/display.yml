@@ -129,17 +129,14 @@
     PLANT_LEAF:
       char: "\""
       fg: green
-<<<<<<< HEAD
     PLANT_BRANCH:
       char: "/"
       fg: brown
-=======
       layer: -1
     PLANT_LEAF_DEAD:
       char: "\""
       fg: green
       layer: -1
->>>>>>> c8a87d3d7cb9f6b5dd4c31a4a79c85b849d7a535
     SEED:
       char: "\u00FA" # ·
       fg: brown
