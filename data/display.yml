@@ -150,3 +150,5 @@
     FLOWER:
       char: "*"
       fg: yellow
+    SMALL_FLYER:
+      char: "\u0F06" # %

@@ -1,0 +1,7 @@
+- type: item
+  name: pollinator microflyer
+  description: A small flying robot to pollinate plants.
+  parts: []
+  display: SMALL_FLYER
+  behavior:
+    - Pollinator: {}
