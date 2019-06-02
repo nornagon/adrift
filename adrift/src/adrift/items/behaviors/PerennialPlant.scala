@@ -5,6 +5,7 @@ import adrift.{GameState, GasComposition, Population}
 
 case class Live(on: Item, var light: Double) extends Message
 case class Grow(carbon: Double) extends Message
+case class Pollinate() extends Message
 
 case class Leaf(
   chanceToDie: Double,
@@ -62,6 +63,8 @@ case class Flower(
           }
         }
       }
+    case Pollinate() =>
+      fertilized = true
     case _ =>
   }
 }
@@ -84,6 +87,8 @@ case class PerennialPlant(
       }
     case Grow(carbon) =>
       storedCarbon += carbon
+    case Pollinate() =>
+      state.broadcastToParts(self, message)
     case _ =>
   }
 
