@@ -2,6 +2,7 @@ package adrift.items.behaviors
 
 import adrift.{GameState, OnFloor}
 import adrift.items.{Behavior, Item, Message}
+import adrift.RandomImplicits._
 
 case class Pollinator(
   var bState: String = "landed",
@@ -18,17 +19,12 @@ case class Pollinator(
           if (energy >= 5 && state.random.nextDouble() < 0.01) {
             bState = "flying"
           }
+          energy += 0.1
         case "flying" if energy <= 1 =>
           bState = "landed"
           state.broadcastToLocation(state.items.lookup(self), Pollinate())
         case "flying" =>
-          val (dx, dy) = (state.random.nextDouble() * 5).toInt match {
-            case 0 => (-1, 0)
-            case 1 => (0, -1)
-            case 2 => (1, 0)
-            case 3 => (0, 1)
-            case _ => (0, 0)
-          }
+          val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
           val (x, y) = state.getItemTile(self)
           if ((dx != 0 || dy != 0) && state.canWalk(x + dx, y + dy)) {
             state.items.move(self, OnFloor(x + dx, y + dy))
