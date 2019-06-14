@@ -150,6 +150,9 @@
     FLOWER:
       char: "*"
       fg: yellow
+    FRUIT:
+      char: "\u00F9" # ∙
+      fg: red
     SMALL_FLYER:
-      char: "\uF6" # %
+      char: "\u00F6" # %
       fg: gray

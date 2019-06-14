@@ -3,6 +3,7 @@ package adrift.items.behaviors
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, Population}
 
+case class Die(from: Item) extends Message
 case class Live(on: Item, var light: Double) extends Message
 case class Grow(carbon: Double) extends Message
 case class Pollinate() extends Message
@@ -18,6 +19,12 @@ case class Leaf(
     self: Item,
     message: Message
   ): Unit = message match {
+    case msg @ Die(plant) => {
+      plant.parts = plant.parts.filter(_ ne self)
+      for (b <- state.sampleItem(becomes)) {
+        state.items.put(b, state.items.lookup(plant))
+      }
+    }
     case msg @ Live(plant, _) =>
       if (state.random.nextDouble() < chanceToDie) {
         plant.parts = plant.parts.filter(_ ne self)
