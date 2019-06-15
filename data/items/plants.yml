@@ -101,6 +101,7 @@
   display: SEED
   behavior:
     - Seed:
+        initialCarbon: 5
         growsInto: apple tree
         germination:
           minTemperature: 283

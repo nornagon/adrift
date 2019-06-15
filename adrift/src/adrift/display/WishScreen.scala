@@ -29,8 +29,14 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
             case setTemp(t) =>
               state.temperature(state.player) = t.toFloat
             case item(name) =>
-              val item = state.data.items(name).generateItem()
-              state.items.put(item, OnFloor(state.player._1, state.player._2))
+              if (state.data.itemGroups.contains(name)) {
+                state.sampleItem(state.data.itemGroups(name).choose).foreach(item => {
+                  state.items.put(item, OnFloor(state.player._1, state.player._2))
+                })
+              } else if (state.data.items.contains(name)) {
+                val item = state.data.items(name).generateItem()
+                state.items.put(item, OnFloor(state.player._1, state.player._2))
+              }
             case _ =>
           }
           display.popScreen()
