@@ -5,3 +5,8 @@
   display: SMALL_FLYER
   behavior:
     - Pollinator: {}
+
+- type: item_group
+  name: bee
+  choose:
+    - pollinator microflyer
