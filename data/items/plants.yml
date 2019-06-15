@@ -121,7 +121,7 @@
     - AnnualPlant:
         productionCarbonThreshold: 1
         minLifespanSeconds: 100
-        maxLivespanSeconds: 200
+        maxLifespanSeconds: 200
         becomes: dead petunia
         produces:
           - { item: petunia leaf, weight: 5 }
