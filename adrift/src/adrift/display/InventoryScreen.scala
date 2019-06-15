@@ -38,18 +38,8 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       }
   }
 
-  def nearbyItems(state: GameState): Map[ItemLocation, Seq[Item]] = {
-    val onFloor: Map[ItemLocation, Seq[Item]] = (for {
-      dy <- -2 to 2
-      dx <- -2 to 2
-      loc = OnFloor(state.player._1 + dx, state.player._2 + dy)
-      if state.isVisible(loc.x, loc.y)
-    } yield loc -> state.items.lookup(loc))(collection.breakOut)
-    onFloor + (InHands() -> state.items.lookup(InHands())) + (Worn() -> state.items.lookup(Worn()))
-  }
-
   override def render(renderer: GlyphRenderer): Unit = {
-    val nbi = for ((k, v) <- nearbyItems(state)) yield k -> v.groupBy(_.kind)
+    val nearbyItems = state.nearbyItems
     val anchor = (1, 1)
     val width = 30
     selectedItem foreach { item =>
@@ -66,17 +56,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
           // TODO: recursively find the location of otherItem until something is worn, in hands, or on the floor.
       }
     }
-
-    val nbiUnrolled = nbi.keys.toSeq.sorted(Ordering.by((x: ItemLocation) => x.toString)).flatMap(nbi(_))
-
-    //renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
-    val lines = for {
-      ((itemKind, items), i) <- nbiUnrolled.zipWithIndex
-    } yield {
-      f"${if (i == selectedIdx) ">" else " "}${if (items.size == 1) itemKind.name else s"${items.size} x ${itemKind.name}"}"
-    }
-    renderer.frame(anchor._1, anchor._2, width, "Nearby", lines)
-    /*
+    renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
     renderer.drawString(anchor._1 + 1, anchor._2 + 1, "Nearby")
     for ((item, i) <- nearbyItems.zipWithIndex) {
       val pos = state.items.lookup(item)
@@ -85,7 +65,6 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     }
     if (nearbyItems.nonEmpty)
       renderer.drawString(anchor._1 + 1, anchor._2 + 2 + selectedIdx, ">")
-      */
   }
 
   def directionString(pos: ItemLocation): String = {
