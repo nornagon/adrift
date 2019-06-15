@@ -1,5 +1,10 @@
 package adrift
 
+object GasComposition {
+    def zero() = {
+        GasComposition(0,0,0)
+    }
+}
 
 case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) {
     def totalPressure(): Double = {
@@ -16,5 +21,8 @@ case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) 
     }
     def +(gc: GasComposition): GasComposition = {
         GasComposition(oxygen + gc.oxygen, carbonDioxide + gc.carbonDioxide, nitrogen + gc.nitrogen)
+    }
+    def minPressure(): Double = {
+        math.min(oxygen,carbonDioxide,nitrogen)
     }
 }
