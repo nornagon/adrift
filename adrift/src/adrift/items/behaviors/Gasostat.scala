@@ -1,9 +1,10 @@
 package adrift.items.behaviors
 
+import adrift.GasComposition
 import adrift.{GameState, OnFloor}
 import adrift.items.{Behavior, Item, Message}
 
-case class PumpGas(gas: GasComposition, rate: Double) extends Message
+case class PumpGas(var gas: GasComposition) extends Message
 
 
 case class Gasostat(gas: GasComposition, targetPp: Double, hysteresis: Double) extends Behavior {
@@ -27,7 +28,7 @@ case class Gasostat(gas: GasComposition, targetPp: Double, hysteresis: Double) e
   }
 }
 
-case class GasPump(gas: GasComposition, gasRate: Double, from: Item, to: Item, var active: Boolean = true) extends Behavior {
+case class GasPump(gas: GasComposition, from: Item, to: Item, var active: Boolean = true) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,
@@ -38,8 +39,8 @@ case class GasPump(gas: GasComposition, gasRate: Double, from: Item, to: Item, v
     case Message.Deactivate =>
       active = false
     case Message.Tick if active =>
-      val pumpedGas = state.sendMessage(from, PumpGas(gas, -1*gasRate))
-      state.sendMessage(to, PumpGas(gas, -1*pumpedGas.rate))
+      val pumpedGas = state.sendMessage(from, PumpGas(gas * -1))
+      state.sendMessage(to, PumpGas(gas * -1))
     case _ =>
   }
 }
@@ -60,7 +61,7 @@ case class GasHolder(var composition: GasComposition, maxPressure: Double) exten
   }
 }
 
-case class Diffuser() {
+case class Diffuser() extends Behavior {
   override def receive(
     state: GameState,
     self: Item,

@@ -23,6 +23,6 @@ case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) 
         GasComposition(oxygen + gc.oxygen, carbonDioxide + gc.carbonDioxide, nitrogen + gc.nitrogen)
     }
     def minPressure(): Double = {
-        math.min(oxygen,carbonDioxide,nitrogen)
+        math.min(math.min(oxygen,carbonDioxide),nitrogen)
     }
 }
