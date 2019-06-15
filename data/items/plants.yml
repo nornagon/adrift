@@ -85,7 +85,7 @@
   description: A small white / pink flower from an apple tree.
   display: FLOWER
   behavior:
-    - Flower: { lifetime: 100, fruit: { repeat: apple, count: {0,1} } }
+    - Flower: { lifetime: 100, fruit: { repeat: apple, count: 0-1 } }
 
 - type: item
   name: apple
@@ -122,10 +122,15 @@
         productionCarbonThreshold: 1
         minLifespanSeconds: 100
         maxLivespanSeconds: 200
-        becomes: 
+        becomes: dead petunia
         produces:
           - { item: petunia leaf, weight: 5 }
           - { item: petunia flower, weight: 1 }
+
+- type: item
+  name: dead petunia
+  description: a small brightly colored flower plant
+  display: PLANT_DETRITUS
 
 - type: item
   name: petunia seed
