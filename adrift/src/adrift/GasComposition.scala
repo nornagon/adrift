@@ -4,6 +4,15 @@ object GasComposition {
     def zero() = {
         GasComposition(0,0,0)
     }
+    def oxygen(qty:Double) = {
+        new OxygenGas(qty)
+    }
+    def nitrogen(qty:Double) = {
+        new NitrogenGas(qty)
+    }
+    def carbonDioxide(qty:Double) = {
+        new CarbonDioxideGas(qty)
+    }
 }
 
 case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) {
@@ -26,3 +35,8 @@ case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) 
         math.min(math.min(oxygen,carbonDioxide),nitrogen)
     }
 }
+
+sealed trait UnitGas
+class OxygenGas(override val oxygen: Double) extends GasComposition(oxygen,carbonDioxide=0,nitrogen=0) with UnitGas {}
+class NitrogenGas(override val nitrogen: Double) extends GasComposition(oxygen=0,carbonDioxide=0,nitrogen) with UnitGas {}
+class CarbonDioxideGas(override val carbonDioxide: Double) extends GasComposition(oxygen=0,carbonDioxide,nitrogen=0) with UnitGas {}

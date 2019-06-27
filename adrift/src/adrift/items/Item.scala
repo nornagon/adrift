@@ -49,6 +49,7 @@ Less simple:
 - disassemble
 - assemble
 - wear
+- connect to other items
 
  */
 
