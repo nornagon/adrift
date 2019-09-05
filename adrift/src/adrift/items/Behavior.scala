@@ -14,6 +14,7 @@ object Behavior {
   import io.circe.generic.extras.Configuration
   import io.circe.generic.extras.auto._
   import io.circe.generic.extras.semiauto._
+  import adrift.Population.serialization._
   implicit private val configuration: Configuration = Configuration.default.withDefaults.withDiscriminator("type")
 
   val decoders: Map[String, Decoder[Behavior]] = Map(

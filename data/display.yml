@@ -103,7 +103,7 @@
       fg: brown
       layer: -1
     DESK:
-      char: "\u00D1" # ╤data/display.yml
+      char: "\u00D1" # ╤
       fg: brown
       layer: -1
     OUTLET:

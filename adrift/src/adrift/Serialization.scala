@@ -153,7 +153,7 @@ object Serialization {
   implicit def decodeItems(implicit data: Data): Decoder[ItemDatabase] = (c: HCursor) => {
     implicit val locItemDecoder: Decoder[(Json, Item)] =
       Decoder.forProduct2("loc", "item")((loc: Json, item: Item) => (loc, item))
-    val locItems = c.as[Vector[(Json, Item)]].right.get
+    val locItems = c.as[Vector[(Json, Item)]].fold(throw _, identity)
     implicit val itemsById: Map[ItemId, Item] =
       locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
 

@@ -1,7 +1,7 @@
 package adrift
 
 import adrift.RandomImplicits._
-import io.circe.{Decoder, DecodingFailure, HCursor, Json}
+import io.circe._
 
 import scala.util.Random
 
@@ -177,5 +177,35 @@ object Population {
       _ <- c.downField("repeat").up.as[TableRepeat[T]].left
       _ <- c.downField("optional").up.as[TableOptional[T]].left
     } yield DecodingFailure(s"Unknown table type: ${c.focus}", c.history)
+  }
+
+  object serialization {
+    import io.circe.generic.semiauto._
+    import io.circe.syntax._
+    import io.circe.{Encoder, Json}
+
+    implicit def encodeCountSpec: Encoder[CountSpec] = {
+      case CountSpecExact(i) => i.asJson
+      case cs: CountSpecRange => cs.toString.asJson
+      case cs: CountSpecDice => cs.toString.asJson
+    }
+    implicit def encodeChance: Encoder[Chance] = (c: Chance) => c.chance.asJson
+
+    implicit def encodeTableChoose[T](implicit e: Encoder[T]): Encoder[TableChoose[T]] = deriveEncoder
+    implicit def encodeTableEach[T](implicit e: Encoder[T]): Encoder[TableEach[T]] = deriveEncoder
+    implicit def encodeTableRepeat[T](implicit e: Encoder[T]): Encoder[TableRepeat[T]] = deriveEncoder
+    implicit def encodeTableGroup[T](implicit e: Encoder[T]): Encoder[TableGroup[T]] = deriveEncoder
+    implicit def encodeTableOptional[T](implicit e: Encoder[T]): Encoder[TableOptional[T]] = deriveEncoder
+    implicit def encodeTableItem[T](implicit e: Encoder[T]): Encoder[TableItem[T]] = deriveEncoder
+    implicit def encodeTable[T](implicit e: Encoder[T]): Encoder[Table[T]] = {
+      case t: TableChoose[T] => t.asJson
+      case t: TableEach[T] => t.asJson
+      case t: TableRepeat[T] => t.asJson
+      case t: TableGroup[T] => t.asJson
+      case t: TableOptional[T] => t.asJson
+      case t: TableItem[T] => t.asJson
+    }
+    implicit def encodeTableChooseEntry[T](implicit e: Encoder[T]): Encoder[TableChooseEntry[T]] = (entry: TableChooseEntry[T]) =>
+      entry.subtable.asJson.deepMerge(Json.obj("weight" -> entry.weight.asJson))
   }
 }
