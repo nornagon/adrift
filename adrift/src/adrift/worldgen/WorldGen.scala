@@ -187,7 +187,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       val cut = random.between((height * 0.3).round.toInt, (height * 0.7).round.toInt)
       Seq(
         Sector(
-          zone = "crew",
+          zone = if (d == 1) "organics" else "crew",
           areas = Seq(SectorArea(l, 0, r-l, cut + 2))
         ),
         Sector(

@@ -1,0 +1,32 @@
+- type: room
+  name: orchard
+  rotatable: true
+  flippable: true
+  layout: |
+    .......................
+    .......................
+    ..Y..Y..Y..Y..Y..Y..Y..
+    .......................
+    .......................
+    ..Y..Y..Y..Y..Y..Y..Y..
+    .......................
+    .......................
+    ..Y..Y..Y..Y..Y..Y..Y..
+    .......................
+    .......................
+  connections:
+    0,0 left: DOOR
+    0,1 left: DOOR
+    3,0 right: WALL
+    3,1 right: WALL
+    0,0 up: WALL
+    1,0 up: WALL
+    2,0 up: WALL
+    3,0 up: WALL
+    0,1 down: WALL
+    1,1 down: WALL
+    2,1 down: WALL
+    3,1 down: WALL
+  defs:
+    .: { terrain: dirt, items: { optional: grass, chance: 75% } }
+    Y: { items: { each: [apple tree, { optional: grass, chance: 75% } ] } }

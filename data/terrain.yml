@@ -33,3 +33,9 @@
   opaque: false
   walkable: false
   display: WINDOW
+
+- type: terrain
+  name: dirt
+  opaque: false
+  walkable: true
+  display: DIRT

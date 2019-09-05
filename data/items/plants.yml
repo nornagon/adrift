@@ -169,3 +169,8 @@
   display: FLOWER
   behavior:
     - Flower: { lifetime: 100, fruit: { repeat: petunia seed, count: 2d4 } }
+
+- type: item
+  name: grass
+  description: A tough, grey-green sagegrass genetically engineered for resilience in microgravity, high-rad and low-nutrient environments.
+  display: PLANT_DETRITUS

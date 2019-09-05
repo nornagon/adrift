@@ -9,6 +9,11 @@
   - {room: observation deck, number: "5-10"}
 
 - type: sector
+  name: organics
+  rooms:
+  - { room: orchard }
+
+- type: sector
   name: engineering
   rooms: 
   - {room: cryopods, number: "10-20"}

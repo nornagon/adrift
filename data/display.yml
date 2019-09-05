@@ -136,6 +136,7 @@
     PLANT_DETRITUS:
       char: "\""
       fg: green
+      bg: brown
       layer: -1
     SEED:
       char: "\u00FA" # ·
@@ -156,3 +157,6 @@
     SMALL_FLYER:
       char: "\u00F6" # %
       fg: gray
+    DIRT:
+      char: " "
+      bg: brown
