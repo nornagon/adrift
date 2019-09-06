@@ -1,6 +1,5 @@
 package adrift
 
-import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
 import adrift.display.{Display, GLFWDisplay}
@@ -17,11 +16,11 @@ object Main {
 
     val data = Data.parse(Paths.get("data"))
 
-    val savePath = Paths.get("save.json")
+    val savePath = Paths.get("save.bson")
     val state =
       if (Files.exists(savePath)) {
         val start = System.nanoTime()
-        val json = io.circe.parser.parse(new String(Files.readAllBytes(savePath))).right.get
+        val json = Bson.decode(Files.newInputStream(savePath))
         println(f"Parse took ${(System.nanoTime() - start) / 1e6}%.1f ms")
         val start2 = System.nanoTime()
         val state = Serialization.load(data, json)
@@ -31,7 +30,7 @@ object Main {
         implicit val random: Random = new Random(52)
         val state = WorldGen(data).generateWorld
         val start = System.nanoTime()
-        Files.write(savePath, Serialization.save(state).spaces2.getBytes(StandardCharsets.UTF_8))
+        Bson.encode(Serialization.save(state), Files.newOutputStream(savePath))
         println(f"Save took ${(System.nanoTime() - start) / 1e6}%.1f ms")
         state
       }
