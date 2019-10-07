@@ -136,7 +136,7 @@
     PLANT_DETRITUS:
       char: "\""
       fg: green
-      bg: brown
+      bg: dark_gray
       layer: -1
     SEED:
       char: "\u00FA" # ·
@@ -144,7 +144,7 @@
     PLANT_TREE:
       char: "Y"
       fg: brown
-      bg: green
+      bg: dark_gray
     PLANT_BUSH:
       char: "*"
       fg: green
@@ -159,4 +159,4 @@
       fg: gray
     DIRT:
       char: " "
-      bg: brown
+      bg: dark_gray

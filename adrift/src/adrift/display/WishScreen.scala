@@ -44,7 +44,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
                 state.data = Data.parse(Paths.get("data"))
               } catch {
                 case e: Throwable =>
-                  println(e)
+                  e.printStackTrace()
                   state.message = Some(s"Couldn't reload: ${e.getMessage}")
               }
             case "colors" =>
