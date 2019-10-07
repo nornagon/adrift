@@ -63,6 +63,7 @@
           - { item: apple leaf, weight: 40 }
           - { item: apple branch, weight: 2 }
           - { item: apple flower, weight: 1 }
+    - Block: {}
 
 - type: item
   name: apple leaf

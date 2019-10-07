@@ -26,6 +26,8 @@ case class DoorOpener(
       msg.opaque = !isOpen
     case msg: IsWalkable =>
       msg.walkable = isOpen
+    case msg: IsPermeable =>
+      msg.permeable = isOpen
     case msg: Display =>
       msg.display = if (isOpen) "DOOR_OPEN" else "DOOR_CLOSED"
     case _ =>

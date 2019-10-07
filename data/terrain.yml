@@ -16,6 +16,7 @@
   name: wall
   opaque: true
   walkable: false
+  permeable: false
   connects: true
   display: WALL
   heatCapacity: 10
@@ -25,12 +26,14 @@
   name: elevator wall
   opaque: true
   walkable: false
+  permeable: false
   connects: true
   display: ELEVATOR_WALL
 
 - type: terrain
   name: transparent polycarbonate window
   opaque: false
+  permeable: false
   walkable: false
   display: WINDOW
 

@@ -204,13 +204,17 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   def itemIsWalkable(item: Item): Boolean =
     sendMessage(item, Message.IsWalkable()).walkable
 
-  def canWalk(x: Int, y: Int): Boolean = {
-    terrain.get(x, y).exists(_.walkable) && items.lookup(OnFloor(x, y)).forall(itemIsWalkable)
-  }
+  def itemIsPermeable(item: Item): Boolean =
+    sendMessage(item, Message.IsPermeable()).permeable
 
-  def isOpaque(x: Int, y: Int): Boolean = {
+  def canWalk(x: Int, y: Int): Boolean =
+    terrain.get(x, y).exists(_.walkable) && items.lookup(OnFloor(x, y)).forall(itemIsWalkable)
+
+  def isOpaque(x: Int, y: Int): Boolean =
     terrain.get(x, y).exists(_.opaque) || items.lookup(OnFloor(x, y)).exists(itemIsOpaque)
-  }
+
+  def isPermeable(x: Int, y: Int): Boolean =
+    terrain.get(x, y).exists(_.permeable) && items.lookup(OnFloor(x, y)).forall(itemIsPermeable)
 
   private var visible = Set.empty[(Int, Int)]
   def recalculateFOV(): Unit = {
@@ -350,7 +354,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
       val b = randomAdj(a)
       if (temperature.contains(a) && temperature.contains(b)) {
         moveHeat(dt / 20, a, b)
-        if (terrain(a).walkable && terrain(b).walkable) {
+        if (terrain(a).permeable && terrain(b).permeable) {
           moveGas(dt, a, b)
         }
       }
@@ -358,7 +362,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         var p = a
         for (_ <- 1 to random.between(2, 8)) {
           val test = randomAdj(p)
-          if (canWalk(test._1, test._2)) {
+          if (isPermeable(test._1, test._2)) {
             p = test
           }
         }

@@ -4,6 +4,7 @@ case class Terrain(
   name: String,
   walkable: Boolean,
   opaque: Boolean,
+  permeable: Boolean = true,
   connects: Boolean = false,
   display: String,
   heatCapacity: Double = 1d,
