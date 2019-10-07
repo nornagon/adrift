@@ -227,7 +227,7 @@ class GLFWDisplay extends Display {
   var font: Texture = _
   private var spriteBatch: SpriteBatch = _
   private var lastState: GameState = _
-  private val pendingActions = mutable.Buffer.empty[Action]
+  private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
   val windowHeightChars = 48
   val screenCharWidth = 16
@@ -244,7 +244,7 @@ class GLFWDisplay extends Display {
     render(lastState)
   }
   private [display] def pushAction(a: Action): Unit = {
-    pendingActions.append(a)
+    pendingActions.add(a)
   }
 
   def init(): Unit = {
@@ -278,15 +278,15 @@ class GLFWDisplay extends Display {
       } else {
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
           key match {
-            case GLFW_KEY_LEFT | GLFW_KEY_H => pendingActions.append(Action.PlayerMove(-1, 0))
-            case GLFW_KEY_DOWN | GLFW_KEY_J => pendingActions.append(Action.PlayerMove(0, 1))
-            case GLFW_KEY_UP | GLFW_KEY_K => pendingActions.append(Action.PlayerMove(0, -1))
-            case GLFW_KEY_RIGHT | GLFW_KEY_L => pendingActions.append(Action.PlayerMove(1, 0))
-            case GLFW_KEY_Y => pendingActions.append(Action.PlayerMove(-1, -1))
-            case GLFW_KEY_U => pendingActions.append(Action.PlayerMove(1, -1))
-            case GLFW_KEY_B => pendingActions.append(Action.PlayerMove(-1, 1))
-            case GLFW_KEY_N => pendingActions.append(Action.PlayerMove(1, 1))
-            case GLFW_KEY_PERIOD => pendingActions.append(Action.Wait())
+            case GLFW_KEY_LEFT | GLFW_KEY_H => pushAction(Action.PlayerMove(-1, 0))
+            case GLFW_KEY_DOWN | GLFW_KEY_J => pushAction(Action.PlayerMove(0, 1))
+            case GLFW_KEY_UP | GLFW_KEY_K => pushAction(Action.PlayerMove(0, -1))
+            case GLFW_KEY_RIGHT | GLFW_KEY_L => pushAction(Action.PlayerMove(1, 0))
+            case GLFW_KEY_Y => pushAction(Action.PlayerMove(-1, -1))
+            case GLFW_KEY_U => pushAction(Action.PlayerMove(1, -1))
+            case GLFW_KEY_B => pushAction(Action.PlayerMove(-1, 1))
+            case GLFW_KEY_N => pushAction(Action.PlayerMove(1, 1))
+            case GLFW_KEY_PERIOD => pushAction(Action.Wait())
             case _ =>
           }
         } else if (action == GLFW_RELEASE) {
@@ -300,7 +300,7 @@ class GLFWDisplay extends Display {
         }
       }
     })
-    glfwSetWindowCloseCallback(window, (_: Long) => pendingActions.append(Action.Quit))
+    glfwSetWindowCloseCallback(window, (_: Long) => pushAction(Action.Quit))
 
     glfwMakeContextCurrent(window)
     glfwSwapInterval(1)
@@ -403,11 +403,16 @@ class GLFWDisplay extends Display {
   }
 
   override def waitForAction: Action = {
-    if (pendingActions.nonEmpty)
-      return pendingActions.remove(0)
+    if (!pendingActions.isEmpty)
+      return pendingActions.poll()
     while (pendingActions.isEmpty)
       glfwWaitEvents()
-    pendingActions.remove(0)
+    pendingActions.poll()
+  }
+
+  override def postAction(action: Action): Unit = {
+    pushAction(action)
+    glfwPostEmptyEvent()
   }
 
   override def running: Boolean = !glfwWindowShouldClose(window)

@@ -1,10 +1,9 @@
 package adrift.display
 
-import adrift.{GameState, OnFloor}
-import adrift.items.{Item, ItemKind}
-import org.lwjgl.glfw.GLFW
+import java.nio.file.{Files, Paths}
 
-import scala.collection.mutable
+import adrift._
+import org.lwjgl.glfw.GLFW
 
 class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
   val setTemp = raw"settemp (-?[0-9.]+)".r
@@ -36,6 +35,17 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               } else if (state.data.items.contains(name)) {
                 val item = state.data.items(name).generateItem()
                 state.items.put(item, OnFloor(state.player._1, state.player._2))
+              }
+            case "save" =>
+              val savePath = Paths.get("save.bson")
+              Bson.encode(Serialization.save(state), Files.newOutputStream(savePath))
+            case "reload" =>
+              try {
+                state.data = Data.parse(Paths.get("data"))
+              } catch {
+                case e: Throwable =>
+                  println(e)
+                  state.message = Some(s"Couldn't reload: ${e.getMessage}")
               }
             case _ =>
           }

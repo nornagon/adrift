@@ -15,4 +15,5 @@ object Action {
   case class TakeOff(item: Item) extends Action
   case class Wait() extends Action
   case object Quit extends Action
+  case class ReloadData(data: Data) extends Action
 }

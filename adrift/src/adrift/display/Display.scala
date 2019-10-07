@@ -8,5 +8,7 @@ trait Display {
   def update(state: GameState): Unit
   def waitForAction: Action
   def running: Boolean
+
+  def postAction(action: Action): Unit
 }
 

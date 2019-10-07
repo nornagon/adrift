@@ -11,7 +11,7 @@ case class Circuit(name: String, max: Int, var stored: Int) {
   def add(amount: Int): Unit = stored = math.min(max, stored + amount)
 }
 
-class GameState(val data: Data, val width: Int, val height: Int, val random: Random) {
+class GameState(var data: Data, val width: Int, val height: Int, val random: Random) {
   var terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
   var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(280d, 310d))
   var gasComposition: Grid[GasComposition] =
@@ -115,6 +115,10 @@ class GameState(val data: Data, val width: Int, val height: Int, val random: Ran
       case Action.Wait() =>
 
       case Action.Quit =>
+
+      case Action.ReloadData(newData) =>
+        data = newData
+        return // don't tick
     }
     items.all.foreach(sendMessage(_, Message.Tick))
     circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
