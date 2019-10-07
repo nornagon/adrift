@@ -47,6 +47,10 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
                   println(e)
                   state.message = Some(s"Couldn't reload: ${e.getMessage}")
               }
+            case "colors" =>
+              display.popScreen()
+              display.pushScreen(new ColorTestScreen(display, state))
+              return
             case _ =>
           }
           display.popScreen()
