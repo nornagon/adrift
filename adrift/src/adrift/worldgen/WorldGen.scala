@@ -1,9 +1,10 @@
 package adrift.worldgen
 
 import adrift.Population.Table
+import adrift.RandomImplicits._
 import adrift.YamlObject.ItemGroup
 import adrift._
-import adrift.items.{Item, ItemKind}
+import adrift.items.Item
 import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 
 import scala.collection.mutable
@@ -415,7 +416,13 @@ case class WorldGen(data: Data)(implicit random: Random) {
         fill(state, xf)
       }
     }
-    state.movePlayer(width*3 + 3, height*3 + 3)
+    val ((startingRoomX, startingRoomY), startingRoom) = random.pick(for {
+      (cols, tx) <- ss.zipWithIndex
+      (room, ty) <- cols.zipWithIndex
+      if room.name == "cryopods"
+    } yield ((tx, ty), room))
+
+    state.movePlayer(startingRoomX*6 + 3, startingRoomY*6 + 3)
     state
   }
 
