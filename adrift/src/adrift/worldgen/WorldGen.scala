@@ -416,11 +416,11 @@ case class WorldGen(data: Data)(implicit random: Random) {
         fill(state, xf)
       }
     }
-    val ((startingRoomX, startingRoomY), startingRoom) = random.pick(for {
+    val (startingRoomX, startingRoomY) = random.pick(for {
       (cols, tx) <- ss.zipWithIndex
       (room, ty) <- cols.zipWithIndex
       if room.name == "cryopods"
-    } yield ((tx, ty), room))
+    } yield (tx, ty))
 
     state.movePlayer(startingRoomX*6 + 3, startingRoomY*6 + 3)
     state
