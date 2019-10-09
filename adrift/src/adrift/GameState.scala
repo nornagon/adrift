@@ -127,6 +127,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
       case Action.Quit =>
 
       case Action.ReloadData(newData) =>
+        println("Reloaded data.")
         data = newData
         return // don't tick
     }
