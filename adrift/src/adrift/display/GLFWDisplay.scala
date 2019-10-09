@@ -399,6 +399,10 @@ class GLFWDisplay extends Display {
 
   override def update(state: GameState): Unit = {
     lastState = state
+    if (state.isDead) {
+      pushScreen(new DeathScreen(this, state))
+      return
+    }
     render(state)
   }
 

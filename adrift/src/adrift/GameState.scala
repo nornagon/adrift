@@ -13,12 +13,20 @@ case class Circuit(name: String, max: Int, var stored: Int) {
 
 class GameState(var data: Data, val width: Int, val height: Int, val random: Random) {
   var terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(280d, 310d))
+  var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 270d))
   var gasComposition: Grid[GasComposition] =
     new Grid[GasComposition](width,height)(GasComposition(oxygen = 4, nitrogen = 9, carbonDioxide = 1))
   var items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
   var bodyTemp: Double = 310
+
+  var deathReason: Option[String] = None
+  def isDead: Boolean = deathReason.nonEmpty
+
+  def die(reason: String): Unit = {
+    putMessage("You die.")
+    deathReason = Some(reason)
+  }
 
   lazy val circuits: mutable.Map[String, Circuit] = mutable.Map.empty[String, Circuit].withDefault { k =>
     val c = Circuit(k, 500, 500)
@@ -127,7 +135,30 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     recalculateFOV()
     val start = System.nanoTime()
     updateHeat()
-    println(s"${(System.nanoTime() - start) / 1e6} ms")
+    println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
+
+    // https://en.wikipedia.org/wiki/Human_body_temperature#Temperature_variation
+    val K = 273
+    if (bodyTemp > 35+K && bodyTemp <= 36+K) {
+      if (random.oneIn(60)) {
+        putMessage("You shiver.")
+      }
+    } else if (bodyTemp > 34+K && bodyTemp <= 35+K) {
+      if (random.oneIn(30)) {
+        putMessage("Your teeth chatter. It's freezing cold.")
+      }
+    } else if (bodyTemp > 33+K && bodyTemp <= 34+K) {
+      if (random.oneIn(10)) {
+        putMessage("You're so cold you can't even shiver.")
+      }
+    } else if (bodyTemp <= 33+K) {
+      if (random.oneIn(10)) {
+        putMessage("Is it hot in here? No, that can't be right...")
+      }
+      if (random.oneIn(30)) {
+        die("hypothermia")
+      }
+    }
   }
 
   def sendMessage[Msg <: Message](item: Item, message: Msg): Msg = {
