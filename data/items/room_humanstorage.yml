@@ -29,7 +29,7 @@
   display: LARGE_EQUIPMENT
 
 - type: item
-  name: cooling_unit
+  name: cooling unit
   description: This small cooling unit is pretty good at pushing heat around for its size.
   parts:
     - { type: B-size frame, count: 1, disassembled_with: SCREWING }

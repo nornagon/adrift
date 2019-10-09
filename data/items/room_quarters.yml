@@ -23,7 +23,7 @@
   name: minifridge
   description: A small food-grade refrigerator for keeping your lunch in
   parts:
-    - { type: cooling_unit, count: 1, disassembled_with: SCREWING}
+    - { type: cooling unit, count: 1, disassembled_with: SCREWING}
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
     - { type: type IIA screw, count: 8, disassembled_with: SCREWING}
   display: MEDIUM_EQUIPMENT
