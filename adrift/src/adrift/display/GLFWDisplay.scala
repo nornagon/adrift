@@ -209,7 +209,7 @@ object Appearance {
       else
         ""
     (if (items.nonEmpty) {
-      s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other things" else "")
+      s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other thing${if (items.size == 1) "" else "s"}" else "")
     } else {
       state.terrain(position).name
     }) + debug
