@@ -12,7 +12,7 @@ case class Wearable(location: Seq[String], warmth: Double) extends Behavior {
     case m: Message.CanWear =>
       m.ok = true
     case m: Message.LoseHeat =>
-      m.dq *= warmth
+      m.dq *= (1 - warmth)
     case _ =>
   }
 }
