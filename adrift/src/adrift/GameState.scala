@@ -31,10 +31,12 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   var showGasDebug = false
 
 
-  var message: Option[String] = None
+  private var _message: Option[String] = None
+  def message: Option[String] = _message
+  def putMessage(message: String): Unit = _message = Some(message)
 
   def receive(action: Action): Unit = {
-    message = None
+    _message = None
     action match {
       case Action.PlayerMove(dx, dy) =>
         if (canWalk(player._1 + dx, player._2 + dy) || walkThroughWalls) {
@@ -55,12 +57,12 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
 
         if (item.parts.isEmpty) {
           items.delete(item)
-          message = Some(s"You take apart the ${item.kind.name}.")
+          putMessage(s"You take apart the ${item.kind.name}.")
         } else if (anyRemoved) {
-          message = Some(s"You weren't able to completely take apart the ${itemDisplayName(item)}.")
+          putMessage(s"You weren't able to completely take apart the ${itemDisplayName(item)}.")
           item.behaviors.append(PartiallyDisassembled())
         } else {
-          message = Some(s"You don't have the tools to do that.")
+          putMessage(s"You don't have the tools to do that.")
         }
 
       case Action.Assemble(itemKind, components) =>
@@ -71,17 +73,17 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
           behaviors = mutable.Buffer.empty
         )
         items.put(newItem, OnFloor(player._1, player._2))
-        message = Some(s"You make a ${itemDisplayName(newItem)}.")
+        putMessage(s"You make a ${itemDisplayName(newItem)}.")
 
       case Action.PickUp(item) =>
         if (!sendMessage(item, Message.PickUp()).ok) {
-          message = Some("You can't pick that up.")
+          putMessage("You can't pick that up.")
         } else if (items.lookup(InHands()).size >= 2) {
-          message = Some("Your hands are full.")
+          putMessage("Your hands are full.")
         } else {
           val pickedUpItem = sendMessage(item, Message.PickedUp(item)).item
           items.move(pickedUpItem, InHands())
-          message = Some(s"You pick up the ${itemDisplayName(pickedUpItem)}.")
+          putMessage(s"You pick up the ${itemDisplayName(pickedUpItem)}.")
         }
 
       case Action.PutDown(item) =>
@@ -89,28 +91,28 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
             sendMessage(item, Message.Dropped())
-            message = Some(s"You place the ${itemDisplayName(item)} on the ${terrain(player).name}.")
+            putMessage(s"You place the ${itemDisplayName(item)} on the ${terrain(player).name}.")
           case _ =>
-            message = Some("You can't put that down.")
+            putMessage("You can't put that down.")
         }
 
       case Action.Plug(item, into) =>
         items.lookup(item) match {
           case InHands() =>
             sendMessage(item, Message.PlugInto(into))
-            message = Some(s"You plug the ${itemDisplayName(item)} into the ${itemDisplayName(into)}.")
+            putMessage(s"You plug the ${itemDisplayName(item)} into the ${itemDisplayName(into)}.")
           case _ =>
-            message = Some("You need to pick it up first.")
+            putMessage("You need to pick it up first.")
         }
 
       case Action.Wear(item) =>
         items.move(item, Worn())
-        message = Some(s"You put on the ${itemDisplayName(item)}.")
+        putMessage(s"You put on the ${itemDisplayName(item)}.")
 
       case Action.TakeOff(item) =>
         items.move(item, OnFloor(player._1, player._2))
         sendMessage(item, Message.Dropped())
-        message = Some(s"You take off the ${itemDisplayName(item)}.")
+        putMessage(s"You take off the ${itemDisplayName(item)}.")
 
       case Action.Wait() =>
 

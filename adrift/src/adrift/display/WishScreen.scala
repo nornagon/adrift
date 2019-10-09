@@ -45,7 +45,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               } catch {
                 case e: Throwable =>
                   e.printStackTrace()
-                  state.message = Some(s"Couldn't reload: ${e.getMessage}")
+                  state.putMessage(s"Couldn't reload: ${e.getMessage}")
               }
             case "colors" =>
               display.popScreen()
