@@ -37,10 +37,12 @@
 
 - type: item
   name: apple
-  description: a tasty-looking apple.
+  description: A tasty-looking red apple.
   display: FRUIT
   parts:
     - {type: apple seed, count: 1d6}
+  behavior:
+    - Edible: { calories: 100 }
 
 
 - type: item

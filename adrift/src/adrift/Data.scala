@@ -67,7 +67,9 @@ case class Data(
   display: DisplayData,
 )
 
-case class Color(r: Float, g: Float, b: Float, a: Float)
+case class Color(r: Float, g: Float, b: Float, a: Float) {
+  def darken(pct: Float): Color = Color(r*pct, g*pct, b*pct, a)
+}
 object Color {
   val hexColor: Regex = raw"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?".r
   implicit val decoder: Decoder[Color] = { (h: HCursor) =>

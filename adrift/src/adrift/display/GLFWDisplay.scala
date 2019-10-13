@@ -286,7 +286,8 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_U => pushAction(Action.PlayerMove(1, -1))
             case GLFW_KEY_B => pushAction(Action.PlayerMove(-1, 1))
             case GLFW_KEY_N => pushAction(Action.PlayerMove(1, 1))
-            case GLFW_KEY_PERIOD => pushAction(Action.Wait())
+            case GLFW_KEY_PERIOD => pushAction(Action.Wait(1))
+            case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
             case _ =>
           }
         } else if (action == GLFW_RELEASE) {
@@ -374,7 +375,14 @@ class GLFWDisplay extends Display {
     for (y <- top until bottom; x <- left until right) {
       if (state.isVisible(x, y)) {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, fg, bg)
+        val d: Float =
+          if (state.sightRadius > 20) 1f
+          else {
+            val k = state.sightRadius / 20f
+            val pctNoise = (1 - k) * 0.1f
+            k * (1 - pctNoise) + math.random().toFloat * pctNoise
+          }
+        renderer.drawChar(font, x - left, y - top, char, fg.darken(d), bg.darken(d))
       } else {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))

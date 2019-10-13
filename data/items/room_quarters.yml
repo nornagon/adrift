@@ -44,7 +44,7 @@
 
 - type: item
   name: bed
-  description: bed
+  description: A sturdy metal frame with a lightweight foam mattress. Mil-spec comfort.
   display: BED
 
 - type: item
