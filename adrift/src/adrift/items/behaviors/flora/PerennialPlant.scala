@@ -1,4 +1,5 @@
-package adrift.items.behaviors
+package adrift.items.behaviors.flora
+
 
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, Population}

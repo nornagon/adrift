@@ -1,4 +1,4 @@
-package adrift.items.behaviors
+package adrift.items.behaviors.flora
 
 import adrift.{GameState, OnFloor}
 import adrift.items.{Behavior, Item, Message}

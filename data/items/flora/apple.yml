@@ -1,0 +1,62 @@
+- type: item
+  name: apple tree
+  description: Johnny appleseed would be proud of his legacy.
+  parts: []
+  display: PLANT_TREE
+  behavior:
+    - PerennialPlant:
+        productionCarbonThreshold: 1
+        produces:
+          - { item: apple leaf, weight: 40 }
+          - { item: apple branch, weight: 2 }
+          - { item: apple flower, weight: 1 }
+    - Block: {}
+
+- type: item
+  name: apple leaf
+  description: A soft green leaf.
+  display: PLANT_LEAF
+  behavior:
+    - Leaf:
+        chanceToDie: 0.001
+        becomes: withered leaf
+        carbonAbsorptionChance: 0.05
+        carbonAbsorptionChunk: 0.1
+
+- type: item
+  name: apple branch
+  description: a branch of applewood.
+  display: PLANT_BRANCH
+
+- type: item
+  name: apple flower
+  description: A small white / pink flower from an apple tree.
+  display: FLOWER
+  behavior:
+    - Flower: { lifetime: 100, fruit: { repeat: apple, count: 0-1 } }
+
+- type: item
+  name: apple
+  description: a tasty-looking apple.
+  display: FRUIT
+  parts:
+    - {type: apple seed, count: 1d6}
+
+
+- type: item
+  name: apple seed
+  description: A small smooth oval-shaped brown seed with a bitter taste.
+  display: SEED
+  behavior:
+    - Seed:
+        initialCarbon: 5
+        growsInto: apple tree
+        germination:
+          minTemperature: 283
+          maxTemperature: 303
+          minPressure: 5
+          duration: 36
+        survival:
+          minTemperature: 200
+          maxTemperature: 340
+          minPressure: 1

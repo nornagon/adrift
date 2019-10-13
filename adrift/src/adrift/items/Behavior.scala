@@ -2,7 +2,9 @@ package adrift.items
 
 import adrift.GameState
 import adrift.items.behaviors._
+import adrift.items.behaviors.flora._
 import io.circe.{Json, JsonObject}
+
 
 trait Behavior {
   def receive(state: GameState, self: Item, message: Message): Unit

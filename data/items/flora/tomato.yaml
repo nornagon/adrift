@@ -1,0 +1,62 @@
+- type: item
+  name: tomato bush
+  description: a hearty survival fruit... or vegetable?
+  parts: []
+  display: PLANT_BUSH
+  behavior:
+    - PerennialPlant:
+        productionCarbonThreshold: 1
+        produces:
+          - { item: tomato leaf, weight: 40 }
+          - { item: tomato branch, weight: 2 }
+          - { item: tomato flower, weight: 1 }
+    - Block: {}
+
+- type: item
+  name: tomato leaf
+  description: A rough green tomato leaf.
+  display: PLANT_LEAF
+  behavior:
+    - Leaf:
+        chanceToDie: 0.001
+        becomes: withered leaf
+        carbonAbsorptionChance: 0.05
+        carbonAbsorptionChunk: 0.1
+
+- type: item
+  name: tomato stalk
+  description: a fibrous lump of tomato plant material.
+  display: PLANT_BRANCH
+
+- type: item
+  name: tomato flower
+  description: A small yellow flower that may become a tomato.
+  display: FLOWER
+  behavior:
+    - Flower: { lifetime: 100, fruit: { repeat: tomato, count: 0-1 } }
+
+- type: item
+  name: tomato
+  description: a plump red tomato.
+  display: FRUIT
+  parts:
+    - {type: tomato seed, count: 1d6}
+
+
+- type: item
+  name: tomato seed
+  description: A small smooth oval-shaped translucent white seed.
+  display: SEED
+  behavior:
+    - Seed:
+        initialCarbon: 5
+        growsInto: tomato bush
+        germination:
+          minTemperature: 283
+          maxTemperature: 303
+          minPressure: 5
+          duration: 36
+        survival:
+          minTemperature: 200
+          maxTemperature: 340
+          minPressure: 1

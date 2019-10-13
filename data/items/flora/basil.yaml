@@ -1,0 +1,52 @@
+- type: item
+  name: basil plant
+  description: A leafy green plant whose leaves have a bitter flavor.
+  parts: []
+  display: PLANT_BUSH
+  behavior:
+    - PerennialPlant:
+        productionCarbonThreshold: 1
+        produces:
+          - { item: basil leaf, weight: 10 }
+          - basil flower
+
+- type: item
+  name: basil leaf
+  description: A soft green leaf with a bitter taste.
+  display: PLANT_LEAF
+  behavior:
+    - Leaf:
+        chanceToDie: 0.001
+        becomes: withered leaf
+        carbonAbsorptionChance: 0.1
+        carbonAbsorptionChunk: 0.1
+
+- type: item
+  name: withered leaf
+  description: A dry, brown, dead leaf. A miracle that it was ever able to live at all, out here.
+  display: PLANT_DETRITUS
+
+- type: item
+  name: basil flower
+  description: A small white flower of the basil plant.
+  display: FLOWER
+  behavior:
+    - Flower: { lifetime: 600, fruit: { repeat: basil seed, count: 2d4 } }
+
+- type: item
+  name: basil seed
+  description: A small smooth oval-shaped black seed.
+  display: SEED
+  behavior:
+    - Seed:
+        initialCarbon: 5
+        growsInto: basil plant
+        germination:
+          minTemperature: 283
+          maxTemperature: 303
+          minPressure: 5
+          duration: 36
+        survival:
+          minTemperature: 200
+          maxTemperature: 340
+          minPressure: 1

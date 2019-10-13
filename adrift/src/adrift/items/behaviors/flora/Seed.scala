@@ -1,4 +1,4 @@
-package adrift.items.behaviors
+package adrift.items.behaviors.flora
 
 import adrift.{GameState, OnFloor}
 import adrift.items.{Behavior, Item, Message}
@@ -11,6 +11,7 @@ case class Seed(
   initialCarbon: Double,
   var dead: Boolean = false,
   var germinationTimer: Double = 0,
+  var driftDist: Int = 1
 ) extends Behavior {
   override def receive(
     state: GameState,
@@ -40,11 +41,16 @@ case class Seed(
       }
     case Live(plant, _) =>
       if (state.random.nextDouble() < 0.1) {
-        val (x, y) = state.getItemTile(plant)
-        val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
-        val pos =
-          if (state.canWalk(x + dx, y + dy)) (x + dx, y + dy)
-          else (x, y)
+        def drift(initpos: (Int,Int), distance:Int): (Int,Int) = (
+            if (distance == 0) return initpos
+            else {
+              val (x,y) = initpos
+              val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
+              if (state.canWalk(x + dx, y + dy)) drift((x + dx, y + dy), distance -1)
+              else (x, y)
+            }
+          )
+        val pos = drift(state.getItemTile(plant), driftDist)
         plant.parts = plant.parts.filter(_ ne self)
         state.items.put(self, OnFloor(pos._1, pos._2))
       }
