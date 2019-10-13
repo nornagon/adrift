@@ -13,7 +13,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
           if (item.parts.nonEmpty)
             display.pushScreen(new DisassembleScreen(display, state, item))
         case GLFW_KEY_W =>
-          if (state.sendMessage(item, Message.CanWear()).ok) {
+          if (!state.items.lookup(item).isInstanceOf[Worn] && state.sendMessage(item, Message.CanWear()).ok) {
             display.pushAction(Action.Wear(item))
             display.popScreen()
           }
@@ -35,6 +35,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
   override def render(renderer: GlyphRenderer): Unit = {
     val width = 30
     val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
+    val actionLines: Seq[String] = Seq.empty ++
+      (if (item.parts.nonEmpty) Some("[D]isassemble") else None) ++
+      (if (!state.items.lookup(item).isInstanceOf[Worn] && state.sendMessage(item, Message.CanWear()).ok) Some("[w]ear") else None) ++
+      (if (state.isEdible(item)) Some("[e]at") else None) ++
+      (if (state.items.lookup(item).isInstanceOf[Worn]) Some("[t]ake off") else None)
     renderer.frame(
       left = anchor._1, top = anchor._2,
       width = width,
@@ -46,7 +51,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
             case (displayName, items) if items.size == 1 => displayName
             case (displayName, items) => s"${items.size} x $displayName"
           }
-        else Seq.empty)
+        else Seq.empty) ++
+        (if (actionLines.nonEmpty) Seq("") ++ actionLines else Seq.empty)
     )
   }
 }
