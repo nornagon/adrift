@@ -17,6 +17,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
             display.pushAction(Action.Wear(item))
             display.popScreen()
           }
+        case GLFW_KEY_E =>
+          if (state.isEdible(item)) {
+            display.pushAction(Action.Eat(item))
+            display.popScreen()
+          }
         case GLFW_KEY_T =>
           if (state.items.lookup(item).isInstanceOf[Worn]) {
             display.pushAction(Action.TakeOff(item))

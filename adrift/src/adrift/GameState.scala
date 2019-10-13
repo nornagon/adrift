@@ -19,6 +19,11 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   var items: ItemDatabase = new ItemDatabase
   var player: (Int, Int) = (0, 0)
   var bodyTemp: Double = 310
+  var internalCalories: Int = 8000
+
+  def sightRadius: Int = {
+    math.max(1, math.min(internalCalories / 200, 100))
+  }
 
   var deathReason: Option[String] = None
   def isDead: Boolean = deathReason.nonEmpty
@@ -51,6 +56,11 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
       updateHeat()
       println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
       checkBodyTemp()
+      internalCalories -= 1
+      if (internalCalories < -8000) {
+        die("hunger")
+        return
+      }
     }
   }
 
@@ -144,6 +154,17 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
 
       case Action.Wait(durationSec) =>
         elapse(durationSec)
+
+      case Action.Eat(item: Item) =>
+        if (internalCalories > 10000) {
+          putMessage(s"You can't imagine eating another bite.")
+        } else {
+          if (isEdible(item)) {
+            elapse(30)
+            eat(item)
+            putMessage(s"You finish eating the ${itemDisplayName(item)}.")
+          }
+        }
 
       case Action.Quit =>
 
@@ -267,12 +288,16 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   def isPermeable(x: Int, y: Int): Boolean =
     terrain.get(x, y).exists(_.permeable) && items.lookup(OnFloor(x, y)).forall(itemIsPermeable)
 
+  def isEdible(item: Item): Boolean = sendMessage(item, Message.IsEdible()).edible
+  def eat(item: Item): Unit =
+    internalCalories += sendMessage(item, Message.Eat()).calories
+
   private var visible = Set.empty[(Int, Int)]
   def recalculateFOV(): Unit = {
     val newVisible = mutable.Set.empty[(Int, Int)]
     newVisible += player
     val opaque = (dx: Int, dy: Int) => isOpaque(player._1 + dx, player._2 + dy)
-    FOV.castShadows(radius = 100, opaqueApply = true, opaque, (x, y) => {
+    FOV.castShadows(radius = sightRadius, opaqueApply = true, opaque, (x, y) => {
       newVisible.add((player._1 + x, player._2 + y))
     })
     visible = newVisible.toSet

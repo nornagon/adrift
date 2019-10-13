@@ -375,7 +375,14 @@ class GLFWDisplay extends Display {
     for (y <- top until bottom; x <- left until right) {
       if (state.isVisible(x, y)) {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, fg, bg)
+        val d: Float =
+          if (state.sightRadius > 20) 1f
+          else {
+            val k = state.sightRadius / 20f
+            val pctNoise = (1 - k) * 0.1f
+            k * (1 - pctNoise) + math.random().toFloat * pctNoise
+          }
+        renderer.drawChar(font, x - left, y - top, char, fg.darken(d), bg.darken(d))
       } else {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))

@@ -14,6 +14,8 @@ object Action {
   case class Wear(item: Item) extends Action
   case class TakeOff(item: Item) extends Action
   case class Wait(durationSec: Int) extends Action
+  case class Eat(item: Item) extends Action
+
   case object Quit extends Action
   case class ReloadData(data: Data) extends Action
 }
