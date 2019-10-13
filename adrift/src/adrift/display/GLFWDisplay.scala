@@ -286,7 +286,8 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_U => pushAction(Action.PlayerMove(1, -1))
             case GLFW_KEY_B => pushAction(Action.PlayerMove(-1, 1))
             case GLFW_KEY_N => pushAction(Action.PlayerMove(1, 1))
-            case GLFW_KEY_PERIOD => pushAction(Action.Wait())
+            case GLFW_KEY_PERIOD => pushAction(Action.Wait(1))
+            case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
             case _ =>
           }
         } else if (action == GLFW_RELEASE) {

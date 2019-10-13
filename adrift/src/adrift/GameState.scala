@@ -43,6 +43,17 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   def message: Option[String] = _message
   def putMessage(message: String): Unit = _message = Some(message)
 
+  def elapse(durationSec: Int): Unit = {
+    for (_ <- 0 until durationSec) {
+      items.all.foreach(sendMessage(_, Message.Tick))
+      circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
+      val start = System.nanoTime()
+      updateHeat()
+      println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
+      checkBodyTemp()
+    }
+  }
+
   def receive(action: Action): Unit = {
     _message = None
     action match {
@@ -50,6 +61,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         if (canWalk(player._1 + dx, player._2 + dy) || walkThroughWalls) {
           movePlayer(player._1 + dx, player._2 + dy)
         }
+        elapse(1)
 
       case Action.Disassemble(item) =>
         var anyRemoved = false
@@ -65,8 +77,10 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
 
         if (item.parts.isEmpty) {
           items.delete(item)
+          elapse(10)
           putMessage(s"You take apart the ${item.kind.name}.")
         } else if (anyRemoved) {
+          elapse(10)
           putMessage(s"You weren't able to completely take apart the ${itemDisplayName(item)}.")
           item.behaviors.append(PartiallyDisassembled())
         } else {
@@ -80,6 +94,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
           parts = components,
           behaviors = mutable.Buffer.empty
         )
+        elapse(10)
         items.put(newItem, OnFloor(player._1, player._2))
         putMessage(s"You make a ${itemDisplayName(newItem)}.")
 
@@ -91,6 +106,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         } else {
           val pickedUpItem = sendMessage(item, Message.PickedUp(item)).item
           items.move(pickedUpItem, InHands())
+          elapse(1)
           putMessage(s"You pick up the ${itemDisplayName(pickedUpItem)}.")
         }
 
@@ -99,6 +115,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
           case InHands() =>
             items.move(item, OnFloor(player._1, player._2))
             sendMessage(item, Message.Dropped())
+            elapse(1)
             putMessage(s"You place the ${itemDisplayName(item)} on the ${terrain(player).name}.")
           case _ =>
             putMessage("You can't put that down.")
@@ -108,6 +125,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         items.lookup(item) match {
           case InHands() =>
             sendMessage(item, Message.PlugInto(into))
+            elapse(1)
             putMessage(s"You plug the ${itemDisplayName(item)} into the ${itemDisplayName(into)}.")
           case _ =>
             putMessage("You need to pick it up first.")
@@ -115,44 +133,43 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
 
       case Action.Wear(item) =>
         items.move(item, Worn())
+        elapse(5)
         putMessage(s"You put on the ${itemDisplayName(item)}.")
 
       case Action.TakeOff(item) =>
         items.move(item, OnFloor(player._1, player._2))
         sendMessage(item, Message.Dropped())
+        elapse(5)
         putMessage(s"You take off the ${itemDisplayName(item)}.")
 
-      case Action.Wait() =>
+      case Action.Wait(durationSec) =>
+        elapse(durationSec)
 
       case Action.Quit =>
 
       case Action.ReloadData(newData) =>
         println("Reloaded data.")
         data = newData
-        return // don't tick
     }
-    items.all.foreach(sendMessage(_, Message.Tick))
-    circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
     recalculateFOV()
-    val start = System.nanoTime()
-    updateHeat()
-    println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
+  }
 
+  private def checkBodyTemp(): Unit = {
     // https://en.wikipedia.org/wiki/Human_body_temperature#Temperature_variation
     val K = 273
-    if (bodyTemp > 35+K && bodyTemp <= 36+K) {
+    if (bodyTemp > 35 + K && bodyTemp <= 36 + K) {
       if (random.oneIn(60)) {
         putMessage("You shiver.")
       }
-    } else if (bodyTemp > 34+K && bodyTemp <= 35+K) {
+    } else if (bodyTemp > 34 + K && bodyTemp <= 35 + K) {
       if (random.oneIn(30)) {
         putMessage("Your teeth chatter. It's freezing cold.")
       }
-    } else if (bodyTemp > 33+K && bodyTemp <= 34+K) {
+    } else if (bodyTemp > 33 + K && bodyTemp <= 34 + K) {
       if (random.oneIn(10)) {
         putMessage("You're so cold you can't even shiver.")
       }
-    } else if (bodyTemp <= 33+K) {
+    } else if (bodyTemp <= 33 + K) {
       if (random.oneIn(10)) {
         putMessage("Is it hot in here? No, that can't be right...")
       }
