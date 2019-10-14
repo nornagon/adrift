@@ -1,0 +1,193 @@
+PLANTS WITH EDIBLE FRUIT
+  TREES/BUSHES
+    POLLINATED TO FRUIT AND SEED
+      apples
+      apricot
+      carob
+      peaches
+      pears
+      plums
+      persimmon
+      lemon
+      lime
+      orange
+      mandarin
+      nectarine
+      chestnut
+      mulberry
+      coconut palm
+      date palm
+      blueberries
+      pommegranite
+      cocoa
+      bay
+      oak
+      vanilla
+      pistachio
+      walnut
+      pecan
+      cashew
+      almond
+      macademia
+      olive
+    CUTTING PROPOGATED
+      banana
+      plantain
+  VINES
+    POLLINATED TO FRUIT AND SEED
+      blackberries
+      red grape
+      green grape
+      watermelon
+      cantaloupe
+      honeydew
+      pumpkin
+      acorn squash
+      kabocha
+      zucchini
+      butternut
+      cucumber
+      raspberries
+      gooseberry
+      strawberries
+      tomatoes
+      peas
+      green beans
+  OTHER PLANTS
+    POLLINATED TO SEED
+
+PLANTS WITH OTHER EDIBLE PARTS
+  TREES/BUSHES
+    POLLINATED TO FRUIT AND SEED
+      cocoa
+      cinnamon
+  OTHER PLANTS 
+    POLLINATED TO SEED
+      spinach
+      chard
+      lettuce
+      kale
+      brussel sprouts
+      potato
+      yam
+      ginger
+      turmeric
+      beets
+      turnips
+      radishes
+      celery
+      rhubarb
+      sunflower
+    NON-POLLINATED TO SEED
+      corn
+      wheat
+      rice
+      spelt
+      barley
+      soybeans
+      sorghum
+
+PLANTS WITHOUT EDIBLE PARTS
+  FLOWERS
+    azalea
+    begonia
+    buttercup
+    california poppy
+    carnation
+    chrysanthemum
+    crocus
+    daffodil
+    daisy
+    geranium
+    hollyhock
+    hyacinth
+    lily
+    marigold
+    morning glory
+    nasturtium
+    orchid
+    pansy
+    petunia
+    rose
+    snapdragon
+    tulip
+    violet
+    zinnia
+  TREES
+    ash
+    aspen
+    basswood
+    beech
+    birch
+    cottonwood
+    elm
+    fir
+    hickory
+    larch
+    pine
+    spruce
+    sycamore
+    willow
+
+UNCATEGORIZED
+  peanut
+  lavender
+  clover
+  watercress
+  lentils
+  garlic
+  ginseng
+  cloves
+  bay
+  oregano
+  thyme
+  rosemary
+  parsley
+  sage
+  onion
+  shallot
+  chives
+  sugarcane
+  maple
+  agave
+  prickley pears
+  aloe
+  cocoa
+  bell pepper
+  jalapeno
+  habanero
+  serrano
+  pineapple
+  avocado
+  canola
+  sesame
+  fig
+  cherry
+  capsicum
+  carrot
+  quinoa
+  coriander
+  amaranth
+  fennel
+  cauliflower
+  broccoli
+  okra
+  cabbage
+  asparagus
+  leek
+  mint
+  eggplant
+  artichoke
+  horseradish
+  cubanelle
+  flax
+  poppy
+  pinto beans
+  black beans
+  lima beans
+  broad beans
+  chickpea
+  garbonzo beans
+  cotton
+  hemp
+   
