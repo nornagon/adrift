@@ -117,7 +117,7 @@ case class DisplayData(
 
 object Data {
   implicit private val configuration: Configuration = Configuration.default.withDefaults
-  private val matcher = FileSystems.getDefault.getPathMatcher("glob:**.yml")
+  private val matcher = FileSystems.getDefault.getPathMatcher("glob:**.{yml,yaml}")
 
   implicit val itemKindDecoder: Decoder[YamlObject.ItemKind] = deriveDecoder[YamlObject.ItemKind].prepare {
     _.withFocus(j => j.mapObject(o => { if (!o.contains("parts")) o.add("parts", Json.arr()) else o }))
