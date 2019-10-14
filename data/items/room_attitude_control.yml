@@ -1,15 +1,11 @@
 - type: item
   name: attitude control panel
   description: control panel for viewing and adjusting the attitude control systems on the ship
-  parts:
-    - {}
   display: SMALL_EQUIPMENT
 
 - type: item
   name: gyro-system
   description: a massive modular high-speed gyroscope with a series of vacuum bearings used to help rotate the ship
-  parts:
-    - {}
   display: LARGE_EQUIPMENT
 
 - type: item
@@ -38,26 +34,22 @@
 - type: item
   name: pressure sensor
   description: a silver button, threaded on the side with a lock ring. comms over hull-bus.
-  parts: {}
   display: SMALL_COMPONENT
 
 - type: item
   name: temperature sensor
   description: capable of surviving and reporting temperatures of near absolute zero to several thousand C, and could be mistaken for a grain of rice.
-  parts: {}
   display: SMALL_COMPONENT
 
 
 - type: item
   name: small bell nozzle
   description: It would make a great art-deco coffee cup if it didn't have that hole in the bottom to connect to the combustion chamber
-  parts: {}
   display: LARGE_COMPONENT
 
 - type: item
   name: small combustion chamber
   description: The metal has a rosy glow to it and it rings when tapped with a fingernail.
-  parts: {}
   display: LARGE_COMPONENT
 
 - type: item
@@ -71,11 +63,9 @@
 - type: item
   name: pump vane
   description: pure white and perfectly smooth.  Looks like an alien ear or ritual knife. One edge is surprisingly sharp.
-  parts: {}
   display: SMALL_PART
 
 - type: item
   name: mag-vac bearing
   description: a chrome donut.  You know there's a seam somewhere because the inside spins separately from the outside, but you can't find it.
-  parts: {}
   display: LARGE_COMPONENT

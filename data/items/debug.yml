@@ -1,0 +1,7 @@
+- type: item
+  name: debug heater
+  description: To make a space warm
+  behavior:
+    - Heater: { dq: 5 }
+    - Thermostat: { }
+  display: VENT

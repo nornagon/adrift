@@ -6,7 +6,6 @@
 - type: item
   name: power cable
   description: The ubiquitous 8-conductor thumb-thick black cable that snakes throughout the ship.
-  parts:
   display: RAW_THIN
 
 - type: item

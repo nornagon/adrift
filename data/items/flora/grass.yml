@@ -1,0 +1,41 @@
+- type: item
+  name: grass
+  description: A tough, grey-green sagegrass genetically engineered for resilience in microgravity, high-rad and low-nutrient environments.
+  display: PLANT_DETRITUS
+  parts:
+    - { type: grass blade, count: 1 }
+  behavior:
+    - PerennialPlant:
+        productionCarbonThreshold: 1
+        produces:
+          - grass seed
+          - grass blade
+
+- type: item
+  name: grass blade
+  description: A long, thin blade of grass.
+  display: PLANT_LEAF
+  behavior:
+    - Leaf:
+        chanceToDie: 0.0001
+        becomes: withered leaf
+        carbonAbsorptionChance: 0.1
+        carbonAbsorptionChunk: 0.1
+
+- type: item
+  name: grass seed
+  description: Itchy motherfucker.
+  display: SEED
+  behavior:
+    - Seed:
+        initialCarbon: 5
+        growsInto: grass
+        germination:
+          minTemperature: 280
+          maxTemperature: 303
+          minPressure: 5
+          duration: 36
+        survival:
+          minTemperature: 200
+          maxTemperature: 340
+          minPressure: 1
