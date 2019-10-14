@@ -7,6 +7,7 @@ import adrift.Population.Table
 import adrift.items.{Behavior, ItemKind, ItemOperation}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
+import io.circe.generic.extras.semiauto._
 import io.circe._
 
 import scala.collection.JavaConverters._
@@ -17,7 +18,7 @@ object YamlObject {
   case class ItemKind(
     name: String,
     description: String,
-    parts: Seq[ItemPart] = Seq.empty,
+    parts: Seq[ItemPart],
     provides: Seq[String] = Seq.empty,
     display: String,
     behavior: Seq[JsonObject] = Seq.empty,
@@ -117,6 +118,10 @@ case class DisplayData(
 object Data {
   implicit private val configuration: Configuration = Configuration.default.withDefaults
   private val matcher = FileSystems.getDefault.getPathMatcher("glob:**.yml")
+
+  implicit val itemKindDecoder: Decoder[YamlObject.ItemKind] = deriveDecoder[YamlObject.ItemKind].prepare {
+    _.withFocus(j => j.mapObject(o => { if (!o.contains("parts")) o.add("parts", Json.arr()) else o }))
+  }
 
   def parse(dir: Path): Data = {
     val ymls: Map[String, Seq[Json]] = Files.walk(dir)

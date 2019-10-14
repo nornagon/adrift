@@ -62,7 +62,5 @@
 - type: item
   name: hull welder
   description: a massive system for adding and removing hull plates
-  parts:
-    - {}
   provides: [ WELDING, CUTTING ]
   display: LARGE_EQUIPMENT
