@@ -62,12 +62,9 @@ class Signal:
 class Buffer:
     iPort = None
     oPort = None
-    sig = None
-
-    def __init__(self,ibrd,obrd):
-        self.sig = Signal(0)
-    def __init__(self,sig):
-        self.sig = sig
+    sig = Signal(0)
+    def __init__(self):
+        pass
     def setInput(self,port):
         self.iPort = port
     def setOutput(self,port):
@@ -78,26 +75,19 @@ class Buffer:
         return sig
 
 class Board:
-    i = [None,None,None]
-    o = [None,None,None]
+    i = [Buffer(),Buffer(),Buffer()]
+    o = [Buffer(),Buffer(),Buffer()]
     backplane = None 
     f = None
     def __init__(self):
-        self.i[1] = Buffer()
-        self.i[1].seto(self)
-        self.i[2] = Buffer()
-        self.i[2].seto(self)
-        self.i[3] = Buffer()
-        self.i[3].seto(self)
-        
-        self.o[1] = Buffer()
-        self.o[1].seti(self)
-        self.o[2] = Buffer()
-        self.o[2].seti(self)
-        self.o[3] = Buffer()
-        self.o[3].seti(self)
+        self.i[1].setOutput(self)
+        self.i[2].setOutput(self)
+        self.i[3].setOutput(self)
+        self.o[1].setInput(self)
+        self.o[2].setInput(self)
+        self.o[3].setInput(self)
 
-    def setFunction(self, f):    # HAHAHAHAHAHA It's totally definitely this easy
+    def setFunction(self, f):    # HAHAHAHAHAHA It's totally definitely this easy.  Creating the function is the tough part.
         self.f = f
 
     def evaluate(self):
@@ -159,7 +149,6 @@ class Sensor:
 
 class Actuator:
     pass
-
 
 class FunctionCreator:
     pass
