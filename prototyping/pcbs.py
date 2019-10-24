@@ -23,19 +23,19 @@ class Signal:
     def __init__(self,value):
         self.value = self.clamp(value)
     def add(self,sig):
-        return self.clamp(self.value + sig.value)
+        return Signal(self.clamp(self.value + sig.value))
     def sub(self,sig):
-        return self.clamp(self.value - sig.value)
+        return Signal(self.clamp(self.value - sig.value))
     def mul(self,sig):
-        return self.clamp(self.value * sig.value)
+        return Signal(self.clamp(self.value * sig.value))
     def div(self,sig):
-        return self.clamp(float(self.value) / float(sig.value))
+        return Signal(self.clamp(float(self.value) / float(sig.value)))
     def clamp(self, val):
         if val > 255:
-            return Signal(255)
+            return 255
         if val < 0:
-            return Signal(0)
-        return Signal(int(round(val)))
+            return 0
+        return int(round(val))
 
     def toBin(self):
         if self.value > 127:
