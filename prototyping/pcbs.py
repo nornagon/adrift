@@ -4,18 +4,24 @@
 # in conidering it an analog value, adding two signals can saturate the channel.  The value does not 'roll over' like a digital value.
 # similarly, subtracting can leave the channel empty - no 'reverse roll over' or negative values are possible.
 # multiplication and division behave the same way.
-# Boards can process signals with basic functions: 
+# Boards have signal processing blocks on them that can process signals with basic functions: 
 #    Add
 #    Subtract
 #    Multiply
 #    Divide
-# Boards also can implement boolean logic on signals.  If a signal value is greater than 127 it is considered to be 'true' 
+# Signal blocks also can implement boolean logic on signals.  If a signal value is greater than 127 it is considered to be 'true' 
 # (think of a voltage activating a transistor) else it is considered 'false'
 # Boolean logic gates available include or, and, xor, nand, not.
-# Boards have a fixed number of inputs and outputs (3 of each?) and can be connected to each other arbitrarily.
-# Boards are connected in a 'backplane' which sets the order in which boards are evaluated (top to bottom) (and maybe also provides the external interface to sensors or actuators)
-# A backplane can hold a select number of boards (5?) and steps once through all board evaluations (eval 1, eval 2, eval 3, eval 4, eval 5) in a game tick.  
-# In this way, if a board's output is connected to its own input we don't end up in an infinite regress.  The IO buffers are persistent in their values held.
+# Signals are passed around through buffers, which can pull values from an input or push them to an output. The buffers are persistent in their values held.
+# Signal blocks are arranced in a (3x3?) grid on a board.  The leftmost column of signal blocks can be connected to the board's inputs, and 
+# the rightmost column can be connected to the outputs.  Blocks cannot connect backwards (to the left) or skip a column (from col 0 to col 2) 
+# though there are 'thru' blocks which just pass signals and do no processing, so a block in col 0 could be connected to a 'thru' block in col 1
+# and then to another block in col 2.
+#
+# Boards have a fixed number of inputs and outputs (3 of each) and can be connected to each other arbitrarily, so long as they are in the same backplane.
+# Boards are connected in a 'backplane' which sets the order in which boards are evaluated (top to bottom)
+# A backplane can hold a select number of boards (3?) and steps once through all board evaluations (eval 1, eval 2, eval 3) in a game tick.  
+# In this way, if a board's output is connected to its own input we don't end up in an infinite regress.  
 
 class Signal:
     def __init__(self,value):
@@ -188,6 +194,12 @@ class SigBlock:
         map(Buffer.set,bo,result)
     def disconnect(self):
         pass
+    def connectOpToIp(self,oIndex,sb,iIndex):
+        self.bo[oIndex].setOutput(sb.bi[iIndex])
+        sb.bi[iIndex].setInput(self.bo[oIndex])
+    def connectIpFromOp(self,iIndex,sb,oIndex):
+        self.bi[iIndex].setInput(sb.bo[oIndex])
+        sb.bo[oIndex].setOutput(self.bi[iIndex])
 
 # Could use introspection to make these blocks maybe?
 class SigBlocks:
@@ -201,6 +213,9 @@ class SigBlocks:
     s_xor = SigBlock(2,1,Signal.s_xor)
     s_nand = SigBlock(2,1,Signal.s_nand)
     s_not = SigBlock(1,1,Signal.s_not)
+    thru1 = SigBlock(1,1,lambda x: x)
+    thru2 = SigBlock(2,2,lambda x,y: x,y)
+    thru3 = SigBlock(3,3,lambda x,y,z: x,y,z)
 
 class Sensor:
     pass
