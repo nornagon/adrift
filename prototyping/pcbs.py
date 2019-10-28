@@ -64,6 +64,8 @@ class Signal:
         return self.toVal(not(self.toBin() and sig.toBin()))
     def s_not(self):
         return Signal(not self.toBin())
+    def __len__(self):
+        return 1
 
 class Buffer:
     iPort = None
@@ -79,41 +81,40 @@ class Buffer:
         self.sig = sig
     def pull(self):
         if self.iPort is not None:
-           self.set(iPort.get)
+           self.set(self.iPort.get())
     def push(self):
         if self.oPort is not None:
-            self.oPort.set(sig)
+            self.oPort.set(self.sig)
     def get(self):
         return self.sig
 
 class Board:
-    bi = [Buffer(),Buffer(),Buffer()]
-    bo = [Buffer(),Buffer(),Buffer()]
+    bi = []
+    bo = []
     cols = 3
     rows = 3
     sigBlocks = [[None for i in range(rows)] for j in range(cols)]
     backplane = None 
     f = None
     def __init__(self):
-        pass
-    def evaluate(self):
-        map(Buffer.pull,self.bi)
-        for col in sigBlocks:
-            for block in col:
-                block.pull()
-                block.execute()
-        map(Buffer.pull,self.bo)
+        self.bi = [Buffer(),Buffer(),Buffer()]
+        self.bo = [Buffer(),Buffer(),Buffer()]
 
-    def setBackplane(self,bp):
-        self.backplane = bp
-
-    def connectTo(self,local_buf_index,brd,remote_buf_index):
+    def connectToBoard(self,localBufIndex,brd,remoteBufIndex):
         if brd in self.backplane.boards:
-            self.bo[local_buf_index].setOutput(brd.bi[remote_buf_index])
-            brd.bi[remote_buf_index].setInput(self.bo[local_buf_index])
+            self.bo[localBufIndex].setOutput(brd.bi[remoteBufIndex])
+            brd.bi[remoteBufIndex].setInput(self.bo[localBufIndex])
         else:
             pass
             # can't connect to boards they're not in your backplane
+
+    def connectSensor(self, localBufIndex, sensor):
+        sensor.bo.setOutput(self.bi[localBufIndex])
+        self.bi[localBufIndex].setInput(sensor.bo)
+
+    def connectActuator(self, localBufIndex, actuator):
+        actuator.bi.setInput(self.bo[localBufIndex])
+        self.bo[localBufIndex].setOutput(actuator.bi)
 
     def disconnect(self):
         for buf in self.bi:
@@ -121,18 +122,22 @@ class Board:
         for buf in self.bo:
             buf.oPort = None
         self.backplane = None
+
+    @staticmethod
     def checkindex(indices):
         map(checkindex,indices)
+    @staticmethod
     def checkindex(ind):
         if ind > 2:
             pass # raise no such index error
         if ind < 0:
             pass
+
     def setSigBlock(self,sigblock,col,row):
         self.checkindex([col,row])
         self.sigBlocks[col][row] = sigblock
 
-    def rmSigBlock(self,sigblock,row,col):
+    def rmSigBlock(self,sigblock,col,row):
         sb = self.sigBlocks[col][row]
         if sb is not None:
             sb.disconnect()
@@ -143,14 +148,33 @@ class Board:
         sigblock = self.sigBlocks[0][sigBlockRow]
         self.bi[biIndex].setOutput(sigblock.bi[sigBlockInputIndex])
         sigblock.bi[sigBlockInputIndex].setInput(self.bi[biIndex])
-        pass
 
     def connectFromSigBlock(self, boIndex, sigBlockRow,sigBlockOutputIndex):
         # can only connect the last column of sigblocks to board outputs
         sigblock = self.sigBlocks[2][sigBlockRow]
         self.bo[boIndex].setInput(sigblock.bo[sigBlockOutputIndex])
         sigblock.bo[sigBlockOutputIndex].setOutput(self.bo[boIndex])
-        pass
+
+    def interconnectSB(self, outputSignalBlockCol, outputSignalBlockRow, outputSignalBlockIndex, 
+        inputSignalBlockCol, inputSignalBlockRow, inputSignalBlockIndex):
+        osb = self.sigBlocks[outputSignalBlockCol][outputSignalBlockRow]
+        isb = self.sigBlocks[inputSignalBlockCol][inputSignalBlockRow]
+        osbbuf = osb.bo[outputSignalBlockIndex]
+        isbbuf = isb.bi[inputSignalBlockIndex]
+        osbbuf.setOutput(isbbuf)
+        isbbuf.setInput(osbbuf)
+
+    def connectIpFromOp(self,iIndex,sb,oIndex):
+        self.bi[iIndex].setInput(sb.bo[oIndex])
+        sb.bo[oIndex].setOutput(self.bi[iIndex])
+
+    def evaluate(self):
+        map(Buffer.pull,self.bi)
+        for col in self.sigBlocks:
+            for block in col:
+                if block is not None:
+                    block.evaluate()
+        map(Buffer.pull,self.bo)
 
 
 class Backplane:
@@ -158,67 +182,97 @@ class Backplane:
     def __init__(self):
         pass
     def setBoard(self,brd,slot):
-        if boards[slot] == None:
+        if self.boards[slot] == None:
             if brd.backplane == None:
                 self.boards[slot] = brd
                 brd.backplane = self
 
     def clrSlot(self,slot):
-        if boards[slot] != None:
+        if self.boards[slot] != None:
             boards[slot].disconnect()
             self.boards[slot] = None
         else:
             pass # already clear
 
     def rmBoard(self,brd):
-        if brd in boards:
+        if brd in self.boards:
             brd.disconnect()
             boards[boards.indexOf(brd)] = None
         else:
             pass # no board to remove
 
     def tick(self):
-        for board in boards:
-            board.evaluate()
+        for board in self.boards:
+            if board is not None:
+                board.evaluate()
 
 class SigBlock:
     bi = []
     bo = []
     f = None
+    board = None
     def __init__(self, nInput, nOutput, function):
         self.bi = [Buffer() for i in range(nInput)]
         self.bo = [Buffer() for i in range(nOutput)]
         self.f = function
-    def execute(self):
-        result = f(*map(Buffer.get(),bi))
-        map(Buffer.set,bo,result)
+    def setBoard(self, board):
+        self.board = board
+    def evaluate(self):
+        for b in self.bi:
+            b.pull()
+        result = self.f(*map(Buffer.get,self.bi))
+        if len(result)>1:
+            map(Buffer.set,self.bo,result)
+        else:
+            self.bo[0].set(result)
     def disconnect(self):
         pass
-    def connectOpToIp(self,oIndex,sb,iIndex):
-        self.bo[oIndex].setOutput(sb.bi[iIndex])
-        sb.bi[iIndex].setInput(self.bo[oIndex])
-    def connectIpFromOp(self,iIndex,sb,oIndex):
-        self.bi[iIndex].setInput(sb.bo[oIndex])
-        sb.bo[oIndex].setOutput(self.bi[iIndex])
 
-# Could use introspection to make these blocks maybe?
-class SigBlocks:
-    add = SigBlock(2,1,Signal.add)
-    sub = SigBlock(2,1,Signal.sub)
-    mul = SigBlock(2,1,Signal.mul)
-    div = SigBlock(2,1,Signal.div)
-    avg = SigBlock(2,1,Signal.avg)
-    s_and = SigBlock(2,1,Signal.s_and)
-    s_or = SigBlock(2,1,Signal.s_or)
-    s_xor = SigBlock(2,1,Signal.s_xor)
-    s_nand = SigBlock(2,1,Signal.s_nand)
-    s_not = SigBlock(1,1,Signal.s_not)
-    thru1 = SigBlock(1,1,lambda x: x)
-    thru2 = SigBlock(2,2,lambda x,y: x,y)
-    thru3 = SigBlock(3,3,lambda x,y,z: x,y,z)
 
-class Sensor:
-    pass
+    # Could use introspection on signal to make these blocks maybe?
+    @classmethod
+    def add(cls): return cls(2,1,Signal.add)
+    @classmethod
+    def sub(cls): return cls(2,1,Signal.sub)
+    @classmethod
+    def mul(cls): return cls(2,1,Signal.mul)
+    @classmethod
+    def div(cls): return cls(2,1,Signal.div)
+    @classmethod
+    def avg(cls): return cls(2,1,Signal.avg)
+    @classmethod
+    def s_and(cls): return cls(2,1,Signal.s_and)
+    @classmethod
+    def s_or(cls): return cls(2,1,Signal.s_or)
+    @classmethod
+    def s_xor(cls): return cls(2,1,Signal.s_xor)
+    @classmethod
+    def s_nand(cls): return cls(2,1,Signal.s_nand)
+    @classmethod
+    def s_not(cls): return cls(1,1,Signal.s_not)
+    @classmethod
+    def thru1(cls): return cls(1,1,lambda x: x)
+    @classmethod
+    def thru2(cls): return cls(2,2,lambda x,y: (x,y))
+    @classmethod
+    def thru3(cls): return cls(3,3,lambda x,y,z: (x,y,z))
+    @classmethod
+    def fork(cls): return cls(1,2,lambda x: (x,x))
+    @classmethod
+    def pfrk(cls): return cls(1,3,lambda x: (x,x,x))
 
-class Actuator:
-    pass
+
+class ConstSensor:
+    bo = None
+    def __init__(self,value):
+        self.bo = Buffer()
+        self.bo.set(Signal(value))
+
+class AlertActuator:
+    # set up some monitoring on a buffer, maybe?
+    bi = None
+    def __init__(self):
+        self.bi = Buffer()
+    def alert(self):
+        self.bi.pull()
+        print(self.bi.get().value)
