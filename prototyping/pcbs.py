@@ -77,14 +77,14 @@ class Buffer:
         self.iPort = port
     def setOutput(self,port):
         self.oPort = port
-    def set(self,sig):
-        self.sig = sig
     def pull(self):
         if self.iPort is not None:
            self.set(self.iPort.get())
     def push(self):
         if self.oPort is not None:
             self.oPort.set(self.sig)
+    def set(self,sig):
+        self.sig = sig
     def get(self):
         return self.sig
 
