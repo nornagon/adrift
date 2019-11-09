@@ -9,13 +9,15 @@ trait CircuitPort {
 }
 
 case class CircuitSignal(signal: Int) extends Message {
-  def +(cs: CircuitSignal): CircuitSignal = CircuitSignal(cs.signal + signal).clamp
-  def -(cs: CircuitSignal): CircuitSignal = CircuitSignal(signal - cs.signal).clamp
-  def *(cs: CircuitSignal): CircuitSignal = CircuitSignal(cs.signal * signal).clamp
-  def /(cs: CircuitSignal): CircuitSignal = CircuitSignal((signal.toDouble / cs.signal.toDouble).round.toInt).clamp
+  def +(cs: CircuitSignal): CircuitSignal = CircuitSignal(cs.signal + signal)
+  def -(cs: CircuitSignal): CircuitSignal = CircuitSignal(signal - cs.signal)
+  def *(cs: CircuitSignal): CircuitSignal = CircuitSignal(cs.signal * signal)
+  def /(cs: CircuitSignal): CircuitSignal = CircuitSignal((signal.toDouble / cs.signal.toDouble).round.toInt)
   def &(cs: CircuitSignal): CircuitSignal = CircuitSignal(this.toBin && cs.toBin)
   def |(cs: CircuitSignal): CircuitSignal = CircuitSignal(this.toBin || cs.toBin)
-  // def ^(cs: CircuitSignal): CircuitSignal = BoolToCS(signal.toBin || cs.toBin)
+  def ^(cs: CircuitSignal): CircuitSignal = CircuitSignal(this.toBin ^ cs.toBin)
+  def not(): CircuitSignal = CircuitSignal(!this.toBin)
+  
   def clamp(value: Int): Int = {
     if (value > 255) {255}
     else if (value < 0){0}
@@ -43,9 +45,9 @@ case object CircuitSignal {
 
 
 case class CircuitBoard(
-  inputs: List[CircuitPort],
-  outputs: List[CircuitPort],
-  sigBlocks: List[List[SignalBlock]]
+  inputs: Seq[CircuitPort],
+  outputs: Seq[CircuitPort],
+  sigBlocks: Seq[Seq[SignalBlock]]
   ) extends Behavior {
   override def receive(
     state: GameState,
@@ -55,7 +57,6 @@ case class CircuitBoard(
     case d: CircuitSignal => {}
   }
 }
-
 
 case class CircuitBuffer(
   var iPort: Option[CircuitPort],
@@ -110,11 +111,51 @@ case class SigSub() extends SignalBlock {
   }
 }
 
+case class SigMul() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal * inputBuffers(1).signal)
+  }
+}
+
+case class SigDiv() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal / inputBuffers(1).signal)
+  }
+}
+
 case class SigAnd() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
     outputBuffers(0).setSignal(inputBuffers(0).signal & inputBuffers(1).signal)
+  }
+}
+
+case class SigOr() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal | inputBuffers(1).signal)
+  }
+}
+
+case class SigXor() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal ^ inputBuffers(1).signal)
+  }
+}
+
+case class SigNot() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal.not)
   }
 }
 
