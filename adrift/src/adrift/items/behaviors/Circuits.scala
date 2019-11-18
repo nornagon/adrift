@@ -40,6 +40,7 @@ case object CircuitSignal {
   }
 }
 
+case class PortSignal(signal: CircuitSignal, portIndex: Int) extends Message {}
 
 case class CircuitBoard(
   inputs: Seq[CircuitPort],
@@ -51,7 +52,15 @@ case class CircuitBoard(
     self: Item,
     message: Message
   ): Unit = message match {
-    case d: CircuitSignal => {}
+    case d: PortSignal => {
+      inputs(d.portIndex).setSignal(d.signal)
+    }
+    case e: Evaluate => {
+      evaluate()
+    }
+  }
+  def evaluate() = {
+    // go through all the signalblocks and evaluate them, set the output ports correctly
   }
 }
 
