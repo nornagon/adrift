@@ -17,7 +17,7 @@ case class CircuitSignal(signal: Int) extends Message {
   def |(cs: CircuitSignal): CircuitSignal = CircuitSignal(this.toBin || cs.toBin)
   def ^(cs: CircuitSignal): CircuitSignal = CircuitSignal(this.toBin ^ cs.toBin)
   def not(): CircuitSignal = CircuitSignal(!this.toBin)
-  
+  def avg(cs: CircuitSignal): CircuitSignal = CircuitSignal((signal + cs.signal)/2)
   def clamp(value: Int): Int = {
     if (value > 255) {255}
     else if (value < 0){0}
@@ -29,9 +29,6 @@ case class CircuitSignal(signal: Int) extends Message {
     else {false}
   }
   def toBin(): Boolean = SigToBin(signal)
-//   def avg(sig1: CircuitSignal, sig2: CircuitSignal): CircuitSignal = {
-//     CircuitSignal(clamp((sig1.signal + sig2.signal)/2))
-//   }
 }
 
 case object CircuitSignal {
@@ -151,6 +148,14 @@ case class SigXor() extends SignalBlock {
   }
 }
 
+case class SigNand() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal((inputBuffers(0).signal & inputBuffers(1).signal).not)
+  }
+}
+
 case class SigNot() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
@@ -159,20 +164,48 @@ case class SigNot() extends SignalBlock {
   }
 }
 
-// case object SignalBlock {
-//     def add(): SignalBlock(2,1,CircuitSignal.add)
-//     def sub(): SignalBlock(2,1,CircuitSignal.sub)
-//     def mul(): SignalBlock(2,1,CircuitSignal.mul)
-//     def div(): SignalBlock(2,1,CircuitSignal.div)
-//     def avg(): SignalBlock(2,1,CircuitSignal.avg)
-//     def s_and(): SignalBlock(2,1,CircuitSignal.s_and)
-//     def s_or(): SignalBlock(2,1,CircuitSignal.s_or)
-//     def s_xor(): SignalBlock(2,1,CircuitSignal.s_xor)
-//     def s_nand(): SignalBlock(2,1,CircuitSignal.s_nand)
-//     def s_not(): SignalBlock(1,1,CircuitSignal.s_not)
-//     def thru1(): SignalBlock(1,1,lambda x: x)
-//     def thru2(): SignalBlock(2,2,lambda x,y: (x,y))
-//     def thru3(): SignalBlock(3,3,lambda x,y,z: (x,y,z))
-//     def fork(): SignalBlock(1,2,lambda x: (x,x))
-//     def pfrk(): SignalBlock(1,3,lambda x: (x,x,x))
-// }
+case class SigFork() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers(1).setSignal(inputBuffers(0).signal)
+  }
+}
+
+case class SigFork3() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer(), CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers(1).setSignal(inputBuffers(0).signal)
+    outputBuffers(2).setSignal(inputBuffers(0).signal)
+  }
+}
+
+case class SigThru() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal)
+  }
+}
+
+case class SigThru2() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers(1).setSignal(inputBuffers(1).signal)
+  }
+}
+
+case class SigThru3() extends SignalBlock {
+  val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer(), CircuitBuffer())
+  val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer(), CircuitBuffer())
+  def evaluate(): Unit = {
+    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers(1).setSignal(inputBuffers(1).signal)
+    outputBuffers(2).setSignal(inputBuffers(2).signal)
+  }
+}
