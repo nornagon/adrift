@@ -24,5 +24,11 @@ class Grid[T](val width: Int, val height: Int)(initial: => T) {
   def contains(x: Int, y: Int): Boolean = x >= 0 && x < width && y >= 0 && y < height
   def contains(pos: (Int, Int)): Boolean = contains(pos._1, pos._2)
   def indices: IndexedSeq[(Int, Int)] = for (y <- 0 until height; x <- 0 until width) yield (x, y)
+
+  override def toString: String = {
+    "Grid(" + (for (y <- 0 until height) yield {
+      (for (x <- 0 until width) yield this(x, y).toString).mkString(", ")
+    }).mkString("\n") + ")"
+  }
 }
 

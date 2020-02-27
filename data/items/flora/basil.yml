@@ -5,7 +5,7 @@
   display: PLANT_BUSH
   behavior:
     - PerennialPlant:
-        productionCarbonThreshold: 1
+        productionCarbonThreshold: 0.4
         produces:
           - { item: basil leaf, weight: 10 }
           - basil flower
@@ -16,10 +16,10 @@
   display: PLANT_LEAF
   behavior:
     - Leaf:
-        chanceToDie: 0.001
+        chanceToDie: 0.0001
         becomes: withered leaf
         carbonAbsorptionChance: 0.1
-        carbonAbsorptionChunk: 0.1
+        carbonAbsorptionChunk: 0.01
 
 - type: item
   name: withered leaf

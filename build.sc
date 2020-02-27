@@ -40,4 +40,9 @@ object adrift extends ScalaModule {
       "jsyn-20171016.jar"
     )
   )
+
+  object test extends Tests {
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest:0.7.1")
+    def testFrameworks = Seq("utest.runner.Framework")
+  }
 }

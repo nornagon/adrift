@@ -34,6 +34,9 @@ case class GasComposition(oxygen:Double, carbonDioxide:Double, nitrogen:Double) 
     def minPressure(): Double = {
         math.min(math.min(oxygen,carbonDioxide),nitrogen)
     }
+
+    override def toString: String =
+        s"GC(O2 = ${oxygen}, CO2 = ${carbonDioxide}, N2 = ${nitrogen}"
 }
 
 sealed trait UnitGas
