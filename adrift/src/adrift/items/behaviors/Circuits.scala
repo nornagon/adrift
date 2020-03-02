@@ -41,6 +41,7 @@ case object CircuitSignal {
 }
 
 case class PortSignal(signal: CircuitSignal, portIndex: Int) extends Message {}
+case class Evaluate() extends Message {}
 
 case class CircuitBoard(
   inputs: Seq[CircuitPort],
