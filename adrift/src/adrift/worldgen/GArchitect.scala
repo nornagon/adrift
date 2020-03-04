@@ -1,5 +1,7 @@
 package adrift.worldgen
 import util.Random
+import adrift.RandomImplicits._
+
 
 class GArchitect {
 // A genetic algorithm Architect.
@@ -70,7 +72,7 @@ case object GArchitect {
 //  val lounge = RoomType(10,10,20)
 
   // Science
-//  val astronomy = RoomType(10,1,3)
+  //  val astronomy = RoomType(10,1,3)
 
   // Command
   val command:RoomType = new RoomType(10,1,1)
@@ -140,8 +142,52 @@ case object GArchitect {
     roomlist.length*2 - xs.distinct.length - ys.distinct.length
   }
 
-  def evaluate(roomlist:Seq[Room],metrics:Seq[(Seq[Room]=>Int)]): Int = {
-    metrics.map(m=> m(roomlist)).sum
+  def evaluate(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Double] = {
+    // first wec'll apply all our metric calculations to our population.
+    val rawEvaluation = metrics.map(m=> {
+      population.map(rl => m._1(rl))
+    })
+    // now lets normalize and reweight our metrics.
+    // basically, right now each metric is some integer, but some metrics might be orders of magnitude larger or smaller than others
+    // and that will cause them to disproportionately affect our selection.  So we will normalize this population so the best are '1' and the worst is '0' for each metric
+    // then we can scale each based on how important we want it to be in our final mating evaluation.
+    val weights = metrics.map(m=> m._2)
+    rawEvaluation.zip(weights).map(ev => {
+      // there's probably a cleaner / more idiomatic way to do this.
+      val e = ev._1
+      val v = ev._2
+      e.map(v => (v-e.min).toDouble / (e.max - e.min).toDouble ).sum * v
+    })
   }
 
+  def mutate(population:Seq[Seq[Room]], rate:Int): Unit ={
+    // in this case, rate is just the maximum distance we might move a room around.  Likely when we run this we'll start
+    // with a high rate and gradually reduce it, simulated annealing style
+    def scoot(coords:Coordinates,amount:Int) = {
+      Coordinates(coords.x + random.nextInt(amount*2)-amount,
+                 coords.y + random.nextInt(amount*2)-amount)
+    }
+    population.map( individual => individual.map( room => Room(room.roomType,scoot(room.coords,rate))))
+  }
+
+  def crossover(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Seq[Room]] = {
+    // individuals in the population who are more fit are more likely to reproduce, so we need some metrics.
+    val parents = evaluate(population, metrics).zip(population).sortBy{ elem => math.pow(random.nextDouble(), 1 / elem._1) }.take(population.length/2)
+    parents.flatMap {
+      parent1 => {
+        val parent2 = random.chooseFrom(parents)(p => p._1)
+        mate(parent1._2, parent2._2)
+      }
+    }
+  }
+  def mate(parent1:Seq[Room], parent2:Seq[Room]): Seq[Seq[Room]] = {
+    val roomtypes = parent1.map(r => r.roomType).distinct
+    List(1,2).map(_ => roomtypes.flatMap(rt => {
+      val p1Rooms = parent1.filter(r=> r.roomType==rt)
+      val p2Rooms = parent2.filter(r=> r.roomType==rt)
+      val numNewRooms = random.between(p1Rooms.length,p2Rooms.length)
+      val roomPool = p1Rooms ++ p2Rooms
+      roomPool.sortBy(_ => random.nextDouble()).take(numNewRooms)
+    }))
+  }
 }
