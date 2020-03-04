@@ -53,17 +53,26 @@ Less simple:
 
  */
 
+case class ItemPart(kind: ItemKind, count: Int, operation: ItemOperation)
+
 case class ItemKind(
   name: String,
   description: String,
-  parts: Seq[((ItemKind, Int), ItemOperation)],
+  parts: Seq[ItemPart],
   display: String,
   behaviors: Seq[() => Behavior]
 ) {
   def generateItem(): Item = {
     Item(
       kind = this,
-      parts = parts.flatMap { case ((part, count), operation) => Seq.fill(count)(part.generateItem()) },
+      parts = parts.flatMap { case ItemPart(partKind, count, operation) => Seq.fill(count)(partKind.generateItem()) },
+      behaviors = mutable.Buffer.empty ++ behaviors.map(_())
+    )
+  }
+  def fromParts(parts: Seq[Item]): Item = {
+    Item(
+      kind = this,
+      parts = parts,
       behaviors = mutable.Buffer.empty ++ behaviors.map(_())
     )
   }

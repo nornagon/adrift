@@ -8,7 +8,7 @@ import org.lwjgl.glfw.GLFW._
 class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
   var button = 0
 
-  val operations = item.kind.parts.map(_._2).toSet
+  val operations = item.kind.parts.map(_.operation).toSet
   val relevantTools = state.nearbyItems.filter(tool =>
     tool.behaviors.collect { case t: Tool => t.op }.toSet
       .intersect(operations.map(_.id))

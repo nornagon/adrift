@@ -4,7 +4,7 @@ import java.nio.file.{FileSystems, Files, Path}
 import java.util.stream.Collectors
 
 import adrift.Population.Table
-import adrift.items.{Behavior, ItemKind, ItemOperation}
+import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe.generic.extras.semiauto._
@@ -220,7 +220,8 @@ object Data {
             i.name,
             i.description,
             i.parts.map { p =>
-              ((itemForId(p.`type`), p.count), operations.getOrElse(p.disassembled_with, throw new RuntimeException(s"item '${i.name}' specified an operation '${p.disassembled_with}' which doesn't seem to exist")))
+              val operation = operations.getOrElse(p.disassembled_with, throw new RuntimeException(s"item '${i.name}' specified an operation '${p.disassembled_with}' which doesn't seem to exist"))
+              ItemPart(itemForId(p.`type`), p.count, operation)
             },
             display = i.display,
             behaviors = behaviorGenerators

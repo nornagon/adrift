@@ -14,6 +14,8 @@ case class Tool(op: String) extends Behavior {
         t.ok = true
         state.sendMessage(self, Message.ToolUsed(t.op))
       }
+    case t: Message.Provides if t.op.id == op =>
+      t.provides = true
     case _ =>
   }
 }

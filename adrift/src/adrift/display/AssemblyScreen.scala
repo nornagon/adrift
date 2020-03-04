@@ -15,9 +15,9 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case GLFW_KEY_K | GLFW_KEY_UP => selectedIdx = (selectedIdx + buildable.size - 1) % buildable.size
         case GLFW_KEY_ENTER =>
 
-          val (kind, components) = buildable(selectedIdx)
+          val (kind, ops) = buildable(selectedIdx)
 
-          display.pushAction(Action.Assemble(kind, components))
+          display.pushAction(Action.Assemble(kind, ops))
           display.popScreen()
         case _ =>
       }

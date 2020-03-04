@@ -17,6 +17,7 @@ object Message {
 
   case class UseTool(op: ItemOperation, var ok: Boolean = false) extends Message
   case class ToolUsed(op: ItemOperation) extends Message
+  case class Provides(op: ItemOperation, var provides: Boolean = false) extends Message
 
   case class IsFunctional(var functional: Boolean = true) extends Message
 
@@ -38,5 +39,4 @@ object Message {
 
   case class Eat(var calories: Int = 0) extends Message
   case class IsEdible(var edible: Boolean = false) extends Message
-
 }
