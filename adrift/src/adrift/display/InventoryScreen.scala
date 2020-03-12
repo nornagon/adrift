@@ -15,6 +15,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     val nearbyItems = state.nearbyItems
+    if (nearbyItems.isEmpty) return
     if (action == GLFW_PRESS || action == GLFW_REPEAT)
       key match {
         case GLFW_KEY_J | GLFW_KEY_DOWN => selectedIdx = (selectedIdx + 1) % nearbyItems.size

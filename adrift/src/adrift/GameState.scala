@@ -75,12 +75,17 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         var anyRemoved = false
         item.parts = item.parts.filter { p =>
           val disassembleOp = item.kind.parts.find(_.kind == p.kind).get.operation
-          val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
-          if (tool.nonEmpty) {
+          if (disassembleOp.id == "HANDLING") {
             items.put(p, OnFloor(player._1, player._2))
-            anyRemoved = true
+            false
+          } else {
+            val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
+            if (tool.nonEmpty) {
+              items.put(p, OnFloor(player._1, player._2))
+              anyRemoved = true
+            }
+            tool.isEmpty
           }
-          tool.isEmpty
         }
 
         if (item.parts.isEmpty) {

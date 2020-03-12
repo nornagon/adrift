@@ -8,7 +8,7 @@ import org.lwjgl.glfw.GLFW._
 class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
   var button = 0
 
-  val operations = item.kind.parts.map(_.operation).toSet
+  val operations = item.kind.parts.map(_.operation).filterNot(_.id == "HANDLING").toSet
   val relevantTools = state.nearbyItems.filter(tool =>
     tool.behaviors.collect { case t: Tool => t.op }.toSet
       .intersect(operations.map(_.id))
@@ -26,7 +26,7 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) exte
         case GLFW_KEY_H | GLFW_KEY_LEFT => button = (button - 1 + 2) % 2
         case GLFW_KEY_ENTER =>
           if (button == 1) {
-            if (canDisassemble || true) {
+            if (canDisassemble) {
               display.popScreen()
               display.popScreen()
               display.pushAction(Action.Disassemble(item))
