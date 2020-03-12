@@ -121,3 +121,18 @@
     1,2 down: DOOR
   rotatable: true
 
+- type: room
+  name: generator room
+  layout: |
+    .....
+    G...G
+    .....
+    G...G
+    .....
+  defs:
+    .: { terrain: floor }
+    G: { items: [main ship power generator] }
+  connections:
+    "0,0 down": DOOR
+    "0,0 up": DOOR
+  rotatable: true

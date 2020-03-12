@@ -19,6 +19,7 @@
   - {room: cryopods, number: "10-20"}
   - {room: air mix room, number: "5-10"}
   - {room: airlock, number: "7-10"}
+  - {room: generator room, number: "1-2"}
   - {room: electronics shop}
   - {room: lab }
   - {room: ADC hub }
