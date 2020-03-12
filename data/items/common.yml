@@ -14,6 +14,7 @@
   behavior:
     - Affixed: {}
     - DoorOpener: {}
+    - UsesElectricity: { perUse: 30 }
 
 - type: item
   name: mounted presence sensor

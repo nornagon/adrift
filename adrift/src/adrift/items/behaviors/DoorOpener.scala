@@ -13,12 +13,12 @@ case class DoorOpener(
     message: Message
   ): Unit = message match {
     case Activate if !isOpen =>
-      if (state.sendMessage(self, Message.IsFunctional()).functional) {
+      if (state.isFunctional(self)) {
         isOpen = true
         state.sendMessage(self, Message.ToolUsed(null))
       }
     case Deactivate =>
-      if (state.sendMessage(self, Message.IsFunctional()).functional) {
+      if (state.isFunctional(self)) {
         isOpen = false
         state.sendMessage(self, Message.ToolUsed(null))
       }

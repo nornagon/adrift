@@ -1,5 +1,5 @@
 package adrift
-import adrift.items.{Item, ItemKind}
+import adrift.items.{Item, ItemKind, ItemOperation}
 sealed trait Action {
 
 }
@@ -7,7 +7,8 @@ sealed trait Action {
 object Action {
   case class PlayerMove(dx: Int, dy: Int) extends Action
   case class Disassemble(item: Item) extends Action
-  case class Assemble(item: ItemKind, components: Seq[Item]) extends Action
+  case class AssemblyAction(tool: Item, part: Item, operation: ItemOperation)
+  case class Assemble(item: ItemKind, operations: Seq[AssemblyAction]) extends Action
   case class PickUp(item: Item) extends Action
   case class PutDown(item: Item) extends Action
   case class Plug(item: Item, into: Item) extends Action

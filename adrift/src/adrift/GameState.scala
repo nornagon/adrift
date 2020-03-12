@@ -1,6 +1,8 @@
 package adrift
 
+import adrift.Action.AssemblyAction
 import adrift.RandomImplicits._
+import adrift.items.Message.{IsFunctional, Provides}
 import adrift.items._
 import adrift.items.behaviors.{PartiallyDisassembled, Tool}
 
@@ -51,7 +53,6 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   def elapse(durationSec: Int): Unit = {
     for (_ <- 0 until durationSec) {
       items.all.foreach(sendMessage(_, Message.Tick))
-      circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
       val start = System.nanoTime()
       updateHeat()
       println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
@@ -73,13 +74,18 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
       case Action.Disassemble(item) =>
         var anyRemoved = false
         item.parts = item.parts.filter { p =>
-          val disassembleOp = item.kind.parts.find(_._1._1 == p.kind).get._2
-          val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
-          if (tool.nonEmpty) {
+          val disassembleOp = item.kind.parts.find(_.kind == p.kind).get.operation
+          if (disassembleOp.id == "HANDLING") {
             items.put(p, OnFloor(player._1, player._2))
-            anyRemoved = true
+            false
+          } else {
+            val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
+            if (tool.nonEmpty) {
+              items.put(p, OnFloor(player._1, player._2))
+              anyRemoved = true
+            }
+            tool.isEmpty
           }
-          tool.isEmpty
         }
 
         if (item.parts.isEmpty) {
@@ -94,16 +100,21 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
           putMessage(s"You don't have the tools to do that.")
         }
 
-      case Action.Assemble(itemKind, components) =>
-        components.foreach(items.delete)
-        val newItem = Item(
-          kind = itemKind,
-          parts = components,
-          behaviors = mutable.Buffer.empty
-        )
-        elapse(10)
-        items.put(newItem, OnFloor(player._1, player._2))
-        putMessage(s"You make a ${itemDisplayName(newItem)}.")
+      case Action.Assemble(itemKind, ops) =>
+        val ok = ops.forall {
+          case AssemblyAction(tool, part, op) =>
+            elapse(1)
+            sendMessage(tool, Message.UseTool(op)).ok
+        }
+        if (ok) {
+          val parts = ops.map(_.part)
+          parts.foreach(items.delete)
+          val newItem = itemKind.fromParts(parts)
+          items.put(newItem, OnFloor(player._1, player._2))
+          putMessage(s"You make a ${itemDisplayName(newItem)}.")
+        } else {
+          putMessage(s"Your tools fail you.")
+        }
 
       case Action.PickUp(item) =>
         if (!sendMessage(item, Message.PickUp()).ok) {
@@ -284,6 +295,10 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     } broadcastToLocation(OnFloor(x, y), Message.PlayerMove(player._1, player._2))
   }
 
+  def isFunctional(p: Item): Boolean = {
+    sendMessage(p, IsFunctional()).functional && p.parts.forall(isFunctional)
+  }
+
   def smash(p: Item): Unit = {
     if (p.parts.isEmpty) {
       if (random.nextFloat() < 0.1) {
@@ -344,23 +359,43 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     onFloor ++ items.lookup(InHands()) ++ items.lookup(Worn())
   }
 
-  def buildableItems2(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
-    def isBuildable(kind: ItemKind): Option[Seq[Item]] = {
-      val partsByKind = kind.parts.groupBy(_._1._1).map {
-        case (partKind, xs) =>
-          val qty = xs.map(_._1._2).sum
-          val parts = availableItems.filter(_.kind == partKind).take(qty)
-          val ops = xs.map(_._2).distinct
-          if (parts.size == qty && ops.forall(op => availableItems.exists(_.behaviors.exists { case t: Tool if t.op == op.id => true; case _ => false })))
-            Some(parts)
-          else None
-      }.toSeq
-      if (partsByKind.forall(_.nonEmpty))
-        Some(partsByKind.flatten.flatten)
-      else
-        None
+  def buildableItems2(availableItems: Seq[Item]): Seq[(ItemKind, Seq[AssemblyAction])] = {
+    def isBuildable(kind: ItemKind): Option[Seq[AssemblyAction]] = {
+      def providesOperation(operation: ItemOperation, item: Item): Boolean =
+        sendMessage(item, Provides(operation)).provides
+      def toolsForOp(operation: ItemOperation): Seq[Item] =
+        availableItems.filter(providesOperation(operation, _))
+      Some(kind.parts.groupBy(_.kind).flatMap {
+        case (partKind, parts) =>
+          val requiredQty = parts.map(_.count).sum
+          val candidateComponents = availableItems.filter(_.kind == partKind).take(requiredQty)
+          if (candidateComponents.size < requiredQty) return None
+          val requiredOps = parts.map(_.operation).distinct
+          val candidateTools: Map[ItemOperation, Seq[Item]] =
+            requiredOps.map { op => op -> toolsForOp(op) }(collection.breakOut)
+          if (candidateTools.values.exists(_.isEmpty)) {
+            return None
+          }
+          // NB. parts and tools are assumed to be non-overlapping
+          val tools = candidateTools.mapValues(_.head)
+
+          parts.flatMap(part => Seq.fill(part.count)(part.operation)).zip(candidateComponents).map {
+            case (op, item) =>
+              AssemblyAction(tools(op), item, op)
+          }
+
+          /*val operations = candidateComponents.zip(parts.map(_.operation)).map {
+            case (item, op) => AssemblyAction(tools(op), item, op)
+          }*/
+      }.toSeq)
     }
-    (for (kind <- data.items.values; if kind.parts.nonEmpty; parts <- isBuildable(kind)) yield (kind, parts))(collection.breakOut)
+
+    val x = (for {
+      kind <- data.items.values
+      if kind.parts.nonEmpty
+      operations <- isBuildable(kind)
+    } yield (kind, operations)).toSeq
+    x
   }
 
   def buildableItems(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
