@@ -16,13 +16,15 @@
     - { type: flex component, count: 21, disassembled_with: SOLDERING }
     - { type: microprocessor, count: 1, disassembled_with: SOLDERING }
   display: MEDIUM_BOX
+  behavior:
+    - ProvidesShipPower: { circuit: "main" }
 
 
-- { type: item, name: "M3A power supply", description: "Ptronics smallest power supply is perfect for a phone or cat toy.", display: SMALL_BOX}
+- { type: item, name: "M3A power supply", description: "Ptronics' smallest power supply is perfect for a phone or cat toy.", display: SMALL_BOX}
 - { type: item, name: "M5A power supply", description: "Another small supply from Ptronics with more voltage and small amps.", display: SMALL_BOX }
 - { type: item, name: "M7A power supply", description: "A small high voltage power supply.", display: SMALL_BOX }
-- { type: item, name: "M3C power supply", description: "MegaMicro made this supply to fill a gap in Ptronics line of power supplies.", display: MEDIUM_BOX }
-- { type: item, name: "M5C power supply", description: "Ptronics most popular power supply. Used as bricks in some countries.", display: MEDIUM_BOX }
+- { type: item, name: "M3C power supply", description: "MegaMicro made this supply to fill a gap in Ptronics' line of power supplies.", display: MEDIUM_BOX }
+- { type: item, name: "M5C power supply", description: "Ptronics' most popular power supply. Used as bricks in some countries.", display: MEDIUM_BOX }
 - { type: item, name: "M7C power supply", description: "If you touch this power supply wrong, you'll probably die.", display: MEDIUM_BOX }
 - { type: item, name: "M3E power supply", description: "A beefy low voltage, high amperage supply from your friends at Ptronics.", display: LARGE_BOX }
 - { type: item, name: "M5E power supply", description: "An off-brand copy of the popular Ptronics M5E unit... someone was trying to save money here.", display: LARGE_BOX }
@@ -127,4 +129,12 @@
   display: LARGE_EQUIPMENT
   behavior:
     - GeneratesShipPower: { circuit: secondary, amountPerTick: 50 }
+    - Affixed: {}
+
+- type: item
+  name: main ship power generator
+  description: temporary test item for testing ship power components
+  display: LARGE_EQUIPMENT
+  behavior:
+    - GeneratesShipPower: { circuit: main, amountPerTick: 50 }
     - Affixed: {}

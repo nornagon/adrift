@@ -53,6 +53,8 @@ object Behavior {
     case b: Tool => Encoder[Tool].apply(b)
     case b: HoldsCharge => Encoder[HoldsCharge].apply(b)
     case b: UsesElectricity => Encoder[UsesElectricity].apply(b)
+    case b: ProvidesShipPower => Encoder[ProvidesShipPower].apply(b)
+    case b: GeneratesShipPower => Encoder[GeneratesShipPower].apply(b)
     case b: Heater => Encoder[Heater].apply(b)
     case b: Cable => Encoder[Cable].apply(b)
     case b: Thermostat => Encoder[Thermostat].apply(b)

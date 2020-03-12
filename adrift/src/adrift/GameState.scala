@@ -53,7 +53,6 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   def elapse(durationSec: Int): Unit = {
     for (_ <- 0 until durationSec) {
       items.all.foreach(sendMessage(_, Message.Tick))
-      circuits.values.foreach { c => c.stored = math.max(0, c.stored - 100) }
       val start = System.nanoTime()
       updateHeat()
       println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
