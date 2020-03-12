@@ -2,7 +2,7 @@ package adrift
 
 import adrift.Action.AssemblyAction
 import adrift.RandomImplicits._
-import adrift.items.Message.Provides
+import adrift.items.Message.{IsFunctional, Provides}
 import adrift.items._
 import adrift.items.behaviors.{PartiallyDisassembled, Tool}
 
@@ -288,6 +288,10 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
       x <- player._1 - 2 to player._1 + 2
       if isVisible(x, y)
     } broadcastToLocation(OnFloor(x, y), Message.PlayerMove(player._1, player._2))
+  }
+
+  def isFunctional(p: Item): Boolean = {
+    sendMessage(p, IsFunctional()).functional && p.parts.forall(isFunctional)
   }
 
   def smash(p: Item): Unit = {

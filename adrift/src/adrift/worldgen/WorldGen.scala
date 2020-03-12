@@ -5,6 +5,7 @@ import adrift.RandomImplicits._
 import adrift.YamlObject.ItemGroup
 import adrift._
 import adrift.items.Item
+import adrift.items.behaviors.Broken
 import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 
 import scala.collection.mutable
@@ -324,7 +325,12 @@ case class WorldGen(data: Data)(implicit random: Random) {
     SuperblockTiles(blocks)
   }
 
-  def generateWorld: GameState = generateDetails(generateSchematic())
+  def generateWorld: GameState = {
+    val schematic = generateSchematic()
+    val initialState = generateDetails(schematic)
+    damage(initialState)
+    initialState
+  }
 
   def generateDetails(schematic: ShipSchematic): GameState = {
     val (width, height) = schematic.size
@@ -429,6 +435,26 @@ case class WorldGen(data: Data)(implicit random: Random) {
   def generateItem(itemGroup: ItemGroup): Seq[Item] = {
     itemGroup.choose.sample()(random, data.itemGroups.mapValues(_.choose)).map { itemId =>
       data.items(itemId).generateItem()
+    }
+  }
+
+  def break(item: Item): Unit = {
+    if (item.parts.isEmpty) {
+      println(s"Breaking ${item.kind.name}")
+      item.behaviors.append(Broken())
+    } else {
+      break(random.pick(item.parts))
+    }
+  }
+
+  def damage(state: GameState): Unit = {
+    for (item <- state.items.all) {
+      if (item.kind.name == "automatic door") {
+        if (random.oneIn(10)) {
+          println(s"Breaking door at ${state.items.lookup(item)}")
+          break(item)
+        }
+      }
     }
   }
 }

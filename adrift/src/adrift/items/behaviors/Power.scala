@@ -10,11 +10,11 @@ case class ProvidesShipPower(circuit: String) extends Behavior {
     message: Message
   ): Unit = message match {
     case m: Message.ChargeAvailable =>
-      if (state.sendMessage(self, Message.IsFunctional()).functional && state.circuits(circuit).stored >= m.amount) {
+      if (state.isFunctional(self) && state.circuits(circuit).stored >= m.amount) {
         m.ok = true
       }
     case m: Message.DrawCharge =>
-      if (state.sendMessage(self, Message.IsFunctional()).functional)
+      if (state.isFunctional(self))
         state.circuits(circuit).stored -= m.amount
     case _ =>
   }
@@ -27,7 +27,7 @@ case class GeneratesShipPower(circuit: String, amountPerTick: Int) extends Behav
     message: Message
   ): Unit = message match {
     case Message.Tick =>
-      if (state.sendMessage(self, Message.IsFunctional()).functional)
+      if (state.isFunctional(self))
         state.circuits(circuit).add(amountPerTick)
       // TODO: use fuel
     case _ =>

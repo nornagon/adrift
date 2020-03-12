@@ -10,7 +10,7 @@ case class Tool(op: String) extends Behavior {
     message: Message
   ): Unit = message match {
     case t: Message.UseTool if t.op.id == op =>
-      if (state.sendMessage(self, Message.IsFunctional()).functional) {
+      if (state.isFunctional(self)) {
         t.ok = true
         state.sendMessage(self, Message.ToolUsed(t.op))
       }
