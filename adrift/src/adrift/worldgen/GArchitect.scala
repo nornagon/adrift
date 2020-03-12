@@ -37,10 +37,14 @@ case class RoomType(
 case class Coordinates(x:Int,y:Int)
 case class Room(roomType: RoomType, coords:Coordinates) {}
 
+
+
 case object GArchitect {
+  type RoomTypes = Seq[RoomType]
   val random = new Random(0)
   val SC_vertical = 100
   val SC_horizontal = 100 // note that as a toroid the map wraps around the horizontal axis.
+
   def distance(c1:Coordinates,c2:Coordinates):Double = {
     if (c1==c2) {
       0.0
@@ -60,55 +64,33 @@ case object GArchitect {
   }
 
   // Engineering
-  val engineRoom:RoomType = new RoomType(100, 1, 5);
-//  val recycling = RoomType(50, 1, 5)
- // val fabrication = RoomType(50, 5, 10)
+  val engineRoom:RoomType = RoomType(100, 1, 5);
+  val recycling:RoomType = RoomType(50, 1, 5)
+  val fabrication:RoomType = RoomType(50, 5, 10)
 
   // Habitation
-  val crewQuarters:RoomType = new RoomType(75, 1, 5000)
-//  val promenade = RoomType(100,1,1)
-//  val dining = RoomType(50,4,10)
-//  val holosuite = RoomType(10,5,10)
-//  val lounge = RoomType(10,10,20)
+  val crewQuarters:RoomType = RoomType(200, 1, 500)
+  val promenade:RoomType = RoomType(100,1,1)
+  val dining:RoomType = RoomType(50,4,10)
+  val holosuite:RoomType = RoomType(10,5,10)
+  val lounge:RoomType = RoomType(10,10,20)
 
   // Science
   //  val astronomy = RoomType(10,1,3)
 
   // Command
-  val command:RoomType = new RoomType(10,1,1)
-
-  val fore:RoomType = new RoomType(0,1,1)
-  val aft:RoomType = new RoomType(0,1,1)
+  val command:RoomType = RoomType(10,1,1)
 
   val roomTypes:List[RoomType] = List(
     command,
     engineRoom,
-    crewQuarters
+    crewQuarters,
+    fabrication,
+    promenade,
+    dining,
+    holosuite,
+    lounge
   )
-  val roomWeighting:List[(RoomType,List[Int])] = List(
-    (engineRoom,List(0,1,1,0,1)),
-    (crewQuarters,List(1,4,1,0,0)),
-    (command,List(1,2,0,0,0)),
-    (fore,List(0,0,0,0,0)),
-    (aft,List(0,0,0,0,0))
-  )
-
-  def PlaceRooms(roomTypes:List[RoomType]): List[Room] = {
-    // For each roomtype in the weighting list
-    // create a list of some number of room instances between the min quantity and the max quantity (random)
-    // assign each one a random position in the vehicle
-    roomTypes.flatMap((r: RoomType) => {
-      val numRooms = if (r.maxQuantity != r.minQuantity) {
-        Random.nextInt(r.maxQuantity - r.minQuantity) + r.minQuantity
-      } else {
-        r.maxQuantity
-      }
-      (1 to numRooms).map { _ => {
-        Room(r, Coordinates(Random.nextInt(SC_horizontal), Random.nextInt(SC_vertical)))
-      }
-      }
-    })
-  }
 
   def roomDistances(roomlist: Seq[Room]): Map[Room,Map[Room,Double]] = {
     val distmap = roomlist.map(r1 => {
@@ -142,30 +124,56 @@ case object GArchitect {
     roomlist.length*2 - xs.distinct.length - ys.distinct.length
   }
 
+  def listAdd(a:Seq[Double],b:Seq[Double]): Seq[Double] = {
+    for (i <- a.indices) yield {
+      a(i) + b(i)
+    }
+  }
+
   def evaluate(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Double] = {
     // first wec'll apply all our metric calculations to our population.
-    val rawEvaluation = metrics.map(m=> {
-      population.map(rl => m._1(rl))
-    })
+    val rawEvaluation = metrics.map(m=> population.map(rl => m._1(rl)))
     // now lets normalize and reweight our metrics.
     // basically, right now each metric is some integer, but some metrics might be orders of magnitude larger or smaller than others
     // and that will cause them to disproportionately affect our selection.  So we will normalize this population so the best are '1' and the worst is '0' for each metric
     // then we can scale each based on how important we want it to be in our final mating evaluation.
     val weights = metrics.map(m=> m._2)
+
     rawEvaluation.zip(weights).map(ev => {
       // there's probably a cleaner / more idiomatic way to do this.
       val e = ev._1
-      val v = ev._2
-      e.map(v => (v-e.min).toDouble / (e.max - e.min).toDouble ).sum * v
-    })
+      val w = ev._2
+      e.map(v => {
+        if (e.min != e.max) {
+          ((v - e.min).toDouble / (e.max - e.min).toDouble)  * w
+        } else {
+          1.0 * w
+        }
+      })
+    }).reduce(listAdd)
   }
 
-  def mutate(population:Seq[Seq[Room]], rate:Int): Unit ={
+  def mutate(population:Seq[Seq[Room]], rate:Int): Seq[Seq[Room]] ={
     // in this case, rate is just the maximum distance we might move a room around.  Likely when we run this we'll start
     // with a high rate and gradually reduce it, simulated annealing style
     def scoot(coords:Coordinates,amount:Int) = {
-      Coordinates(coords.x + random.nextInt(amount*2)-amount,
-                 coords.y + random.nextInt(amount*2)-amount)
+      val deltaX = random.nextInt(amount * 2) - amount
+      val deltaY = random.nextInt(amount * 2) - amount
+      val newX = if (coords.x + deltaX > SC_horizontal) {
+        coords.x + deltaX - SC_horizontal
+      } else if (coords.x + deltaX < 0) {
+        coords.x + deltaX + SC_horizontal
+      } else {
+        coords.x + deltaX
+      }
+      val newY = if (coords.y + deltaY > SC_vertical) {
+        SC_vertical
+      } else if (coords.y + deltaY < 0) {
+        0
+      } else {
+        coords.y + deltaY
+      }
+      Coordinates(newX,newY)
     }
     population.map( individual => individual.map( room => Room(room.roomType,scoot(room.coords,rate))))
   }
@@ -180,6 +188,7 @@ case object GArchitect {
       }
     }
   }
+
   def mate(parent1:Seq[Room], parent2:Seq[Room]): Seq[Seq[Room]] = {
     val roomtypes = parent1.map(r => r.roomType).distinct
     List(1,2).map(_ => roomtypes.flatMap(rt => {
@@ -187,7 +196,36 @@ case object GArchitect {
       val p2Rooms = parent2.filter(r=> r.roomType==rt)
       val numNewRooms = random.between(p1Rooms.length,p2Rooms.length)
       val roomPool = p1Rooms ++ p2Rooms
-      roomPool.sortBy(_ => random.nextDouble()).take(numNewRooms)
+      random.nOf(numNewRooms,roomPool)
     }))
+  }
+
+  def placeRooms(roomTypes:RoomTypes): Seq[Room] = {
+    // For each roomtype in the weighting list
+    // create a list of some number of room instances between the min quantity and the max quantity (random)
+    // assign each one a random position in the vehicle
+    roomTypes.flatMap((r: RoomType) => {
+      val numRooms = if (r.maxQuantity != r.minQuantity) {
+        Random.nextInt(r.maxQuantity - r.minQuantity) + r.minQuantity
+      } else {
+        r.maxQuantity
+      }
+      (1 to numRooms).map { _ => {
+        Room(r, Coordinates(Random.nextInt(SC_horizontal), Random.nextInt(SC_vertical)))
+      }
+      }
+    })
+  }
+
+  def runTest = {
+    var gennum = 0
+    var pop = Seq.fill(10)(placeRooms(roomTypes))
+    val metricfunctions = Seq(linedup(_),spaceAllocation(_))
+    val metrics = metricfunctions.zip(Seq(1.0,2.0))
+    while(gennum < 5 ) {
+      val mutated = mutate(pop, 5)
+      pop = crossover(pop, metrics)
+      gennum = gennum + 1    }
+    pop
   }
 }
