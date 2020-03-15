@@ -2,6 +2,8 @@ package adrift.worldgen
 import util.Random
 import adrift.RandomImplicits._
 
+import scala.collection.mutable.ListBuffer
+
 
 class GArchitect {
 // A genetic algorithm Architect.
@@ -37,10 +39,10 @@ case class RoomType(
 case class Coordinates(x:Int,y:Int)
 case class Room(roomType: RoomType, coords:Coordinates) {}
 
-
-
 case object GArchitect {
   type RoomTypes = Seq[RoomType]
+  type Layout = Seq[Room]
+  case class PopulationReport(p: Layout, rawMetrics:Seq[Int], scaledMetrics: Double)
   val random = new Random(0)
   val SC_vertical = 100
   val SC_horizontal = 100 // note that as a toroid the map wraps around the horizontal axis.
@@ -64,7 +66,7 @@ case object GArchitect {
   }
 
   // Engineering
-  val engineRoom:RoomType = RoomType(100, 1, 5);
+  val engineRoom:RoomType = RoomType(100, 1, 5)
   val recycling:RoomType = RoomType(50, 1, 5)
   val fabrication:RoomType = RoomType(50, 5, 10)
 
@@ -72,38 +74,35 @@ case object GArchitect {
   val crewQuarters:RoomType = RoomType(200, 1, 500)
   val promenade:RoomType = RoomType(100,1,1)
   val dining:RoomType = RoomType(50,4,10)
-  val holosuite:RoomType = RoomType(10,5,10)
+  val holoSuite:RoomType = RoomType(10,5,10)
   val lounge:RoomType = RoomType(10,10,20)
-
   // Science
   //  val astronomy = RoomType(10,1,3)
-
   // Command
   val command:RoomType = RoomType(10,1,1)
 
-  val roomTypes:List[RoomType] = List(
+  val roomTypes:Seq[RoomType] = Seq(
     command,
     engineRoom,
     crewQuarters,
     fabrication,
     promenade,
     dining,
-    holosuite,
+    holoSuite,
     lounge
   )
 
-  def roomDistances(roomlist: Seq[Room]): Map[Room,Map[Room,Double]] = {
-    val distmap = roomlist.map(r1 => {
-      val distances = roomlist.map(r2 => {
-        distance(r1.coords,r2.coords)
-      })
-      (roomlist zip distances).toMap
-    })
-    (roomlist zip distmap).toMap
-  }
-
   def spaceAllocation(roomlist:Seq[Room]):Int = {
     // provide reward in proportion to distance from roomtypes that have a large space allocation
+    def roomDistances(roomlist: Seq[Room]): Map[Room,Map[Room,Double]] = {
+      val distmap = roomlist.map(r1 => {
+        val distances = roomlist.map(r2 => {
+          distance(r1.coords,r2.coords)
+        })
+        (roomlist zip distances).toMap
+      })
+      (roomlist zip distmap).toMap
+    }
     val roomdistances = roomDistances(roomlist)
     // find the 5 closest rooms
     // multiply by the space allocation value for the roomtype divided by the number of rooms of that type there are.
@@ -124,22 +123,52 @@ case object GArchitect {
     roomlist.length*2 - xs.distinct.length - ys.distinct.length
   }
 
+  private val metricFunctions: Seq[Seq[Room] => Int] = Seq(linedup,spaceAllocation)
+  private val metrics: Seq[(Seq[Room] => Int, Double)] = metricFunctions.zip(Seq(1.0,2.0))
+
   def listAdd(a:Seq[Double],b:Seq[Double]): Seq[Double] = {
     for (i <- a.indices) yield {
       a(i) + b(i)
     }
   }
 
-  def evaluate(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Double] = {
-    // first wec'll apply all our metric calculations to our population.
-    val rawEvaluation = metrics.map(m=> population.map(rl => m._1(rl)))
+//  def evaluate(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Seq[Int]] = {
+//    // produce a list of evaluations according to each metric (3 metrics?  3 lists)
+//    metrics.map(m=> population.map(rl => m._1(rl)))
+//  }
+//
+//  def rescaleEvaluation(rawEvaluation:Seq[Seq[Int]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Double] = {
+//    // now lets normalize and reweight our metrics.
+//    // basically, right now each metric is some integer, but some metrics might be orders of magnitude larger or smaller than others
+//    // and that will cause them to disproportionately affect our selection.  So we will normalize this population so the best are '1' and the worst is '0' for each metric
+//    // then we can scale each based on how important we want it to be in our final mating evaluation.
+//    val weights = metrics.map(m=> m._2)
+//    rawEvaluation.zip(weights).map(ev => {
+//      // there's probably a cleaner / more idiomatic way to do this.
+//      val e = ev._1
+//      val w = ev._2
+//      e.map(v => {
+//        if (e.min != e.max) {
+//          ((v - e.min).toDouble / (e.max - e.min).toDouble)  * w
+//        } else {
+//          1.0 * w
+//        }
+//      })
+//    }).reduce(listAdd)
+//  }
+
+  def evaluate(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Seq[Int]] = {
+    // produce a list of evaluations for each population unit.  (pop of 30?  30 lists)
+    population.map(rl=> metrics.map(m => m._1(rl)))
+  }
+
+  def rescaleEvaluation(rawEvaluation:Seq[Seq[Int]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Double] = {
     // now lets normalize and reweight our metrics.
     // basically, right now each metric is some integer, but some metrics might be orders of magnitude larger or smaller than others
     // and that will cause them to disproportionately affect our selection.  So we will normalize this population so the best are '1' and the worst is '0' for each metric
     // then we can scale each based on how important we want it to be in our final mating evaluation.
     val weights = metrics.map(m=> m._2)
-
-    rawEvaluation.zip(weights).map(ev => {
+    rawEvaluation.transpose.zip(weights).map(ev => {
       // there's probably a cleaner / more idiomatic way to do this.
       val e = ev._1
       val w = ev._2
@@ -153,10 +182,11 @@ case object GArchitect {
     }).reduce(listAdd)
   }
 
+
   def mutate(population:Seq[Seq[Room]], rate:Int): Seq[Seq[Room]] ={
     // in this case, rate is just the maximum distance we might move a room around.  Likely when we run this we'll start
     // with a high rate and gradually reduce it, simulated annealing style
-    def scoot(coords:Coordinates,amount:Int) = {
+    def scoot(coords:Coordinates,amount:Int): Coordinates = {
       val deltaX = random.nextInt(amount * 2) - amount
       val deltaY = random.nextInt(amount * 2) - amount
       val newX = if (coords.x + deltaX > SC_horizontal) {
@@ -178,15 +208,30 @@ case object GArchitect {
     population.map( individual => individual.map( room => Room(room.roomType,scoot(room.coords,rate))))
   }
 
-  def crossover(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Seq[Room]] = {
+  object Reporter {
+    var generation = 0
+    var report = List[(Int,PopulationReport)]()
+    def setGeneration(g:Int) = {generation = g}
+    def addReport(p:PopulationReport) = {report = report ++ List((generation,p))}
+  }
+
+  val reporter = Reporter
+
+  def crossover(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Layout] = {
     // individuals in the population who are more fit are more likely to reproduce, so we need some metrics.
-    val parents = evaluate(population, metrics).zip(population).sortBy{ elem => math.pow(random.nextDouble(), 1 / elem._1) }.take(population.length/2)
+    val evaluations = evaluate(population, metrics)
+    val scaledEvaluations = rescaleEvaluation(evaluations, metrics)
+    val parents = scaledEvaluations.zip(population).sortBy{ elem => math.pow(random.nextDouble(), 1 / elem._1) }.take(population.length/2)
+    for (i <- population.indices) yield {
+      reporter.addReport(PopulationReport(population(i),evaluations(i),scaledEvaluations(i)))
+    }
     parents.flatMap {
       parent1 => {
         val parent2 = random.chooseFrom(parents)(p => p._1)
         mate(parent1._2, parent2._2)
+//        Seq(mate(parent1._2, parent2._2), mate(parent1._2, parent2._2))
       }
-    }
+    }//.flatten
   }
 
   def mate(parent1:Seq[Room], parent2:Seq[Room]): Seq[Seq[Room]] = {
@@ -216,16 +261,23 @@ case object GArchitect {
       }
     })
   }
+  def runGeneration(pop:Seq[Seq[Room]]): Seq[Seq[Room]] = {
+    val mutated = mutate(pop,5)
+    crossover(pop, metrics)
+  }
 
-  def runTest = {
+  def runGenerations(numGenerations:Int) = {
     var gennum = 0
     var pop = Seq.fill(10)(placeRooms(roomTypes))
-    val metricfunctions = Seq(linedup(_),spaceAllocation(_))
-    val metrics = metricfunctions.zip(Seq(1.0,2.0))
-    while(gennum < 5 ) {
+
+    while(gennum < numGenerations ) {
+      reporter.setGeneration((gennum))
       val mutated = mutate(pop, 5)
       pop = crossover(pop, metrics)
-      gennum = gennum + 1    }
+      gennum = gennum + 1
+      print("Generation")
+    }
+    reporter.report
     pop
   }
 }
