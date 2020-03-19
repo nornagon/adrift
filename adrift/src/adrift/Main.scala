@@ -1,14 +1,17 @@
 package adrift
 
+import java.awt.{Dimension, Graphics}
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 
 import adrift.display.{Display, GLFWDisplay}
-import adrift.worldgen.WorldGen
+import adrift.worldgen.{Coordinates, GArchitect, WorldGen}
 import com.sun.nio.file.SensitivityWatchEventModifier
 import javax.sound.sampled.AudioSystem
+import javax.swing.{JFrame, JPanel}
 
 import scala.util.Random
+import javax.swing.SwingUtilities
 
 object Main {
   def onFileChanged(path: Path)(f: (Path) => Unit): Unit = {
@@ -46,7 +49,56 @@ object Main {
     t.start()
   }
 
+  def architect(): Unit = {
+    import GArchitect._
+    import java.awt.Color
+    var pop = Seq.fill(10)(placeRooms(roomTypes))
+
+    val frame = new JFrame("Adrift")
+    frame.setDefaultCloseOperation(3)
+
+    val colors = Seq(
+      Color.BLACK,
+      Color.BLUE,
+      Color.RED,
+      Color.GREEN,
+      Color.MAGENTA,
+      Color.PINK,
+      Color.YELLOW,
+      Color.CYAN,
+    )
+
+    val panel = new JPanel() {
+      override def paint(g: Graphics): Unit = {
+        val indiv = pop(0)
+        for (room <- indiv) {
+          val Coordinates(x, y) = room.coords
+          val t = roomTypes.indexOf(room.roomType)
+          assert(t >= 0)
+          val color = colors(t % colors.size)
+          g.setColor(color)
+          g.fillRect(x * 10, y * 10, 5, 5)
+        }
+      }
+    }
+    panel.setPreferredSize(new Dimension(SC_horizontal * 10, SC_vertical * 10))
+    frame.getContentPane.add(panel)
+    frame.pack()
+
+    frame.setVisible(true)
+
+    while (true) {
+      Thread.sleep(100)
+      pop = runGeneration(pop)
+      panel.repaint()
+    }
+  }
+
   def main(args: Array[String]): Unit = {
+    //SwingUtilities.invokeLater(() => architect())
+    architect()
+    return
+
     //jsyn(); return
 
     //javax(); return
@@ -89,7 +141,7 @@ object Main {
     }
   }
 
-  private def javax() = {
+  private def javaxbased() = {
     val sound = AudioSystem.getAudioInputStream(Paths.get("hum.wav").toFile)
     val clip = AudioSystem.getClip
 
@@ -105,7 +157,7 @@ object Main {
     Thread.sleep(clip.getMicrosecondLength / 1000)
   }
 
-  private def jsyn() = {
+  private def jsynbased() = {
     import com.jsyn.JSyn
     import com.jsyn.unitgen._
     import com.jsyn.util._

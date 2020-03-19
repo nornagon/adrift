@@ -262,8 +262,8 @@ case object GArchitect {
     })
   }
   def runGeneration(pop:Seq[Seq[Room]]): Seq[Seq[Room]] = {
-    val mutated = mutate(pop,5)
-    crossover(pop, metrics)
+    val mutated = mutate(pop,1)
+    crossover(mutated, metrics)
   }
 
   def runGenerations(numGenerations:Int) = {
