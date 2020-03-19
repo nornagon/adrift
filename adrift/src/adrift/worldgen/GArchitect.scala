@@ -1,4 +1,6 @@
 package adrift.worldgen
+import adrift.Grid
+
 import util.Random
 import adrift.RandomImplicits._
 
@@ -43,7 +45,7 @@ case object GArchitect {
   type RoomTypes = Seq[RoomType]
   type Layout = Seq[Room]
   case class PopulationReport(p: Layout, rawMetrics:Seq[Int], scaledMetrics: Double)
-  val random = new Random(0)
+  val random = new Random(1)
   val SC_vertical = 100
   val SC_horizontal = 100 // note that as a toroid the map wraps around the horizontal axis.
 
@@ -64,6 +66,8 @@ case object GArchitect {
       }
     }
   }
+
+  def wrapX(x: Int): Int = (x + SC_horizontal) % SC_horizontal
 
   // Engineering
   val engineRoom:RoomType = RoomType(100, 1, 5)
@@ -108,10 +112,43 @@ case object GArchitect {
     // multiply by the space allocation value for the roomtype divided by the number of rooms of that type there are.
     val rtypes = roomlist map(r=> r.roomType)
     roomlist.map(r => {
-      val numRooms = rtypes.count(p => p == r.roomType)
+      val numRooms = rtypes.count(p => p eq r.roomType)
       roomdistances(r).values.toSeq.sorted.slice(0,5).sum * r.roomType.spaceWeight / numRooms
     }).sum.toInt
     // thats our reward.  Yar.
+  }
+
+  def spaceAllocation2(roomlist: Seq[Room]): Int = {
+    val totalSpaceOnTheShip = SC_vertical * SC_horizontal
+    val totalSpace = roomlist.map(_.roomType).distinct.map(_.spaceWeight).sum
+    val realSpacePerSpaceWeight = totalSpaceOnTheShip / totalSpace
+    val realSpacePerRoomByType = roomlist.groupBy(_.roomType).map {
+      case (rt, rooms) => rt -> rt.spaceWeight / rooms.size * realSpacePerSpaceWeight
+    }
+    val grid = new Grid(SC_horizontal, SC_vertical)(collection.mutable.Buffer.empty[Room])
+    roomlist.foreach { room => grid(room.coords.x, room.coords.y).append(room) }
+    def distanceToClosest(x: Int, y: Int): Double = {
+      var r = 1
+      while (true) {
+        val nearby = for {
+          tx <- x - r to x + r
+          ty <- y - r to y + r
+          if tx != x && ty != y
+          if ty >= 0 && ty < SC_vertical
+          room <- grid(wrapX(tx), ty)
+        } yield room
+        if (nearby.nonEmpty) return r
+        r += 1
+      }
+      Int.MaxValue
+    }
+
+    -roomlist.map { room =>
+      val d = distanceToClosest(room.coords.x, room.coords.y) * 2 + 1
+      val d2 = d * d
+      val delta = math.abs(realSpacePerRoomByType(room.roomType) - d2)
+      delta
+    }.sum.round.toInt
   }
 
   def linedup(roomlist:Seq[Room]):Int = {
@@ -123,8 +160,21 @@ case object GArchitect {
     roomlist.length*2 - xs.distinct.length - ys.distinct.length
   }
 
-  private val metricFunctions: Seq[Seq[Room] => Int] = Seq(linedup,spaceAllocation)
-  private val metrics: Seq[(Seq[Room] => Int, Double)] = metricFunctions.zip(Seq(10.0,1.0))
+  def nooverlap(roomlist: Seq[Room]): Int = {
+    val roomsPerCoordinate = new collection.mutable.HashMap[Coordinates, Int]()
+    for (room <- roomlist) {
+      val pre = roomsPerCoordinate.getOrElseUpdate(room.coords, 0)
+      roomsPerCoordinate.put(room.coords, pre + 1)
+    }
+    roomlist.size - roomsPerCoordinate.values.count(_ > 1)
+  }
+
+  private val metrics = Seq(
+    linedup _ -> 1d,
+    spaceAllocation2 _ -> 1d,
+    nooverlap _ -> 2d,
+    //((x: Seq[Room]) => 1) -> 1d
+  )
 
   def listAdd(a:Seq[Double],b:Seq[Double]): Seq[Double] = {
     for (i <- a.indices) yield {
@@ -190,15 +240,9 @@ case object GArchitect {
       if (!random.oneIn(10)) return coords
       val deltaX = random.between(-amount, amount + 1)
       val deltaY = random.between(-amount, amount + 1)
-      val newX = if (coords.x + deltaX > SC_horizontal) {
-        coords.x + deltaX - SC_horizontal
-      } else if (coords.x + deltaX < 0) {
-        coords.x + deltaX + SC_horizontal
-      } else {
-        coords.x + deltaX
-      }
-      val newY = if (coords.y + deltaY > SC_vertical) {
-        SC_vertical
+      val newX = wrapX(coords.x + deltaX)
+      val newY = if (coords.y + deltaY >= SC_vertical) {
+        SC_vertical - 1
       } else if (coords.y + deltaY < 0) {
         0
       } else {
@@ -206,7 +250,11 @@ case object GArchitect {
       }
       Coordinates(newX,newY)
     }
-    population.map( individual => individual.map( room => Room(room.roomType,scoot(room.coords,rate))))
+    population.map { individual =>
+      individual.map { room =>
+        room.copy(coords = scoot(room.coords, rate))
+      }
+    }
   }
 
   object Reporter {
@@ -228,21 +276,54 @@ case object GArchitect {
     }
     parents.flatMap {
       parent1 => {
-        val parent2 = random.chooseFrom(parents)(p => p._1)
-        mate(parent1._2, parent2._2)
+        val parent2 = random.chooseFrom(parents.filter(_ ne parent1))(p => p._1)
+        mate3(parent1._2, parent2._2)
 //        Seq(mate(parent1._2, parent2._2), mate(parent1._2, parent2._2))
       }
     }//.flatten
   }
 
+  def mate3(parent1: Seq[Room], parent2: Seq[Room]): Seq[Seq[Room]] = {
+    def makeChild = if (random.nextBoolean()) parent1 else parent2
+    Seq(makeChild, makeChild)
+  }
+
+  def mate2(parent1: Seq[Room], parent2: Seq[Room]): Seq[Seq[Room]] = {
+    def makeChild = {
+      val minRooms = math.min(parent1.size, parent2.size)
+      val maxRooms = math.max(parent1.size, parent2.size)
+      val childNumRooms = random.between(minRooms, maxRooms)
+      val remainingParent1Rooms = collection.mutable.ListBuffer.empty[Room]
+      remainingParent1Rooms ++= parent1
+      val remainingParent2Rooms = collection.mutable.ListBuffer.empty[Room]
+      remainingParent2Rooms ++= parent2
+      val childRooms = Seq.fill(childNumRooms) {
+        val parentRooms = if (remainingParent1Rooms.isEmpty)
+          remainingParent2Rooms
+        else if (remainingParent2Rooms.isEmpty)
+          remainingParent1Rooms
+        else if (random.nextBoolean()) remainingParent1Rooms else remainingParent2Rooms
+        val idx = random.between(0, parentRooms.size)
+        val room = parentRooms.remove(idx)
+        room
+      }
+      childRooms
+    }
+    Seq(makeChild, makeChild)
+  }
+
   def mate(parent1:Seq[Room], parent2:Seq[Room]): Seq[Seq[Room]] = {
     val roomtypes = parent1.map(r => r.roomType).distinct
     List(1,2).map(_ => roomtypes.flatMap(rt => {
-      val p1Rooms = parent1.filter(r=> r.roomType==rt)
-      val p2Rooms = parent2.filter(r=> r.roomType==rt)
+      if (random.nextBoolean())
+        parent1.filter(r=> r.roomType==rt)
+      else
+        parent2.filter(r=> r.roomType==rt)
+      /*
       val numNewRooms = random.between(p1Rooms.length,p2Rooms.length)
       val roomPool = p1Rooms ++ p2Rooms
       random.nOf(numNewRooms,roomPool)
+       */
     }))
   }
 
@@ -257,7 +338,7 @@ case object GArchitect {
         r.maxQuantity
       }
       (1 to numRooms).map { _ => {
-        Room(r, Coordinates(Random.nextInt(SC_horizontal), Random.nextInt(SC_vertical)))
+        Room(r, Coordinates(random.nextInt(SC_horizontal), random.nextInt(SC_vertical)))
       }
       }
     })

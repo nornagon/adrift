@@ -52,7 +52,8 @@ object Main {
   def architect(): Unit = {
     import GArchitect._
     import java.awt.Color
-    var pop = Seq.fill(10)(placeRooms(roomTypes))
+    var pop = Seq.fill(20)(placeRooms(roomTypes))
+    var generation = 0
 
     val frame = new JFrame("Adrift")
     frame.setDefaultCloseOperation(3)
@@ -70,7 +71,7 @@ object Main {
 
     val panel = new JPanel() {
       override def paint(g: Graphics): Unit = {
-        val indiv = pop(0)
+        val indiv = pop.last
         for (room <- indiv) {
           val Coordinates(x, y) = room.coords
           val t = roomTypes.indexOf(room.roomType)
@@ -78,6 +79,10 @@ object Main {
           val color = colors(t % colors.size)
           g.setColor(color)
           g.fillRect(x * 10, y * 10, 5, 5)
+        }
+        for (report <- reporter.report.lastOption) {
+          g.setColor(Color.BLACK)
+          g.drawString(generation + " " + report._2.rawMetrics.toString(), 5, 15)
         }
       }
     }
@@ -88,8 +93,8 @@ object Main {
     frame.setVisible(true)
 
     while (true) {
-      Thread.sleep(100)
       pop = runGeneration(pop)
+      generation += 1
       panel.repaint()
     }
   }
