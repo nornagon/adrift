@@ -25,5 +25,21 @@ object RandomImplicits {
     // https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_A-Res
     def chooseFrom[T](elems: TraversableOnce[T])(weight: T => Double): T =
       elems.maxBy { elem => math.pow(r.nextDouble(), 1 / weight(elem)) }
+
+    def nFrom[T](k: Int, elems: TraversableOnce[T])(weight: T => Double): Seq[T] = {
+      val h = new scala.collection.mutable.PriorityQueue[(Double, T)]()(Ordering.by(_._1))
+      elems.foreach { e =>
+        val rv = math.pow(r.nextDouble(), 1 / weight(e))
+        if (h.size < k)
+          h.enqueue((rv, e))
+        else {
+          if (rv > h.head._1) {
+            h.dequeue()
+            h.enqueue((rv, e))
+          }
+        }
+      }
+      h.map(_._2)(collection.breakOut)
+    }
   }
 }

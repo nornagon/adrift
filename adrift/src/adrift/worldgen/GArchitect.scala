@@ -124,7 +124,7 @@ case object GArchitect {
   }
 
   private val metricFunctions: Seq[Seq[Room] => Int] = Seq(linedup,spaceAllocation)
-  private val metrics: Seq[(Seq[Room] => Int, Double)] = metricFunctions.zip(Seq(1.0,2.0))
+  private val metrics: Seq[(Seq[Room] => Int, Double)] = metricFunctions.zip(Seq(10.0,1.0))
 
   def listAdd(a:Seq[Double],b:Seq[Double]): Seq[Double] = {
     for (i <- a.indices) yield {
@@ -187,8 +187,9 @@ case object GArchitect {
     // in this case, rate is just the maximum distance we might move a room around.  Likely when we run this we'll start
     // with a high rate and gradually reduce it, simulated annealing style
     def scoot(coords:Coordinates,amount:Int): Coordinates = {
-      val deltaX = random.nextInt(amount * 2) - amount
-      val deltaY = random.nextInt(amount * 2) - amount
+      if (!random.oneIn(10)) return coords
+      val deltaX = random.between(-amount, amount + 1)
+      val deltaY = random.between(-amount, amount + 1)
       val newX = if (coords.x + deltaX > SC_horizontal) {
         coords.x + deltaX - SC_horizontal
       } else if (coords.x + deltaX < 0) {
@@ -221,7 +222,7 @@ case object GArchitect {
     // individuals in the population who are more fit are more likely to reproduce, so we need some metrics.
     val evaluations = evaluate(population, metrics)
     val scaledEvaluations = rescaleEvaluation(evaluations, metrics)
-    val parents = scaledEvaluations.zip(population).sortBy{ elem => math.pow(random.nextDouble(), 1 / elem._1) }.take(population.length/2)
+    val parents = random.nFrom(population.length/2, scaledEvaluations.zip(population))(_._1)
     for (i <- population.indices) yield {
       reporter.addReport(PopulationReport(population(i),evaluations(i),scaledEvaluations(i)))
     }
