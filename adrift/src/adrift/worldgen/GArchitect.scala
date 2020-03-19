@@ -159,7 +159,7 @@ case object GArchitect {
 
   def evaluate(population:Seq[Seq[Room]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Seq[Int]] = {
     // produce a list of evaluations for each population unit.  (pop of 30?  30 lists)
-    population.map(rl=> metrics.map(m => m._1(rl)))
+    population.par.map(rl=> metrics.map(m => m._1(rl))).seq
   }
 
   def rescaleEvaluation(rawEvaluation:Seq[Seq[Int]], metrics:Seq[(Seq[Room]=>Int,Double)]): Seq[Double] = {
