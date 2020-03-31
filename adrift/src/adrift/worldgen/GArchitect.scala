@@ -295,8 +295,9 @@ case object GArchitect {
       val childNumRooms = random.between(minRooms, maxRooms)
       val remainingParent1Rooms = collection.mutable.ListBuffer.empty[Room]
       remainingParent1Rooms ++= parent1
+      val p1coords = remainingParent1Rooms.map(r => r.coords)
       val remainingParent2Rooms = collection.mutable.ListBuffer.empty[Room]
-      remainingParent2Rooms ++= parent2
+      remainingParent2Rooms ++= parent2.filter(r => !p1coords.contains(r.coords) )
       val childRooms = Seq.fill(childNumRooms) {
         val parentRooms = if (remainingParent1Rooms.isEmpty)
           remainingParent2Rooms
