@@ -27,6 +27,36 @@
       count: 2
 
 - type: room
+  name: quarters-gen
+  rotatable: true
+  layout: |
+    .....
+    .....
+    .....
+    .....
+    .....
+  gen: quarters
+  connections:
+    0,0 down: DOOR
+  defs:
+    .: { terrain: floor }
+
+- type: roomgen
+  name: quarters
+  algorithm: Furnish
+  options:
+    items:
+      each:
+        - repeat:
+            type: { each: [ bed, { group: bedding } ] }
+            wall_adjacent: true
+            nearby: { optional: [ side table ], chance: 50% }
+          count: 1-2
+        - { optional: { type: { each: [ thermostat, heating vent ] }, wall_adjacent: true }, chance: 50% }
+        - { type: { each: [ desk, { group: small tools } ] }, wall_adjacent: true, nearby: chair }
+        - { type: { each: [ closet, { group: clothing } ] }, wall_adjacent: true }
+
+- type: room
   name: quarters 2
   rotatable: true
   flippable: true

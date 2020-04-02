@@ -89,6 +89,11 @@ case class WorldGen(data: Data)(implicit random: Random) {
           }
         }
       }
+      rd.gen foreach { genName =>
+        val cells = for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex; if !cell.isSpaceChar)
+          yield xf(x - x0 * 6, y - y0 * 6)
+        data.roomgens(genName).generate(s, cells)
+      }
     }
 
     var hitFirst = false

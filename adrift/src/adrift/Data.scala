@@ -5,6 +5,7 @@ import java.util.stream.Collectors
 
 import adrift.Population.Table
 import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
+import adrift.worldgen.RoomGen
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe.generic.extras.semiauto._
@@ -41,6 +42,7 @@ object YamlObject {
     flippable: Boolean = false,
     layout: String,
     defs: Map[String, JsonObject] = Map.empty,
+    gen: Option[String] = None,
     default_terrain: String = "floor",
     items: Seq[JsonObject] = Seq.empty,
     connections: Map[String, String] = Map.empty,
@@ -48,6 +50,12 @@ object YamlObject {
     for (line <- layout.lines.asInstanceOf[java.util.stream.Stream[String]].iterator().asScala; char <- line; if !char.isSpaceChar)
       assert(defs.contains(char.toString), s"'$char' not present in defs of room '$name'")
   }
+
+  case class RoomGen(
+    name: String,
+    algorithm: String,
+    options: JsonObject
+  )
 
   case class SectorRoom(
     room: String,
@@ -63,6 +71,7 @@ case class Data(
   items: Map[String, ItemKind],
   itemGroups: Map[String, YamlObject.ItemGroup],
   rooms: Map[String, YamlObject.RoomDef],
+  roomgens: Map[String, RoomGen],
   terrain: Map[String, Terrain],
   sectors: Map[String, YamlObject.SectorDef],
   display: DisplayData,
@@ -159,6 +168,17 @@ object Data {
         case (k, v) => assert(v.length == 1, s"More than one room with name $k"); k -> v.head
       }
 
+    val roomgens = ymls("roomgen")
+      .map(obj => obj.as[YamlObject.RoomGen]
+        .fold(ex => throw new RuntimeException(s"Failed to parse roomgen: $obj", ex), identity))
+      .groupBy(_.name).map {
+        case (k, v) => assert(v.length == 1, s"More than one roomgen with name $k"); k -> v.head
+      }
+      .map {
+        case (k, v) => k -> RoomGen.decoders(v.algorithm).decodeJson(Json.fromJsonObject(v.options)).fold(throw _, identity)
+      }
+    println(roomgens)
+
     val terrain: Map[String, Terrain] = ymls("terrain")
       .map(obj => obj.as[Terrain]
         .fold(ex => throw new RuntimeException(s"Failed to parse terrain: $obj", ex), identity))
@@ -185,6 +205,7 @@ object Data {
       items,
       itemGroups,
       rooms,
+      roomgens,
       terrain,
       sectors,
       display

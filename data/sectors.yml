@@ -2,6 +2,7 @@
   name: crew
   rooms: 
   - {room: quarters, number: "10-20"}
+  - {room: quarters-gen, number: "10-20"}
   - {room: quarters 2, number: "10-20"}
   - {room: twin quarters, number: "10-20"}
   - {room: break room, number: "0-10"}
