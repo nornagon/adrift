@@ -1,6 +1,7 @@
 package adrift
 
 import adrift.items.{Behavior, Item, ItemId}
+import io.circe.{KeyDecoder, KeyEncoder}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -15,17 +16,14 @@ object Serialization {
 
   case class GameStateSerialized(
     random: Random,
-    terrain: Grid[Terrain],
-    temperature: Grid[Double],
-    gasComposition: Grid[GasComposition],
+    levels: Map[LevelId, Level],
     items: ItemDatabase,
-    player: (Int, Int),
+    player: Location,
     bodyTemp: Double
   ) {
     def toGameState(data: Data): GameState = {
-      val state = new GameState(data, terrain.width, terrain.height, random)
-      state.terrain = terrain
-      state.temperature = temperature
+      val state = new GameState(data, random)
+      state.levels ++= levels
       state.items = items
       state.player = player
       state.bodyTemp = bodyTemp
@@ -33,11 +31,9 @@ object Serialization {
     }
   }
   object GameStateSerialized{
-    def fromGameState(state: GameState) = GameStateSerialized(
+    def fromGameState(state: GameState): GameStateSerialized = GameStateSerialized(
       state.random,
-      state.terrain,
-      state.temperature,
-      state.gasComposition,
+      state.levels.toMap,
       state.items,
       state.player,
       state.bodyTemp
@@ -82,13 +78,22 @@ object Serialization {
   implicit val encodeTerrain: Encoder[Terrain] = (t: Terrain) => t.name.asJson
   implicit def decodeTerrain(implicit data: Data): Decoder[Terrain] = (c: HCursor) => c.as[String].map(data.terrain)
 
+  implicit val encodeLevelIdAsKey: KeyEncoder[LevelId] = (t: LevelId) => t.id
+  implicit val decodeLevelIdAsKey: KeyDecoder[LevelId] = (t: String) => Some(LevelId(t))
+  implicit val encodeLevelId: Encoder[LevelId] = (t: LevelId) => t.id.asJson
+  implicit def decodeLevelId: Decoder[LevelId] = (c: HCursor) => c.as[String].map(LevelId)
+
+  implicit val encodeLocation: Encoder[Location] = deriveEncoder[Location]
+  implicit val decodeLocation: Decoder[Location] = deriveDecoder[Location]
+
   implicit val encodeGasComposition: Encoder[GasComposition] = deriveEncoder
   implicit val decodeGasComposition: Decoder[GasComposition] = deriveDecoder
 
   implicit val encodeItemLocation: Encoder[ItemLocation] = {
-    case OnFloor(x: Int, y: Int) =>
+    case OnFloor(Location(levelId, x, y)) =>
       Json.obj(
         "where" -> "OnFloor".asJson,
+        "l" -> levelId.id.asJson,
         "x" -> x.asJson,
         "y" -> y.asJson
       )
@@ -108,9 +113,10 @@ object Serialization {
       r <- where match {
         case "OnFloor" =>
           for {
+            l <- h.get[String]("l")
             x <- h.get[Int]("x")
             y <- h.get[Int]("y")
-          } yield OnFloor(x, y)
+          } yield OnFloor(Location(LevelId(l), x, y))
         case "InHands" =>
           Right(InHands())
         case "Inside" =>
@@ -168,8 +174,22 @@ object Serialization {
     Right(db)
   }
 
+  implicit def encodeLevel: Encoder[Level] = (a: Level) =>
+    Json.obj(
+      "terrain" -> a.terrain.asJson,
+      "temperature" -> a.temperature.asJson,
+      "gasComposition" -> a.gasComposition.asJson,
+    )
+  implicit def decodeLevel(implicit d: Data): Decoder[Level] = (c: HCursor) =>
+    for {
+      terrain <- c.get[Grid[Terrain]]("terrain")
+      temperature <- c.get[Grid[Double]]("temperature")
+      gasComposition <- c.get[Grid[GasComposition]]("gasComposition")
+    } yield
+      Level(terrain, temperature, gasComposition)
+
   implicit val encodeGameState: Encoder[GameState] =
-    deriveEncoder[GameStateSerialized].contramap(GameStateSerialized.fromGameState)
+    deriveEncoder[GameStateSerialized].contramap(GameStateSerialized.fromGameState _)
   implicit def decodeGameState(implicit data: Data): Decoder[GameState] =
     deriveDecoder[GameStateSerialized].map(_.toGameState(data))
 

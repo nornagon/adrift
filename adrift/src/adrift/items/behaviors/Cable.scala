@@ -1,7 +1,7 @@
 package adrift.items.behaviors
 
 import adrift.items.Message.CanReceivePlug
-import adrift.{GameState, OnFloor}
+import adrift.{GameState, Location, OnFloor}
 import adrift.items.{Behavior, Item, Message}
 
 case class Cable(plugShape: String) extends Behavior {
@@ -19,16 +19,16 @@ case class Cable(plugShape: String) extends Behavior {
           // first plug action begins the unspooling
           self.behaviors.append(Unspooling())
           // unspool from the location of the plugee to the player's position
-          val OnFloor(x, y) = state.items.lookup(item)
-          if ((x, y) != state.player)
-            state.sendMessage(self, Message.Hauled((x, y), state.player))
+          val OnFloor(loc) = state.items.lookup(item)
+          if (loc != state.player)
+            state.sendMessage(self, Message.Hauled(loc, state.player))
         } else {
           // if we're already unspooling, this must be the 2nd plug action
           self.behaviors --= self.behaviors.filter(_.isInstanceOf[Unspooling])
           state.items.delete(self)
-          val OnFloor(x, y) = state.items.lookup(item)
-          if ((x, y) != state.player)
-            state.sendMessage(self, Message.Hauled((x, y), state.player))
+          val OnFloor(loc) = state.items.lookup(item)
+          if (loc != state.player)
+            state.sendMessage(self, Message.Hauled(loc, state.player))
           if (!self.parts.exists(state.items.exists)) {
             // no part of the cable is on the floor, so drop one to make it pick-up-able
             state.items.put(self.parts.head, state.items.lookup(item))
@@ -41,7 +41,7 @@ case class Cable(plugShape: String) extends Behavior {
       if (!state.items.exists(self)) {
         val location = self.parts
           .collectFirst { case i if state.items.exists(i) => state.items.lookup(i) }
-          .getOrElse(OnFloor(state.player._1, state.player._2))
+          .getOrElse(OnFloor(state.player))
         self.parts.foreach { p =>
           if (state.items.exists(p)) state.items.delete(p)
           p.behaviors --= p.behaviors.filter(_.isInstanceOf[Unrolled])
@@ -79,12 +79,12 @@ case class Unspooling() extends Behavior {
     message: Message
   ): Unit = message match {
     case Message.Hauled(from, to) =>
-      var lastCell = from
-      for (c <- cellsBetween(from, to)) {
+      var lastCell = from.xy
+      for (c <- cellsBetween(from.xy, to.xy)) {
         val section = self.parts.find(!_.behaviors.exists(_.isInstanceOf[Unrolled]))
         val prevSection = self.parts.filter(_.behaviors.exists(_.isInstanceOf[Unrolled])).lastOption
         section foreach { s =>
-          state.items.put(s, OnFloor(c._1, c._2))
+          state.items.put(s, OnFloor(Location(from.levelId, c._1, c._2)))
           s.behaviors.append(Unrolled(self, lastCell))
           prevSection foreach { p =>
             p.behaviors.collectFirst { case b: Unrolled => b }.get.toCell = Some(c)

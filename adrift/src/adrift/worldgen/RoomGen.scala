@@ -1,6 +1,6 @@
 package adrift.worldgen
 
-import adrift.{GameState, OnFloor}
+import adrift.{GameState, LevelId, Location, OnFloor}
 import adrift.Population.Table
 import io.circe.{Json, JsonObject}
 import adrift.RandomImplicits._
@@ -8,18 +8,18 @@ import adrift.RandomImplicits._
 import scala.util.Random
 
 trait RoomGen {
-  def generate(state: GameState, cells: Seq[(Int, Int)])(implicit r: Random): Unit
+  def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit
 }
 
 case class FurnishItem(`type`: Table[String], wall_adjacent: Boolean = false, nearby: Option[Table[String]])
 case class Furnish(items: Table[FurnishItem]) extends RoomGen {
-  override def generate(state: GameState, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
+  override def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
     val cellSet = cells.toSet
     def isWallAdjacent(p: (Int, Int)): Boolean = {
       val (x, y) = p
       !cellSet(x-1, y) || !cellSet(x+1, y) || !cellSet(x, y-1) || !cellSet(x, y+1)
     }
-    def isEmpty(p: (Int, Int)): Boolean = state.items.lookup(OnFloor(p._1, p._2)).isEmpty
+    def isEmpty(p: (Int, Int)): Boolean = state.items.lookup(OnFloor(Location(levelId, p._1, p._2))).isEmpty
     def chooseWallAdjacentLocation(): Option[(Int, Int)] = {
       val candidates = cells filter isWallAdjacent filter isEmpty
       if (candidates.nonEmpty) Some(r.pick(candidates)) else None
@@ -38,10 +38,10 @@ case class Furnish(items: Table[FurnishItem]) extends RoomGen {
       val maybeLoc = if (item.wall_adjacent) chooseWallAdjacentLocation() else chooseAnyLocation()
       maybeLoc foreach { loc =>
         val items = state.sampleItem(item.`type`)
-        for (i <- items) state.items.put(i, OnFloor(loc._1, loc._2))
+        for (i <- items) state.items.put(i, OnFloor(Location(levelId, loc._1, loc._2)))
         for (nearby <- item.nearby; nearbyLoc <- chooseNearbyLocation(loc)) {
           val items = state.sampleItem(nearby)
-          for (i <- items) state.items.put(i, OnFloor(nearbyLoc._1, nearbyLoc._2))
+          for (i <- items) state.items.put(i, OnFloor(Location(levelId, nearbyLoc._1, nearbyLoc._2)))
         }
       }
     }

@@ -127,7 +127,7 @@ object Appearance {
   }
 
   def charForCable(state: GameState, unrolledItem: Item): (Char, Color, Color) = {
-    val OnFloor(x, y) = state.items.lookup(unrolledItem)
+    val OnFloor(Location(_, x, y)) = state.items.lookup(unrolledItem)
     val unrolled = unrolledItem.behaviors.collectFirst { case u: behaviors.Unrolled => u }.get
     val prevDir = Dir.from(unrolled.fromCell, (x, y))
     val nextDir = unrolled.toCell.map(Dir.from(_, (x, y))).getOrElse(prevDir.opposite)
@@ -154,11 +154,12 @@ object Appearance {
     state.sendMessage(item, Message.Display(item.kind.display)).display
 
   def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {
-    if (x == state.player._1 && y == state.player._2) {
+    val level = state.levels(state.player.levelId)
+    if (x == state.player.x && y == state.player.y) {
       val (char, fg, bg, _) = state.data.display.getDisplay("PLAYER")
       (char, fg, bg)
-    } else if (state.terrain.contains(x, y)) {
-      val items = state.items.lookup(OnFloor(x, y))
+    } else if (level.terrain.contains(x, y)) {
+      val items = state.items.lookup(OnFloor(Location(state.player.levelId, x, y)))
         .filter(item => displayForItem(state, item) != "INVISIBLE")
       if (items.nonEmpty) {
         // reversed so that we get the _last_ item in the list that has the highest layer instead of the _first_.
@@ -173,18 +174,18 @@ object Appearance {
         }
       } else {
         def apparent(x: Int, y: Int): Option[Terrain] = {
-          if (state.terrain.contains(x, y))
-            Some(state.terrain((x, y)))
+          if (level.terrain.contains(x, y))
+            Some(level.terrain((x, y)))
           else None
         }
 
-        val terrain = state.terrain(x, y)
+        val terrain = level.terrain(x, y)
         if (terrain.connects) {
           val left = apparent(x - 1, y)
           val up = apparent(x, y - 1)
           val right = apparent(x + 1, y)
           val down = apparent(x, y + 1)
-          val viewedFrom = Dir.from(state.player, (x, y))
+          val viewedFrom = Dir.from((state.player.x, state.player.y), (x, y))
           val (_, fg, bg, _) = state.data.display.getDisplay(terrain.display)
           (charForWall(terrain,
             left.orNull,
@@ -199,19 +200,20 @@ object Appearance {
     } else (' ', Color.Black, Color.Black)
   }
 
-  def messageAtCell(state: GameState, position: (Int, Int)): String = {
-    val items = state.items.lookup(OnFloor(position._1, position._2))
+  def messageAtCell(state: GameState, location: Location): String = {
+    val level = state.levels(location.levelId)
+    val items = state.items.lookup(OnFloor(location))
     val debug =
       if (state.showTempDebug)
-        f" (${state.temperature(position) - 273}%.1f C)"
+        f" (${level.temperature(location.x, location.y) - 273}%.1f C)"
       else if (state.showGasDebug)
-        s" (${state.gasComposition(position)})"
+        s" (${level.gasComposition(location.x, location.y)})"
       else
         ""
     (if (items.nonEmpty) {
       s"Here: ${items.last.kind.name}" + (if (items.size > 1) s" and ${items.size - 1} other thing${if (items.size == 1) "" else "s"}" else "")
     } else {
-      state.terrain(position).name
+      level.terrain(location.x, location.y).name
     }) + debug
   }
 }
@@ -314,9 +316,9 @@ class GLFWDisplay extends Display {
 
   def cameraBounds(state: GameState): (Int, Int, Int, Int) = {
     val worldHeightChars = windowHeightChars - 1
-    val left = state.player._1 - windowWidthChars/2
+    val left = state.player.x - windowWidthChars/2
     val right = left + windowWidthChars
-    val top = state.player._2 - worldHeightChars/2
+    val top = state.player.y - worldHeightChars/2
     val bottom = top + worldHeightChars
     (left, right, top, bottom)
   }
@@ -343,9 +345,9 @@ class GLFWDisplay extends Display {
     glEnable(GL_BLEND)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-    val left = state.player._1 - windowWidthChars/2
+    val left = state.player.x - windowWidthChars/2
     val right = left + windowWidthChars
-    val top = state.player._2 - worldHeightChars/2
+    val top = state.player.y - worldHeightChars/2
     val bottom = top + worldHeightChars
 
     spriteBatch.begin()
@@ -372,8 +374,9 @@ class GLFWDisplay extends Display {
     top: Int,
     bottom: Int
   ): Unit = {
+    val levelId = state.player.levelId
     for (y <- top until bottom; x <- left until right) {
-      if (state.isVisible(x, y)) {
+      if (state.isVisible(Location(levelId, x, y))) {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         val d: Float =
           if (state.sightRadius > 20) 1f
@@ -388,14 +391,16 @@ class GLFWDisplay extends Display {
         renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
 
-      if (state.showGasDebug && state.gasComposition.contains(x, y)) {
-        val gc = state.gasComposition(x, y)
+      val level = state.levels(levelId)
+
+      if (state.showGasDebug && level.gasComposition.contains(x, y)) {
+        val gc = level.gasComposition(x, y)
         val color = Color(0, 0, gc.oxygen.toFloat / 15, 0.3f)
         renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
 
-      if (state.showTempDebug && state.temperature.contains(x, y)) {
-        val temp = state.temperature(x, y)
+      if (state.showTempDebug && level.temperature.contains(x, y)) {
+        val temp = level.temperature(x, y)
         val color = if (temp > 273)
           Color((1 - math.exp(-(temp - 273)/30)).toFloat, 0, 0, 0.3f)
         else

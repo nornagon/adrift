@@ -25,9 +25,9 @@ case class Pollinator(
           state.broadcastToLocation(state.items.lookup(self), Pollinate())
         case "flying" =>
           val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
-          val (x, y) = state.getItemTile(self)
-          if ((dx != 0 || dy != 0) && state.canWalk(x + dx, y + dy)) {
-            state.items.move(self, OnFloor(x + dx, y + dy))
+          val loc = state.getItemTile(self)
+          if ((dx != 0 || dy != 0) && state.canWalk(loc + (dx, dy))) {
+            state.items.move(self, OnFloor(loc + (dx, dy)))
             energy -= 1
           } else {
             energy -= 0.25

@@ -1,6 +1,6 @@
 package adrift.items.behaviors.flora
 
-import adrift.{GameState, OnFloor}
+import adrift.{GameState, Location, OnFloor}
 import adrift.items.{Behavior, Item, Message}
 import adrift.RandomImplicits._
 
@@ -20,8 +20,8 @@ case class Seed(
   ): Unit = message match {
     case Message.Tick if !dead =>
       val pos = state.getItemTile(self)
-      val gas = state.gasComposition(pos)
-      val temp = state.temperature(pos)
+      val gas = state.levels(pos.levelId).gasComposition(pos.xy)
+      val temp = state.levels(pos.levelId).temperature(pos.xy)
       if (gas.totalPressure() < survival.minPressure || temp < survival.minTemperature || temp > survival.maxTemperature) {
         dead = true
       }
@@ -41,18 +41,16 @@ case class Seed(
       }
     case Live(plant, _) =>
       if (state.random.nextDouble() < 0.1) {
-        def drift(initpos: (Int,Int), distance:Int): (Int,Int) = (
-            if (distance == 0) return initpos
-            else {
-              val (x,y) = initpos
-              val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
-              if (state.canWalk(x + dx, y + dy)) drift((x + dx, y + dy), distance -1)
-              else (x, y)
-            }
-          )
+        def drift(initpos: Location, distance: Int): Location =
+          if (distance == 0) initpos
+          else {
+            val (dx, dy) = state.random.oneOf((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1))
+            if (state.canWalk(initpos + (dx, dy))) drift(initpos + (dx, dy), distance - 1)
+            else initpos
+          }
         val pos = drift(state.getItemTile(plant), driftDist)
         plant.parts = plant.parts.filter(_ ne self)
-        state.items.put(self, OnFloor(pos._1, pos._2))
+        state.items.put(self, OnFloor(pos))
       }
     case _ =>
   }

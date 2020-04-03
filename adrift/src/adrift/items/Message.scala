@@ -1,9 +1,11 @@
 package adrift.items
 
+import adrift.Location
+
 trait Message
 
 object Message {
-  case class PlayerMove(x: Int, y: Int) extends Message
+  case class PlayerMove(loc: Location) extends Message
   case object Activate extends Message
   case object Deactivate extends Message
   case object Tick extends Message
@@ -29,7 +31,7 @@ object Message {
   case class CanReceivePlug(plugShape: String, var ok: Boolean = false) extends Message
   case class CanPlugInto(item: Item, var ok: Boolean = false) extends Message
 
-  case class Hauled(from: (Int, Int), to: (Int, Int)) extends Message
+  case class Hauled(from: Location, to: Location) extends Message
 
   case class PickedUp(var item: Item) extends Message
   case class Dropped() extends Message

@@ -5,7 +5,7 @@ import adrift.items.Item
 import scala.collection.mutable
 
 sealed trait ItemLocation
-case class OnFloor(x: Int, y: Int) extends ItemLocation
+case class OnFloor(l: Location) extends ItemLocation
 case class InHands() extends ItemLocation
 case class Inside(other: Item) extends ItemLocation
 case class Worn() extends ItemLocation

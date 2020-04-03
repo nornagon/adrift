@@ -24,17 +24,17 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
             case "showgas" =>
               state.showGasDebug = !state.showGasDebug
             case setGas("oxygen", pp) =>
-              state.gasComposition(state.player) = state.gasComposition(state.player).copy(oxygen = pp.toFloat)
+              state.levels(state.player.levelId).gasComposition(state.player.x, state.player.y) = state.levels(state.player.levelId).gasComposition(state.player.x, state.player.y).copy(oxygen = pp.toFloat)
             case setTemp(t) =>
-              state.temperature(state.player) = t.toFloat
+              state.levels(state.player.levelId).temperature(state.player.x, state.player.y) = t.toFloat
             case item(name) =>
               if (state.data.itemGroups.contains(name)) {
                 state.sampleItem(state.data.itemGroups(name).choose).foreach(item => {
-                  state.items.put(item, OnFloor(state.player._1, state.player._2))
+                  state.items.put(item, OnFloor(state.player))
                 })
               } else if (state.data.items.contains(name)) {
                 val item = state.data.items(name).generateItem()
-                state.items.put(item, OnFloor(state.player._1, state.player._2))
+                state.items.put(item, OnFloor(state.player))
               }
             case "save" =>
               val savePath = Paths.get("save.bson")
