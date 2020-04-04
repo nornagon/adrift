@@ -26,9 +26,19 @@ class Grid[T](val width: Int, val height: Int)(initial: => T) {
   def indices: IndexedSeq[(Int, Int)] = for (y <- 0 until height; x <- 0 until width) yield (x, y)
 
   override def toString: String = {
-    "Grid(" + (for (y <- 0 until height) yield {
+    s"${this.getClass.getSimpleName}(" + (for (y <- 0 until height) yield {
       (for (x <- 0 until width) yield this(x, y).toString).mkString(", ")
     }).mkString("\n") + ")"
   }
 }
 
+class CylinderGrid[T](width: Int, height: Int)(initial: => T) extends Grid[T](width, height)(initial) {
+  def normalizeX(x: Int): Int = ((x % width) + width) % width
+  def normalize(xy: (Int, Int)): (Int, Int) =
+    (normalizeX(xy._1), xy._2)
+
+  override def apply(x: Int, y: Int): T = super.apply(normalizeX(x), y)
+  override def get(x: Int, y: Int): Option[T] = super.get(normalizeX(x), y)
+  override def update(x: Int, y: Int, c: T): Unit = super.update(normalizeX(x), y, c)
+  override def contains(x: Int, y: Int): Boolean = super.contains(normalizeX(x), y)
+}

@@ -20,9 +20,9 @@ case class Location(levelId: LevelId, x: Int, y: Int) {
 }
 
 case class Level(
-  var terrain: Grid[Terrain],
-  var temperature: Grid[Double],
-  var gasComposition: Grid[GasComposition],
+  var terrain: CylinderGrid[Terrain],
+  var temperature: CylinderGrid[Double],
+  var gasComposition: CylinderGrid[GasComposition],
 ) {
   val width: Int = terrain.width
   val height: Int = terrain.height
@@ -30,9 +30,6 @@ case class Level(
   assert(width == gasComposition.width)
   assert(height == temperature.height)
   assert(height == gasComposition.height)
-
-  def normalize(xy: (Int, Int)): (Int, Int) =
-    (((xy._1 % width) + width) % width, xy._2)
 
   def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
     val terA = terrain(a)
@@ -97,10 +94,31 @@ case class Level(
 
 class GameState(var data: Data, val random: Random) {
   var levels = mutable.Map.empty[LevelId, Level]
-  var items: ItemDatabase = new ItemDatabase
+  var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
   var bodyTemp: Double = 310
   var internalCalories: Int = 8000
+
+  val items = new {
+    def put(item: Item, location: ItemLocation): Unit = itemDb.put(item, normalize(location))
+    def delete(item: Item): Unit = itemDb.delete(item)
+    def lookup(item: Item): ItemLocation = itemDb.lookup(item)
+    def lookup(location: ItemLocation): Seq[Item] = itemDb.lookup(normalize(location))
+    def exists(item: Item): Boolean = itemDb.exists(item)
+    def all: Iterable[Item] = itemDb.all
+    def move(item: Item, location: ItemLocation): Unit = itemDb.move(item, normalize(location))
+  }
+
+  def normalize(l: Location): Location = {
+    val level = levels(l.levelId)
+    if (l.x >= 0 && l.x < level.width) return l
+    val (x, y) = level.terrain.normalize(l.xy)
+    l.copy(x = x, y = y)
+  }
+  def normalize(l: ItemLocation): ItemLocation = l match {
+    case OnFloor(l) if l.x < 0 || l.x >= levels(l.levelId).width => OnFloor(normalize(l))
+    case other => other
+  }
 
   def sightRadius: Int = {
     math.max(1, math.min(internalCalories / 200, 100))

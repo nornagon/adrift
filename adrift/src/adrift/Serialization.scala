@@ -24,7 +24,7 @@ object Serialization {
     def toGameState(data: Data): GameState = {
       val state = new GameState(data, random)
       state.levels ++= levels
-      state.items = items
+      state.itemDb = items
       state.player = player
       state.bodyTemp = bodyTemp
       state
@@ -34,7 +34,7 @@ object Serialization {
     def fromGameState(state: GameState): GameStateSerialized = GameStateSerialized(
       state.random,
       state.levels.toMap,
-      state.items,
+      state.itemDb,
       state.player,
       state.bodyTemp
     )
@@ -65,6 +65,7 @@ object Serialization {
       "height" -> a.height.asJson,
       "cells" -> a.cells.asJson
     )
+  implicit def encodeCylinderGrid[T: Encoder]: Encoder[CylinderGrid[T]] = (a: CylinderGrid[T]) => encodeGrid[T](implicitly[Encoder[T]])(a)
   implicit def decodeGrid[T: Decoder]: Decoder[Grid[T]] = (c: HCursor) =>
     for {
       width <- c.get[Int]("width")
@@ -73,6 +74,15 @@ object Serialization {
     } yield {
       val iter = cells.iterator
       new Grid[T](width, height)(iter.next())
+    }
+  implicit def decodeCylinderGrid[T: Decoder]: Decoder[CylinderGrid[T]] = (c: HCursor) =>
+    for {
+      width <- c.get[Int]("width")
+      height <- c.get[Int]("height")
+      cells <- c.get[Vector[T]]("cells")
+    } yield {
+      val iter = cells.iterator
+      new CylinderGrid[T](width, height)(iter.next())
     }
 
   implicit val encodeTerrain: Encoder[Terrain] = (t: Terrain) => t.name.asJson
@@ -182,9 +192,9 @@ object Serialization {
     )
   implicit def decodeLevel(implicit d: Data): Decoder[Level] = (c: HCursor) =>
     for {
-      terrain <- c.get[Grid[Terrain]]("terrain")
-      temperature <- c.get[Grid[Double]]("temperature")
-      gasComposition <- c.get[Grid[GasComposition]]("gasComposition")
+      terrain <- c.get[CylinderGrid[Terrain]]("terrain")
+      temperature <- c.get[CylinderGrid[Double]]("temperature")
+      gasComposition <- c.get[CylinderGrid[GasComposition]]("gasComposition")
     } yield
       Level(terrain, temperature, gasComposition)
 
