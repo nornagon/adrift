@@ -112,8 +112,7 @@ class GameState(var data: Data, val random: Random) {
   def normalize(l: Location): Location = {
     val level = levels(l.levelId)
     if (l.x >= 0 && l.x < level.width) return l
-    val (x, y) = level.terrain.normalize(l.xy)
-    l.copy(x = x, y = y)
+    l.copy(x = level.terrain.normalizeX(l.x))
   }
   def normalize(l: ItemLocation): ItemLocation = l match {
     case OnFloor(l) if l.x < 0 || l.x >= levels(l.levelId).width => OnFloor(normalize(l))

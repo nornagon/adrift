@@ -40,5 +40,5 @@ class CylinderGrid[T](width: Int, height: Int)(initial: => T) extends Grid[T](wi
   override def apply(x: Int, y: Int): T = super.apply(normalizeX(x), y)
   override def get(x: Int, y: Int): Option[T] = super.get(normalizeX(x), y)
   override def update(x: Int, y: Int, c: T): Unit = super.update(normalizeX(x), y, c)
-  override def contains(x: Int, y: Int): Boolean = super.contains(normalizeX(x), y)
+  override def contains(x: Int, y: Int): Boolean = y >= 0 && y < height
 }
