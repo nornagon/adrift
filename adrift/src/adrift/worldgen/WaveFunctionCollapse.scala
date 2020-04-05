@@ -70,8 +70,8 @@ object WaveFunctionCollapse {
     )
     for (y <- 0 until height) {
       for (x <- 0 until width) {
-        if (x < width - 1 && mustConnect((x, y), (x+1, y)))
-          lb.addEdge(y*width+x, y*width+x+1)
+        if (x < width && mustConnect((x, y), ((x+1)%width, y)))
+          lb.addEdge(y*width+x, y*width+(x+1)%width)
         if (y < height - 1 && mustConnect((x, y), (x, y+1)))
           lb.addEdge(y*width+x, (y+1)*width+x)
       }
@@ -86,8 +86,8 @@ object WaveFunctionCollapse {
     // adjacency: at most, each room is connected to all its neighbors.
     for (y <- 0 until height) {
       for (x <- 0 until width) {
-        if (x < width - 1)
-          ub.addEdge(y*width+x, y*width+x+1)
+        if (x < width)
+          ub.addEdge(y*width+x, y*width+(x+1)%width)
         if (y < height - 1)
           ub.addEdge(y*width+x, (y+1)*width+x)
       }
@@ -121,33 +121,27 @@ object WaveFunctionCollapse {
       allowedVertical.add(t1, t2, if (connectedVertically) 1 else 0)
     }
 
-    val leftEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(-1, t)) yield t)(collection.breakOut)
-    val rightEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(t, -1)) yield t)(collection.breakOut)
+    //val leftEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(-1, t)) yield t)(collection.breakOut)
+    //val rightEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(t, -1)) yield t)(collection.breakOut)
     val topEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedVertical(-1, t)) yield t)(collection.breakOut)
     val bottomEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedVertical(t, -1)) yield t)(collection.breakOut)
 
     // restrict the tile choice to those that can be placed next to each other, and
     // enforce that the connectivity map matches the tile choice
     for (y <- 0 until height; x <- 0 until width) {
-      if (x == 0)
-        model.member(tiles(y*width+x), leftEdgeAllowed).post()
-      if (x == width - 1)
-        model.member(tiles(y*width+x), rightEdgeAllowed).post()
       if (y == 0)
         model.member(tiles(y*width+x), topEdgeAllowed).post()
       if (y == height - 1)
         model.member(tiles(y*width+x), bottomEdgeAllowed).post()
       val allowedInThisSector: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedAt(x, y, t)) yield t)(collection.breakOut)
       model.member(tiles(y * width + x), allowedInThisSector).post()
-      if (x < width - 1) {
-        val connectedRight = model.boolVar(s"edge([$x,$y] - [${x+1},$y])")
-        model.edgeChanneling(connectivity, connectedRight, y*width+x, y*width+x+1).post()
-        model.table(
-          Array(tiles(y * width + x), tiles(y * width + x + 1), connectedRight),
-          allowedHorizontal,
-          "GACSTR+"
-        ).post()
-      }
+      val connectedRight = model.boolVar(s"edge([$x,$y] - [${(x+1)%width},$y])")
+      model.edgeChanneling(connectivity, connectedRight, y*width+x, y*width+(x+1)%width).post()
+      model.table(
+        Array(tiles(y * width + x), tiles(y * width + (x + 1)%width), connectedRight),
+        allowedHorizontal,
+        "GACSTR+"
+      ).post()
       if (y < height - 1) {
         val connectedDown = model.boolVar(s"edge([$x,$y] - [$x,${y+1}])")
         model.edgeChanneling(connectivity, connectedDown, y*width+x, (y+1)*width+x).post()
@@ -178,9 +172,9 @@ object WaveFunctionCollapse {
       var s = ""
       for (y <- 0 until height) {
         for (x <- 0 until width) {
-          val connectedRight = x < width - 1 && v(y * width + x)(y * width + x + 1)
+          val connectedRight = v(y * width + x)(y * width + (x + 1) % width)
           val connectedDown = y < height - 1 && v(y * width + x)((y + 1) * width + x)
-          val connectedLeft = x > 0 && v(y * width + x)(y * width + x - 1)
+          val connectedLeft = v(y * width + x)(y * width + (x + width - 1) % width)
           val connectedUp = y > 0 && v(y * width + x)((y - 1) * width + x)
           val tile = tiles(y * width + x)
           if (tile.getDomainSize > 1) {
