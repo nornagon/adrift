@@ -50,7 +50,7 @@
     - { type: cryo-door, count: 10, disassembled_with: SCREWING }
     - { type: type IC screw, count: 6, disassembled_with: SCREWING }
     - { type: type IB screw, count: 10, disassembled_with: SCREWING }
-  display: HUMAN_EQUIPMENT
+  display: CRYOCASKET
   behavior:
     - Block: {}
 

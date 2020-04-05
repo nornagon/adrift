@@ -96,6 +96,9 @@
       char: "\u00F0" # ≡
     HUMAN_EQUIPMENT:
       char: "\u00E9" # Θ
+    CRYOCASKET:
+      char: "\u00E9" # Θ
+      fg: blue
     CLOTHING:
       char: "\u0043" # C
     CHAIR:
