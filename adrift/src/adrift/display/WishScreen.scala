@@ -10,11 +10,38 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
   val setGas = raw"setgas (\S+) (-?[0-9.]+)".r
   val item = raw"item (.+)".r
   var input = ""
+
+  def longestCommonPrefix(strs: Traversable[String]): String = {
+    if (strs.isEmpty) return ""
+    val minLen = strs.view.map(_.length).min
+    var low = 1
+    var high = minLen
+    while (low <= high) {
+      val middle = (low + high) / 2
+      if (isCommonPrefix(strs, middle)) low = middle + 1
+      else high = middle - 1
+    }
+    strs.head.substring(0, (low + high) / 2)
+  }
+
+  private def isCommonPrefix(strs: Traversable[String], len: Int): Boolean = {
+    val str1 = strs.head.substring(0, len)
+    strs.tail.forall(_.startsWith(str1))
+  }
+
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
       key match {
         case GLFW.GLFW_KEY_BACKSPACE if input.length > 0 =>
           input = input.init
+        case GLFW.GLFW_KEY_TAB =>
+          input match {
+            case item(partial) =>
+              val matching = state.data.itemGroups.keySet union state.data.items.keySet filter (_.startsWith(partial))
+              if (matching.nonEmpty)
+                input = s"item ${longestCommonPrefix(matching)}"
+            case _ =>
+          }
         case GLFW.GLFW_KEY_ENTER =>
           input match {
             case "wtw" =>
