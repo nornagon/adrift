@@ -1,0 +1,28 @@
+- type: item_group
+  name: bedding
+  choose:
+    - bed sheet
+    - duvet
+    - pillow
+
+- type: item
+  name: bed sheet
+  display: RAW_CLOTH
+  description: >-
+    A flat sheet of synthetic fiber cloth.
+  parts: []
+
+- type: item
+  name: duvet
+  display: RAW_CLOTH
+  description: >-
+    Small comfort against the vast, uncaring coldness of space.
+  parts: []
+
+- type: item
+  name: pillow
+  description: >-
+    A regulation pillow. You'd think these would be more comfortable, given how important it is for the crew to be
+    well-rested on this sort of mission. Whatever this sort of mission is.
+  parts: []
+  display: RAW_CLOTH

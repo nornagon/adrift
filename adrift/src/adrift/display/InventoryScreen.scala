@@ -47,12 +47,12 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       val loc = state.items.lookup(item)
       val (left, _, top, _) = display.cameraBounds(state)
       loc match {
-        case OnFloor(x, y) =>
+        case OnFloor(loc) =>
           val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
-          renderer.drawChar(display.font, x - left, y - top, char, fg=Color.Black, bg=Color.White)
+          renderer.drawChar(display.font, loc.x - left, loc.y - top, char, fg=Color.Black, bg=Color.White)
         case InHands() | Worn() =>
           val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
-          renderer.drawChar(display.font, state.player._1 - left, state.player._2 - top, char, fg=Color.Black, bg=Color.White)
+          renderer.drawChar(display.font, state.player.x - left, state.player.y - top, char, fg=Color.Black, bg=Color.White)
         case Inside(otherItem) =>
           // TODO: recursively find the location of otherItem until something is worn, in hands, or on the floor.
       }
@@ -70,9 +70,9 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   def directionString(pos: ItemLocation): String = {
     pos match {
-      case OnFloor(x, y) =>
-        val dx = x - state.player._1
-        val dy = y - state.player._2
+      case OnFloor(loc) =>
+        val dx = loc.x - state.player.x
+        val dy = loc.y - state.player.y
         if (dx < 0) {
           if (dy < 0) "NW"
           else if (dy == 0) "W"

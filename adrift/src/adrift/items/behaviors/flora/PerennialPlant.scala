@@ -35,9 +35,10 @@ case class Leaf(
       } else {
         if (state.random.nextDouble() < msg.light) {
           val pos = state.getItemTile(plant)
+          val level = state.levels(pos.levelId)
           if (state.random.nextDouble() < carbonAbsorptionChance &&
-            state.gasComposition(pos).carbonDioxide >= carbonAbsorptionChunk) {
-            state.gasComposition(pos) +=
+            level.gasComposition(pos.xy).carbonDioxide >= carbonAbsorptionChunk) {
+            level.gasComposition(pos.xy) +=
               GasComposition(oxygen = carbonAbsorptionChunk, carbonDioxide = -carbonAbsorptionChunk, nitrogen = 0)
             state.sendMessage(plant, Grow(carbonAbsorptionChunk))
           }

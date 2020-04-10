@@ -15,13 +15,6 @@
     - soldering iron
 
 - type: item_group
-  name: bedding
-  choose:
-    - bedsheet
-    - duvet
-    - pillow
-
-- type: item_group
   name: electronic equipment
   choose:
     - { group: small electronics}

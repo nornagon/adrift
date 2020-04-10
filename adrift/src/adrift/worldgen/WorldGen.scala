@@ -32,7 +32,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     down: ConnectionType,
     rotatable: Boolean = false,
     rotation: Int = 0,
-    fill: Option[(GameState, (Int, Int) => (Int, Int)) => Unit],
+    fill: Option[(GameState, LevelId, (Int, Int) => (Int, Int)) => Unit],
   ) {
     def rotated: Room = copy(
       left = up.rotated,
@@ -73,21 +73,26 @@ case class WorldGen(data: Data)(implicit random: Random) {
       if (isDefined) tiles.add((rx, ry))
     }
 
-    def doFill(x0: Int, y0: Int)(s: GameState, xf: (Int, Int) => (Int, Int)): Unit = {
+    def doFill(x0: Int, y0: Int)(s: GameState, levelId: LevelId, xf: (Int, Int) => (Int, Int)): Unit = {
       for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex; if !cell.isSpaceChar) {
         val (tx, ty) = xf(x - x0*6, y - y0*6)
         val cellChar = cell.toString
         val d = rd.defs.getOrElse(cellChar, throw new RuntimeException(s"Character '$cellChar' not in defs of room ${rd.name}"))
         val terrain = d("terrain").flatMap(_.asString).getOrElse(rd.default_terrain)
-        s.terrain(tx, ty) = data.terrain(terrain)
+        s.levels(levelId).terrain(tx, ty) = data.terrain(terrain)
         val itemTable = d("items").map(_.as[Table[String]].getOrElse(throw new RuntimeException(s"Failed to parse items")))
         itemTable.foreach { table =>
           val items = table.sample()(random, data.itemGroups.mapValues(_.choose))
           items.foreach { item_kind_id =>
             val itemKind = data.items(item_kind_id)
-            s.items.put(itemKind.generateItem(), OnFloor(tx, ty))
+            s.items.put(itemKind.generateItem(), OnFloor(Location(levelId, tx, ty)))
           }
         }
+      }
+      rd.gen foreach { genName =>
+        val cells = for ((row, y) <- layout.zipWithIndex; (cell, x) <- row.zipWithIndex; if !cell.isSpaceChar)
+          yield xf(x - x0 * 6, y - y0 * 6)
+        data.roomgens(genName).generate(s, levelId, cells)
       }
     }
 
@@ -334,9 +339,17 @@ case class WorldGen(data: Data)(implicit random: Random) {
 
   def generateDetails(schematic: ShipSchematic): GameState = {
     val (width, height) = schematic.size
-    val state = new GameState(data, width * 6, height * 6, new Random(random.nextLong()))
-    for ((x, y) <- state.terrain.indices) {
-      state.terrain(x, y) = data.terrain("wall")
+    val state = new GameState(data, new Random(random.nextLong()))
+    val levelId = LevelId("main")
+    state.levels(levelId) = Level(
+      terrain = new CylinderGrid(width * 6, height * 6)(data.terrain("empty space")),
+      temperature = new CylinderGrid(width * 6, height * 6)(random.between(250d, 270d)),
+      gasComposition = new CylinderGrid(width * 6, height * 6)(GasComposition(4, 9, 1))
+    )
+    //(data.terrain("empty space"), random.between(250d, 270d))
+    val level = state.levels(levelId)
+    for ((x, y) <- level.terrain.indices) {
+      level.terrain(x, y) = data.terrain("wall")
     }
     val superblocks = WaveFunctionCollapse.graphSolve(superblockTiles, width / 5, height / 5, random, mustConnect = { (a, b) =>
       a._1 == b._1 && a._1 == width / 5 / 2 || (a._2 == b._2 && a._2 > 0 && a._2 < height / 5 - 1)
@@ -364,43 +377,43 @@ case class WorldGen(data: Data)(implicit random: Random) {
     for (ty <- 0 until height; tx <- 0 until width; x = tx * 6; y = ty * 6) {
       val room = ss(tx)(ty)
       // top-left corner
-      state.terrain(x, y) = data.terrain("wall")
+      level.terrain(x, y) = data.terrain("wall")
       // top wall
       room.up match {
         case Wall =>
           for (dx <- 1 to 5) {
-            state.terrain(x + dx, y) = data.terrain("wall")
+            level.terrain(x + dx, y) = data.terrain("wall")
           }
         case Door =>
           for (dx <- 1 to 5) {
-            state.terrain(x + dx, y) = data.terrain("wall")
+            level.terrain(x + dx, y) = data.terrain("wall")
           }
-          state.terrain(x + 3, y) = data.terrain("floor")
-          generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x + 3, y)))
+          level.terrain(x + 3, y) = data.terrain("floor")
+          generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(Location(levelId, x + 3, y))))
         case Open | Internal(_, _) =>
           for (dx <- 1 to 5) {
-            state.terrain(x + dx, y) = data.terrain("floor")
+            level.terrain(x + dx, y) = data.terrain("floor")
           }
         case Space =>
           for (dx <- 1 to 5) {
-            state.terrain(x + dx, y) = data.terrain("empty space")
+            level.terrain(x + dx, y) = data.terrain("empty space")
           }
       }
       // left wall
       room.left match {
         case Wall =>
           for (dy <- 1 to 5) {
-            state.terrain(x, y + dy) = data.terrain("wall")
+            level.terrain(x, y + dy) = data.terrain("wall")
           }
         case Door =>
           for (dy <- 1 to 5) {
-            state.terrain(x, y + dy) = data.terrain("wall")
+            level.terrain(x, y + dy) = data.terrain("wall")
           }
-          state.terrain(x, y + 3) = data.terrain("floor")
-          generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(x, y + 3)))
+          level.terrain(x, y + 3) = data.terrain("floor")
+          generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(Location(levelId, x, y + 3))))
         case Open | Internal(_, _) | Space =>
           for (dy <- 1 to 5) {
-            state.terrain(x, y + dy) = data.terrain("floor")
+            level.terrain(x, y + dy) = data.terrain("floor")
           }
       }
     }
@@ -419,7 +432,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
           case 2 => (x, y) => (ox - x, oy - y)
           case 3 => (x, y) => (ox - y, oy + x)
         }
-        fill(state, xf)
+        fill(state, levelId, xf)
       }
     }
     val (startingRoomX, startingRoomY) = random.pick(for {
@@ -428,7 +441,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       if room.name == "cryopods"
     } yield (tx, ty))
 
-    state.movePlayer(startingRoomX*6 + 3, startingRoomY*6 + 3)
+    state.movePlayer(Location(levelId, startingRoomX*6 + 3, startingRoomY*6 + 3))
     state
   }
 

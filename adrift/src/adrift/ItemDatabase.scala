@@ -5,7 +5,7 @@ import adrift.items.Item
 import scala.collection.mutable
 
 sealed trait ItemLocation
-case class OnFloor(x: Int, y: Int) extends ItemLocation
+case class OnFloor(l: Location) extends ItemLocation
 case class InHands() extends ItemLocation
 case class Inside(other: Item) extends ItemLocation
 case class Worn() extends ItemLocation
@@ -25,12 +25,8 @@ class ItemDatabase {
     itemsByLocation(loc) = itemsByLocation(loc).filter(_ != item)
   }
 
-  def lookup(item: Item): ItemLocation = {
-    locationsByItem(item)
-  }
-  def lookup(location: ItemLocation): Seq[Item] = {
-    itemsByLocation(location)
-  }
+  def lookup(item: Item): ItemLocation = locationsByItem(item)
+  def lookup(location: ItemLocation): Seq[Item] = itemsByLocation(location)
 
   def exists(item: Item): Boolean = locationsByItem.contains(item)
 

@@ -1,7 +1,6 @@
 package adrift.items.behaviors
 
-import adrift.GasComposition
-import adrift.{GameState, OnFloor}
+import adrift.{GameState, GasComposition, Location, OnFloor}
 import adrift.items.{Behavior, Item, Message}
 
 case class PumpGas(var gas: GasComposition) extends Message
@@ -15,8 +14,8 @@ case class Gasostat(gas: GasComposition, targetPp: Double, hysteresis: Double) e
   ): Unit = message match {
     case Message.Tick =>
       state.items lookup self match {
-        case l @ OnFloor(x, y) =>
-          val c = state.gasComposition(x, y)
+        case l @ OnFloor(Location(levelId, x, y)) =>
+          val c = state.levels(levelId).gasComposition(x, y)
           if (c.oxygen < targetPp - hysteresis) {
             state.broadcastToLocation(l, Message.Activate)
           } else if (c.oxygen > targetPp) {
@@ -68,11 +67,11 @@ case class Diffuser() extends Behavior {
     message: Message
   ): Unit = message match {
     case m@PumpGas(gas) =>
-      val (x,y) = state.getItemTile(self)
-      if ((gas + state.gasComposition(x,y)).minPressure < 0) {
+      val loc = state.getItemTile(self)
+      if ((gas + state.levels(loc.levelId).gasComposition(loc.x, loc.y)).minPressure < 0) {
         m.gas = GasComposition.zero()
       } else {
-        state.gasComposition(x,y) += gas
+        state.levels(loc.levelId).gasComposition(loc.x, loc.y) += gas
       }
     case _ =>
   }

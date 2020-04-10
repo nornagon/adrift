@@ -1,10 +1,11 @@
 package adrift.display
 
-import adrift.{Color, GameState, OnFloor}
+import adrift.{Color, GameState, Location, OnFloor}
 import org.lwjgl.glfw.GLFW._
 
 class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  var (x, y) = state.player
+  var Location(levelId, x, y) = state.player
+
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
       key match {
@@ -32,8 +33,8 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
       else
         (1, 1)
 
-    val terrain = state.terrain(x, y)
-    val items = state.items.lookup(OnFloor(x, y))
+    val terrain = state.levels(levelId).terrain(x, y)
+    val items = state.items.lookup(OnFloor(Location(levelId, x, y)))
 
     renderer.frame(
       left = anchor._1, top = anchor._2,

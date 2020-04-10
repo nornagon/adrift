@@ -10,7 +10,8 @@ case class GasLeak() extends Behavior {
     message: Message
   ): Unit = message match {
     case Message.Tick =>
-      state.gasComposition(state.getItemTile(self)) += GasComposition(oxygen = 1, carbonDioxide = 0, nitrogen = 0)
+      val loc = state.getItemTile(self)
+      state.levels(loc.levelId).gasComposition(loc.x, loc.y) += GasComposition(oxygen = 1, carbonDioxide = 0, nitrogen = 0)
     case _ =>
   }
 }

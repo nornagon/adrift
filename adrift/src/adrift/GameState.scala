@@ -13,15 +13,111 @@ case class Circuit(name: String, max: Int, var stored: Int) {
   def add(amount: Int): Unit = stored = math.min(max, stored + amount)
 }
 
-class GameState(var data: Data, val width: Int, val height: Int, val random: Random) {
-  var terrain: Grid[Terrain] = new Grid[Terrain](width, height)(data.terrain("empty space"))
-  var temperature: Grid[Double] = new Grid[Double](width, height)(random.between(250d, 270d))
-  var gasComposition: Grid[GasComposition] =
-    new Grid[GasComposition](width,height)(GasComposition(oxygen = 4, nitrogen = 9, carbonDioxide = 1))
-  var items: ItemDatabase = new ItemDatabase
-  var player: (Int, Int) = (0, 0)
+case class LevelId(id: String) extends AnyVal
+case class Location(levelId: LevelId, x: Int, y: Int) {
+  def +(dx: Int, dy: Int): Location = copy(levelId, x + dx, y + dy)
+  def xy: (Int, Int) = (x, y)
+}
+
+case class Level(
+  var terrain: CylinderGrid[Terrain],
+  var temperature: CylinderGrid[Double],
+  var gasComposition: CylinderGrid[GasComposition],
+) {
+  val width: Int = terrain.width
+  val height: Int = terrain.height
+  assert(width == temperature.width)
+  assert(width == gasComposition.width)
+  assert(height == temperature.height)
+  assert(height == gasComposition.height)
+
+  def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
+    val terA = terrain(a)
+    val terB = terrain(b)
+    val ta = temperature(a)
+    val tb = temperature(b)
+    val k = terA.heatTransfer * terB.heatTransfer
+    val w = (ta - tb) * k
+    val dq = w * dt
+    if (temperature.contains(a)) temperature(a) -= dq / terA.heatCapacity
+    if (temperature.contains(b)) temperature(b) += dq / terB.heatCapacity
+  }
+
+  def moveGas(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
+    val gca = gasComposition(a)
+    val gcb = gasComposition(b)
+    val w = (gca - gcb) * 0.5
+    val dpp = w * dt
+    gasComposition(a) -= dpp
+    gasComposition(b) += dpp
+  }
+
+  def updateHeat(dt: Double = 1, isPermeable: (Int, Int) => Boolean)(implicit random: Random): Unit = {
+    def randomAdj(p: (Int, Int)): (Int, Int) = {
+      val (x, y) = p
+      random.between(0, 4) match {
+        case 0 => (x - 1, y)
+        case 1 => (x + 1, y)
+        case 2 => (x, y - 1)
+        case 3 => (x, y + 1)
+      }
+    }
+    for (_ <- 0 until (width * height * 0.4).round.toInt) {
+      val a = (random.between(0, width), random.between(0, height))
+      val b = randomAdj(a)
+      if (temperature.contains(a) && temperature.contains(b)) {
+        moveHeat(dt / 20, a, b)
+        if (terrain(a).permeable && terrain(b).permeable) {
+          moveGas(dt, a, b)
+        }
+      }
+      if (terrain(a).name == "floor" && random.oneIn(2)) {
+        var p = a
+        for (_ <- 1 to random.between(2, 8)) {
+          val test = randomAdj(p)
+          if (isPermeable(test._1, test._2)) {
+            p = test
+          }
+        }
+        if (p != a) {
+          val tmp = temperature(p)
+          temperature(p) = temperature(a)
+          temperature(a) = tmp
+          val tmp2 = gasComposition(p)
+          gasComposition(p) = gasComposition(a)
+          gasComposition(a) = tmp2
+        }
+      }
+    }
+  }
+}
+
+class GameState(var data: Data, val random: Random) {
+  var levels = mutable.Map.empty[LevelId, Level]
+  var itemDb: ItemDatabase = new ItemDatabase
+  var player: Location = Location(LevelId("main"), 0, 0)
   var bodyTemp: Double = 310
   var internalCalories: Int = 8000
+
+  val items = new {
+    def put(item: Item, location: ItemLocation): Unit = itemDb.put(item, normalize(location))
+    def delete(item: Item): Unit = itemDb.delete(item)
+    def lookup(item: Item): ItemLocation = itemDb.lookup(item)
+    def lookup(location: ItemLocation): Seq[Item] = itemDb.lookup(normalize(location))
+    def exists(item: Item): Boolean = itemDb.exists(item)
+    def all: Iterable[Item] = itemDb.all
+    def move(item: Item, location: ItemLocation): Unit = itemDb.move(item, normalize(location))
+  }
+
+  def normalize(l: Location): Location = {
+    val level = levels(l.levelId)
+    if (l.x >= 0 && l.x < level.width) return l
+    l.copy(x = level.terrain.normalizeX(l.x))
+  }
+  def normalize(l: ItemLocation): ItemLocation = l match {
+    case OnFloor(l) if l.x < 0 || l.x >= levels(l.levelId).width => OnFloor(normalize(l))
+    case other => other
+  }
 
   def sightRadius: Int = {
     math.max(1, math.min(internalCalories / 200, 100))
@@ -54,7 +150,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     for (_ <- 0 until durationSec) {
       items.all.foreach(sendMessage(_, Message.Tick))
       val start = System.nanoTime()
-      updateHeat()
+      updateHeat(player.levelId)
       println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
       checkBodyTemp()
       internalCalories -= 1
@@ -66,8 +162,8 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     _message = None
     action match {
       case Action.PlayerMove(dx, dy) =>
-        if (canWalk(player._1 + dx, player._2 + dy) || walkThroughWalls) {
-          movePlayer(player._1 + dx, player._2 + dy)
+        if (canWalk(player + (dx, dy)) || walkThroughWalls) {
+          movePlayer(player + (dx, dy))
         }
         elapse(1)
 
@@ -76,12 +172,12 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         item.parts = item.parts.filter { p =>
           val disassembleOp = item.kind.parts.find(_.kind == p.kind).get.operation
           if (disassembleOp.id == "HANDLING") {
-            items.put(p, OnFloor(player._1, player._2))
+            items.put(p, OnFloor(player))
             false
           } else {
             val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
             if (tool.nonEmpty) {
-              items.put(p, OnFloor(player._1, player._2))
+              items.put(p, OnFloor(player))
               anyRemoved = true
             }
             tool.isEmpty
@@ -110,7 +206,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
           val parts = ops.map(_.part)
           parts.foreach(items.delete)
           val newItem = itemKind.fromParts(parts)
-          items.put(newItem, OnFloor(player._1, player._2))
+          items.put(newItem, OnFloor(player))
           putMessage(s"You make a ${itemDisplayName(newItem)}.")
         } else {
           putMessage(s"Your tools fail you.")
@@ -131,10 +227,10 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
       case Action.PutDown(item) =>
         items.lookup(item) match {
           case InHands() =>
-            items.move(item, OnFloor(player._1, player._2))
+            items.move(item, OnFloor(player))
             sendMessage(item, Message.Dropped())
             elapse(1)
-            putMessage(s"You place the ${itemDisplayName(item)} on the ${terrain(player).name}.")
+            putMessage(s"You place the ${itemDisplayName(item)} on the ${levels(player.levelId).terrain(player.x, player.y).name}.")
           case _ =>
             putMessage("You can't put that down.")
         }
@@ -155,7 +251,7 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
         putMessage(s"You put on the ${itemDisplayName(item)}.")
 
       case Action.TakeOff(item) =>
-        items.move(item, OnFloor(player._1, player._2))
+        items.move(item, OnFloor(player))
         sendMessage(item, Message.Dropped())
         elapse(5)
         putMessage(s"You take off the ${itemDisplayName(item)}.")
@@ -265,9 +361,9 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     name
   }
 
-  def getItemTile(item: Item): (Int, Int) = {
+  def getItemTile(item: Item): Location = {
     items.lookup(item) match {
-      case OnFloor(x, y) => (x, y)
+      case OnFloor(l) => l
       case InHands() | Worn() => player
       case Inside(other) => getItemTile(other)
     }
@@ -280,24 +376,24 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     } yield itemKind.generateItem()
   }
 
-  def movePlayer(x: Int, y: Int): Unit = {
+  def movePlayer(l: Location): Unit = {
     val oldPos = player
-    player = (x, y)
+    player = l
     items.lookup(InHands()).foreach(sendMessage(_, Message.Hauled(from = oldPos, to = player)))
     broadcastPlayerMoved()
   }
 
   def broadcastPlayerMoved(): Unit = {
     for {
-      y <- player._2 - 2 to player._2 + 2
-      x <- player._1 - 2 to player._1 + 2
-      if isVisible(x, y)
-    } broadcastToLocation(OnFloor(x, y), Message.PlayerMove(player._1, player._2))
+      dy <- -2 to +2
+      dx <- -2 to +2
+      loc = player + (dx, dy)
+      if isVisible(loc)
+    } broadcastToLocation(OnFloor(loc), Message.PlayerMove(player))
   }
 
-  def isFunctional(p: Item): Boolean = {
+  def isFunctional(p: Item): Boolean =
     sendMessage(p, IsFunctional()).functional && p.parts.forall(isFunctional)
-  }
 
   def smash(p: Item): Unit = {
     if (p.parts.isEmpty) {
@@ -321,14 +417,16 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   def itemIsPermeable(item: Item): Boolean =
     sendMessage(item, Message.IsPermeable()).permeable
 
-  def canWalk(x: Int, y: Int): Boolean =
-    terrain.get(x, y).exists(_.walkable) && items.lookup(OnFloor(x, y)).forall(itemIsWalkable)
+  def terrain(l: Location): Option[Terrain] = levels(l.levelId).terrain.get(l.x, l.y)
 
-  def isOpaque(x: Int, y: Int): Boolean =
-    terrain.get(x, y).exists(_.opaque) || items.lookup(OnFloor(x, y)).exists(itemIsOpaque)
+  def canWalk(l: Location): Boolean =
+    terrain(l).exists(_.walkable) && items.lookup(OnFloor(l)).forall(itemIsWalkable)
 
-  def isPermeable(x: Int, y: Int): Boolean =
-    terrain.get(x, y).exists(_.permeable) && items.lookup(OnFloor(x, y)).forall(itemIsPermeable)
+  def isOpaque(l: Location): Boolean =
+    terrain(l).exists(_.opaque) || items.lookup(OnFloor(l)).exists(itemIsOpaque)
+
+  def isPermeable(l: Location): Boolean =
+    terrain(l).exists(_.permeable) && items.lookup(OnFloor(l)).forall(itemIsPermeable)
 
   def isEdible(item: Item): Boolean = sendMessage(item, Message.IsEdible()).edible
   def eat(item: Item): Unit =
@@ -337,23 +435,23 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
   private var visible = Set.empty[(Int, Int)]
   def recalculateFOV(): Unit = {
     val newVisible = mutable.Set.empty[(Int, Int)]
-    newVisible += player
-    val opaque = (dx: Int, dy: Int) => isOpaque(player._1 + dx, player._2 + dy)
+    newVisible += ((player.x, player.y))
+    val opaque = (dx: Int, dy: Int) => isOpaque(player + (dx, dy))
     FOV.castShadows(radius = sightRadius, opaqueApply = true, opaque, (x, y) => {
-      newVisible.add((player._1 + x, player._2 + y))
+      newVisible.add((player.x + x, player.y + y))
     })
     visible = newVisible.toSet
   }
 
-  def isVisible(x: Int, y: Int): Boolean = isVisible((x, y))
-  def isVisible(p: (Int, Int)): Boolean = visible contains p
+  def isVisible(location: Location): Boolean =
+    location.levelId == player.levelId && visible.contains(location.xy)
 
   def nearbyItems: Seq[Item] = {
     val onFloor = for {
       dy <- -2 to 2
       dx <- -2 to 2
-      loc = OnFloor(player._1 + dx, player._2 + dy)
-      if isVisible(loc.x, loc.y)
+      loc = OnFloor(player + (dx, dy))
+      if isVisible(loc.l)
       i <- items.lookup(loc)
     } yield i
     onFloor ++ items.lookup(InHands()) ++ items.lookup(Worn())
@@ -398,134 +496,20 @@ class GameState(var data: Data, val width: Int, val height: Int, val random: Ran
     x
   }
 
-  def buildableItems(availableItems: Seq[Item]): Seq[(ItemKind, Seq[Item])] = {
-    /*
-    // First put together a list of operations we can do with the tools in our area
-    var availableOps: Seq[ItemOperation] = Seq()
-    for ((item, _) <- availableItems) availableOps ++= item.kind.provides
-    // Make a map of the available item kinds and quantities
-    val itemIndex: mutable.Map[ItemKind, Seq[ItemLocation]] = mutable.Map()
-    availableItems foreach {
-      case (item, location) =>
-        if (itemIndex.contains(item.kind)) {
-          itemIndex(item.kind) = itemIndex(item.kind) :+ location
-        } else {
-          itemIndex(item.kind) = Seq(location)
-        }
-    }
-
-    def buildable(itemKind: ItemKind, itemIndex: mutable.Map[ItemKind, Seq[ItemLocation]]): Option[Seq[ItemLocation]] = {
-      if (itemIndex.contains(itemKind)) {
-        val itemLocations = itemIndex(itemKind)
-        if (itemLocations.nonEmpty) {
-          val location = itemIndex(itemKind).head
-          itemIndex(itemKind) = itemIndex(itemKind).tail
-          return Some(Seq(location))
-        } else {
-          return None
-        }
-      }
-      if (itemKind.parts.isEmpty) return None
-      var locs = Seq.empty[ItemLocation]
-      // Call this function recursively on the parts of the item to see if each subpart is buildable
-      for (((kind: ItemKind, qty: Int), op: ItemOperation) <- itemKind.parts) {
-        if (availableOps.contains(op)) {
-          var q = qty
-          while (q > 0) {
-            buildable(kind, itemIndex) match {
-              case Some(componentLocations) =>
-                locs ++= componentLocations
-                q -= 1
-              case None =>
-                return None
-            }
-          }
-        } else {
-          return None
-        }
-      }
-      Some(locs)
-    }
-    data.items.values.toSeq
-      .map { kind => (kind, buildable(kind, mutable.Map.empty ++ itemIndex)) }
-      .collect {
-        case (kind, Some(locations)) => (kind, locations)
-      }
-      */
-    ???
-  }
-
-  def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
-    val terA = terrain(a)
-    val terB = terrain(b)
-    val ta = temperature(a)
-    val tb = temperature(b)
-    val k = terA.heatTransfer * terB.heatTransfer
-    val w = (ta - tb) * k
-    val dq = w * dt
-    if (temperature.contains(a)) temperature(a) -= dq / terA.heatCapacity
-    if (temperature.contains(b)) temperature(b) += dq / terB.heatCapacity
-  }
-
-  def moveGas(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
-    val gca = gasComposition(a)
-    val gcb = gasComposition(b)
-    val w = (gca - gcb) * 0.5
-    val dpp = w * dt
-    gasComposition(a) -= dpp
-    gasComposition(b) += dpp
-  }
-
-  def updateHeat(dt: Double = 1): Unit = {
-    import RandomImplicits._
-    def randomAdj(p: (Int, Int)): (Int, Int) = {
-      val (x, y) = p
-      random.between(0, 4) match {
-        case 0 => (x - 1, y)
-        case 1 => (x + 1, y)
-        case 2 => (x, y - 1)
-        case 3 => (x, y + 1)
-      }
-    }
-    for (_ <- 0 until (width * height * 0.4).round.toInt) {
-      val a = (random.between(0, width), random.between(0, height))
-      val b = randomAdj(a)
-      if (temperature.contains(a) && temperature.contains(b)) {
-        moveHeat(dt / 20, a, b)
-        if (terrain(a).permeable && terrain(b).permeable) {
-          moveGas(dt, a, b)
-        }
-      }
-      if (terrain(a).name == "floor" && random.oneIn(2)) {
-        var p = a
-        for (_ <- 1 to random.between(2, 8)) {
-          val test = randomAdj(p)
-          if (isPermeable(test._1, test._2)) {
-            p = test
-          }
-        }
-        if (p != a) {
-          val tmp = temperature(p)
-          temperature(p) = temperature(a)
-          temperature(a) = tmp
-          val tmp2 = gasComposition(p)
-          gasComposition(p) = gasComposition(a)
-          gasComposition(a) = tmp2
-        }
-      }
-    }
-
+  def updateHeat(levelId: LevelId, dt: Double = 1): Unit = {
+    val level = levels(levelId)
+    level.updateHeat(dt, (x: Int, y: Int) => isPermeable(Location(levelId, x, y)))(random)
 
     // transfer heat between player & environment
     val playerHeatCapacity = 4 // ~water
 
-    val playerTileTemp = temperature(player)
+    val playerTileTemp = level.temperature(player.x, player.y)
     val k = 0.01
     val w = (bodyTemp - playerTileTemp) * k
 
     val dq = broadcastToLocation(Worn(), Message.LoseHeat(dq = w * dt / 20)).dq
     bodyTemp -= dq / playerHeatCapacity
-    temperature(player) += dq / terrain(player).heatCapacity
+    level.temperature(player.x, player.y) += dq / level.terrain(player.x, player.y).heatCapacity
 
     // player generates heat through metabolism
     // the thought here is:
