@@ -1,17 +1,29 @@
 import mill._
 import mill.scalalib._
 import ammonite.ops._
+import coursier.maven.MavenRepository
 
 object adrift extends ScalaModule {
+
   val lwjglVersion = "3.1.2"
   override def forkArgs = Seq("-Xmx12g") ++ (
     if (System.getProperty("os.name") startsWith "Mac")
       Seq()//("-XstartOnFirstThread")
     else Seq.empty)
   override def scalaVersion = "2.12.4"
+
+  def repositories = super.repositories ++ Seq(
+    MavenRepository("https://oss.sonatype.org/content/repositories/snapshots/"),
+    MavenRepository("https://oss.sonatype.org/content/repositories/releases/")
+  )
+
   override def ivyDeps = Agg(
     ivy"org.choco-solver:choco-solver:4.0.6",
     ivy"org.choco-solver:choco-graph:4.2.2",
+
+    ivy"org.scalanlp::breeze:0.12",
+    ivy"org.scalanlp::breeze-natives:0.12",
+    ivy"org.scalanlp::breeze-viz:0.12",
 
     ivy"io.circe::circe-core:0.9.1",
     ivy"io.circe::circe-generic:0.9.1",
