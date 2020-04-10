@@ -3,6 +3,7 @@ import adrift.Grid
 
 import util.Random
 import adrift.RandomImplicits._
+import adrift.worldgen.NEATArchitect.RoomTypeId
 
 import scala.collection.mutable.ListBuffer
 
@@ -33,13 +34,156 @@ class GArchitect {
 
 }
 
-case class RoomType(
-  spaceWeight: Double,
-  minQuantity:Int,
-  maxQuantity:Int,
-) {}
+object NEATArchitect {
+  case class RoomId(value: Int) extends AnyVal
+  case class ConnectionId(id: Int) extends AnyVal
+  case class RoomTypeId(id: Int) extends AnyVal
+
+  case class RoomGene(
+    id: RoomId,
+    roomType: RoomTypeId
+  )
+
+  case class ConnectionGene(
+    id: ConnectionId,
+
+    // Ids of the rooms this gene connects
+    a: RoomId,
+    b: RoomId,
+
+    weight: Float,
+
+    enabled: Boolean,
+  )
+
+  case class Genome(
+    rooms: Seq[RoomGene],
+    connections: Seq[ConnectionGene],
+    mutationRate: Int = 3
+  ) {
+    //lazy val adjacency = ??? /* ... lazily compute adjacency matrix ... */
+
+    def connectionIdForRooms(a: RoomId, b: RoomId): ConnectionId = {
+      if (a.value > b.value) return connectionIdForRooms(b, a)
+      assert(b.value < (1 << 16), "Make it a long")
+      ConnectionId(a.value << 16 + b.value)
+    }
+
+    def mutateAddConnection()(implicit random: Random): Genome = {
+      val roomA = random.pick(rooms)
+      val roomB = random.pick(rooms)
+      if (roomA.id == roomB.id) return this
+      val (rA, rB) = if (roomA.id.value < roomB.id.value) (roomA, roomB) else (roomB, roomA)
+      if (connections.exists(g => g.a == rA.id && g.b == rB.id)) return this
+
+      val newConnection: ConnectionGene = ConnectionGene(
+        id = connectionIdForRooms(rA.id, rB.id),
+        a = rA.id,
+        b = rB.id,
+        weight = 1f,
+        enabled = true
+      )
+      copy(connections = connections :+ newConnection)
+    }
+
+    def mutateRandomConnection(f: ConnectionGene => ConnectionGene)(implicit random: Random): Genome = {
+      val i = random.between(0, connections.size)
+      copy(connections = connections.patch(i, Seq(f(connections(i))), 1))
+    }
+
+    def mutateDisableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = false))
+    def mutateEnableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = true))
+    def mutateConnectionWeight()(implicit random: Random): Genome = mutateRandomConnection { c =>
+      c.copy(weight = c.weight * random.between(0.9f, 1.1f))
+    }
+
+    def mutateAddRoom()(implicit random: Random): Genome = {
+      val newRoomTypeId = random.pick(RoomType.byId.keys)
+      val newRoomType = RoomType.byId(newRoomTypeId)
+      val existingCount = rooms.count(_.roomType == newRoomTypeId)
+      if (existingCount >= newRoomType.maxQuantity) return this
+
+      val roomGene = RoomGene(RoomId(rooms.maxBy(_.id.value).id.value + 1), newRoomTypeId)
+
+      val otherRooms = random.nOf(random.between(1, 3), rooms).distinct
+
+      val connectionGenes = otherRooms.map { r =>
+        ConnectionGene(
+          id = connectionIdForRooms(r.id, roomGene.id),
+          a = r.id,
+          b = roomGene.id,
+          weight = 1,
+          enabled = true
+        )
+      }
+
+      copy(rooms = rooms :+ roomGene, connections = connections ++ connectionGenes)
+    }
+
+    def mutateMutationRate()(implicit random: Random): Genome =
+      copy(mutationRate = math.max(1, mutationRate + random.between(-1, 1)))
+
+    val mutationFunctions = Seq(
+      ((g: Genome, r: Random) => g.mutateAddRoom()(r), 1f),
+      ((g: Genome, r: Random) => g.mutateEnableConnection()(r), 1f),
+      ((g: Genome, r: Random) => g.mutateDisableConnection()(r), 1f),
+      ((g: Genome, r: Random) => g.mutateAddConnection()(r), 1f),
+      ((g: Genome, r: Random) => g.mutateConnectionWeight()(r), 1f),
+      ((g: Genome, r: Random) => g.mutateMutationRate()(r), 1f),
+    )
+
+    def mutate()(implicit random: Random): Genome = {
+      val mutations = random.nFrom(random.between(0, mutationRate), mutationFunctions)(_._2).map(_._1)
+      mutations.foldLeft(this)((genome, mutate) => mutate(genome, random))
+    }
+
+    def crossover(other: Genome): Genome = ???
+  }
+
+  def newGenome()(implicit random: Random): Genome = {
+    var nextRoomId = 0
+    val roomGenes = for {
+      (rtId, rt) <- RoomType.byId
+      num = random.between(rt.minQuantity, rt.maxQuantity)
+      _ <- 1 to num
+    } yield {
+      nextRoomId += 1
+      RoomGene(RoomId(nextRoomId), rtId)
+    }
+
+    Genome(roomGenes.toSeq, Seq.empty)
+  }
+}
+
+object RoomType {
+  case class RoomType(
+    name: String,
+    spaceWeight: Double,
+    minQuantity:Int,
+    maxQuantity:Int,
+  )
+  val all: Seq[RoomType] = Seq(
+    RoomType("command", spaceWeight = 10, minQuantity = 1, maxQuantity = 1),
+
+    RoomType("engine room", spaceWeight = 100, minQuantity = 1, maxQuantity = 5),
+
+    RoomType("recycling", spaceWeight = 50, minQuantity = 1, maxQuantity = 5),
+
+    RoomType("fabrication", spaceWeight = 50, minQuantity = 5, maxQuantity = 10),
+
+    RoomType("crew quarters", spaceWeight = 200, minQuantity = 1, maxQuantity = 500),
+    RoomType("promenade", spaceWeight = 100,minQuantity = 1,maxQuantity = 1),
+    RoomType("dining", spaceWeight = 50,minQuantity = 4,maxQuantity = 10),
+    RoomType("holo suite", spaceWeight = 10,minQuantity = 5,maxQuantity = 10),
+    RoomType("lounge", spaceWeight = 10,minQuantity = 10,maxQuantity = 20),
+  )
+
+  val byId: Map[RoomTypeId, RoomType] = all.zipWithIndex.map {
+    case (rt, id) => RoomTypeId(id) -> rt
+  }(collection.breakOut)
+}
 case class Coordinates(x:Int,y:Int)
-case class Room(roomType: RoomType, coords:Coordinates) {}
+case class Room(roomType: RoomTypeId, coords:Coordinates) {}
 
 case object GArchitect {
   type RoomTypes = Seq[RoomType]
@@ -68,33 +212,6 @@ case object GArchitect {
   }
 
   def wrapX(x: Int): Int = (x + SC_horizontal) % SC_horizontal
-
-  // Engineering
-  val engineRoom:RoomType = RoomType(100, 1, 5)
-  val recycling:RoomType = RoomType(50, 1, 5)
-  val fabrication:RoomType = RoomType(50, 5, 10)
-
-  // Habitation
-  val crewQuarters:RoomType = RoomType(200, 1, 500)
-  val promenade:RoomType = RoomType(100,1,1)
-  val dining:RoomType = RoomType(50,4,10)
-  val holoSuite:RoomType = RoomType(10,5,10)
-  val lounge:RoomType = RoomType(10,10,20)
-  // Science
-  //  val astronomy = RoomType(10,1,3)
-  // Command
-  val command:RoomType = RoomType(10,1,1)
-
-  val roomTypes:Seq[RoomType] = Seq(
-    command,
-    engineRoom,
-    crewQuarters,
-    fabrication,
-    promenade,
-    dining,
-    holoSuite,
-    lounge
-  )
 
   def spaceAllocation(roomlist:Seq[Room]):Int = {
     // provide reward in proportion to distance from roomtypes that have a large space allocation

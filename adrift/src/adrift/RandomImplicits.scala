@@ -6,6 +6,7 @@ object RandomImplicits {
     def angle: Double = r.nextDouble() * 2 * Math.PI
     /** Returns a double in the range [a, b) */
     def between(a: Double, b: Double): Double = r.nextDouble() * (b - a) + a
+    def between(a: Float, b: Float): Float = r.nextFloat() * (b - a) + a
     /** Returns an integer in the range [a, b) */
     def between(a: Int, b: Int): Int = (r.nextDouble() * (b - a) + a).floor.toInt
     /** Returns true one time out of n (on average) */
