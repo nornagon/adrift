@@ -68,7 +68,7 @@ case class Level(
       val b = randomAdj(a)
       if (temperature.contains(a) && temperature.contains(b)) {
         moveHeat(dt / 20, a, b)
-        if (terrain(a).permeable && terrain(b).permeable) {
+        if (isPermeable(a._1, a._2) && isPermeable(b._1, b._2)) {
           moveGas(dt, a, b)
         }
       }
