@@ -16,11 +16,13 @@ case class DoorOpener(
       if (state.isFunctional(self)) {
         isOpen = true
         state.sendMessage(self, Message.ToolUsed(null))
+        state.markPermeabilityDirty(state.getItemTile(self))
       }
     case Deactivate =>
       if (state.isFunctional(self)) {
         isOpen = false
         state.sendMessage(self, Message.ToolUsed(null))
+        state.markPermeabilityDirty(state.getItemTile(self))
       }
     case msg: IsOpaque =>
       msg.opaque = !isOpen

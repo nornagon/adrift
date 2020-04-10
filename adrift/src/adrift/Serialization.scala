@@ -27,6 +27,7 @@ object Serialization {
       state.itemDb = items
       state.player = player
       state.bodyTemp = bodyTemp
+      state.refresh()
       state
     }
   }

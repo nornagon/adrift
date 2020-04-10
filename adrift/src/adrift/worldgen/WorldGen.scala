@@ -334,6 +334,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val schematic = generateSchematic()
     val initialState = generateDetails(schematic)
     damage(initialState)
+    initialState.refresh()
     initialState
   }
 

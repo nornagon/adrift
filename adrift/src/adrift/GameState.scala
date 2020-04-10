@@ -63,6 +63,7 @@ case class Level(
       }
     }
     for (_ <- 0 until (width * height * 0.4).round.toInt) {
+      // diffusion
       val a = (random.between(0, width), random.between(0, height))
       val b = randomAdj(a)
       if (temperature.contains(a) && temperature.contains(b)) {
@@ -71,11 +72,14 @@ case class Level(
           moveGas(dt, a, b)
         }
       }
+
+      // convection
       if (terrain(a).name == "floor" && random.oneIn(2)) {
         var p = a
         for (_ <- 1 to random.between(2, 8)) {
           val test = randomAdj(p)
-          if (isPermeable(test._1, test._2)) {
+          val (x, y) = test
+          if (y >= 0 && y < height && isPermeable(x, y)) {
             p = test
           }
         }
@@ -425,6 +429,30 @@ class GameState(var data: Data, val random: Random) {
   def isOpaque(l: Location): Boolean =
     terrain(l).exists(_.opaque) || items.lookup(OnFloor(l)).exists(itemIsOpaque)
 
+  private val isPermeableCache = mutable.Map.empty[LevelId, CylinderGrid[Boolean]]
+  private val dirtyPermeabilityTiles: mutable.Queue[Location] = mutable.Queue.empty[Location]
+  def recomputePermeabilityCache(): Unit = {
+    isPermeableCache.clear()
+    for ((lId, l) <- levels) {
+      val g = new CylinderGrid[Boolean](l.width, l.height)(true)
+      for (y <- 0 until l.height; x <- 0 until l.width) {
+        g(x, y) = isPermeable(Location(lId, x, y))
+      }
+      isPermeableCache(lId) = g
+    }
+  }
+  def markPermeabilityDirty(location: Location): Unit = dirtyPermeabilityTiles.enqueue(location)
+  def processPermeabilityUpdateQueue(): Unit = {
+    while (dirtyPermeabilityTiles.nonEmpty) {
+      val l = dirtyPermeabilityTiles.dequeue()
+      isPermeableCache(l.levelId)(l.x, l.y) = isPermeable(l)
+    }
+  }
+
+  def refresh(): Unit = {
+    recomputePermeabilityCache()
+  }
+
   def isPermeable(l: Location): Boolean =
     terrain(l).exists(_.permeable) && items.lookup(OnFloor(l)).forall(itemIsPermeable)
 
@@ -498,7 +526,9 @@ class GameState(var data: Data, val random: Random) {
 
   def updateHeat(levelId: LevelId, dt: Double = 1): Unit = {
     val level = levels(levelId)
-    level.updateHeat(dt, (x: Int, y: Int) => isPermeable(Location(levelId, x, y)))(random)
+    processPermeabilityUpdateQueue()
+    val permeability = isPermeableCache(levelId)
+    level.updateHeat(dt, (x: Int, y: Int) => permeability(x, y))(random)
 
     // transfer heat between player & environment
     val playerHeatCapacity = 4 // ~water
