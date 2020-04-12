@@ -28,7 +28,7 @@ class StressMajorization {
   private var iterationLimit = 0
   private var size = 0
   private var positions: Array[(Double, Double)] = _
-  private var getNeighbors: Int => TraversableOnce[Int] = _
+  private var neighborCache: Array[Array[Int]] = _
 
   /**
     * Initialize all internal structures that are required for the subsequent iterative procedure..
@@ -39,7 +39,7 @@ class StressMajorization {
     this.iterationLimit = iterationLimit
     this.epsilon = epsilon
     this.desiredEdgeLength = desiredEdgeLength
-    this.getNeighbors = neighbors
+    neighborCache = Array.tabulate(size) { u => neighbors(u).toArray }
     this.positions = Array.tabulate(size)(initialPosition)
     // all pairs shortest path
     val n = size
@@ -130,7 +130,7 @@ class StressMajorization {
   }
   def position(u: Int): (Double, Double) = positions(u)
   private def setPosition(u: Int, pos: (Double, Double)): Unit = positions(u) = pos
-  private def neighbors(u: Int): TraversableOnce[Int] = getNeighbors(u)
+  private def neighbors(u: Int): TraversableOnce[Int] = neighborCache(u)
 
   /**
     * @return the stress value of the current node positioning.
