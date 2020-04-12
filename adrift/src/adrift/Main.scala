@@ -1,11 +1,12 @@
 package adrift
 
+import java.awt.event.{KeyEvent, KeyListener}
 import java.awt.{Dimension, Graphics}
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 
 import adrift.display.{Display, GLFWDisplay}
-import adrift.worldgen.{Coordinates, GArchitect, WorldGen}
+import adrift.worldgen.{Coordinates, GArchitect, NEATArchitect, WorldGen}
 import com.sun.nio.file.SensitivityWatchEventModifier
 import javax.sound.sampled.AudioSystem
 import javax.swing.{JFrame, JPanel}
@@ -49,6 +50,72 @@ object Main {
     t.start()
   }
 
+  def neatArchitect(): Unit = {
+    implicit val random: Random = new Random(42)
+    val genome = NEATArchitect.newGenome()
+    var n = 1
+    var gLayout = NEATArchitect.layout(genome, n)
+
+    import java.awt.Color
+
+    val frame = new JFrame("Adrift")
+    frame.setDefaultCloseOperation(3)
+
+    val panel = new JPanel() {
+      override def paint(g: Graphics): Unit = {
+        val minX = gLayout.roomPositions.map(_._2._1).min
+        val maxX = gLayout.roomPositions.map(_._2._1).max
+        val minY = gLayout.roomPositions.map(_._2._2).min
+        val maxY = gLayout.roomPositions.map(_._2._2).max
+        val bigger = if (maxY - minY > maxX - minX) maxY - minY else maxX - minX
+        val scale = 1000d / bigger
+
+        g.setColor(Color.BLACK)
+
+        def f(p: (Double, Double)): (Int, Int) = (
+          ((p._1 - minX) * scale).round.toInt,
+          ((p._2 - minY) * scale).round.toInt
+        )
+
+        for (conn <- genome.connections) {
+          val aPos = gLayout.roomPositions(conn.a)
+          val bPos = gLayout.roomPositions(conn.b)
+
+          val (x1, y1) = f(aPos)
+          val (x2, y2) = f(bPos)
+
+          g.drawLine(x1, y1, x2, y2)
+        }
+
+        for ((rId, p) <- gLayout.roomPositions) {
+          val (x, y) = f(p)
+          g.drawRect(x - 2, y - 2, 4, 4)
+        }
+      }
+    }
+
+    panel.setPreferredSize(new Dimension(1000, 1000))
+    frame.getContentPane.add(panel)
+    frame.pack()
+
+    frame.setVisible(true)
+    frame.addKeyListener(new KeyListener {
+      override def keyTyped(e: KeyEvent): Unit = {}
+
+      override def keyPressed(e: KeyEvent): Unit = {
+        if (e.getKeyChar == ' ') {
+          n += 10
+          println(n)
+          gLayout = NEATArchitect.layout(genome, n)(new Random(0))
+          frame.repaint()
+        }
+      }
+
+      override def keyReleased(e: KeyEvent): Unit = {}
+    })
+  }
+
+/*
   def architect(): Unit = {
     import GArchitect._
     import java.awt.Color
@@ -98,12 +165,10 @@ object Main {
       panel.repaint()
     }
   }
+ */
 
   def main(args: Array[String]): Unit = {
-    //SwingUtilities.invokeLater(() => architect())
-    architect()
-    return
-
+  neatArchitect(); return
     //jsyn(); return
 
     //javax(); return

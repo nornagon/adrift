@@ -4,7 +4,9 @@ import adrift.Grid
 import util.Random
 import adrift.RandomImplicits._
 import adrift.worldgen.NEATArchitect.RoomTypeId
+import adrift.worldgen.RoomType.RoomType
 
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 
@@ -142,16 +144,45 @@ object NEATArchitect {
 
   def newGenome()(implicit random: Random): Genome = {
     var nextRoomId = 0
-    val roomGenes = for {
+    val roomGenes: Seq[RoomGene] = (for {
       (rtId, rt) <- RoomType.byId
       num = random.between(rt.minQuantity, rt.maxQuantity)
       _ <- 1 to num
     } yield {
       nextRoomId += 1
       RoomGene(RoomId(nextRoomId), rtId)
+    })(collection.breakOut)
+
+    var n = 0
+    val connections = mutable.Buffer.empty[ConnectionGene]
+    for (i <- 1 until roomGenes.size) {
+      val id = ConnectionId({ n += 1; n })
+      connections += ConnectionGene(id, roomGenes(random.between(0, i)).id, roomGenes(i).id, 1, enabled = true)
     }
 
-    Genome(roomGenes.toSeq, Seq.empty)
+    Genome(roomGenes, connections)
+  }
+
+  case class RoomLayout(roomPositions: Map[RoomId, (Double, Double)]) {}
+
+  def layout(g: Genome, iterationLimit: Int = 50)(implicit random: Random): RoomLayout = {
+    val sm = new StressMajorization()
+    val idxToRoomId: Map[Int, RoomId] = g.rooms.zipWithIndex.map { case (r, i) => i -> r.id }(collection.breakOut)
+    val roomIdToIdx = idxToRoomId.map { case (k, v) => v -> k }
+    def neighbs(i: Int): TraversableOnce[Int] = {
+      val needle = g.rooms(i).id
+      g.connections.flatMap {
+        case c: ConnectionGene if c.a == needle => Some(roomIdToIdx(c.b))
+        case c: ConnectionGene if c.b == needle => Some(roomIdToIdx(c.a))
+        case _ => None
+      }
+    }
+    sm.initialize(g.rooms.size, iterationLimit, 0.001, 1, _ => (random.between(-1d, 1d), random.between(-1d, 1d)), neighbs)
+    sm.execute()
+    val roomPositions: Map[RoomId, (Double, Double)] = g.rooms.indices.map({ i =>
+      g.rooms(i).id -> sm.position(i)
+    })(collection.breakOut)
+    RoomLayout(roomPositions)
   }
 }
 
@@ -185,8 +216,8 @@ object RoomType {
 case class Coordinates(x:Int,y:Int)
 case class Room(roomType: RoomTypeId, coords:Coordinates) {}
 
+/*
 case object GArchitect {
-  type RoomTypes = Seq[RoomType]
   type Layout = Seq[Room]
   case class PopulationReport(p: Layout, rawMetrics:Seq[Int], scaledMetrics: Double)
   val random = new Random(1)
@@ -445,7 +476,7 @@ case object GArchitect {
     }))
   }
 
-  def placeRooms(roomTypes:RoomTypes): Seq[Room] = {
+  def placeRooms(roomTypes: Seq[RoomType]): Seq[Room] = {
     // For each roomtype in the weighting list
     // create a list of some number of room instances between the min quantity and the max quantity (random)
     // assign each one a random position in the vehicle
@@ -481,3 +512,5 @@ case object GArchitect {
     pop
   }
 }
+
+ */
