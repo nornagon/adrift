@@ -177,7 +177,13 @@ object NEATArchitect {
         case _ => None
       }
     }
-    sm.initialize(g.rooms.size, iterationLimit, 0.001, 1, _ => (random.between(-1d, 1d), random.between(-1d, 1d)), neighbs)
+    sm.initialize(
+      g.rooms.size,
+      iterationLimit,
+      epsilon = 0.001,
+      desiredEdgeLength = 1,
+      initialPosition = _ => (random.between(-1d, 1d), random.between(-1d, 1d)),
+      neighbors = neighbs)
     sm.execute()
     val roomPositions: Map[RoomId, (Double, Double)] = g.rooms.indices.map({ i =>
       g.rooms(i).id -> sm.position(i)

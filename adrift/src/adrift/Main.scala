@@ -106,7 +106,9 @@ object Main {
         if (e.getKeyChar == ' ') {
           n += 10
           println(n)
+          val begin = System.nanoTime()
           gLayout = NEATArchitect.layout(genome, n)(new Random(0))
+          println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
           frame.repaint()
         }
       }
