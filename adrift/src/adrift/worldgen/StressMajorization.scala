@@ -20,8 +20,6 @@ class StressMajorization {
   private var apsp: Array[Array[Double]] = _
   /** Weights for each pair of nodes. */
   private var w: Array[Array[Double]] = _
-  /** Common desired edge length, can be overridden by individual edges. */
-  private var desiredEdgeLength = .0
   /** Epsilon for terminating the stress minimizing process. */
   private var epsilon = .0
   /** Maximum number of iterations (overrides the {@link #epsilon}). */
@@ -29,11 +27,12 @@ class StressMajorization {
   private var size = 0
   private var positions: Array[(Double, Double)] = _
   private var neighborCache: Array[Array[Int]] = _
+  private var desiredEdgeLength: (Int, Int) => Double = _
 
   /**
     * Initialize all internal structures that are required for the subsequent iterative procedure..
     */
-  def initialize(size: Int, iterationLimit: Int, epsilon: Double, desiredEdgeLength: Double, initialPosition: Int => (Double, Double), neighbors: Int => TraversableOnce[Int]): Unit = {
+  def initialize(size: Int, iterationLimit: Int, epsilon: Double, desiredEdgeLength: (Int, Int) => Double, initialPosition: Int => (Double, Double), neighbors: Int => TraversableOnce[Int]): Unit = {
     if (size <= 1) return
     this.size = size
     this.iterationLimit = iterationLimit
@@ -103,7 +102,7 @@ class StressMajorization {
         //var el = .0
         //if (e.hasProperty(StressOptions.DESIRED_EDGE_LENGTH)) el = e.getProperty(StressOptions.DESIRED_EDGE_LENGTH)
         //else el = desiredEdgeLength
-        val el = desiredEdgeLength
+        val el = desiredEdgeLength(u, v)
         val d = dist(u) + el
         if (d < dist(v)) {
           dist(v) = d

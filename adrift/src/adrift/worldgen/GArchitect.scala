@@ -158,6 +158,9 @@ object NEATArchitect {
     for (i <- 1 until roomGenes.size) {
       val id = ConnectionId({ n += 1; n })
       connections += ConnectionGene(id, roomGenes(random.between(0, i)).id, roomGenes(i).id, 1, enabled = true)
+      if (random.oneIn(10)) {
+        connections += ConnectionGene(id, roomGenes(random.between(0, i)).id, roomGenes(i).id, 1, enabled = true)
+      }
     }
 
     Genome(roomGenes, connections)
@@ -177,11 +180,18 @@ object NEATArchitect {
         case _ => None
       }
     }
+    val lengths: Map[(Int, Int), Double] = g.connections.map { c =>
+      val idxA = roomIdToIdx(c.a)
+      val idxB = roomIdToIdx(c.b)
+      val rtA = RoomType.byId(g.rooms(idxA).roomType)
+      val rtB = RoomType.byId(g.rooms(idxB).roomType)
+      (idxA, idxB) -> (rtA.spaceWeight + rtB.spaceWeight)
+    }(collection.breakOut)
     sm.initialize(
       g.rooms.size,
       iterationLimit,
       epsilon = 0.001,
-      desiredEdgeLength = 1,
+      desiredEdgeLength = (u, v) => lengths(if (u < v) (u, v) else (v, u)),
       initialPosition = _ => (random.between(-1d, 1d), random.between(-1d, 1d)),
       neighbors = neighbs)
     sm.execute()
