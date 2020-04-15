@@ -43,7 +43,7 @@ class StressMajorization {
   private var neighborCache: Array[Array[Int]] = _
   private var desiredEdgeLength: (Int, Int) => Double = _
   private var distanceP: ((Double, Double), (Double, Double)) => Double = _
-  private var diffX: (Double, Double) => Double = _
+  private var diff: ((Double, Double), (Double, Double)) => (Double, Double) = _
 
 
   /**
@@ -56,7 +56,7 @@ class StressMajorization {
     desiredEdgeLength: (Int, Int) => Double,
     initialPosition: Int => (Double, Double),
     distance: ((Double, Double), (Double, Double)) => Double,
-    diffX: (Double, Double) => Double,
+    diff: ((Double, Double), (Double, Double)) => (Double, Double),
     neighbors: Int => TraversableOnce[Int]
   ): Unit = {
     if (size <= 1) return
@@ -67,7 +67,7 @@ class StressMajorization {
     neighborCache = Array.tabulate(size) { u => neighbors(u).toArray }
     this.positions = Array.tabulate(size)(initialPosition)
     this.distanceP = distance
-    this.diffX = diffX
+    this.diff = diff
     // all pairs shortest path
     val n = size
     apsp = Array.fill(n, n)(0)
@@ -192,8 +192,7 @@ class StressMajorization {
       if (eucDist > 0) {
         val (vx, vy) = position(v)
         val (ux, uy) = position(u)
-        val dx = diffX(ux, vx)
-        val dy = uy - vy
+        val (dx, dy) = diff((ux, uy), (vx, vy))
         xDisp += wij * (vx + apsp(u)(v) * dx / eucDist)
         yDisp += wij * (vy + apsp(u)(v) * dy / eucDist)
       }

@@ -206,11 +206,16 @@ object NEATArchitect {
         val dy = na._2 - nb._2
         math.sqrt(dx * dx + dy * dy)
       },
-      diffX = (x1, x2) => {
-        val nx1 = normalizeX(x1)
-        val nx2 = normalizeX(x2)
-        val dx = math.abs(nx1 - nx2)
-        math.min(dx, cylinderCircumference - dx) * math.signum(x1 - x2)
+      diff = (p1, p2) => {
+        val dx = {
+          val x1 = p1._1
+          val x2 = p2._1
+          val nx1 = normalizeX(x1)
+          val nx2 = normalizeX(x2)
+          val dx = math.abs(nx1 - nx2)
+          math.min(dx, cylinderCircumference - dx) * math.signum(x1 - x2)
+        }
+        (dx, p1._2 - p2._2)
       })
     sm.execute()
     val roomPositions: Map[RoomId, (Double, Double)] = g.rooms.indices.map({ i =>
