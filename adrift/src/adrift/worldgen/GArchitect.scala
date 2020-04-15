@@ -185,18 +185,36 @@ object NEATArchitect {
       val idxB = roomIdToIdx(c.b)
       val rtA = RoomType.byId(g.rooms(idxA).roomType)
       val rtB = RoomType.byId(g.rooms(idxB).roomType)
-      (idxA, idxB) -> (rtA.spaceWeight + rtB.spaceWeight)
+      (idxA, idxB) -> math.sqrt(rtA.spaceWeight + rtB.spaceWeight)*4
     }(collection.breakOut)
+    val cylinderCircumference = 1000d
+    def normalizeX(x: Double): Double =
+      if (x >= 0 && x < cylinderCircumference) x
+      else ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
+    def normalizePosition(p: (Double, Double)): (Double, Double) = (normalizeX(p._1), p._2)
     sm.initialize(
       g.rooms.size,
       iterationLimit,
       epsilon = 0.001,
       desiredEdgeLength = (u, v) => lengths(if (u < v) (u, v) else (v, u)),
       initialPosition = _ => (random.between(-1d, 1d), random.between(-1d, 1d)),
-      neighbors = neighbs)
+      neighbors = neighbs,
+      distance = (a, b) => {
+        val na = normalizePosition(a)
+        val nb = normalizePosition(b)
+        val dx = math.min(math.abs(na._1 - nb._1), cylinderCircumference - math.abs(na._1 - nb._1))
+        val dy = na._2 - nb._2
+        math.sqrt(dx * dx + dy * dy)
+      },
+      diffX = (x1, x2) => {
+        val nx1 = normalizeX(x1)
+        val nx2 = normalizeX(x2)
+        val dx = math.abs(nx1 - nx2)
+        math.min(dx, cylinderCircumference - dx) * math.signum(x1 - x2)
+      })
     sm.execute()
     val roomPositions: Map[RoomId, (Double, Double)] = g.rooms.indices.map({ i =>
-      g.rooms(i).id -> sm.position(i)
+      g.rooms(i).id -> normalizePosition(sm.position(i))
     })(collection.breakOut)
     RoomLayout(roomPositions)
   }

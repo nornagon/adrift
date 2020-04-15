@@ -84,7 +84,8 @@ object Main {
           val (x1, y1) = f(aPos)
           val (x2, y2) = f(bPos)
 
-          g.drawLine(x1, y1, x2, y2)
+          if (math.abs(x2 - x1) < 1000 - math.abs(x2 - x1))
+            g.drawLine(x1, y1, x2, y2)
         }
 
         for ((rId, p) <- gLayout.roomPositions) {
