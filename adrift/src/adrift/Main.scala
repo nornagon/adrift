@@ -6,51 +6,15 @@ import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 
 import adrift.display.{Display, GLFWDisplay}
-import adrift.worldgen.{Coordinates, GArchitect, NEATArchitect, WorldGen}
+import adrift.worldgen.{NEATArchitect, WorldGen}
 import com.sun.nio.file.SensitivityWatchEventModifier
 import javax.sound.sampled.AudioSystem
 import javax.swing.{JFrame, JPanel}
 
 import scala.util.Random
-import javax.swing.SwingUtilities
 
-object Main {
-  def onFileChanged(path: Path)(f: (Path) => Unit): Unit = {
-    val watcher = FileSystems.getDefault.newWatchService()
-    val keyToPath = collection.mutable.HashMap.empty[WatchKey, Path]
-    val depth = 0
-    Files.find(path, depth, (_: Path, attrs: BasicFileAttributes) => { attrs.isDirectory }).forEach((path) => {
-      keyToPath.put(path.register(
-        watcher,
-        Array[WatchEvent.Kind[_]](
-          StandardWatchEventKinds.ENTRY_CREATE,
-          StandardWatchEventKinds.ENTRY_DELETE,
-          StandardWatchEventKinds.ENTRY_MODIFY
-        ),
-        SensitivityWatchEventModifier.HIGH
-      ), path)
-    })
-    val t = new Thread(() => {
-      while (true) {
-        val k = watcher.take()
-        val root = keyToPath(k)
-        val es = k.pollEvents()
-        import scala.collection.JavaConverters._
-        for (e <- es.asScala) {
-          e.context() match {
-            case p: Path =>
-              val fullPath = root.resolve(p)
-              f(fullPath)
-          }
-        }
-        k.reset()
-      }
-    })
-    t.setDaemon(true)
-    t.start()
-  }
-
-  def neatArchitect(): Unit = {
+object ArchitectTest {
+  def main(args: Array[String]): Unit = {
     implicit val random: Random = new Random(42)
     val genome = NEATArchitect.newGenome()
     var n = 1
@@ -118,60 +82,45 @@ object Main {
     })
   }
 
-/*
-  def architect(): Unit = {
-    import GArchitect._
-    import java.awt.Color
-    var pop = Seq.fill(20)(placeRooms(roomTypes))
-    var generation = 0
+}
 
-    val frame = new JFrame("Adrift")
-    frame.setDefaultCloseOperation(3)
-
-    val colors = Seq(
-      Color.BLACK,
-      Color.BLUE,
-      Color.RED,
-      Color.GREEN,
-      Color.MAGENTA,
-      Color.PINK,
-      Color.YELLOW,
-      Color.CYAN,
-    )
-
-    val panel = new JPanel() {
-      override def paint(g: Graphics): Unit = {
-        val indiv = pop.last
-        for (room <- indiv) {
-          val Coordinates(x, y) = room.coords
-          val t = roomTypes.indexOf(room.roomType)
-          assert(t >= 0)
-          val color = colors(t % colors.size)
-          g.setColor(color)
-          g.fillRect(x * 10, y * 10, 5, 5)
+object Main {
+  def onFileChanged(path: Path)(f: (Path) => Unit): Unit = {
+    val watcher = FileSystems.getDefault.newWatchService()
+    val keyToPath = collection.mutable.HashMap.empty[WatchKey, Path]
+    val depth = 0
+    Files.find(path, depth, (_: Path, attrs: BasicFileAttributes) => { attrs.isDirectory }).forEach((path) => {
+      keyToPath.put(path.register(
+        watcher,
+        Array[WatchEvent.Kind[_]](
+          StandardWatchEventKinds.ENTRY_CREATE,
+          StandardWatchEventKinds.ENTRY_DELETE,
+          StandardWatchEventKinds.ENTRY_MODIFY
+        ),
+        SensitivityWatchEventModifier.HIGH
+      ), path)
+    })
+    val t = new Thread(() => {
+      while (true) {
+        val k = watcher.take()
+        val root = keyToPath(k)
+        val es = k.pollEvents()
+        import scala.collection.JavaConverters._
+        for (e <- es.asScala) {
+          e.context() match {
+            case p: Path =>
+              val fullPath = root.resolve(p)
+              f(fullPath)
+          }
         }
-        for (report <- reporter.report.lastOption) {
-          g.setColor(Color.BLACK)
-          g.drawString(generation + " " + report._2.rawMetrics.toString(), 5, 15)
-        }
+        k.reset()
       }
-    }
-    panel.setPreferredSize(new Dimension(SC_horizontal * 10, SC_vertical * 10))
-    frame.getContentPane.add(panel)
-    frame.pack()
-
-    frame.setVisible(true)
-
-    while (true) {
-      pop = runGeneration(pop)
-      generation += 1
-      panel.repaint()
-    }
+    })
+    t.setDaemon(true)
+    t.start()
   }
- */
 
   def main(args: Array[String]): Unit = {
-  neatArchitect(); return
     //jsyn(); return
 
     //javax(); return

@@ -2,13 +2,15 @@ import mill._
 import mill.scalalib._
 import ammonite.ops._
 import coursier.maven.MavenRepository
+import mill.modules.Jvm
+import mill.eval.Result
 
 object adrift extends ScalaModule {
 
   val lwjglVersion = "3.1.2"
   override def forkArgs = Seq("-Xmx12g") ++ (
     if (System.getProperty("os.name") startsWith "Mac")
-      Seq.empty//Seq("-XstartOnFirstThread")
+      Seq("-XstartOnFirstThread")
     else Seq.empty)
   override def scalaVersion = "2.12.4"
 
@@ -16,6 +18,20 @@ object adrift extends ScalaModule {
     MavenRepository("https://oss.sonatype.org/content/repositories/snapshots/"),
     MavenRepository("https://oss.sonatype.org/content/repositories/releases/")
   )
+
+  def runAlt(mainClass: String, args: String*) = T.command{
+    try Result.Success(Jvm.runSubprocess(
+      mainClass,
+      runClasspath().map(_.path),
+      jvmArgs = Seq.empty,
+      envArgs = forkEnv(),
+      mainArgs = args,
+      workingDir = forkWorkingDir()
+    )) catch { case e: Exception =>
+      Result.Failure("subprocess failed")
+    }
+  }
+
 
   override def ivyDeps = Agg(
     ivy"org.choco-solver:choco-solver:4.0.6",
