@@ -194,11 +194,11 @@ object NEATArchitect {
     def normalizePosition(p: (Double, Double)): (Double, Double) = (normalizeX(p._1), p._2)
     sm.initialize(
       g.rooms.size,
+      neighbors = neighbs,
       iterationLimit,
       epsilon = 0.001,
       desiredEdgeLength = (u, v) => lengths(if (u < v) (u, v) else (v, u)),
-      initialPosition = _ => (random.between(-1d, 1d), random.between(-1d, 1d)),
-      neighbors = neighbs,
+      initialPosition = _ => (random.between(0, 1000d), random.between(0d, 1000d)),
       distance = (a, b) => {
         val na = normalizePosition(a)
         val nb = normalizePosition(b)
