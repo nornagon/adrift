@@ -23,12 +23,12 @@ case class CircuitSignal(signal: Int) extends Message {
     else if (value < 0){0}
     else {value.round.toInt}
   }
-  def clamp(): CircuitSignal = CircuitSignal(clamp(signal))
+  def clamp: CircuitSignal = CircuitSignal(clamp(signal))
   def SigToBin(value: Int): Boolean = {
     if(value > 127){true} 
     else {false}
   }
-  def toBin(): Boolean = SigToBin(signal)
+  def toBin: Boolean = SigToBin(signal)
 }
 
 case object CircuitSignal {
@@ -53,14 +53,10 @@ case class CircuitBoard(
     self: Item,
     message: Message
   ): Unit = message match {
-    case d: PortSignal => {
-      inputs(d.portIndex).setSignal(d.signal)
-    }
-    case e: Evaluate => {
-      evaluate()
-    }
+    case d: PortSignal => inputs(d.portIndex).setSignal(d.signal)
+    case e: Evaluate => evaluate()
   }
-  def evaluate() = {
+  def evaluate():Unit = {
     // go through all the signalblocks and evaluate them, set the output ports correctly
   }
 }
@@ -71,18 +67,18 @@ case class CircuitBuffer(
   var signal: CircuitSignal) extends CircuitPort {
     def setSignal(sig: CircuitSignal): Unit = {signal = sig}
     def getSignal: CircuitSignal = signal
-    def pull: Unit = iPort match {
+    def pull(): Unit = iPort match {
       case None => throw new Exception("no input port to pull signal from")
       case Some(cp) => setSignal(cp.getSignal)
     }
-    def push: Unit = oPort match {
+    def push(): Unit = oPort match {
       case None => throw new Exception("no output port to push signal to")
       case Some(cp) => cp.setSignal(signal)
     }
-    def setIPort(p: CircuitPort) = {
+    def setIPort(p: CircuitPort):Unit = {
       iPort = Some(p)
     }
-    def setOPort(p: CircuitPort) = {
+    def setOPort(p: CircuitPort):Unit = {
       oPort = Some(p)
     }
   }
@@ -94,11 +90,11 @@ case object CircuitBuffer {
 trait SignalBlock {
   val inputBuffers: Seq[CircuitBuffer]
   val outputBuffers: Seq[CircuitBuffer]
-  def evaluate: Unit
-  def update: Unit = {
-    inputBuffers.map(b => b.pull)
-    evaluate
-    outputBuffers.map(b => b.push)
+  def evaluate(): Unit
+  def update(): Unit = {
+    inputBuffers.map(b => b.pull())
+    evaluate()
+    outputBuffers.map(b => b.push())
   }
 }
 
@@ -106,7 +102,7 @@ case class SigAdd() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal + inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal + inputBuffers(1).signal)
   }
 }
 
@@ -114,7 +110,7 @@ case class SigSub() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal - inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal - inputBuffers(1).signal)
   }
 }
 
@@ -122,7 +118,7 @@ case class SigMul() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal * inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal * inputBuffers(1).signal)
   }
 }
 
@@ -130,7 +126,7 @@ case class SigDiv() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal / inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal / inputBuffers(1).signal)
   }
 }
 
@@ -138,7 +134,7 @@ case class SigAnd() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal & inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal & inputBuffers(1).signal)
   }
 }
 
@@ -146,7 +142,7 @@ case class SigOr() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal | inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal | inputBuffers(1).signal)
   }
 }
 
@@ -154,7 +150,7 @@ case class SigXor() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal ^ inputBuffers(1).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal ^ inputBuffers(1).signal)
   }
 }
 
@@ -162,7 +158,7 @@ case class SigNand() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal((inputBuffers(0).signal & inputBuffers(1).signal).not)
+    outputBuffers.head.setSignal((inputBuffers.head.signal & inputBuffers(1).signal).not())
   }
 }
 
@@ -170,7 +166,7 @@ case class SigNot() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal.not)
+    outputBuffers.head.setSignal(inputBuffers.head.signal.not())
   }
 }
 
@@ -178,8 +174,8 @@ case class SigFork() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal)
-    outputBuffers(1).setSignal(inputBuffers(0).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal)
+    outputBuffers(1).setSignal(inputBuffers.head.signal)
   }
 }
 
@@ -187,9 +183,9 @@ case class SigFork3() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer(), CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal)
-    outputBuffers(1).setSignal(inputBuffers(0).signal)
-    outputBuffers(2).setSignal(inputBuffers(0).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal)
+    outputBuffers(1).setSignal(inputBuffers.head.signal)
+    outputBuffers(2).setSignal(inputBuffers.head.signal)
   }
 }
 
@@ -197,7 +193,7 @@ case class SigThru() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal)
   }
 }
 
@@ -205,7 +201,7 @@ case class SigThru2() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal)
     outputBuffers(1).setSignal(inputBuffers(1).signal)
   }
 }
@@ -214,7 +210,7 @@ case class SigThru3() extends SignalBlock {
   val inputBuffers = Seq(CircuitBuffer(), CircuitBuffer(), CircuitBuffer())
   val outputBuffers = Seq(CircuitBuffer(), CircuitBuffer(), CircuitBuffer())
   def evaluate(): Unit = {
-    outputBuffers(0).setSignal(inputBuffers(0).signal)
+    outputBuffers.head.setSignal(inputBuffers.head.signal)
     outputBuffers(1).setSignal(inputBuffers(1).signal)
     outputBuffers(2).setSignal(inputBuffers(2).signal)
   }

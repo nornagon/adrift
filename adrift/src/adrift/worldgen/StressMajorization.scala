@@ -50,28 +50,28 @@ class StressMajorization {
     * Initialize all internal structures that are required for the subsequent iterative procedure..
     */
   def initialize(
-    size: Int,
+    numNodes: Int,
+    neighbors: Int => TraversableOnce[Int],
     iterationLimit: Int,
     epsilon: Double,
     desiredEdgeLength: (Int, Int) => Double,
     initialPosition: Int => (Double, Double),
     distance: ((Double, Double), (Double, Double)) => Double,
-    diff: ((Double, Double), (Double, Double)) => (Double, Double),
-    neighbors: Int => TraversableOnce[Int]
+    diff: ((Double, Double), (Double, Double)) => (Double, Double)
   ): Unit = {
-    if (size <= 1) return
-    this.size = size
+    if (numNodes <= 1) return
+    this.size = numNodes
     this.iterationLimit = iterationLimit
     this.epsilon = epsilon
     this.desiredEdgeLength = desiredEdgeLength
-    neighborCache = Array.tabulate(size) { u => neighbors(u).toArray }
-    this.positions = Array.tabulate(size)(initialPosition)
+    neighborCache = Array.tabulate(numNodes) { u => neighbors(u).toArray }
+    this.positions = Array.tabulate(numNodes)(initialPosition)
     this.distanceP = distance
     this.diff = diff
     // all pairs shortest path
-    val n = size
+    val n = numNodes
     apsp = Array.fill(n, n)(0)
-    for (source <- 0 until size) {
+    for (source <- 0 until numNodes) {
       dijkstra(source, apsp(source))
     }
     // init weight matrix
