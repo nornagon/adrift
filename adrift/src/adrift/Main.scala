@@ -18,6 +18,7 @@ object ArchitectTest {
     implicit val random: Random = new Random(42)
     val genome = NEATArchitect.newGenome()
     var n = 1
+    var growthIterationLimit = Int.MaxValue
     var gLayout = NEATArchitect.layout(genome, n)
 
     import java.awt.Color
@@ -25,12 +26,27 @@ object ArchitectTest {
     val frame = new JFrame("Adrift")
     frame.setDefaultCloseOperation(3)
 
+    val colors = Seq(
+      Color.BLACK,
+      Color.BLUE,
+      Color.CYAN,
+      Color.DARK_GRAY,
+      Color.GRAY,
+      Color.GREEN,
+      Color.LIGHT_GRAY,
+      Color.MAGENTA,
+      Color.ORANGE,
+      Color.PINK,
+      Color.RED,
+      Color.YELLOW,
+    )
+
     val panel = new JPanel() {
       override def paint(g: Graphics): Unit = {
-        val minX = gLayout.roomPositions.map(_._2._1).min
-        val maxX = gLayout.roomPositions.map(_._2._1).max
-        val minY = gLayout.roomPositions.map(_._2._2).min
-        val maxY = gLayout.roomPositions.map(_._2._2).max
+        val minX = gLayout.roomCenters.map(_._2._1).min
+        val maxX = gLayout.roomCenters.map(_._2._1).max
+        val minY = gLayout.roomCenters.map(_._2._2).min
+        val maxY = gLayout.roomCenters.map(_._2._2).max
         val bigger = if (maxY - minY > maxX - minX) maxY - minY else maxX - minX
         val scale = 1000d / bigger
 
@@ -41,19 +57,32 @@ object ArchitectTest {
           ((p._2 - minY) * scale).round.toInt
         )
 
+        for ((rId, rect) <- gLayout.roomRects) {
+          g.setColor(colors(((rId.hashCode() % colors.size) + colors.size) % colors.size))
+          val (l, t) = f(rect.l, rect.t)
+          val (r, b) = f(rect.r, rect.b)
+          g.fillRect(l, t, r - l, b - t)
+        }
+
         for (conn <- genome.connections) {
-          val aPos = gLayout.roomPositions(conn.a)
-          val bPos = gLayout.roomPositions(conn.b)
+          val aPos = gLayout.roomCenters(conn.a)
+          val bPos = gLayout.roomCenters(conn.b)
 
           val (x1, y1) = f(aPos)
           val (x2, y2) = f(bPos)
 
-          if (math.abs(x2 - x1) < 1000 - math.abs(x2 - x1))
+          if (math.abs(x2 - x1) < 1000 - math.abs(x2 - x1)) {
+            g.setColor(Color.BLACK)
             g.drawLine(x1, y1, x2, y2)
+          } else {
+            g.setColor(Color.PINK)
+            g.drawLine(x1, y1, x2, y2)
+          }
         }
 
-        for ((rId, p) <- gLayout.roomPositions) {
+        for ((rId, p) <- gLayout.roomCenters) {
           val (x, y) = f(p)
+          g.setColor(colors(((rId.hashCode() % colors.size) + colors.size) % colors.size))
           g.drawRect(x - 2, y - 2, 4, 4)
         }
       }
@@ -70,9 +99,21 @@ object ArchitectTest {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyChar == ' ') {
           n += 10
+          growthIterationLimit = Int.MaxValue
           println(n)
           val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n)(new Random(0))
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(0))
+          println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
+          frame.repaint()
+        }
+        if (e.getKeyChar == 'i') {
+          if (growthIterationLimit == Int.MaxValue)
+            growthIterationLimit = 0
+          else
+            growthIterationLimit += 1000
+          println(growthIterationLimit)
+          val begin = System.nanoTime()
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(0))
           println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
           frame.repaint()
         }

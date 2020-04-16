@@ -1,5 +1,5 @@
 package adrift.worldgen
-import adrift.Grid
+import adrift.{CylinderGrid, Grid}
 
 import util.Random
 import adrift.RandomImplicits._
@@ -166,9 +166,10 @@ object NEATArchitect {
     Genome(roomGenes, connections)
   }
 
-  case class RoomLayout(roomPositions: Map[RoomId, (Double, Double)]) {}
+  case class Rect(t: Int, r: Int, b: Int, l: Int)
+  case class RoomLayout(roomCenters: Map[RoomId, (Double, Double)], roomRects: Map[RoomId, Rect]) {}
 
-  def layout(g: Genome, iterationLimit: Int = 50)(implicit random: Random): RoomLayout = {
+  def layout(g: Genome, iterationLimit: Int = 50, growthIterationLimit: Int = Int.MaxValue)(implicit random: Random): RoomLayout = {
     val sm = new StressMajorization()
     val idxToRoomId: Map[Int, RoomId] = g.rooms.zipWithIndex.map { case (r, i) => i -> r.id }(collection.breakOut)
     val roomIdToIdx = idxToRoomId.map { case (k, v) => v -> k }
@@ -218,10 +219,106 @@ object NEATArchitect {
         (dx, p1._2 - p2._2)
       })
     sm.execute()
-    val roomPositions: Map[RoomId, (Double, Double)] = g.rooms.indices.map({ i =>
+    val roomCenters: Map[RoomId, (Double, Double)] = g.rooms.indices.map({ i =>
       g.rooms(i).id -> normalizePosition(sm.position(i))
     })(collection.breakOut)
-    RoomLayout(roomPositions)
+
+
+    // Room growth, inspired by A Constrained Growth Method for Procedural Floor Plan Generation
+    // R. Lopes, T. Tutenel, R. M. Smelik,  K. J. de Kraker, R. Bidarra
+    // http://graphics.tudelft.nl/~rafa/myPapers/bidarra.GAMEON10.pdf
+    // See also,
+    // A Survey on the Procedural Generation of Virtual Worlds, J. Freiknecht, W. Effelsberg
+    // https://www.researchgate.net/publication/320722498_A_Survey_on_the_Procedural_Generation_of_Virtual_Worlds
+    val roomGrid = new CylinderGrid[Option[RoomId]](1000, 1000)(None)
+
+    @scala.annotation.tailrec
+    def findNearbyEmpty(x: Int, y: Int): (Int, Int) = {
+      if (y < 0) findNearbyEmpty(x, 0)
+      else if (y >= roomGrid.height) findNearbyEmpty(x, roomGrid.height - 1)
+      else {
+        if (roomGrid(x, y).isEmpty)
+          (x, y)
+        else {
+          if (random.nextBoolean())
+            findNearbyEmpty(x + random.oneOf(1, -1), y)
+          else
+            findNearbyEmpty(x, y + random.oneOf(1, -1))
+        }
+      }
+    }
+
+    // Initialize rooms
+    val roomRects = mutable.Map.empty[RoomId, Rect]
+    roomCenters.foreach {
+      case (id, pos) =>
+        val gridPos = findNearbyEmpty(pos._1.round.toInt, pos._2.round.toInt)
+        roomRects += (id -> Rect(gridPos._2, gridPos._1 + 1, gridPos._2 + 1, gridPos._1))
+        roomGrid(gridPos) = Some(id)
+    }
+
+    // grow
+    def allEmpty(x1: Int, y1: Int, x2: Int, y2: Int): Boolean = {
+      for (x <- x1 until x2; y <- y1 until y2) { if (roomGrid(x, y).nonEmpty) return false }
+      true
+    }
+    def fill(x1: Int, y1: Int, x2: Int, y2: Int, value: Option[RoomId]): Unit =
+      for (x <- x1 until x2; y <- y1 until y2) roomGrid(x, y) = value
+    def isGrowable(rect: Rect, dir: Int): Boolean = {
+      dir match {
+        case 0 => // t
+          rect.t > 0 && allEmpty(rect.l, rect.t - 1, rect.r, rect.t)
+        case 1 => // r
+          allEmpty(rect.r, rect.t, rect.r + 1, rect.b)
+        case 2 => // b
+          rect.b < roomGrid.height - 1 && allEmpty(rect.l, rect.b, rect.r, rect.b + 1)
+        case 3 => // l
+          allEmpty(rect.l - 1, rect.t, rect.l, rect.b)
+      }
+    }
+    def isGrowableAnyDir(rect: Rect): Boolean = (0 until 4).exists(isGrowable(rect, _))
+    def findGrowableRoom(): Option[RoomId] = {
+      random.maybePick(roomRects.keys.view.filter { k => isGrowableAnyDir(roomRects(k)) })
+    }
+
+    def growRoomInDir(roomId: RoomId, dir: Int): Unit = {
+      val rect = roomRects(roomId)
+      dir match {
+        case 0 => // t
+          fill(rect.l, rect.t - 1, rect.r, rect.t, Some(roomId))
+          roomRects(roomId) = rect.copy(t = rect.t - 1)
+        case 1 => // r
+          fill(rect.r, rect.t, rect.r + 1, rect.b, Some(roomId))
+          roomRects(roomId) = rect.copy(r = rect.r + 1)
+        case 2 => // b
+          fill(rect.l, rect.b, rect.r, rect.b + 1, Some(roomId))
+          roomRects(roomId) = rect.copy(b = rect.b + 1)
+        case 3 => // l
+          fill(rect.l - 1, rect.t, rect.l, rect.b, Some(roomId))
+          roomRects(roomId) = rect.copy(l = rect.l - 1)
+      }
+    }
+    def growRoom(roomId: RoomId): Unit = {
+      val rect = roomRects(roomId)
+      val dir = random.pick((0 until 4).filter(isGrowable(rect, _)))
+      growRoomInDir(roomId, dir)
+    }
+
+    var i = 0
+    var done = false
+    while (!done && i < growthIterationLimit) {
+      // find a room that can grow
+      findGrowableRoom() match {
+        case Some(roomId) =>
+          growRoom(roomId)
+        case None =>
+          done = true
+      }
+      i += 1
+    }
+
+
+    RoomLayout(roomCenters, roomRects.toMap)
   }
 }
 

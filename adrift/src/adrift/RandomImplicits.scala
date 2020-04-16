@@ -19,8 +19,27 @@ object RandomImplicits {
     def nOf[K](n: Int, options: Seq[K]): Seq[K] = r.shuffle(options).take(n)
     def pick[K](options: Seq[K]): K = options(between(0, options.size).floor.toInt)
     def pick[K](options: TraversableOnce[K]): K = {
-      var i = 0
-      options.reduce((a, b) => { i += 1; if (oneIn(i + 1)) a else b })
+      var i = 1
+      val iterator = options.toIterator
+      var x = iterator.next
+      while (iterator.hasNext) {
+        val b = iterator.next
+        i += 1
+        if (oneIn(i)) x = b
+      }
+      x
+    }
+    def maybePick[K](options: TraversableOnce[K]): Option[K] = {
+      var i = 1
+      val iterator = options.toIterator
+      if (!iterator.hasNext) return None
+      var x = iterator.next
+      while (iterator.hasNext) {
+        val b = iterator.next
+        i += 1
+        if (oneIn(i)) x = b
+      }
+      Some(x)
     }
 
     // https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_A-Res
