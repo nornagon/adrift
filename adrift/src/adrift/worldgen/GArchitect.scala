@@ -38,8 +38,6 @@ class GArchitect {
 
 object NEATArchitect {
   case class HistoricalId(value: Int) extends AnyVal
-  case class RoomId(value: Int) extends AnyVal
-  case class ConnectionId(id: Int) extends AnyVal
   case class RoomTypeId(id: Int) extends AnyVal
 
   trait Gene {
@@ -63,7 +61,23 @@ object NEATArchitect {
     enabled: Boolean,
   ) extends Gene
 
-  case class Species()
+  case class Population(s: Seq[Species])
+  case class Species(representative: Genome, members: Seq[Genome])
+
+  def newPopulation(num:Int, speciationDelta: Int = 2): Population = {
+    val individuals = Seq.fill(num)(newGenome())
+    def assignSpecies(): Seq[Species] = {Seq.empty}
+    // if no species exists, create one with the first genome.
+    // go through genomes
+    // compare delta between current genome and current species representative.
+    // if within threshold, assign genome to species.
+    // if not, create new species and assign this genome as representative.
+
+    // Then go through all species
+    // evaluate all members and assign the highest evaluated member as the representative.
+    Population(assignSpecies())
+  }
+
 
   class GAContext() {
     var historicalId = 0
@@ -72,18 +86,31 @@ object NEATArchitect {
       historicalId += 1
       id
     }
-    def addGene(g: Gene): Unit = {
-      val id = newId()
-    }
-
+    var species: Seq[Species] = Seq.empty
   }
 
   case class Genome(
-  rooms: Seq[RoomGene],
-  connections: Seq[ConnectionGene],
-  mutationRate: Int = 3,
-  context: GAContext
+    rooms: Seq[RoomGene],
+    connections: Seq[ConnectionGene],
+    mutationRate: Int = 3,
+    context: GAContext
   ) {
+    def evaluate(): Double = {
+      // Several evaluation metrics are important.
+      // We should check and penalize if a genome doesn't have correct room quantities.
+      val roomTypeCoefficient = 100d
+      RoomType.all.map(rt => {
+        val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt)
+        if (relevantRooms > rt.maxQuantity) {
+          relevantRooms - rt.maxQuantity
+        } else if (relevantRooms < rt.minQuantity) {
+          rt.minQuantity - relevantRooms
+        } else {
+          0
+        }
+      }).sum * -1 * roomTypeCoefficient
+      // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
+    }
     //lazy val adjacency = ??? /* ... lazily compute adjacency matrix ... */
     def mutateAddConnection(idGen: () => HistoricalId)(implicit random: Random): Genome = {
       val roomA = random.pick(rooms)
@@ -154,38 +181,34 @@ object NEATArchitect {
     }
 
     def delta(other:Genome): Double = {
+      // NEAT paper says that they used disjoint / excess coefficient of 1
       def disjointCoefficient = 1
-      def weightCoefficient = 1
+      // NEAT paper says that they used weight coefficient of .4 for some problems and 3 for others that are more 'sensitive'
+      def weightCoefficient = .4
       val localSize = rooms.size + connections.size
       val otherSize = other.rooms.size + other.connections.size
-      val localGeneIds: Set[HistoricalId] = ((rooms.map(_.id) ++ connections.map(_.id))).toSet
+      val localGeneIds: Set[HistoricalId] = (rooms.map(_.id) ++ connections.map(_.id)).toSet
       val otherGeneIds: Set[HistoricalId] = (other.rooms.map(_.id) ++ other.connections.map(_.id)).toSet
       val disjointGeneIds = localGeneIds.diff(otherGeneIds).union(otherGeneIds.diff(localGeneIds))
       val disjointGeneCount = disjointGeneIds.size
-      def weightDelta(other: Genome): Float = {
+      def weightDelta(other: Genome): Double= {
         val localConnectionIds = connections.map(_.id)
         val otherConnectionIds = other.connections.map(_.id)
         val intersectingIds = localConnectionIds.intersect(otherConnectionIds)
         val intersectingWeights = connections.filter(c => intersectingIds.contains(c.id)).map(g => {
           math.abs(other.connections.find(p => p.id == g.id).get.weight - g.weight)
         }).sum
-        val localDisjointIds = localConnectionIds.diff(otherConnectionIds)
-        val otherDisjointIds = otherConnectionIds.diff(localConnectionIds)
-        val localNonIntersectingWeights = connections.filter(c => localDisjointIds.contains(c.id)).map(_.weight).sum
-        val otherNonIntersectingWeights = other.connections.filter(c => otherDisjointIds.contains(c.id)).map(_.weight).sum
-        intersectingWeights + localNonIntersectingWeights + otherNonIntersectingWeights
+        intersectingWeights/intersectingIds.length.toDouble
       }
-    weightDelta(other) * weightCoefficient + disjointGeneCount * disjointCoefficient / Seq(localSize, otherSize).max.toDouble
+      weightDelta(other) * weightCoefficient + disjointGeneCount * disjointCoefficient / Seq(localSize, otherSize).max.toDouble
     }
-
 
     def crossover(other: Genome): Genome = ???
   }
 
-  def newGenome(numForeAft: Int = 3)(implicit random: Random): Genome = {
+  def newGenome(numForeAft: Int = 3): Genome = {
     val context = new GAContext()
-    def idGen = context.newId
-    var nextRoomId = 0
+    def idGen = context.newId()
     val foreRoomTypeid = RoomType.all.indexWhere(r => r.name == "fore")
     val aftRoomTypeid = RoomType.all.indexWhere(r => r.name == "aft")
     val roomGenes: Seq[RoomGene] =
@@ -212,7 +235,7 @@ object NEATArchitect {
     val mutationRate = 3
     Genome(roomGenes, connections, mutationRate, context)
   }
-
+  def newPopulation(num: Int): Seq[Genome]
   case class Rect(t: Int, r: Int, b: Int, l: Int)
   case class RoomLayout(roomCenters: Map[HistoricalId, (Double, Double)], roomRects: Map[HistoricalId, Rect]) {}
 
