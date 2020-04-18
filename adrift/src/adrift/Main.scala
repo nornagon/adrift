@@ -57,12 +57,25 @@ object ArchitectTest {
           ((p._2 - minY) * scale).round.toInt
         )
 
+        def colorForRoom(rId: NEATArchitect.HistoricalId) = {
+          colors(((rId.hashCode() % colors.size) + colors.size) % colors.size)
+        }
+
+        for (p <- gLayout.roomGrid.indices) {
+          gLayout.roomGrid(p) foreach { rId =>
+            g.setColor(colorForRoom(rId))
+            g.fillRect(p._1, p._2, 1, 1)
+          }
+        }
+
+/*
         for ((rId, rect) <- gLayout.roomRects) {
-          g.setColor(colors(((rId.hashCode() % colors.size) + colors.size) % colors.size))
+          g.setColor(colorForRoom(rId))
           val (l, t) = f(rect.l, rect.t)
           val (r, b) = f(rect.r, rect.b)
-          g.fillRect(l, t, r - l, b - t)
+          g.drawRect(l, t, r - l, b - t)
         }
+ */
 
         for (conn <- genome.connections) {
           val aPos = gLayout.roomCenters(conn.a)
@@ -82,7 +95,7 @@ object ArchitectTest {
 
         for ((rId, p) <- gLayout.roomCenters) {
           val (x, y) = f(p)
-          g.setColor(colors(((rId.hashCode() % colors.size) + colors.size) % colors.size))
+          g.setColor(colorForRoom(rId))
           g.drawRect(x - 2, y - 2, 4, 4)
         }
       }
@@ -102,7 +115,7 @@ object ArchitectTest {
           growthIterationLimit = Int.MaxValue
           println(n)
           val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(0))
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(42))
           println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
           frame.repaint()
         }
@@ -113,7 +126,7 @@ object ArchitectTest {
             growthIterationLimit += 1000
           println(growthIterationLimit)
           val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(0))
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(42))
           println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
           frame.repaint()
         }

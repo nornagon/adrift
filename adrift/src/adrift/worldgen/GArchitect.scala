@@ -236,8 +236,13 @@ object NEATArchitect {
     Genome(roomGenes, connections, mutationRate, context)
   }
   def newPopulation(num: Int): Seq[Genome] = ???
+
   case class Rect(t: Int, r: Int, b: Int, l: Int)
-  case class RoomLayout(roomCenters: Map[HistoricalId, (Double, Double)], roomRects: Map[HistoricalId, Rect]) {}
+  case class RoomLayout(
+    roomCenters: Map[HistoricalId, (Double, Double)],
+    roomRects: Map[HistoricalId, Rect],
+    roomGrid: CylinderGrid[Option[HistoricalId]]
+  )
 
   def layout(g: Genome, iterationLimit: Int = 50, growthIterationLimit: Int = Int.MaxValue)(implicit random: Random): RoomLayout = {
     val cylinderCircumference = 1000d
@@ -405,7 +410,7 @@ object NEATArchitect {
     }
 
 
-    RoomLayout(roomCenters, roomRects.toMap)
+    RoomLayout(roomCenters, roomRects.toMap, roomGrid)
   }
 }
 
