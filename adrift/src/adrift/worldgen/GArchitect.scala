@@ -9,33 +9,6 @@ import adrift.worldgen.RoomType.RoomType
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
-
-class GArchitect {
-// A genetic algorithm Architect.
-  // For all GAs, the first real step is to define the genome.
-  // Our genome will be a 2d graph of spaces, with associated area, with lines being connectivity between them.
-  // we may start with one each of a given type of space (say, habitation),
-  // then add connectivity to however many different other spaces (say, dining, or each of the 'work' spaces)
-  // It may be possible to have multiple 'copies' of a particular type of space, or maybe only one copy.
-  // For example, it may be reasonable to restrict the genome to have only a single copy of the 'Engine' space
-  // or maybe it's reasonable to have up to (say) four copies of that space.
-  // One node in teh genome may be part of the genometry, so 'aft' might be a node that ends up having 0 sq ft of
-  // area allocated, but is connected to the 'engine' space, making it desirable that the engines be close to the aft
-  // section of the vehicle.
-  // Users will probably define a list of spaces, possible percentage allocation of space (with bounds -
-  // habitation can be 5-15% of total space), maximum and minimum number of those 'spaces' and desired connectivity with
-  // some weighting / reward factor.  So Engines might be weighted as '10' for 'aft' and have connectivity to
-  // powerplant at 8, while connectivity to habitation would be 1.  The GA would get rewarded for putting the engine(s)
-  // at the back and closer to the power plant(s).
-
-  // The GA should in one stage take the available space and partition it into geometric sections.  Then an evaluation
-  // can occur and some amount of reward can be allocated.
-  // This process may be fractal - within each chunk of allocated space  the available space may get broken up further.
-  // For example 'engineering' may get broken up into industrial fabrication, recycling, etc.  These sections may be
-  // further subdivided arbitrarily.
-
-}
-
 object NEATArchitect {
   case class HistoricalId(value: Int) extends AnyVal
   case class RoomTypeId(id: Int) extends AnyVal
@@ -61,23 +34,47 @@ object NEATArchitect {
     enabled: Boolean,
   ) extends Gene
 
-  case class Population(s: Seq[Species])
-  case class Species(representative: Genome, members: Seq[Genome])
 
-  def newPopulation(num:Int, speciationDelta: Int = 2): Population = {
-    val individuals = Seq.fill(num)(newGenome())
-    def assignSpecies(): Seq[Species] = {Seq.empty}
-    // if no species exists, create one with the first genome.
-    // go through genomes
-    // compare delta between current genome and current species representative.
-    // if within threshold, assign genome to species.
-    // if not, create new species and assign this genome as representative.
+  // General GA process:
+  // create population
+  // Repeate:
+  //   mutate
+  //   evaluate
+  //   kill
+  //   mate
+  //   [speciate]
 
-    // Then go through all species
-    // evaluate all members and assign the highest evaluated member as the representative.
-    Population(assignSpecies())
+  def runGeneration(pNew:Population): Unit = {
+    val pMutated = pNew.mutate()
+    val evaluations = pMutated.evaluate()
+    val pUnspeciated = pMutated.regenerate(evaluations)
+    pUnspeciated.speciate()
   }
 
+  case class Species(representative: Genome, fitness: Double)
+  case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double) {
+    def mutate(): Population = {
+      // mutuate the members of the population
+      copy(species, members, speciationDelta)
+    }
+    def evaluate(): Map[Genome, Double] = {
+      // evaluate the fitness of members
+      Map.empty
+    }
+    def regenerate(evaluations: Map[Genome, Double]): Population = {
+      // allocate fitness to species, kill off individuals and mate to produce new ones, then pick representatives for new species.
+      copy(species, members, speciationDelta)
+    }
+    def speciate(): Population = {
+      copy(species, members, speciationDelta)
+    }
+  }
+
+  def newPopulation(num:Int, speciationDelta: Double = 3d): Population = {
+    // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
+    val individuals = Seq.fill(num)(newGenome())
+    Population(Seq(Species(individuals.head, 0d)), individuals, speciationDelta)
+  }
 
   class GAContext() {
     var historicalId = 0
@@ -96,6 +93,7 @@ object NEATArchitect {
     context: GAContext
   ) {
     def evaluate(): Double = {
+      // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
       val roomTypeCoefficient = 100d
@@ -137,6 +135,7 @@ object NEATArchitect {
     def mutateDisableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = false))
     def mutateEnableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = true))
     def mutateConnectionWeight()(implicit random: Random): Genome = mutateRandomConnection { c =>
+      // in cannonical NEAT this has some chance to become a new random value, and some other chance to bump up / down slightly
       c.copy(weight = c.weight * random.between(0.9f, 1.1f))
     }
 
