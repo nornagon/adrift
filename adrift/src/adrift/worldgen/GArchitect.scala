@@ -450,28 +450,17 @@ object NEATArchitect {
     emptyCells ++= roomGrid.indices.filter(p => roomGrid(p).isEmpty)
     val adjs = Seq((-1, 0), (0, -1), (1, 0), (0, 1))
     while (emptyCells.nonEmpty && i < growthIterationLimit) {
-      val c = emptyCells.find {
-        case (x, y) =>
-          adjs.exists {
-            case (dx, dy) =>
-              roomGrid.get(x + dx, y + dy) match {
-                case Some(value) => value.nonEmpty
-                case None => false
-              }
-          }
-      }
+      val cell = emptyCells.find {
+        c => adjs.exists { d => roomGrid.get(c._1 + d._1, c._2 + d._2).exists(_.nonEmpty) }
+      }.getOrElse(throw new RuntimeException("How can there be no empty cell that's adjacent to something??"))
+      assert(roomGrid(cell).isEmpty)
 
-      c match {
-        case Some(cell) =>
-          assert(roomGrid(cell).isEmpty)
-          val adjCell = adjs.find(a => roomGrid.get(cell._1 + a._1, cell._2 + a._2).exists(_.nonEmpty)).get
-          val adjVal = roomGrid(cell._1 + adjCell._1, cell._2 + adjCell._2)
-          val rect = findBigEmptyRect(cell)
-          fill(rect.l, rect.t, rect.r, rect.b, adjVal)
-          for (x <- rect.l until rect.r; y <- rect.t until rect.b) emptyCells.remove((normalizeXI(x), y))
-        case None =>
-          throw new RuntimeException("How can there be no empty cell that's adjacent to something??")
-      }
+      val adjCell = adjs.find(a => roomGrid.get(cell._1 + a._1, cell._2 + a._2).exists(_.nonEmpty)).get
+      val adjVal = roomGrid(cell._1 + adjCell._1, cell._2 + adjCell._2)
+      val rect = findBigEmptyRect(cell)
+      fill(rect.l, rect.t, rect.r, rect.b, adjVal)
+      for (x <- rect.l until rect.r; y <- rect.t until rect.b) emptyCells.remove((normalizeXI(x), y))
+
       i += 1
     }
 
