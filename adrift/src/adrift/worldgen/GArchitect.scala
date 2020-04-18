@@ -41,33 +41,50 @@ object NEATArchitect {
   //   mutate
   //   evaluate
   //   kill
-  //   mate
-  //   [speciate]
+  //   mate & [speciate]
 
   def runGeneration(pNew:Population): Unit = {
     val pMutated = pNew.mutate()
     val evaluations = pMutated.evaluate()
-    val pUnspeciated = pMutated.regenerate(evaluations)
-    pUnspeciated.speciate()
+    pMutated.mate(evaluations)
   }
 
-  case class Species(representative: Genome, fitness: Double)
-  case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double) {
-    def mutate(): Population = {
-      // mutuate the members of the population
-      copy(species, members, speciationDelta)
-    }
-    def evaluate(): Map[Genome, Double] = {
-      // evaluate the fitness of members
-      Map.empty
-    }
-    def regenerate(evaluations: Map[Genome, Double]): Population = {
+  case class Species(representative: Genome)
+  case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double)(implicit random: Random) {
+
+    def mutate(): Population = copy(species, members = members.map(_.mutate()), speciationDelta)
+
+    def evaluate(): Map[Genome, Double] = members.zip(members.map(_.evaluate())).toMap
+
+    def mate(evaluations: Map[Genome, Double]): Population = {
       // allocate fitness to species, kill off individuals and mate to produce new ones, then pick representatives for new species.
+      val popSize = members.length
+
+      // allocate fitness to species
+      val totalFitness = evaluations.values.sum
+      val speciesMembers = species.zip(species.map(s => members.filter(_.delta(s.representative) < speciationDelta))).toMap
+
+      val speciesFitness = species.zip(species.map(s => {
+        speciesMembers(s).map(g => evaluations(g)).sum
+      })).toMap
+      val newSpeciesSizes = species.zip(species.map(s => (speciesFitness(s) / totalFitness * popSize).round.toInt)).toMap
+
+      // produce new individuals
+      def speciesMate(species: Species): Genome = {
+        val potentialParents = speciesMembers(species)
+        if (potentialParents.length < 2) return species.representative
+        val parent1 = random.chooseFrom(potentialParents)(evaluations(_))
+        val parent2 = random.chooseFrom(potentialParents.dropWhile(_ == parent1))(evaluations(_))
+        parent1.crossover(parent2)
+      }
+      val newIndividuals = species.flatMap(s => {
+        Seq.fill(newSpeciesSizes(s))(speciesMate(s))
+      })
+      // make new species for those individuals, trying to keep them as close to the old ones as possible, maybe?
+
       copy(species, members, speciationDelta)
     }
-    def speciate(): Population = {
-      copy(species, members, speciationDelta)
-    }
+
   }
 
   def newPopulation(num:Int, speciationDelta: Double = 3d): Population = {
@@ -96,18 +113,20 @@ object NEATArchitect {
       // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
-      val roomTypeCoefficient = 100d
-      RoomType.all.map(rt => {
-        val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt)
+      val roomTypeCoefficient = 1d
+      val rtEval = RoomType.all.map(rt => {
+        val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt).toDouble
         if (relevantRooms > rt.maxQuantity) {
-          relevantRooms - rt.maxQuantity
+          rt.maxQuantity.toDouble/relevantRooms
         } else if (relevantRooms < rt.minQuantity) {
-          rt.minQuantity - relevantRooms
+          relevantRooms/rt.minQuantity.toDouble
         } else {
-          0
+          1
         }
-      }).sum * -1 * roomTypeCoefficient
+      }).sum * roomTypeCoefficient
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
+      // val affiinityEval = ???
+      Math.max(0,rtEval)
     }
     //lazy val adjacency = ??? /* ... lazily compute adjacency matrix ... */
     def mutateAddConnection(idGen: () => HistoricalId)(implicit random: Random): Genome = {
