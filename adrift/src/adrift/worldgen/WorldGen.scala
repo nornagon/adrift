@@ -353,22 +353,24 @@ case class WorldGen(data: Data)(implicit random: Random) {
     )
     state.levels(levelId) = level
 
-    for (y <- 0 until height) {
-      for (x <- 0 until width) {
-        val left = layout.roomGrid(x - 1, y)
-        val here = layout.roomGrid(x, y)
-        if (here != left) {
-          level.terrain(x, y) = data.terrain("wall")
-        }
-      }
-    }
-
     for (x <- 0 until width) {
       for (y <- 1 until height) {
         val up = layout.roomGrid(x, y - 1)
         val here = layout.roomGrid(x, y)
         if (here != up) {
           level.terrain(x, y) = data.terrain("wall")
+        }
+      }
+    }
+
+    for (y <- 0 until height) {
+      for (x <- 0 until width) {
+        val left = layout.roomGrid(x - 1, y)
+        val here = layout.roomGrid(x, y)
+        if (here != left) {
+          level.terrain(x, y) = data.terrain("wall")
+          if (level.terrain.contains(x, y + 1))
+            level.terrain(x, y + 1) = data.terrain("wall")
         }
       }
     }
