@@ -81,16 +81,16 @@ object NEATArchitect {
         Seq.fill(newSpeciesSizes(s))(speciesMate(s))
       })
       // make new species for those individuals, trying to keep them as close to the old ones as possible, maybe?
-
-      copy(species, members, speciationDelta)
+      val representatives: Seq[Genome] = species.dropWhile(newSpeciesSizes(_)<1).map(_.representative)
+      val newSpecies = representatives.map(rep => Species(newIndividuals.sortBy(g => g.delta(rep)).head))
+      Population(newSpecies, newIndividuals, speciationDelta)
     }
-
   }
 
-  def newPopulation(num:Int, speciationDelta: Double = 3d): Population = {
+  def newPopulation(num:Int, speciationDelta: Double = 3d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
     val individuals = Seq.fill(num)(newGenome())
-    Population(Seq(Species(individuals.head, 0d)), individuals, speciationDelta)
+    Population(Seq(Species(individuals.head)), individuals, speciationDelta)
   }
 
   class GAContext() {
