@@ -237,7 +237,11 @@ object NEATArchitect {
   }
   def newPopulation(num: Int): Seq[Genome] = ???
 
-  case class Rect(t: Int, r: Int, b: Int, l: Int)
+  case class Rect(t: Int, r: Int, b: Int, l: Int) {
+    require(r > l)
+    require(b > t)
+    def area: Int = (r - l) * (b - t)
+  }
   case class RoomLayout(
     roomCenters: Map[HistoricalId, (Double, Double)],
     roomRects: Map[HistoricalId, Rect],
@@ -245,16 +249,16 @@ object NEATArchitect {
   )
 
   def layout(g: Genome, iterationLimit: Int = 50, growthIterationLimit: Int = Int.MaxValue)(implicit random: Random): RoomLayout = {
-    val cylinderCircumference = 1000d
-    val cylinderLength = 1000d
+    val cylinderCircumference = 1000
+    val cylinderLength = 1000
 
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
     val foreRooms = g.rooms.filter(_.roomType == foreRoomTypeId).sortBy(_.id.value)
     val aftRooms = g.rooms.filter(_.roomType == aftRoomTypeId).sortBy(_.id.value)
     // arrange the fore rooms in a circle around the top, and the aft in a circle around the bottom
-    val forePositions = foreRooms.indices.map { i => (cylinderCircumference / foreRooms.size * i, 0d) }
-    val aftPositions = aftRooms.indices.map { i => (cylinderCircumference / foreRooms.size * i, cylinderLength) }
+    val forePositions = foreRooms.indices.map { i => (cylinderCircumference.toDouble / foreRooms.size * i, 0d) }
+    val aftPositions = aftRooms.indices.map { i => (cylinderCircumference.toDouble / foreRooms.size * i, cylinderLength.toDouble) }
     val fixedPositionRooms: Map[HistoricalId, (Double, Double)] =
       foreRooms.zip(forePositions).map { case (r, p) => r.id -> p }.toMap ++
         aftRooms.zip(aftPositions).map { case (r, p) => r.id -> p }
@@ -278,8 +282,9 @@ object NEATArchitect {
       (idxA, idxB) -> math.sqrt(rtA.spaceWeight + rtB.spaceWeight)*4
     }(collection.breakOut)
     def normalizeX(x: Double): Double =
-      if (x >= 0 && x < cylinderCircumference) x
-      else ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
+      ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
+    def normalizeXI(x: Int): Int =
+      ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
     def normalizePosition(p: (Double, Double)): (Double, Double) = (normalizeX(p._1), p._2)
     sm.initialize(
       g.rooms.size,
@@ -405,6 +410,63 @@ object NEATArchitect {
           growRoom(roomId)
         case None =>
           done = true
+      }
+      i += 1
+    }
+
+    def seek(s0: Int, d: Int, f: Int => Boolean): Int = {
+      var s = s0
+      while (f(s))
+        s += d
+      s - d
+    }
+
+    def findBigEmptyRect(cell: (Int, Int)): Rect = {
+      def isEmpty(x: Int, y: Int): Boolean = roomGrid.contains(x, y) && roomGrid(x, y).isEmpty
+      def isEmptyRow(l: Int, r: Int)(y: Int): Boolean = allEmpty(l, y, r, y + 1)
+      def isEmptyCol(t: Int, b: Int)(x: Int): Boolean = allEmpty(x, t, x + 1, b)
+      val (cx, cy) = cell
+      // find the longest horizontal line of empty cells which includes this cell
+      val l = seek(cx, -1, isEmpty(_, cy))
+      val r = seek(cx, 1, isEmpty(_, cy)) + 1
+      // same but vertical
+      val t = seek(cy, -1, isEmpty(cx, _))
+      val b = seek(cy, 1, isEmpty(cx, _)) + 1
+      val rt = seek(cy, -1, isEmptyRow(l, r))
+      val rb = seek(cy, 1, isEmptyRow(l, r)) + 1
+      val r1 = Rect(rt, r, rb, l)
+      val rl = seek(cx, -1, isEmptyCol(t, b))
+      val rr = seek(cx, 1, isEmptyCol(t, b)) + 1
+      val r2 = Rect(t, rr, b, rl)
+      if (r1.area > r2.area) r1 else r2
+    }
+
+    // fill in the gaps
+    val emptyCells = mutable.Set.empty[(Int, Int)]
+    emptyCells ++= roomGrid.indices.filter(p => roomGrid(p).isEmpty)
+    val adjs = Seq((-1, 0), (0, -1), (1, 0), (0, 1))
+    while (emptyCells.nonEmpty && i < growthIterationLimit) {
+      val c = emptyCells.find {
+        case (x, y) =>
+          adjs.exists {
+            case (dx, dy) =>
+              roomGrid.get(x + dx, y + dy) match {
+                case Some(value) => value.nonEmpty
+                case None => false
+              }
+          }
+      }
+
+      c match {
+        case Some(cell) =>
+          assert(roomGrid(cell).isEmpty)
+          val adjCell = adjs.find(a => roomGrid.get(cell._1 + a._1, cell._2 + a._2).exists(_.nonEmpty)).get
+          val adjVal = roomGrid(cell._1 + adjCell._1, cell._2 + adjCell._2)
+          val rect = findBigEmptyRect(cell)
+          fill(rect.l, rect.t, rect.r, rect.b, adjVal)
+          for (x <- rect.l until rect.r; y <- rect.t until rect.b) emptyCells.remove((normalizeXI(x), y))
+        case None =>
+          throw new RuntimeException("How can there be no empty cell that's adjacent to something??")
       }
       i += 1
     }
