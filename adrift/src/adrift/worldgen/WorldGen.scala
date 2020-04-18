@@ -338,6 +338,46 @@ case class WorldGen(data: Data)(implicit random: Random) {
     initialState
   }
 
+  def generateWorldGA: GameState = {
+    val layout = NEATArchitect.make()
+    val state = new GameState(data, new Random(random.nextLong()))
+
+    val width = layout.roomGrid.width
+    val height = layout.roomGrid.height
+
+    val levelId = LevelId("main")
+    val level = Level(
+      terrain = new CylinderGrid(width, height)(data.terrain("floor")),
+      temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
+      gasComposition = new CylinderGrid(width, height)(GasComposition(4, 9, 1))
+    )
+    state.levels(levelId) = level
+
+    for (y <- 0 until height) {
+      for (x <- 0 until width) {
+        val left = layout.roomGrid(x - 1, y)
+        val here = layout.roomGrid(x, y)
+        if (here != left) {
+          level.terrain(x, y) = data.terrain("wall")
+        }
+      }
+    }
+
+    for (x <- 0 until width) {
+      for (y <- 1 until height) {
+        val up = layout.roomGrid(x, y - 1)
+        val here = layout.roomGrid(x, y)
+        if (here != up) {
+          level.terrain(x, y) = data.terrain("wall")
+        }
+      }
+    }
+
+    state.refresh()
+
+    state
+  }
+
   def generateDetails(schematic: ShipSchematic): GameState = {
     val (width, height) = schematic.size
     val state = new GameState(data, new Random(random.nextLong()))

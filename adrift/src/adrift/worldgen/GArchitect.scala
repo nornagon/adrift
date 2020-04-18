@@ -248,9 +248,13 @@ object NEATArchitect {
     roomGrid: CylinderGrid[Option[HistoricalId]]
   )
 
-  def layout(g: Genome, iterationLimit: Int = 50, growthIterationLimit: Int = Int.MaxValue)(implicit random: Random): RoomLayout = {
-    val cylinderCircumference = 1000
-    val cylinderLength = 1000
+  def layout(
+    g: Genome,
+    iterationLimit: Int = 50,
+    growthIterationLimit: Int = Int.MaxValue
+  )(implicit random: Random): RoomLayout = {
+    val cylinderCircumference = 360
+    val cylinderLength = 270
 
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
@@ -327,7 +331,7 @@ object NEATArchitect {
     // See also,
     // A Survey on the Procedural Generation of Virtual Worlds, J. Freiknecht, W. Effelsberg
     // https://www.researchgate.net/publication/320722498_A_Survey_on_the_Procedural_Generation_of_Virtual_Worlds
-    val roomGrid = new CylinderGrid[Option[HistoricalId]](1000, 1000)(None)
+    val roomGrid = new CylinderGrid[Option[HistoricalId]](cylinderCircumference, cylinderLength)(None)
 
     @scala.annotation.tailrec
     def findNearbyEmpty(x: Int, y: Int): (Int, Int) = {
@@ -466,6 +470,11 @@ object NEATArchitect {
 
 
     RoomLayout(roomCenters, roomRects.toMap, roomGrid)
+  }
+
+  def make()(implicit random: Random): RoomLayout = {
+    // TODO: like... run the GA
+    layout(newGenome())
   }
 }
 

@@ -14,6 +14,8 @@ object adrift extends ScalaModule {
     else Seq.empty)
   override def scalaVersion = "2.12.4"
 
+  override def mainClass = Some("adrift.Main")
+
   override def repositories = super.repositories ++ Seq(
     MavenRepository("https://oss.sonatype.org/content/repositories/snapshots/"),
     MavenRepository("https://oss.sonatype.org/content/repositories/releases/")

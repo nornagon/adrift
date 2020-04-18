@@ -50,13 +50,15 @@ object Main {
     //jsyn(); return
 
     //javax(); return
+    val useGA = args.contains("--ga")
+    val load = args.contains("--load")
 
     val dataPath = Paths.get("data")
     val data = Data.parse(dataPath)
 
     val savePath = Paths.get("save.bson")
     val state =
-      if (Files.exists(savePath)) {
+      if (Files.exists(savePath) && load) {
         val start = System.nanoTime()
         val json = Bson.decode(Files.newInputStream(savePath))
         println(f"Parse took ${(System.nanoTime() - start) / 1e6}%.1f ms")
@@ -65,11 +67,12 @@ object Main {
         println(f"Load took ${(System.nanoTime() - start2) / 1e6}%.1f ms")
         state
       } else {
-        implicit val random: Random = new Random(52)
-        val state = WorldGen(data).generateWorld
-        val start = System.nanoTime()
-        Bson.encode(Serialization.save(state), Files.newOutputStream(savePath))
-        println(f"Save took ${(System.nanoTime() - start) / 1e6}%.1f ms")
+        implicit val random: Random = new Random(12367)
+        val gen = WorldGen(data)
+        val state = if (useGA) gen.generateWorldGA else gen.generateWorld
+        //val start = System.nanoTime()
+        //Bson.encode(Serialization.save(state), Files.newOutputStream(savePath))
+        //println(f"Save took ${(System.nanoTime() - start) / 1e6}%.1f ms")
         state
       }
 

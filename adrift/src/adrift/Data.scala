@@ -177,7 +177,6 @@ object Data {
       .map {
         case (k, v) => k -> RoomGen.decoders(v.algorithm).decodeJson(Json.fromJsonObject(v.options)).fold(throw _, identity)
       }
-    println(roomgens)
 
     val terrain: Map[String, Terrain] = ymls("terrain")
       .map(obj => obj.as[Terrain]
