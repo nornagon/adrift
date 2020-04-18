@@ -142,40 +142,38 @@ object Data {
         )
         java.util.Arrays.stream(xs.asArray.get.toArray)
       }
-      .collect(Collectors.toList[Json]).asScala
+      .collect(Collectors.toList[Json]).asScala.toSeq
       .groupBy(obj => obj.hcursor.get[String]("type").right.getOrElse { throw new RuntimeException(s"Failed to parse (missing 'type' key): $obj") })
 
-    val operations = ymls("operation")
+    val operations: Map[String, ItemOperation] = ymls("operation")
       .map(obj => obj.as[ItemOperation]
         .fold(ex => throw new RuntimeException(s"Failed to parse operation: $obj", ex), identity))
-      .groupBy(_.id).map {
-        case (k, v) => assert(v.length == 1); k -> v.head
-      }
+      .groupBy(_.id).map { case (k, v) => assert(v.length == 1); k -> v.head }
 
     val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
 
-    val itemGroups = ymls("item_group")
+    val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item_group")
       .map(obj => obj.as[YamlObject.ItemGroup]
         .fold(ex => throw new RuntimeException(s"Failed to parse item_group: $obj", ex), identity))
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head
       }
 
-    val rooms = ymls("room")
+    val rooms: Map[String, YamlObject.RoomDef] = ymls("room")
       .map(obj => obj.as[YamlObject.RoomDef]
         .fold(ex => throw new RuntimeException(s"Failed to parse room: $obj", ex), identity))
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one room with name $k"); k -> v.head
       }
 
-    val roomgens = ymls("roomgen")
+    val roomgens: Map[String, RoomGen] = ymls("roomgen")
       .map(obj => obj.as[YamlObject.RoomGen]
         .fold(ex => throw new RuntimeException(s"Failed to parse roomgen: $obj", ex), identity))
-      .groupBy(_.name).map {
-        case (k, v) => assert(v.length == 1, s"More than one roomgen with name $k"); k -> v.head
+      .groupBy(_.name).map { case (k: String, v: Seq[YamlObject.RoomGen]) =>
+        assert(v.length == 1, s"More than one roomgen with name $k"); k -> v.head
       }
-      .map {
-        case (k, v) => k -> RoomGen.decoders(v.algorithm).decodeJson(Json.fromJsonObject(v.options)).fold(throw _, identity)
+      .map { case (k: String, v: YamlObject.RoomGen) =>
+        k -> RoomGen.decoders(v.algorithm).decodeJson(Json.fromJsonObject(v.options)).fold(throw _, identity)
       }
 
     val terrain: Map[String, Terrain] = ymls("terrain")
@@ -218,7 +216,7 @@ object Data {
         identity
       )
     )
-    val itemsById = itemDefs.groupBy(_.name).map {
+    val itemsById: Map[String, YamlObject.ItemKind] = itemDefs.groupBy(_.name).map {
       case (k, v) =>
         assert(v.size == 1, s"more than one item with the name '$k'")
         k -> v.head

@@ -375,7 +375,7 @@ class GameState(var data: Data, val random: Random) {
 
   def sampleItem(table: Population.Table[String]): Seq[Item] = {
     for {
-      itemKindName <- table.sample()(random, data.itemGroups.mapValues(_.choose))
+      itemKindName <- table.sample()(random, data.itemGroups.view.mapValues(_.choose))
       itemKind = data.items(itemKindName)
     } yield itemKind.generateItem()
   }
@@ -492,13 +492,13 @@ class GameState(var data: Data, val random: Random) {
       def toolsForOp(operation: ItemOperation): Seq[Item] =
         availableItems.filter(providesOperation(operation, _))
       Some(kind.parts.groupBy(_.kind).flatMap {
-        case (partKind, parts) =>
+        case (partKind: ItemKind, parts: Seq[ItemPart]) =>
           val requiredQty = parts.map(_.count).sum
           val candidateComponents = availableItems.filter(_.kind == partKind).take(requiredQty)
           if (candidateComponents.size < requiredQty) return None
           val requiredOps = parts.map(_.operation).distinct
           val candidateTools: Map[ItemOperation, Seq[Item]] =
-            requiredOps.map { op => op -> toolsForOp(op) }(collection.breakOut)
+            requiredOps.view.map { op => op -> toolsForOp(op) }.to(Map)
           if (candidateTools.values.exists(_.isEmpty)) {
             return None
           }
@@ -513,7 +513,7 @@ class GameState(var data: Data, val random: Random) {
           /*val operations = candidateComponents.zip(parts.map(_.operation)).map {
             case (item, op) => AssemblyAction(tools(op), item, op)
           }*/
-      }.toSeq)
+      }.to(Seq))
     }
 
     val x = (for {

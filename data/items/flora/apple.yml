@@ -40,7 +40,7 @@
   description: A tasty-looking red apple.
   display: FRUIT
   parts:
-    - {type: apple seed, count: 1d6}
+    - {type: apple seed, count: 1}
   behavior:
     - Edible: { calories: 100 }
 

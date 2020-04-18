@@ -43,7 +43,7 @@ object NEATArchitect {
   //   kill
   //   mate & [speciate]
 
-  def runGeneration(pNew:Population): Unit = {
+  def runGeneration(pNew: Population)(implicit random: Random): Population = {
     val pMutated = pNew.mutate()
     val evaluations = pMutated.evaluate()
     pMutated.mate(evaluations)
@@ -51,10 +51,11 @@ object NEATArchitect {
 
   case class Species(representative: Genome)
   case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double)(implicit random: Random) {
+    def best: Genome = members.maxBy(_.fitness)
 
     def mutate(): Population = copy(species, members = members.map(_.mutate()), speciationDelta)
 
-    def evaluate(): Map[Genome, Double] = members.zip(members.map(_.evaluate())).toMap
+    def evaluate(): Map[Genome, Double] = members.zip(members.map(_.fitness)).toMap
 
     def mate(evaluations: Map[Genome, Double]): Population = {
       // allocate fitness to species, kill off individuals and mate to produce new ones, then pick representatives for new species.
@@ -113,7 +114,7 @@ object NEATArchitect {
     mutationRate: Int = 3,
     context: GAContext
   ) {
-    def evaluate(): Double = {
+    lazy val fitness: Double = {
       // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
@@ -285,9 +286,8 @@ object NEATArchitect {
       connections += ConnectionGene(idGen, HistoricalId(i), HistoricalId(i + numForeAft), 1, enabled = true)
     }
     val mutationRate = 3
-    Genome(roomGenes, connections, mutationRate, context)
+    Genome(roomGenes, connections.to(Seq), mutationRate, context)
   }
-  def newPopulation(num: Int): Seq[Genome] = ???
 
   case class Rect(t: Int, r: Int, b: Int, l: Int) {
     require(r > l)
@@ -320,9 +320,9 @@ object NEATArchitect {
         aftRooms.zip(aftPositions).map { case (r, p) => r.id -> p }
 
     val sm = new StressMajorization()
-    val idxToRoomId: Map[Int, HistoricalId] = g.rooms.zipWithIndex.map { case (r, i) => i -> r.id }(collection.breakOut)
-    val roomIdToIdx = idxToRoomId.map { case (k, v) => v -> k }
-    def neighbs(i: Int): TraversableOnce[Int] = {
+    val idxToRoomId: Map[Int, HistoricalId] = g.rooms.view.zipWithIndex.map { case (r, i) => i -> r.id }.to(Map)
+    val roomIdToIdx: Map[HistoricalId, Int] = idxToRoomId.map { case (k, v) => v -> k }
+    def neighbs(i: Int): IterableOnce[Int] = {
       val needle = g.rooms(i).id
       g.connections.flatMap {
         case c: ConnectionGene if c.a == needle => Some(roomIdToIdx(c.b))
@@ -330,13 +330,13 @@ object NEATArchitect {
         case _ => None
       }
     }
-    val lengths: Map[(Int, Int), Double] = g.connections.map { c =>
+    val lengths: Map[(Int, Int), Double] = g.connections.view.map { c =>
       val idxA = roomIdToIdx(c.a)
       val idxB = roomIdToIdx(c.b)
       val rtA = RoomType.byId(g.rooms(idxA).roomType)
       val rtB = RoomType.byId(g.rooms(idxB).roomType)
       (idxA, idxB) -> math.sqrt(rtA.spaceWeight + rtB.spaceWeight)*4
-    }(collection.breakOut)
+    }.to(Map)
     def normalizeX(x: Double): Double =
       ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
     def normalizeXI(x: Int): Int =
@@ -372,9 +372,9 @@ object NEATArchitect {
         (dx, p1._2 - p2._2)
       })
     sm.execute()
-    val roomCenters: Map[HistoricalId, (Double, Double)] = g.rooms.indices.map({ i =>
+    val roomCenters: Map[HistoricalId, (Double, Double)] = g.rooms.indices.view.map({ i =>
       g.rooms(i).id -> normalizePosition(sm.position(i))
-    })(collection.breakOut)
+    }).to(Map)
 
 
     // Room growth, inspired by A Constrained Growth Method for Procedural Floor Plan Generation
@@ -525,8 +525,10 @@ object NEATArchitect {
   }
 
   def make()(implicit random: Random): RoomLayout = {
-    // TODO: like... run the GA
-    layout(newGenome())
+    // TODO: an actual GA, this loop just plays one on TV
+    val generations = 10
+    val winner = Iterable.iterate(newPopulation(10), generations)(runGeneration).last.best
+    layout(winner)
   }
 }
 
@@ -558,7 +560,7 @@ object RoomType {
 
   val byId: Map[RoomTypeId, RoomType] = all.zipWithIndex.map {
     case (rt, id) => RoomTypeId(id) -> rt
-  }(collection.breakOut)
+  }.to(Map)
 
   val byName: Map[String, RoomTypeId] = byId.map { case (k, v) => v.name -> k }
 }

@@ -12,7 +12,7 @@ object adrift extends ScalaModule {
     if (System.getProperty("os.name") startsWith "Mac")
       Seq("-XstartOnFirstThread")
     else Seq.empty)
-  override def scalaVersion = "2.12.4"
+  override def scalaVersion = "2.13.1"
 
   override def mainClass = Some("adrift.Main")
 
@@ -43,12 +43,12 @@ object adrift extends ScalaModule {
     ivy"org.scalanlp::breeze-natives:1.0",
     ivy"org.scalanlp::breeze-viz:1.0",
 
-    ivy"io.circe::circe-core:0.9.1",
-    ivy"io.circe::circe-generic:0.9.1",
-    ivy"io.circe::circe-generic-extras:0.9.1",
-    ivy"io.circe::circe-parser:0.9.1",
-    ivy"io.circe::circe-optics:0.9.1",
-    ivy"io.circe::circe-yaml:0.7.0",
+    ivy"io.circe::circe-core:0.13.0",
+    ivy"io.circe::circe-generic:0.13.0",
+    ivy"io.circe::circe-generic-extras:0.13.0",
+    ivy"io.circe::circe-parser:0.13.0",
+    ivy"io.circe::circe-optics:0.13.0",
+    ivy"io.circe::circe-yaml:0.13.0",
   ) ++ Agg.from(
     Seq(
       "lwjgl",

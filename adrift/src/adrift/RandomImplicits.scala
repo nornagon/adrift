@@ -18,9 +18,9 @@ object RandomImplicits {
     def oneOf[K](options: K*): K = pick(options)
     def nOf[K](n: Int, options: Seq[K]): Seq[K] = r.shuffle(options).take(n)
     def pick[K](options: Seq[K]): K = options(between(0, options.size).floor.toInt)
-    def pick[K](options: TraversableOnce[K]): K = {
+    def pick[K](options: IterableOnce[K]): K = {
       var i = 1
-      val iterator = options.toIterator
+      val iterator = options.iterator
       var x = iterator.next
       while (iterator.hasNext) {
         val b = iterator.next
@@ -29,9 +29,9 @@ object RandomImplicits {
       }
       x
     }
-    def maybePick[K](options: TraversableOnce[K]): Option[K] = {
+    def maybePick[K](options: IterableOnce[K]): Option[K] = {
       var i = 1
-      val iterator = options.toIterator
+      val iterator = options.iterator
       if (!iterator.hasNext) return None
       var x = iterator.next
       while (iterator.hasNext) {
@@ -43,12 +43,13 @@ object RandomImplicits {
     }
 
     // https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_A-Res
-    def chooseFrom[T](elems: TraversableOnce[T])(weight: T => Double): T =
-      elems.maxBy { elem => math.pow(r.nextDouble(), 1 / weight(elem)) }
+    def chooseFrom[T](elems: IterableOnce[T])(weight: T => Double): T =
+      elems.iterator.maxBy { elem => math.pow(r.nextDouble(), 1 / weight(elem)) }
 
-    def nFrom[T](k: Int, elems: TraversableOnce[T])(weight: T => Double): Seq[T] = {
+    def nFrom[T](k: Int, elems: IterableOnce[T])(weight: T => Double): Iterable[T] = {
+      if (k == 0) return Seq.empty
       val h = new scala.collection.mutable.PriorityQueue[(Double, T)]()(Ordering.by(_._1))
-      elems.foreach { e =>
+      elems.iterator.foreach { e =>
         val rv = math.pow(r.nextDouble(), 1 / weight(e))
         if (h.size < k)
           h.enqueue((rv, e))
@@ -59,7 +60,7 @@ object RandomImplicits {
           }
         }
       }
-      h.map(_._2)(collection.breakOut)
+      h.view.map(_._2)
     }
   }
 }

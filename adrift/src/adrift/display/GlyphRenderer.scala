@@ -74,7 +74,7 @@ class GlyphRenderer(
     fg: Color = Color.White,
     bg: Color = Color.Black
   ): Unit = {
-    for ((c, i) <- s.zipWithIndex) {
+    for ((c, i) <- s.view.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return
       drawChar(font, x + i, y, c, fg, bg)
     }
@@ -90,15 +90,15 @@ class GlyphRenderer(
         currentLine.clear()
       }
       // TODO: ellipsis
-      if (lines.size >= maxHeight) return lines
+      if (lines.size >= maxHeight) return lines.to(Seq)
       if (currentLine.nonEmpty)
         currentLine.append(" ")
       currentLine.append(word)
     }
     if (currentLine.isEmpty)
-      lines
+      lines.to(Seq)
     else
-      lines :+ currentLine.toString()
+      (lines :+ currentLine.toString()).to(Seq)
   }
 
   def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {

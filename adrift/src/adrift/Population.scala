@@ -106,7 +106,7 @@ object Population {
     *       - { repeat: baz, count: 2d3 }
     * </pre>
     */
-  type TableContext[T] = Map[String, Table[T]]
+  type TableContext[T] = PartialFunction[String, Table[T]]
 
   sealed trait Table[T] {
     def sample()(implicit r: Random, ctx: TableContext[T]): Seq[T]

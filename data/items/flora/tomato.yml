@@ -40,7 +40,7 @@
   description: a plump red tomato.
   display: FRUIT
   parts:
-    - {type: tomato seed, count: 1d6}
+    - {type: tomato seed, count: 1}
 
 
 - type: item

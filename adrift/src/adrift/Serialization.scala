@@ -172,7 +172,7 @@ object Serialization {
       Decoder.forProduct2("loc", "item")((loc: Json, item: Item) => (loc, item))
     val locItems = c.as[Vector[(Json, Item)]].fold(throw _, identity)
     implicit val itemsById: Map[ItemId, Item] =
-      locItems.map { case (_, item) => item.id -> item }(collection.breakOut)
+      locItems.view.map { case (_, item) => item.id -> item }.to(Map)
 
     val db = new ItemDatabase
     for ((loc, item) <- locItems) {

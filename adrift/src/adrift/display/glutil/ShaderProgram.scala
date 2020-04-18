@@ -35,22 +35,22 @@ object ShaderProgram {
 
     val numUniforms = glGetProgrami(program, GL_ACTIVE_UNIFORMS)
 
-    val uniforms: Map[String, Int] = (0 until numUniforms).map({ i =>
+    val uniforms: Map[String, Int] = (0 until numUniforms).view.map({ i =>
       val size = BufferUtils.createIntBuffer(1)
       val ty = BufferUtils.createIntBuffer(1)
       val name = glGetActiveUniform(program, i, size, ty)
       val id = glGetUniformLocation(program, name)
       name -> id
-    })(collection.breakOut)
+    }).to(Map)
 
     val numAttributes = glGetProgrami(program, GL_ACTIVE_ATTRIBUTES)
-    val attribs: Map[String, Attrib] = (0 until numAttributes).map({ i =>
+    val attribs: Map[String, Attrib] = (0 until numAttributes).view.map({ i =>
       val size = BufferUtils.createIntBuffer(1)
       val ty = BufferUtils.createIntBuffer(1)
       val name = glGetActiveAttrib(program, i, size, ty)
       val loc = glGetAttribLocation(program, name)
       name -> Attrib(name, size.get(0), ty.get(0), loc)
-    })(collection.breakOut)
+    }).to(Map)
 
     ShaderProgram(program, uniforms, attribs)
   }
