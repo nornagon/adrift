@@ -15,7 +15,8 @@ import scala.util.Random
 
 object ArchitectTest {
   def main(args: Array[String]): Unit = {
-    implicit val random: Random = new Random(42)
+    var seed = 42
+    implicit val random: Random = new Random(seed)
     val genome = NEATArchitect.newGenome()
     var n = 1
     var growthIterationLimit = Int.MaxValue
@@ -115,7 +116,7 @@ object ArchitectTest {
           growthIterationLimit = Int.MaxValue
           println(n)
           val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(42))
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(seed))
           println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
           frame.repaint()
         }
@@ -126,8 +127,16 @@ object ArchitectTest {
             growthIterationLimit += 1000
           println(growthIterationLimit)
           val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(42))
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(seed))
           println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
+          frame.repaint()
+        }
+        if (e.getKeyChar == 'r') {
+          seed = Random.nextInt()
+          println(seed)
+          growthIterationLimit = Int.MaxValue
+          n = 1
+          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(seed))
           frame.repaint()
         }
       }
