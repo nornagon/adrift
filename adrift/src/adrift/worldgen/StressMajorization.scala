@@ -44,6 +44,7 @@ class StressMajorization {
   private var desiredEdgeLength: (Int, Int) => Double = _
   private var distanceP: ((Double, Double), (Double, Double)) => Double = _
   private var diff: ((Double, Double), (Double, Double)) => (Double, Double) = _
+  private var isFixedPosition: Int => Boolean = _
 
 
   /**
@@ -56,6 +57,7 @@ class StressMajorization {
     epsilon: Double,
     desiredEdgeLength: (Int, Int) => Double,
     initialPosition: Int => (Double, Double),
+    isFixedPosition: Int => Boolean,
     distance: ((Double, Double), (Double, Double)) => Double,
     diff: ((Double, Double), (Double, Double)) => (Double, Double)
   ): Unit = {
@@ -66,6 +68,7 @@ class StressMajorization {
     this.desiredEdgeLength = desiredEdgeLength
     neighborCache = Array.tabulate(numNodes) { u => neighbors(u).toArray }
     this.positions = Array.tabulate(numNodes)(initialPosition)
+    this.isFixedPosition = isFixedPosition
     this.distanceP = distance
     this.diff = diff
     // all pairs shortest path
@@ -96,9 +99,10 @@ class StressMajorization {
     do {
       if (count > 0) prevStress = curStress
       for (u <- 0 until size) {
-        //if (u.getProperty(StressOptions.FIXED)) continue //todo: continue is not supported
-        val newPos = computeNewPosition(u)
-        setPosition(u, newPos)
+        if (!this.isFixedPosition(u)) {
+          val newPos = computeNewPosition(u)
+          setPosition(u, newPos)
+        }
       }
       curStress = computeStress
       assert(curStress <= prevStress, s"stress must never increase")

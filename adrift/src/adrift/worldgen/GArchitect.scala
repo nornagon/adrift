@@ -209,10 +209,10 @@ object NEATArchitect {
   def newGenome(numForeAft: Int = 3): Genome = {
     val context = new GAContext()
     def idGen = context.newId()
-    val foreRoomTypeid = RoomType.all.indexWhere(r => r.name == "fore")
-    val aftRoomTypeid = RoomType.all.indexWhere(r => r.name == "aft")
+    val foreRoomTypeId = RoomType.byName("fore")
+    val aftRoomTypeId = RoomType.byName("aft")
     val roomGenes: Seq[RoomGene] =
-      Seq.fill(numForeAft)(RoomGene(idGen, RoomTypeId(foreRoomTypeid))) ++ Seq.fill(numForeAft)(RoomGene(idGen, RoomTypeId(aftRoomTypeid)))
+      Seq.fill(numForeAft)(RoomGene(idGen, foreRoomTypeId)) ++ Seq.fill(numForeAft)(RoomGene(idGen, aftRoomTypeId))
 
     val connections = mutable.Buffer.empty[ConnectionGene]
 
@@ -235,11 +235,25 @@ object NEATArchitect {
     val mutationRate = 3
     Genome(roomGenes, connections, mutationRate, context)
   }
-  def newPopulation(num: Int): Seq[Genome]
+  def newPopulation(num: Int): Seq[Genome] = ???
   case class Rect(t: Int, r: Int, b: Int, l: Int)
   case class RoomLayout(roomCenters: Map[HistoricalId, (Double, Double)], roomRects: Map[HistoricalId, Rect]) {}
 
   def layout(g: Genome, iterationLimit: Int = 50, growthIterationLimit: Int = Int.MaxValue)(implicit random: Random): RoomLayout = {
+    val cylinderCircumference = 1000d
+    val cylinderLength = 1000d
+
+    val foreRoomTypeId = RoomType.byName("fore")
+    val aftRoomTypeId = RoomType.byName("aft")
+    val foreRooms = g.rooms.filter(_.roomType == foreRoomTypeId).sortBy(_.id.value)
+    val aftRooms = g.rooms.filter(_.roomType == aftRoomTypeId).sortBy(_.id.value)
+    // arrange the fore rooms in a circle around the top, and the aft in a circle around the bottom
+    val forePositions = foreRooms.indices.map { i => (cylinderCircumference / foreRooms.size * i, 0d) }
+    val aftPositions = aftRooms.indices.map { i => (cylinderCircumference / foreRooms.size * i, cylinderLength) }
+    val fixedPositionRooms: Map[HistoricalId, (Double, Double)] =
+      foreRooms.zip(forePositions).map { case (r, p) => r.id -> p }.toMap ++
+        aftRooms.zip(aftPositions).map { case (r, p) => r.id -> p }
+
     val sm = new StressMajorization()
     val idxToRoomId: Map[Int, HistoricalId] = g.rooms.zipWithIndex.map { case (r, i) => i -> r.id }(collection.breakOut)
     val roomIdToIdx = idxToRoomId.map { case (k, v) => v -> k }
@@ -258,7 +272,6 @@ object NEATArchitect {
       val rtB = RoomType.byId(g.rooms(idxB).roomType)
       (idxA, idxB) -> math.sqrt(rtA.spaceWeight + rtB.spaceWeight)*4
     }(collection.breakOut)
-    val cylinderCircumference = 1000d
     def normalizeX(x: Double): Double =
       if (x >= 0 && x < cylinderCircumference) x
       else ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
@@ -269,7 +282,11 @@ object NEATArchitect {
       iterationLimit,
       epsilon = 0.001,
       desiredEdgeLength = (u, v) => lengths(if (u < v) (u, v) else (v, u)),
-      initialPosition = _ => (random.between(0d, 1000d), random.between(0d, 1000d)),
+      initialPosition = i => {
+        val roomId = idxToRoomId(i)
+        fixedPositionRooms.getOrElse(roomId, (random.between(0d, cylinderCircumference), random.between(0d, cylinderLength)))
+      },
+      isFixedPosition = u => fixedPositionRooms.contains(idxToRoomId(u)),
       distance = (a, b) => {
         val na = normalizePosition(a)
         val nb = normalizePosition(b)
@@ -421,6 +438,8 @@ object RoomType {
   val byId: Map[RoomTypeId, RoomType] = all.zipWithIndex.map {
     case (rt, id) => RoomTypeId(id) -> rt
   }(collection.breakOut)
+
+  val byName: Map[String, RoomTypeId] = byId.map { case (k, v) => v.name -> k }
 }
 case class Coordinates(x:Int,y:Int)
 case class Room(roomType: RoomTypeId, coords:Coordinates) {}
