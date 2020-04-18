@@ -429,15 +429,19 @@ object NEATArchitect {
       // find the longest horizontal line of empty cells which includes this cell
       val l = seek(cx, -1, isEmpty(_, cy))
       val r = seek(cx, 1, isEmpty(_, cy)) + 1
-      // same but vertical
-      val t = seek(cy, -1, isEmpty(cx, _))
-      val b = seek(cy, 1, isEmpty(cx, _)) + 1
+      // expand the horizontal line upwards and downwards as far as possible to make a rect
       val rt = seek(cy, -1, isEmptyRow(l, r))
       val rb = seek(cy, 1, isEmptyRow(l, r)) + 1
       val r1 = Rect(rt, r, rb, l)
+
+      // same but vertical
+      val t = seek(cy, -1, isEmpty(cx, _))
+      val b = seek(cy, 1, isEmpty(cx, _)) + 1
       val rl = seek(cx, -1, isEmptyCol(t, b))
       val rr = seek(cx, 1, isEmptyCol(t, b)) + 1
       val r2 = Rect(t, rr, b, rl)
+
+      // take the bigger one
       if (r1.area > r2.area) r1 else r2
     }
 
