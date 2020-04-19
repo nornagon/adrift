@@ -75,7 +75,9 @@ class StressMajorization {
     val n = numNodes
     apsp = Array.fill(n, n)(0)
     for (source <- 0 until numNodes) {
-      dijkstra(source, apsp(source))
+      val visited = dijkstra(source, apsp(source))
+      if (visited < numNodes)
+        assert(false, "Graph is disjoint")
     }
     // init weight matrix
     w = Array.fill(n, n)(0d)
@@ -114,12 +116,13 @@ class StressMajorization {
   /**
     * Performs Dijkstra's all pairs shortest path algorithm.
     */
-  private def dijkstra(source: Int, dist: Array[Double]): Unit = {
+  private def dijkstra(source: Int, dist: Array[Double]): Int = {
     val nodes = new PriorityQueue[Int]((n1: Int, n2: Int) => java.lang.Double.compare(dist(n1), dist(n2)))
     val mark = new Array[Boolean](size)
     // init
     util.Arrays.fill(mark, false)
     dist(source) = 0
+    var visited = 1
     for (n <- 0 until size) {
       if (n != source) dist(n) = Integer.MAX_VALUE
       nodes.add(n)
@@ -127,6 +130,7 @@ class StressMajorization {
     // find shortest paths
     while (!nodes.isEmpty) {
       val u = nodes.poll
+      if (!mark(u)) visited += 1
       mark(u) = true
       for (v <- neighbors(u); if !mark(v)) {
         // get e's desired length
@@ -142,6 +146,7 @@ class StressMajorization {
         }
       }
     }
+    visited
   }
 
   /**

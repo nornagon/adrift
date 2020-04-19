@@ -22,10 +22,13 @@ object NEATArchitect {
     a: HistoricalId,
     b: HistoricalId,
 
-    weight: Float,
+    weight: Double,
 
     enabled: Boolean,
-  )
+  ) {
+    require(a != b, "can't connect a room to itself")
+    require(a.value < b.value, "edges must always be constructed with the lower id first")
+  }
 
   case class Rect(t: Int, r: Int, b: Int, l: Int) {
     require(r > l)
@@ -69,6 +72,10 @@ object NEATArchitect {
     generationNumber: Int,
     nextId: Int
   ) {
+    {
+      val maxId = members.flatMap(m => m.rooms.view.map(_.id.value) ++ m.connections.view.map(_.id.value)).max
+      assert(nextId > maxId)
+    }
     def best: Genome = members.maxBy(_.fitness)
 
     def mutate()(implicit random: Random): Population = {
@@ -145,6 +152,13 @@ object NEATArchitect {
     connections: Seq[ConnectionGene],
     mutationRate: Int = 3,
   ) {
+    def asDot: String =
+      s"graph {\n${rooms.map(_.id.value.toString).mkString(";\n")};\n${connections.map(c => s"${c.a.value} -- ${c.b.value}").mkString(";\n")};\n}"
+
+    {
+      val allIds = rooms.view.map(_.id) ++ connections.view.map(_.id)
+      require(allIds.size == allIds.toSet.size, s"duplicate id(s): ${allIds.groupBy(identity).view.filter(_._2.size > 1).keys.mkString(", ")}")
+    }
     lazy val fitness: Double = {
       // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
@@ -207,10 +221,11 @@ object NEATArchitect {
       val otherRooms = random.nOf(random.between(1, 3), rooms).distinct
 
       val connectionGenes = otherRooms.map { r =>
+        val (a, b) = if (r.id.value < roomGene.id.value) (r, roomGene) else (roomGene, r)
         ConnectionGene(
           id = nextId,
-          a = r.id,
-          b = roomGene.id,
+          a = a.id,
+          b = b.id,
           weight = 1,
           enabled = true
         )
@@ -223,17 +238,17 @@ object NEATArchitect {
       copy(mutationRate = math.max(1, mutationRate + random.between(-1, 1)))
 
     val mutationFunctions = Seq(
-      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateAddRoom(newId)(r), 1f),
-      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateEnableConnection()(r), 1f),
-      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateDisableConnection()(r), 1f),
-      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateAddConnection(newId)(r), 1f),
-      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateConnectionWeight()(r), 1f),
-      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateMutationRate()(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddRoom(newId())(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateEnableConnection()(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateDisableConnection()(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddConnection(newId())(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateConnectionWeight()(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateMutationRate()(r), 1f),
     )
 
     def mutate(newId: => HistoricalId)(implicit random: Random): Genome = {
       val mutations = random.nFrom(random.between(0, mutationRate), mutationFunctions)(_._2).map(_._1)
-      mutations.foldLeft(this)((genome, mutate) => mutate(genome, random, newId))
+      mutations.foldLeft(this)((genome, mutate) => mutate(genome, random, newId _))
     }
 
     def delta(other: Genome): Double = {
@@ -247,7 +262,7 @@ object NEATArchitect {
       val otherGeneIds: Set[HistoricalId] = (other.rooms.map(_.id) ++ other.connections.map(_.id)).toSet
       val disjointGeneIds = localGeneIds.diff(otherGeneIds).union(otherGeneIds.diff(localGeneIds))
       val disjointGeneCount = disjointGeneIds.size
-      def weightDelta(other: Genome): Double= {
+      def weightDelta(other: Genome): Double = {
         val localConnectionIds = connections.map(_.id)
         val otherConnectionIds = other.connections.map(_.id)
         val intersectingIds = localConnectionIds.intersect(otherConnectionIds)
@@ -290,30 +305,28 @@ object NEATArchitect {
   }
 
   def newGenome(newId: => HistoricalId, numForeAft: Int = 3): Genome = {
-    var nextId = 0
-    def idGen = { val id = nextId; nextId += 1; HistoricalId(id) }
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
     val roomGenes: Seq[RoomGene] =
-      Seq.fill(numForeAft)(RoomGene(idGen, foreRoomTypeId)) ++ Seq.fill(numForeAft)(RoomGene(idGen, aftRoomTypeId))
+      Seq.fill(numForeAft)(RoomGene(newId, foreRoomTypeId)) ++ Seq.fill(numForeAft)(RoomGene(newId, aftRoomTypeId))
 
     val connections = mutable.Buffer.empty[ConnectionGene]
 
     // Connect the Fore 'rooms' in a ring
     for (i <- 0 until numForeAft - 1) {
-      connections += ConnectionGene(idGen, HistoricalId(i), HistoricalId(i+1), 1, enabled = true)
+      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i+1), 1, enabled = true)
     }
-    connections += ConnectionGene(idGen, HistoricalId(0), HistoricalId(numForeAft - 1), 1, enabled = true)
+    connections += ConnectionGene(newId, HistoricalId(0), HistoricalId(numForeAft - 1), 1, enabled = true)
 
     // Connect the Aft 'rooms' in a ring
     for (i <- numForeAft until numForeAft * 2 - 1) {
-      connections += ConnectionGene(idGen, HistoricalId(i), HistoricalId(i+1), 1, enabled = true)
+      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i+1), 1, enabled = true)
     }
-    connections += ConnectionGene(idGen, HistoricalId(numForeAft), HistoricalId(numForeAft * 2 - 1), 1, enabled = true)
+    connections += ConnectionGene(newId, HistoricalId(numForeAft), HistoricalId(numForeAft * 2 - 1), 1, enabled = true)
 
     // Connect each Fore room to its corresponding Aft room.
     for (i <- 0 until numForeAft) {
-      connections += ConnectionGene(idGen, HistoricalId(i), HistoricalId(i + numForeAft), 1, enabled = true)
+      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i + numForeAft), 1, enabled = true)
     }
     val mutationRate = 3
     Genome(roomGenes, connections.to(Seq), mutationRate)
@@ -352,9 +365,8 @@ object NEATArchitect {
     val lengths: Map[(Int, Int), Double] = g.connections.view.map { c =>
       val idxA = roomIdToIdx(c.a)
       val idxB = roomIdToIdx(c.b)
-      val rtA = RoomType.byId(g.rooms(idxA).roomType)
-      val rtB = RoomType.byId(g.rooms(idxB).roomType)
-      (idxA, idxB) -> math.sqrt(rtA.spaceWeight + rtB.spaceWeight)*4
+      assert(idxA < idxB)
+      (idxA, idxB) -> c.weight
     }.to(Map)
     def normalizeX(x: Double): Double =
       ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
