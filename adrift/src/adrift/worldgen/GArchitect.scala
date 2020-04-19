@@ -49,6 +49,15 @@ object NEATArchitect {
     pMutated.mate(evaluations)
   }
 
+  def runGenerations(initial: Population, numGenerations: Int)(implicit random: Random): Population =
+    Iterable.iterate(initial, numGenerations)(runGeneration).last
+
+  def make()(implicit random: Random): RoomLayout = {
+    // TODO: an actual GA, this loop just plays one on TV
+    val winner = runGenerations(newPopulation(10), 10).best
+    layout(winner)
+  }
+
   case class Species(representative: Genome)
   case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double)(implicit random: Random) {
     def best: Genome = members.maxBy(_.fitness)
@@ -522,13 +531,6 @@ object NEATArchitect {
 
 
     RoomLayout(roomCenters, roomRects.toMap, roomGrid)
-  }
-
-  def make()(implicit random: Random): RoomLayout = {
-    // TODO: an actual GA, this loop just plays one on TV
-    val generations = 10
-    val winner = Iterable.iterate(newPopulation(10), generations)(runGeneration).last.best
-    layout(winner)
   }
 }
 
