@@ -66,12 +66,17 @@ object NEATArchitect {
     species: Seq[Species],
     members: Seq[Genome],
     speciationDelta: Double,
-    generationNumber: Int
+    generationNumber: Int,
+    nextId: Int
   ) {
     def best: Genome = members.maxBy(_.fitness)
 
-    def mutate()(implicit random: Random): Population =
-      copy(members = members.map(_.mutate()))
+    def mutate()(implicit random: Random): Population = {
+      var next = nextId
+      def newId: HistoricalId = { next += 1; HistoricalId(next - 1) }
+      val newMembers = members.map(_.mutate(newId))
+      copy(members = newMembers, nextId = next)
+    }
 
     def mate(targetPopSize: Int)(implicit random: Random): Population = {
       // allocate fitness to species
@@ -126,27 +131,19 @@ object NEATArchitect {
 
   def newPopulation(num:Int, speciationDelta: Double = 3d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
-    val g = newGenome()
+    var nextId = 0
+    def newId: HistoricalId = { nextId += 1; HistoricalId(nextId - 1) }
+    val g = newGenome(newId)
     val individuals = Seq.fill(num)(g)
     // All the initial genomes are the same, so there's only one species.
     val species = Seq(Species(individuals.head))
-    Population(species, individuals, speciationDelta, generationNumber = 0)
-  }
-
-  class GAContext {
-    var historicalId = 0
-    def newId(): HistoricalId = {
-      val id = HistoricalId(historicalId)
-      historicalId += 1
-      id
-    }
+    Population(species, individuals, speciationDelta, generationNumber = 0, nextId = nextId)
   }
 
   case class Genome(
     rooms: Seq[RoomGene],
     connections: Seq[ConnectionGene],
     mutationRate: Int = 3,
-    context: GAContext
   ) {
     lazy val fitness: Double = {
       // This evaluate might create a room layout and perform evaluations on that layout.
@@ -171,14 +168,14 @@ object NEATArchitect {
     val roomIdMap: Map[HistoricalId, RoomGene] = rooms.map(r => r.id).zip(rooms).toMap
     val connectionIdMap: Map[HistoricalId, ConnectionGene] = connections.map(c => c.id).zip(connections).toMap
 
-    def mutateAddConnection(idGen: () => HistoricalId)(implicit random: Random): Genome = {
+    def mutateAddConnection(idGen: => HistoricalId)(implicit random: Random): Genome = {
       val roomA = random.pick(rooms)
       val roomB = random.pick(rooms)
       if (roomA.id == roomB.id) return this
       val (rA, rB) = if (roomA.id.value < roomB.id.value) (roomA, roomB) else (roomB, roomA)
       if (connections.exists(g => g.a == rA.id && g.b == rB.id)) return this
       val newConnection: ConnectionGene = ConnectionGene(
-        id = idGen(),
+        id = idGen,
         a = rA.id,
         b = rB.id,
         weight = 1f,
@@ -199,19 +196,19 @@ object NEATArchitect {
       c.copy(weight = c.weight * random.between(0.9f, 1.1f))
     }
 
-    def mutateAddRoom(idGen: () => HistoricalId)(implicit random: Random): Genome = {
+    def mutateAddRoom(nextId: => HistoricalId)(implicit random: Random): Genome = {
       val newRoomTypeId = random.pick(RoomType.byId.keys)
       val newRoomType = RoomType.byId(newRoomTypeId)
       val existingCount = rooms.count(_.roomType == newRoomTypeId)
       if (existingCount >= newRoomType.maxQuantity) return this
 
-      val roomGene = RoomGene(id = idGen(), newRoomTypeId)
+      val roomGene = RoomGene(id = nextId, newRoomTypeId)
 
       val otherRooms = random.nOf(random.between(1, 3), rooms).distinct
 
       val connectionGenes = otherRooms.map { r =>
         ConnectionGene(
-          id = idGen(),
+          id = nextId,
           a = r.id,
           b = roomGene.id,
           weight = 1,
@@ -226,17 +223,17 @@ object NEATArchitect {
       copy(mutationRate = math.max(1, mutationRate + random.between(-1, 1)))
 
     val mutationFunctions = Seq(
-      ((g: Genome, r: Random) => g.mutateAddRoom(g.context.newId)(r), 1f),
-      ((g: Genome, r: Random) => g.mutateEnableConnection()(r), 1f),
-      ((g: Genome, r: Random) => g.mutateDisableConnection()(r), 1f),
-      ((g: Genome, r: Random) => g.mutateAddConnection(g.context.newId)(r), 1f),
-      ((g: Genome, r: Random) => g.mutateConnectionWeight()(r), 1f),
-      ((g: Genome, r: Random) => g.mutateMutationRate()(r), 1f),
+      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateAddRoom(newId)(r), 1f),
+      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateEnableConnection()(r), 1f),
+      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateDisableConnection()(r), 1f),
+      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateAddConnection(newId)(r), 1f),
+      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateConnectionWeight()(r), 1f),
+      ((g: Genome, r: Random, newId: => HistoricalId) => g.mutateMutationRate()(r), 1f),
     )
 
-    def mutate()(implicit random: Random): Genome = {
+    def mutate(newId: => HistoricalId)(implicit random: Random): Genome = {
       val mutations = random.nFrom(random.between(0, mutationRate), mutationFunctions)(_._2).map(_._1)
-      mutations.foldLeft(this)((genome, mutate) => mutate(genome, random))
+      mutations.foldLeft(this)((genome, mutate) => mutate(genome, random, newId))
     }
 
     def delta(other: Genome): Double = {
@@ -292,9 +289,9 @@ object NEATArchitect {
     }
   }
 
-  def newGenome(numForeAft: Int = 3): Genome = {
-    val context = new GAContext()
-    def idGen = context.newId()
+  def newGenome(newId: => HistoricalId, numForeAft: Int = 3): Genome = {
+    var nextId = 0
+    def idGen = { val id = nextId; nextId += 1; HistoricalId(id) }
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
     val roomGenes: Seq[RoomGene] =
@@ -319,7 +316,7 @@ object NEATArchitect {
       connections += ConnectionGene(idGen, HistoricalId(i), HistoricalId(i + numForeAft), 1, enabled = true)
     }
     val mutationRate = 3
-    Genome(roomGenes, connections.to(Seq), mutationRate, context)
+    Genome(roomGenes, connections.to(Seq), mutationRate)
   }
 
   def layout(
