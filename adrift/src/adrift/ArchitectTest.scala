@@ -12,7 +12,7 @@ object ArchitectTest {
   def main(args: Array[String]): Unit = {
     var seed = 42
     implicit val random: Random = new Random(seed)
-    val genome = Iterator.iterate(NEATArchitect.newPopulation(10))(NEATArchitect.runGeneration).drop(10).next().best
+    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(10), 100).best
     var n = 1
     var growthIterationLimit = Int.MaxValue
     var gLayout = NEATArchitect.layout(genome, n)

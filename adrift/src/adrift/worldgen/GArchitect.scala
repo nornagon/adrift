@@ -43,14 +43,15 @@ object NEATArchitect {
   //   kill
   //   mate & [speciate]
 
-  def runGeneration(pNew: Population)(implicit random: Random): Population = {
+  def runGeneration(pNew: Population, targetPopSize: Int)(implicit random: Random): Population = {
     val pMutated = pNew.mutate()
-    val evaluations = pMutated.evaluate()
-    pMutated.mate(evaluations)
+    val ret = pMutated.mate(targetPopSize)
+    println(s"Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size}")
+    ret
   }
 
   def runGenerations(initial: Population, numGenerations: Int)(implicit random: Random): Population =
-    Iterable.iterate(initial, numGenerations)(runGeneration).last
+    Iterable.iterate(initial, numGenerations)(runGeneration(_, initial.members.size)).last
 
   def make()(implicit random: Random): RoomLayout = {
     // TODO: an actual GA, this loop just plays one on TV
@@ -64,28 +65,28 @@ object NEATArchitect {
 
     def mutate(): Population = copy(species, members = members.map(_.mutate()), speciationDelta)
 
-    def evaluate(): Map[Genome, Double] = members.zip(members.map(_.fitness)).toMap
-
-    def mate(evaluations: Map[Genome, Double]): Population = {
-      // allocate fitness to species, kill off individuals and mate to produce new ones, then pick representatives for new species.
-      val popSize = members.length
-
+    def mate(targetPopSize: Int): Population = {
       // allocate fitness to species
-      val totalFitness = evaluations.values.sum
-      val speciesMembers = species.zip(species.map(s => members.filter(_.delta(s.representative) < speciationDelta))).toMap
+      val totalFitness = members.map(_.fitness).sum
 
-      val speciesFitness = species.zip(species.map(s => {
-        speciesMembers(s).map(g => evaluations(g)).sum
-      })).toMap
-      val newSpeciesSizes = species.zip(species.map(s => (speciesFitness(s) / totalFitness * popSize).round.toInt)).toMap
+      def findSpeciesOf(genome: NEATArchitect.Genome): Species =
+        species.find(s => s.representative.delta(genome) < speciationDelta).getOrElse(
+          throw new Exception("member of no species???"))
+
+      val speciesMembers = members.map { m => (m, findSpeciesOf(m)) }.groupMap(_._2)(_._1)
+
+      val speciesFitness = species.map(s => {
+        s -> speciesMembers(s).view.map(_.fitness).sum
+      }).toMap
+      val newSpeciesSizes = species.map(s => s -> (speciesFitness(s) / totalFitness * targetPopSize).round.toInt).toMap
 
       // produce new individuals
       def speciesMate(species: Species): Genome = {
         val potentialParents = speciesMembers(species)
         if (potentialParents.length < 2) return species.representative
-        val parent1 = random.chooseFrom(potentialParents)(evaluations(_))
-        val parent2 = random.chooseFrom(potentialParents.dropWhile(_ == parent1))(evaluations(_))
-        if (evaluations(parent1) > evaluations(parent2)) {
+        val parent1 = random.chooseFrom(potentialParents)(_.fitness)
+        val parent2 = random.chooseFrom(potentialParents.filterNot(_ == parent1))(_.fitness)
+        if (parent1.fitness > parent2.fitness) {
           parent1.crossover(parent2)
         } else {
           parent2.crossover(parent1)
@@ -94,10 +95,22 @@ object NEATArchitect {
       val newIndividuals = species.flatMap(s => {
         Seq.fill(newSpeciesSizes(s))(speciesMate(s))
       })
-      // make new species for those individuals, trying to keep them as close to the old ones as possible, maybe?
-      val representatives: Seq[Genome] = species.dropWhile(newSpeciesSizes(_)<1).map(_.representative)
-      val newSpecies = representatives.map(rep => Species(newIndividuals.sortBy(g => g.delta(rep)).head))
-      Population(newSpecies, newIndividuals, speciationDelta)
+      assert(newIndividuals.size == members.size)
+
+      val representatives: Seq[Genome] = species.filter(newSpeciesSizes(_) > 0).map(_.representative)
+
+      val newSpecies = mutable.Buffer.empty[Species]
+      newSpecies ++= representatives.map(rep => Species(newIndividuals.minBy(g => g.delta(rep))))
+
+      for (individual <- newIndividuals) {
+        val acceptableSpecies = newSpecies.find(s => individual.delta(s.representative) < speciationDelta)
+        if (acceptableSpecies.isEmpty) {
+          // add new species
+          newSpecies += Species(individual)
+        }
+      }
+
+      Population(newSpecies.to(Seq), newIndividuals, speciationDelta)
     }
   }
 
@@ -488,7 +501,7 @@ object NEATArchitect {
 
     def findBigEmptyRect(cell: (Int, Int)): Rect = {
       def isEmpty(x: Int, y: Int): Boolean = roomGrid.contains(x, y) && roomGrid(x, y).isEmpty
-      def isEmptyRow(l: Int, r: Int)(y: Int): Boolean = allEmpty(l, y, r, y + 1)
+      def isEmptyRow(l: Int, r: Int)(y: Int): Boolean = y >= 0 && y < roomGrid.height && allEmpty(l, y, r, y + 1)
       def isEmptyCol(t: Int, b: Int)(x: Int): Boolean = allEmpty(x, t, x + 1, b)
       val (cx, cy) = cell
       // find the longest horizontal line of empty cells which includes this cell
