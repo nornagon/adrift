@@ -10,14 +10,10 @@ object NEATArchitect {
   case class HistoricalId(value: Int) extends AnyVal
   case class RoomTypeId(id: Int) extends AnyVal
 
-  trait Gene {
-    val id: HistoricalId
-  }
-
   case class RoomGene(
     id: HistoricalId,
     roomType: RoomTypeId,
-  ) extends Gene
+  )
 
   case class ConnectionGene(
     id: HistoricalId,
@@ -29,8 +25,18 @@ object NEATArchitect {
     weight: Float,
 
     enabled: Boolean,
-  ) extends Gene
+  )
 
+  case class Rect(t: Int, r: Int, b: Int, l: Int) {
+    require(r > l)
+    require(b > t)
+    def area: Int = (r - l) * (b - t)
+  }
+  case class RoomLayout(
+    roomCenters: Map[HistoricalId, (Double, Double)],
+    roomRects: Map[HistoricalId, Rect],
+    roomGrid: CylinderGrid[Option[HistoricalId]]
+  )
 
   // General GA process:
   // create population
@@ -40,8 +46,8 @@ object NEATArchitect {
   //   kill
   //   mate & [speciate]
 
-  def runGeneration(pNew: Population, targetPopSize: Int)(implicit random: Random): Population = {
-    val pMutated = pNew.mutate()
+  def runGeneration(pop: Population, targetPopSize: Int)(implicit random: Random): Population = {
+    val pMutated = pop.mutate()
     val ret = pMutated.mate(targetPopSize)
     println(s"#${ret.generationNumber} Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size}")
     ret
@@ -51,31 +57,34 @@ object NEATArchitect {
     Iterable.iterate(initial, numGenerations)(runGeneration(_, initial.members.size)).last
 
   def make()(implicit random: Random): RoomLayout = {
-    // TODO: an actual GA, this loop just plays one on TV
     val winner = runGenerations(newPopulation(10), 10).best
     layout(winner)
   }
 
   case class Species(representative: Genome)
-  case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double, generationNumber: Int)(implicit random: Random) {
+  case class Population(
+    species: Seq[Species],
+    members: Seq[Genome],
+    speciationDelta: Double,
+    generationNumber: Int
+  ) {
     def best: Genome = members.maxBy(_.fitness)
 
-    def mutate(): Population = copy(species, members = members.map(_.mutate()), speciationDelta)
+    def mutate()(implicit random: Random): Population =
+      copy(members = members.map(_.mutate()))
 
-    def mate(targetPopSize: Int): Population = {
+    def mate(targetPopSize: Int)(implicit random: Random): Population = {
       // allocate fitness to species
       val totalFitness = members.map(_.fitness).sum
 
       def findSpeciesOf(genome: NEATArchitect.Genome): Species =
-        species.find(s => s.representative.delta(genome) < speciationDelta).getOrElse(
-          throw new Exception("member of no species???"))
+        species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
+          .getOrElse(throw new Exception("member of no species???"))
 
       val speciesMembers = members.map { m => (m, findSpeciesOf(m)) }.groupMap(_._2)(_._1)
 
-      val speciesFitness = species.map(s => {
-        s -> speciesMembers(s).view.map(_.fitness).sum
-      }).toMap
-      val newSpeciesSizes = species.map(s => s -> (speciesFitness(s) / totalFitness * targetPopSize).round.toInt).toMap
+      val speciesFitness = species.map { s => s -> speciesMembers(s).view.map(_.fitness).sum }.toMap
+      val newSpeciesSizes = species.map { s => s -> (speciesFitness(s) / totalFitness * targetPopSize).round.toInt }.toMap
 
       // produce new individuals
       def speciesMate(species: Species): Genome = {
@@ -89,16 +98,20 @@ object NEATArchitect {
           parent2.crossover(parent1)
         }
       }
-      val newIndividuals = species.flatMap(s => {
+
+      val nonEmptySpecies = species.filter(newSpeciesSizes(_) > 0)
+
+      val newIndividuals = nonEmptySpecies.flatMap(s => {
         Seq.fill(newSpeciesSizes(s))(speciesMate(s))
       })
-      assert(newIndividuals.size == members.size)
-
-      val representatives: Seq[Genome] = species.filter(newSpeciesSizes(_) > 0).map(_.representative)
 
       val newSpecies = mutable.Buffer.empty[Species]
-      newSpecies ++= representatives.map(rep => Species(newIndividuals.minBy(g => g.delta(rep))))
 
+      // Create initial species in the new generation by matching new individuals to the previous species
+      newSpecies ++= nonEmptySpecies.map(s => Species(newIndividuals.minBy(_.delta(s.representative))))
+
+      // Ensure that there's a species for each individual in the new generation, by creating a new species for any
+      // individual which doesn't closely match an existing species.
       for (individual <- newIndividuals) {
         val acceptableSpecies = newSpecies.find(s => individual.delta(s.representative) < speciationDelta)
         if (acceptableSpecies.isEmpty) {
@@ -107,24 +120,26 @@ object NEATArchitect {
         }
       }
 
-      Population(newSpecies.to(Seq), newIndividuals, speciationDelta, generationNumber + 1)
+      copy(species = newSpecies.to(Seq), members = newIndividuals, generationNumber = generationNumber + 1)
     }
   }
 
   def newPopulation(num:Int, speciationDelta: Double = 3d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
-    val individuals = Seq.fill(num)(newGenome())
-    Population(Seq(Species(individuals.head)), individuals, speciationDelta, 0)
+    val g = newGenome()
+    val individuals = Seq.fill(num)(g)
+    // All the initial genomes are the same, so there's only one species.
+    val species = Seq(Species(individuals.head))
+    Population(species, individuals, speciationDelta, generationNumber = 0)
   }
 
-  class GAContext() {
+  class GAContext {
     var historicalId = 0
     def newId(): HistoricalId = {
       val id = HistoricalId(historicalId)
       historicalId += 1
       id
     }
-    var species: Seq[Species] = Seq.empty
   }
 
   case class Genome(
@@ -156,7 +171,6 @@ object NEATArchitect {
     val roomIdMap: Map[HistoricalId, RoomGene] = rooms.map(r => r.id).zip(rooms).toMap
     val connectionIdMap: Map[HistoricalId, ConnectionGene] = connections.map(c => c.id).zip(connections).toMap
 
-    //lazy val adjacency = ??? /* ... lazily compute adjacency matrix ... */
     def mutateAddConnection(idGen: () => HistoricalId)(implicit random: Random): Genome = {
       val roomA = random.pick(rooms)
       val roomB = random.pick(rooms)
@@ -165,7 +179,6 @@ object NEATArchitect {
       if (connections.exists(g => g.a == rA.id && g.b == rB.id)) return this
       val newConnection: ConnectionGene = ConnectionGene(
         id = idGen(),
-//        id = connectionIdForRooms(rA.id, rB.id),
         a = rA.id,
         b = rB.id,
         weight = 1f,
@@ -213,10 +226,10 @@ object NEATArchitect {
       copy(mutationRate = math.max(1, mutationRate + random.between(-1, 1)))
 
     val mutationFunctions = Seq(
-      ((g: Genome, r: Random) => g.mutateAddRoom(context.newId)(r), 1f),
+      ((g: Genome, r: Random) => g.mutateAddRoom(g.context.newId)(r), 1f),
       ((g: Genome, r: Random) => g.mutateEnableConnection()(r), 1f),
       ((g: Genome, r: Random) => g.mutateDisableConnection()(r), 1f),
-      ((g: Genome, r: Random) => g.mutateAddConnection(context.newId)(r), 1f),
+      ((g: Genome, r: Random) => g.mutateAddConnection(g.context.newId)(r), 1f),
       ((g: Genome, r: Random) => g.mutateConnectionWeight()(r), 1f),
       ((g: Genome, r: Random) => g.mutateMutationRate()(r), 1f),
     )
@@ -226,11 +239,11 @@ object NEATArchitect {
       mutations.foldLeft(this)((genome, mutate) => mutate(genome, random))
     }
 
-    def delta(other:Genome): Double = {
+    def delta(other: Genome): Double = {
       // NEAT paper says that they used disjoint / excess coefficient of 1
-      def disjointCoefficient = 1
+      def disjointCoefficient = 1d
       // NEAT paper says that they used weight coefficient of .4 for some problems and 3 for others that are more 'sensitive'
-      def weightCoefficient = .4
+      def weightCoefficient = .4d
       val localSize = rooms.size + connections.size
       val otherSize = other.rooms.size + other.connections.size
       val localGeneIds: Set[HistoricalId] = (rooms.map(_.id) ++ connections.map(_.id)).toSet
@@ -275,7 +288,7 @@ object NEATArchitect {
           connectionIdMap(c)
         }
       })
-      Genome(newRooms, newConnections, mutationRate, context)
+      copy(rooms = newRooms, connections = newConnections)
     }
   }
 
@@ -308,17 +321,6 @@ object NEATArchitect {
     val mutationRate = 3
     Genome(roomGenes, connections.to(Seq), mutationRate, context)
   }
-
-  case class Rect(t: Int, r: Int, b: Int, l: Int) {
-    require(r > l)
-    require(b > t)
-    def area: Int = (r - l) * (b - t)
-  }
-  case class RoomLayout(
-    roomCenters: Map[HistoricalId, (Double, Double)],
-    roomRects: Map[HistoricalId, Rect],
-    roomGrid: CylinderGrid[Option[HistoricalId]]
-  )
 
   def layout(
     g: Genome,
