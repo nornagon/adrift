@@ -75,7 +75,11 @@ object NEATArchitect {
         if (potentialParents.length < 2) return species.representative
         val parent1 = random.chooseFrom(potentialParents)(evaluations(_))
         val parent2 = random.chooseFrom(potentialParents.dropWhile(_ == parent1))(evaluations(_))
-        parent1.crossover(parent2)
+        if (evaluations(parent1) > evaluations(parent2)) {
+          parent1.crossover(parent2)
+        } else {
+          parent2.crossover(parent1)
+        }
       }
       val newIndividuals = species.flatMap(s => {
         Seq.fill(newSpeciesSizes(s))(speciesMate(s))
@@ -128,6 +132,9 @@ object NEATArchitect {
       // val affiinityEval = ???
       Math.max(0,rtEval)
     }
+    val roomIdMap: Map[HistoricalId, RoomGene] = rooms.map(r => r.id).zip(rooms).toMap
+    val connectionIdMap: Map[HistoricalId, ConnectionGene] = connections.map(c => c.id).zip(connections).toMap
+
     //lazy val adjacency = ??? /* ... lazily compute adjacency matrix ... */
     def mutateAddConnection(idGen: () => HistoricalId)(implicit random: Random): Genome = {
       val roomA = random.pick(rooms)
@@ -221,7 +228,34 @@ object NEATArchitect {
       weightDelta(other) * weightCoefficient + disjointGeneCount * disjointCoefficient / Seq(localSize, otherSize).max.toDouble
     }
 
-    def crossover(other: Genome): Genome = ???
+    def crossover(other: Genome)(implicit random: Random): Genome = {
+      // all genes with the same historicalID are conserved, with the value coming randomly from either parent.
+      // all disjoint genes from more fit parent are populated.  no disjoint genes from less fit parent are populated.
+      // Assume that the less fit parent is passed in as 'other'
+      // this means that the child is basically this genome, but with 'shared' genes having weights overwritten occasionally by the 'other'
+      val localRooms = rooms.map(_.id)
+      val localConnections = connections.map(_.id)
+      val otherRooms = other.rooms.map(_.id)
+      val otherConnections = other.connections.map(_.id)
+      val commonRooms = localRooms.intersect(otherRooms)
+      val commonConnections = localConnections.intersect(otherConnections)
+
+      val newRooms: Seq[RoomGene] = localRooms.map(r => {
+        if (commonRooms.contains(r)) {
+          if (random.nextBoolean()) {roomIdMap(r)} else {other.roomIdMap(r)}
+        } else {
+          roomIdMap(r)
+        }
+      })
+      val newConnections: Seq[ConnectionGene] = localConnections.map(c => {
+        if (commonConnections.contains(c)) {
+          if (random.nextBoolean()) {connectionIdMap(c)} else {other.connectionIdMap(c)}
+        } else {
+          connectionIdMap(c)
+        }
+      })
+      Genome(newRooms, newConnections, mutationRate, context)
+    }
   }
 
   def newGenome(numForeAft: Int = 3): Genome = {
