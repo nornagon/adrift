@@ -3,7 +3,7 @@ package adrift
 import java.awt.event.{KeyEvent, KeyListener}
 import java.awt.{Dimension, Graphics}
 
-import adrift.worldgen.NEATArchitect
+import adrift.worldgen.{NEATArchitect, RoomType}
 import javax.swing.{JFrame, JPanel}
 
 import scala.util.Random
@@ -12,7 +12,7 @@ object ArchitectTest {
   def main(args: Array[String]): Unit = {
     var seed = 42
     implicit val random: Random = new Random(seed)
-    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(10), 100).best
+    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(100), 500).best
     var n = 1
     var growthIterationLimit = Int.MaxValue
     var gLayout = NEATArchitect.layout(genome, n)

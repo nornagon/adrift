@@ -1,13 +1,10 @@
 package adrift.worldgen
-import adrift.{CylinderGrid, Grid}
-
-import util.Random
+import adrift.CylinderGrid
 import adrift.RandomImplicits._
 import adrift.worldgen.NEATArchitect.RoomTypeId
-import adrift.worldgen.RoomType.RoomType
 
 import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
+import scala.util.Random
 
 object NEATArchitect {
   case class HistoricalId(value: Int) extends AnyVal
@@ -46,7 +43,7 @@ object NEATArchitect {
   def runGeneration(pNew: Population, targetPopSize: Int)(implicit random: Random): Population = {
     val pMutated = pNew.mutate()
     val ret = pMutated.mate(targetPopSize)
-    println(s"Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size}")
+    println(s"#${ret.generationNumber} Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size}")
     ret
   }
 
@@ -60,7 +57,7 @@ object NEATArchitect {
   }
 
   case class Species(representative: Genome)
-  case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double)(implicit random: Random) {
+  case class Population(species: Seq[Species], members: Seq[Genome], speciationDelta: Double, generationNumber: Int)(implicit random: Random) {
     def best: Genome = members.maxBy(_.fitness)
 
     def mutate(): Population = copy(species, members = members.map(_.mutate()), speciationDelta)
@@ -110,14 +107,14 @@ object NEATArchitect {
         }
       }
 
-      Population(newSpecies.to(Seq), newIndividuals, speciationDelta)
+      Population(newSpecies.to(Seq), newIndividuals, speciationDelta, generationNumber + 1)
     }
   }
 
   def newPopulation(num:Int, speciationDelta: Double = 3d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
     val individuals = Seq.fill(num)(newGenome())
-    Population(Seq(Species(individuals.head)), individuals, speciationDelta)
+    Population(Seq(Species(individuals.head)), individuals, speciationDelta, 0)
   }
 
   class GAContext() {
@@ -141,7 +138,8 @@ object NEATArchitect {
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
       val roomTypeCoefficient = 1d
-      val rtEval = RoomType.all.map(rt => {
+      val disallowed = Set("fore", "aft")
+      val rtEval = RoomType.all.filterNot(rt => disallowed contains rt.name).map(rt => {
         val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt).toDouble
         if (relevantRooms > rt.maxQuantity) {
           rt.maxQuantity.toDouble/relevantRooms
@@ -347,8 +345,8 @@ object NEATArchitect {
     def neighbs(i: Int): IterableOnce[Int] = {
       val needle = g.rooms(i).id
       g.connections.flatMap {
-        case c: ConnectionGene if c.a == needle => Some(roomIdToIdx(c.b))
-        case c: ConnectionGene if c.b == needle => Some(roomIdToIdx(c.a))
+        case c: ConnectionGene if c.enabled && c.a == needle => Some(roomIdToIdx(c.b))
+        case c: ConnectionGene if c.enabled && c.b == needle => Some(roomIdToIdx(c.a))
         case _ => None
       }
     }
@@ -569,8 +567,8 @@ object RoomType {
     RoomType("holo suite", spaceWeight = 10,minQuantity = 5,maxQuantity = 10),
     RoomType("lounge", spaceWeight = 10,minQuantity = 10,maxQuantity = 20),
 
-    RoomType("fore", spaceWeight = 100, minQuantity = 1, maxQuantity = 1),
-    RoomType("aft", spaceWeight = 100, minQuantity = 1, maxQuantity = 1),
+    RoomType("fore", spaceWeight = 100, minQuantity = 1, maxQuantity = 5),
+    RoomType("aft", spaceWeight = 100, minQuantity = 1, maxQuantity = 5),
   )
 
   val byId: Map[RoomTypeId, RoomType] = all.zipWithIndex.map {
