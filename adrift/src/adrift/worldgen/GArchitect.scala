@@ -86,10 +86,11 @@ object NEATArchitect {
       assert(nextId > maxId, "next id should definitely be higher than the max id in the genes present")
     }
 
-    {
-      // every member of the population should belong to a species
-      assert(members.forall(m => species.exists(_.representative.delta(m) < speciationDelta)))
-    }
+    assert(members.forall(m => species.exists(_.representative.delta(m) < speciationDelta)),
+      "Every member of the population should belong to a species")
+
+    assert(species.view.map(_.representative).to(Set).size == species.size,
+      "No two species should have the same representative")
 
     def best: Genome = members.par.maxBy(_.fitness)
 
@@ -104,9 +105,8 @@ object NEATArchitect {
       def newId: HistoricalId = { next += 1; HistoricalId(next - 1) }
 
       // allocate fitness to species
-      val totalFitness = members.par.map(_.fitness).sum
-
-      val speciesFitness = species.map { s => s -> speciesMembers(s).view.map(_.fitness).sum }.toMap
+      val speciesFitness = speciesMembers.view.mapValues(_.map(_.fitness).sum).toMap
+      val totalFitness = speciesFitness.values.sum
       val newSpeciesSizes = species.map { s => s -> (speciesFitness(s) / totalFitness * targetPopSize).round.toInt }.toMap
 
       // produce new individuals
@@ -131,7 +131,7 @@ object NEATArchitect {
       val newSpecies = mutable.Buffer.empty[Species]
 
       // Create initial species in the new generation by matching new individuals to the previous species
-      newSpecies ++= nonEmptySpecies.map(s => Species(newIndividuals.minBy(_.delta(s.representative))))
+      newSpecies ++= nonEmptySpecies.map(s => Species(newIndividuals.minBy(_.delta(s.representative)))).distinct
 
       // Ensure that there's a species for each individual in the new generation, by creating a new species for any
       // individual which doesn't closely match an existing species.
