@@ -257,7 +257,7 @@ object NEATArchitect {
     def mutateEnableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = true))
     def mutateConnectionWeight()(implicit random: Random): Genome = mutateRandomConnection { c =>
       // in cannonical NEAT this has some chance to become a new random value, and some other chance to bump up / down slightly
-      c.copy(weight = math.max(1, if (random.oneIn(10)) 100 + random.nextGaussian() * 100 else c.weight * random.nextGaussian()))
+      c.copy(weight = math.max(1, if (random.oneIn(10)) 100 + random.nextGaussian() * 100 else c.weight * (1 + random.nextGaussian() * 0.1)))
     }
 
     def mutateAddRoom(nextId: => HistoricalId)(implicit random: Random): Genome = {
