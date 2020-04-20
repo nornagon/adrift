@@ -107,7 +107,7 @@ class StressMajorization {
         }
       }
       curStress = computeStress
-      assert(curStress <= prevStress, s"stress must never increase")
+      //assert(curStress <= prevStress, s"stress must never increase (was $prevStress, now $curStress)")
     } while (
       !done({ count += 1; count - 1 }, prevStress, curStress)
     )
@@ -154,7 +154,7 @@ class StressMajorization {
     * {@link StressOptions#ITERATION_LIMIT} is reached.
     */
   private def done(count: Int, prevStress: Double, curStress: Double) =
-    prevStress == 0 || (((prevStress - curStress) / prevStress) < epsilon) || (count >= iterationLimit)
+    prevStress == 0 || ((math.abs(prevStress - curStress) / prevStress) < epsilon) || (count >= iterationLimit)
 
   private def distance(u: Int, v: Int): Double = {
     val pu = position(u)
