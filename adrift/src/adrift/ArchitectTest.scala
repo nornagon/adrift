@@ -54,7 +54,7 @@ object ArchitectTest {
 
         for (p <- gLayout.roomGrid.indices) {
           gLayout.roomGrid(p) foreach { rId =>
-            if (!gLayout.roomGrid(p._1 + 1, p._2).contains(rId))
+            if (!gLayout.roomGrid(p._1 + 1, p._2).contains(rId) || (p._2 < gLayout.roomGrid.height - 1 && !gLayout.roomGrid(p._1, p._2 + 1).contains(rId)))
               g.setColor(colorForRoom(rId).darker())
             else
               g.setColor(colorForRoom(rId))
