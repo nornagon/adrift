@@ -13,6 +13,10 @@ object NEATArchitect {
   case class HistoricalId(value: Int) extends AnyVal
   case class RoomTypeId(value: Int) extends AnyVal
 
+  // TODO: make these parameters to the algorithm
+  val cylinderCircumference = 360
+  val cylinderLength = 270
+
   case class RoomGene(
     id: HistoricalId,
     roomType: RoomTypeId,
@@ -359,20 +363,21 @@ object NEATArchitect {
     val connections = mutable.Buffer.empty[ConnectionGene]
 
     // Connect the Fore 'rooms' in a ring
+    val foreAftRoomSeparation = cylinderCircumference.toDouble / numForeAft
     for (i <- 0 until numForeAft - 1) {
-      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i+1), 1, enabled = true)
+      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i+1), foreAftRoomSeparation, enabled = true)
     }
-    connections += ConnectionGene(newId, HistoricalId(0), HistoricalId(numForeAft - 1), 1, enabled = true)
+    connections += ConnectionGene(newId, HistoricalId(0), HistoricalId(numForeAft - 1), foreAftRoomSeparation, enabled = true)
 
     // Connect the Aft 'rooms' in a ring
     for (i <- numForeAft until numForeAft * 2 - 1) {
-      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i+1), 1, enabled = true)
+      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i+1), foreAftRoomSeparation, enabled = true)
     }
-    connections += ConnectionGene(newId, HistoricalId(numForeAft), HistoricalId(numForeAft * 2 - 1), 1, enabled = true)
+    connections += ConnectionGene(newId, HistoricalId(numForeAft), HistoricalId(numForeAft * 2 - 1), foreAftRoomSeparation, enabled = true)
 
     // Connect each Fore room to its corresponding Aft room.
     for (i <- 0 until numForeAft) {
-      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i + numForeAft), 1, enabled = true)
+      connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i + numForeAft), cylinderLength, enabled = true)
     }
     val mutationRate = 3
     Genome(roomGenes, connections.to(Seq), mutationRate)
@@ -383,9 +388,6 @@ object NEATArchitect {
     iterationLimit: Int = 50,
     growthIterationLimit: Int = 20000
   )(implicit random: Random): RoomLayout = {
-    val cylinderCircumference = 360
-    val cylinderLength = 270
-
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
     val foreRooms = g.rooms.filter(_.roomType == foreRoomTypeId).sortBy(_.id.value)
