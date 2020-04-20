@@ -50,9 +50,8 @@ object NEATArchitect {
   //   mate & [speciate]
 
   def runGeneration(pop: Population, targetPopSize: Int)(implicit random: Random): Population = {
-    val pMutated = pop.mutate()
-    val ret = pMutated.mate(targetPopSize)
-    println(s"#${ret.generationNumber} Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size}")
+    val ret = pop.mate(targetPopSize)
+    println(s"#${ret.generationNumber} Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size} / ${ret.species.size} species")
     ret
   }
 
@@ -74,24 +73,26 @@ object NEATArchitect {
   ) {
     {
       val maxId = members.flatMap(m => m.rooms.view.map(_.id.value) ++ m.connections.view.map(_.id.value)).max
-      assert(nextId > maxId)
+      assert(nextId > maxId, "next id should definitely be higher than the max id in the genes present")
     }
+
+    {
+      // every member of the population should belong to a species
+      assert(members.forall(m => species.exists(_.representative.delta(m) < speciationDelta)))
+    }
+
     def best: Genome = members.maxBy(_.fitness)
 
-    def mutate()(implicit random: Random): Population = {
+    def mate(targetPopSize: Int)(implicit random: Random): Population = {
       var next = nextId
       def newId: HistoricalId = { next += 1; HistoricalId(next - 1) }
-      val newMembers = members.map(_.mutate(newId))
-      copy(members = newMembers, nextId = next)
-    }
 
-    def mate(targetPopSize: Int)(implicit random: Random): Population = {
       // allocate fitness to species
       val totalFitness = members.map(_.fitness).sum
 
       def findSpeciesOf(genome: NEATArchitect.Genome): Species =
         species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
-          .getOrElse(throw new Exception("member of no species???"))
+          .getOrElse(throw new Exception(s"member of no species??? closest was ${species.view.map(_.representative.delta(genome)).min}"))
 
       val speciesMembers = members.map { m => (m, findSpeciesOf(m)) }.groupMap(_._2)(_._1)
 
@@ -103,12 +104,12 @@ object NEATArchitect {
         val potentialParents = speciesMembers(species)
         if (potentialParents.length < 2) return species.representative
         val parent1 = random.chooseFrom(potentialParents)(_.fitness)
-        val parent2 = random.chooseFrom(potentialParents.filterNot(_ == parent1))(_.fitness)
+        val parent2 = random.chooseFrom(potentialParents.filterNot(_ eq parent1))(_.fitness)
         if (parent1.fitness > parent2.fitness) {
           parent1.crossover(parent2)
         } else {
           parent2.crossover(parent1)
-        }
+        }.mutate(newId)
       }
 
       val nonEmptySpecies = species.filter(newSpeciesSizes(_) > 0)
@@ -132,16 +133,21 @@ object NEATArchitect {
         }
       }
 
-      copy(species = newSpecies.to(Seq), members = newIndividuals, generationNumber = generationNumber + 1)
+      copy(
+        species = newSpecies.to(Seq),
+        members = newIndividuals,
+        generationNumber = generationNumber + 1,
+        nextId = next
+      )
     }
   }
 
-  def newPopulation(num:Int, speciationDelta: Double = 3d)(implicit random: Random): Population = {
+  def newPopulation(num:Int, speciationDelta: Double = 0.5d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
     var nextId = 0
     def newId: HistoricalId = { nextId += 1; HistoricalId(nextId - 1) }
     val g = newGenome(newId)
-    val individuals = Seq.fill(num)(g)
+    val individuals = Seq.fill(num)(g.copy())
     // All the initial genomes are the same, so there's only one species.
     val species = Seq(Species(individuals.head))
     Population(species, individuals, speciationDelta, generationNumber = 0, nextId = nextId)
