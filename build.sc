@@ -49,6 +49,8 @@ object adrift extends ScalaModule {
     ivy"io.circe::circe-parser:0.13.0",
     ivy"io.circe::circe-optics:0.13.0",
     ivy"io.circe::circe-yaml:0.13.0",
+
+    ivy"org.scala-lang.modules::scala-parallel-collections:0.2.0",
   ) ++ Agg.from(
     Seq(
       "lwjgl",

@@ -1,8 +1,11 @@
 package adrift.worldgen
+import java.time.{Duration, Instant}
+
 import adrift.CylinderGrid
 import adrift.RandomImplicits._
 import adrift.worldgen.NEATArchitect.RoomTypeId
 
+import scala.collection.parallel.CollectionConverters._
 import scala.collection.mutable
 import scala.util.Random
 
@@ -50,8 +53,10 @@ object NEATArchitect {
   //   mate & [speciate]
 
   def runGeneration(pop: Population, targetPopSize: Int)(implicit random: Random): Population = {
+    val start = Instant.now()
     val ret = pop.mate(targetPopSize)
-    println(s"#${ret.generationNumber} Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size} / ${ret.species.size} species")
+    val duration = Duration.between(start, Instant.now())
+    println(f"#${ret.generationNumber} (${duration.toMillis} ms) Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size} / ${ret.species.size} species")
     ret
   }
 
@@ -81,14 +86,14 @@ object NEATArchitect {
       assert(members.forall(m => species.exists(_.representative.delta(m) < speciationDelta)))
     }
 
-    def best: Genome = members.maxBy(_.fitness)
+    def best: Genome = members.par.maxBy(_.fitness)
 
     def mate(targetPopSize: Int)(implicit random: Random): Population = {
       var next = nextId
       def newId: HistoricalId = { next += 1; HistoricalId(next - 1) }
 
       // allocate fitness to species
-      val totalFitness = members.map(_.fitness).sum
+      val totalFitness = members.par.map(_.fitness).sum
 
       def findSpeciesOf(genome: NEATArchitect.Genome): Species =
         species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
