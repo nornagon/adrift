@@ -55,8 +55,13 @@ object NEATArchitect {
   def runGeneration(pop: Population, targetPopSize: Int)(implicit random: Random): Population = {
     val start = Instant.now()
     val ret = pop.mate(targetPopSize)
+    val best = ret.best // trigger eval inside the timer
     val duration = Duration.between(start, Instant.now())
-    println(f"#${ret.generationNumber} (${duration.toMillis} ms) Best fitness: ${ret.best.fitness} / pop size: ${ret.members.size} / ${ret.species.size} species")
+    println(Seq(
+      f"#${ret.generationNumber}%-2d (${duration.toMillis}%-4d ms)",
+      f"Best fitness: ${best.fitness}%.3f",
+      s"Pop size: ${ret.members.size} (${ret.speciesMembers.values.map(_.size).toSeq.sorted.reverse.mkString("+")})",
+    ).mkString(" / "))
     ret
   }
 
@@ -88,18 +93,18 @@ object NEATArchitect {
 
     def best: Genome = members.par.maxBy(_.fitness)
 
+
+    def findSpeciesOf(genome: NEATArchitect.Genome): Species =
+      species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
+        .getOrElse(throw new Exception(s"member of no species??? closest was ${species.view.map(_.representative.delta(genome)).min}"))
+    lazy val speciesMembers: Map[Species, Seq[Genome]] = members.map { m => (m, findSpeciesOf(m)) }.groupMap(_._2)(_._1)
+
     def mate(targetPopSize: Int)(implicit random: Random): Population = {
       var next = nextId
       def newId: HistoricalId = { next += 1; HistoricalId(next - 1) }
 
       // allocate fitness to species
       val totalFitness = members.par.map(_.fitness).sum
-
-      def findSpeciesOf(genome: NEATArchitect.Genome): Species =
-        species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
-          .getOrElse(throw new Exception(s"member of no species??? closest was ${species.view.map(_.representative.delta(genome)).min}"))
-
-      val speciesMembers = members.map { m => (m, findSpeciesOf(m)) }.groupMap(_._2)(_._1)
 
       val speciesFitness = species.map { s => s -> speciesMembers(s).view.map(_.fitness).sum }.toMap
       val newSpeciesSizes = species.map { s => s -> (speciesFitness(s) / totalFitness * targetPopSize).round.toInt }.toMap
