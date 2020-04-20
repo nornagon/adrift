@@ -38,9 +38,14 @@ object NEATArchitect {
   }
 
   case class Rect(t: Int, r: Int, b: Int, l: Int) {
+    // NB. we're using unnormalized coordinates here.
+
     require(r > l)
     require(b > t)
+
     def area: Int = (r - l) * (b - t)
+    def width: Int = r - l
+    def height: Int = b - t
   }
   case class RoomLayout(
     roomCenters: Map[HistoricalId, (Double, Double)],
@@ -85,6 +90,7 @@ object NEATArchitect {
     generationNumber: Int,
     nextId: Int
   ) {
+    assert(members.nonEmpty, s"Must have at least one member (generation $generationNumber)");
     {
       val maxId = members.flatMap(m => m.rooms.view.map(_.id.value) ++ m.connections.view.map(_.id.value)).max
       assert(nextId > maxId, "next id should definitely be higher than the max id in the genes present")
@@ -108,6 +114,7 @@ object NEATArchitect {
       def newId: HistoricalId = { next += 1; HistoricalId(next - 1) }
 
       // allocate fitness to species
+      assert(members.forall(_.fitness >= 0), "genomes should have positive fitness")
       val speciesFitness = speciesMembers.view.mapValues(_.map(_.fitness).sum).toMap
       val totalFitness = speciesFitness.values.sum
       val newSpeciesSizes = species.map { s => s -> (speciesFitness(s) / totalFitness * targetPopSize).round.toInt }.toMap
@@ -126,6 +133,7 @@ object NEATArchitect {
       }
 
       val nonEmptySpecies = species.filter(newSpeciesSizes(_) > 0)
+      assert(nonEmptySpecies.nonEmpty, "expected at least one non-empty species")
 
       val newIndividuals = nonEmptySpecies.flatMap(s => {
         Seq.fill(newSpeciesSizes(s))(speciesMate(s))
@@ -220,11 +228,26 @@ object NEATArchitect {
       // TODO: Why 2?
       val spaceWeightFactor = spaceWeightCoefficient * (2 - distanceFromIdeal)
 
+      // aspect ratio. each room can earn up to 1 point for being square.
+      assert(layout.roomRects.values.forall(r => r.width > 0 && r.height > 0), "room rects should be non-empty")
+      val aspectRatios = layout.roomRects.values.view.map(r => r.width.toDouble / r.height)
+      // all aspect ratios are positive. a < 1 means width < height, a > 1 means width > height. we reciprocate the
+      // latter to put everything in [0,1], with 1 being "square" and < 1 being "not square".
+      val squarenesses = aspectRatios.map {
+        case a if a < 1 => a
+        case a => 1 / a
+      }
+      val averageSquareness = if (layout.roomRects.nonEmpty) squarenesses.sum / layout.roomRects.size else 0
+      assert(averageSquareness >= 0 && averageSquareness <= 1, s"Average squareness should be in [0,1] but was ${averageSquareness}")
+      val squarenessCoefficient = 1d
+      val squarenessFactor = averageSquareness * squarenessCoefficient
+
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
       // val affiinityEval = ???
       Map(
         "room counts" -> math.max(0, rtEval),
-        "space weight" -> math.max(0, spaceWeightFactor)
+        "space weight" -> math.max(0, spaceWeightFactor),
+        "squareness" -> squarenessFactor,
       )
     }
 
