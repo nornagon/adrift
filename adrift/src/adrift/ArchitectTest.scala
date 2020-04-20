@@ -3,6 +3,7 @@ package adrift
 import java.awt.event.{KeyEvent, KeyListener}
 import java.awt.{Dimension, Graphics}
 
+import adrift.worldgen.NEATArchitect.RoomTypeId
 import adrift.worldgen.{NEATArchitect, RoomType}
 import javax.swing.{JFrame, JPanel}
 
@@ -12,8 +13,8 @@ object ArchitectTest {
   def main(args: Array[String]): Unit = {
     var seed = 42
     implicit val random: Random = new Random(seed)
-    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(50), 50).best
-    var n = 1
+    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(20), 100).best
+    var n = 50
     var growthIterationLimit = Int.MaxValue
     var gLayout = NEATArchitect.layout(genome, n)
 
@@ -48,18 +49,29 @@ object ArchitectTest {
 
         g.setColor(Color.BLACK)
 
+/*
         def f(p: (Double, Double)): (Int, Int) = (
           ((p._1 - minX) * scale).round.toInt,
           ((p._2 - minY) * scale).round.toInt
         )
+ */
+        def f(p: (Double, Double)): (Int, Int) = (
+          p._1.round.toInt,
+          p._2.round.toInt
+        )
 
-        def colorForRoom(rId: NEATArchitect.HistoricalId) = {
-          colors(((rId.hashCode() % colors.size) + colors.size) % colors.size)
-        }
+
+        def colorForRoomType(rtId: RoomTypeId): Color =
+          colors(((rtId.value % colors.size) + colors.size) % colors.size)
+        def colorForRoom(rId: NEATArchitect.HistoricalId): Color =
+          colorForRoomType(genome.rooms.find(_.id == rId).get.roomType)
 
         for (p <- gLayout.roomGrid.indices) {
           gLayout.roomGrid(p) foreach { rId =>
-            g.setColor(colorForRoom(rId))
+            if (!gLayout.roomGrid(p._1 + 1, p._2).contains(rId))
+              g.setColor(colorForRoom(rId).darker())
+            else
+              g.setColor(colorForRoom(rId))
             g.fillRect(p._1, p._2, 1, 1)
           }
         }
@@ -81,7 +93,7 @@ object ArchitectTest {
           val (x2, y2) = f(bPos)
 
           if (math.abs(x2 - x1) < 1000 - math.abs(x2 - x1)) {
-            g.setColor(Color.BLACK)
+            g.setColor(new Color(0, 0, 0, 64))
             g.drawLine(x1, y1, x2, y2)
           } else {
             g.setColor(Color.PINK)
@@ -91,8 +103,26 @@ object ArchitectTest {
 
         for ((rId, p) <- gLayout.roomCenters) {
           val (x, y) = f(p)
-          g.setColor(colorForRoom(rId))
+          g.setColor(new Color(0, 0, 0, 64))
           g.drawRect(x - 2, y - 2, 4, 4)
+        }
+
+        g.setColor(Color.WHITE)
+        val legendWidth = 100
+        val legendRight = 10
+        val legendLeft = this.getWidth - legendWidth - legendRight
+        val legendLineHeight = 12
+        val legendTop = 10
+        val legendSquareSize = legendLineHeight - 2
+
+        g.fillRect(legendLeft, legendTop, legendWidth, legendLineHeight * RoomType.byId.size + 2)
+        g.setColor(Color.BLACK)
+        g.drawRect(legendLeft, legendTop, legendWidth, legendLineHeight * RoomType.byId.size + 2)
+        for ((rtId, i) <- RoomType.byId.keys.zipWithIndex) {
+          g.setColor(colorForRoomType(rtId))
+          g.fillRect(legendLeft + 2, legendTop + i * legendLineHeight + 2, legendSquareSize, legendSquareSize)
+          g.setColor(Color.BLACK)
+          g.drawString(RoomType.byId(rtId).name, legendLeft + 2 + legendSquareSize + 2, legendTop + i * legendLineHeight + 2 + legendSquareSize - 1)
         }
       }
     }

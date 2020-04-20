@@ -11,7 +11,7 @@ import scala.util.Random
 
 object NEATArchitect {
   case class HistoricalId(value: Int) extends AnyVal
-  case class RoomTypeId(id: Int) extends AnyVal
+  case class RoomTypeId(value: Int) extends AnyVal
 
   case class RoomGene(
     id: HistoricalId,
@@ -152,7 +152,7 @@ object NEATArchitect {
     }
   }
 
-  def newPopulation(num:Int, speciationDelta: Double = 0.5d)(implicit random: Random): Population = {
+  def newPopulation(num:Int, speciationDelta: Double = 1d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
     var nextId = 0
     def newId: HistoricalId = { nextId += 1; HistoricalId(nextId - 1) }
@@ -229,7 +229,7 @@ object NEATArchitect {
         id = idGen,
         a = rA.id,
         b = rB.id,
-        weight = 1f,
+        weight = 10f,
         enabled = true
       )
       copy(connections = connections :+ newConnection)
@@ -244,7 +244,7 @@ object NEATArchitect {
     def mutateEnableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = true))
     def mutateConnectionWeight()(implicit random: Random): Genome = mutateRandomConnection { c =>
       // in cannonical NEAT this has some chance to become a new random value, and some other chance to bump up / down slightly
-      c.copy(weight = c.weight * random.between(0.9f, 1.1f))
+      c.copy(weight = math.max(1, if (random.oneIn(10)) 100 + random.nextGaussian() * 100 else c.weight * random.nextGaussian()))
     }
 
     def mutateAddRoom(nextId: => HistoricalId)(implicit random: Random): Genome = {
