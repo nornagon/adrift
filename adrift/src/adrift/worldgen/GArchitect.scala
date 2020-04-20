@@ -176,7 +176,8 @@ object NEATArchitect {
       val allIds = rooms.view.map(_.id) ++ connections.view.map(_.id)
       require(allIds.size == allIds.toSet.size, s"duplicate id(s): ${allIds.groupBy(identity).view.filter(_._2.size > 1).keys.mkString(", ")}")
     }
-    lazy val fitness: Double = {
+
+    lazy val evaluations: Map[String, Double] = {
       // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
@@ -214,8 +215,13 @@ object NEATArchitect {
 
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
       // val affiinityEval = ???
-      math.max(0, rtEval) + math.max(0, spaceWeightFactor)
+      Map(
+        "room counts" -> math.max(0, rtEval),
+        "space weight" -> math.max(0, spaceWeightFactor)
+      )
     }
+
+    def fitness: Double = evaluations.values.sum
     val roomIdMap: Map[HistoricalId, RoomGene] = rooms.map(r => r.id).zip(rooms).toMap
     val connectionIdMap: Map[HistoricalId, ConnectionGene] = connections.map(c => c.id).zip(connections).toMap
 

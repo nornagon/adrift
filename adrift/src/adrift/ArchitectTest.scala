@@ -14,6 +14,7 @@ object ArchitectTest {
     var seed = 42
     implicit val random: Random = new Random(seed)
     val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(20), 100).best
+    println(genome.evaluations)
     var n = 50
     var growthIterationLimit = Int.MaxValue
     var gLayout = NEATArchitect.layout(genome, n)
