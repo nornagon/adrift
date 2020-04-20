@@ -172,6 +172,8 @@ object NEATArchitect {
     def asDot: String =
       s"graph {\n${rooms.map(_.id.value.toString).mkString(";\n")};\n${connections.map(c => s"${c.a.value} -- ${c.b.value}").mkString(";\n")};\n}"
 
+    lazy val layout: RoomLayout = NEATArchitect.layout(this)(new Random(seed))
+
     {
       val allIds = rooms.view.map(_.id) ++ connections.view.map(_.id)
       require(allIds.size == allIds.toSet.size, s"duplicate id(s): ${allIds.groupBy(identity).view.filter(_._2.size > 1).keys.mkString(", ")}")
@@ -194,15 +196,18 @@ object NEATArchitect {
         }
       }).sum * roomTypeCoefficient
 
-      val roomLayout = layout(this)(new Random(seed))
-      val totalSpace = roomLayout.roomGrid.width * roomLayout.roomGrid.height
+      val totalSpace = layout.roomGrid.width * layout.roomGrid.height
       val totalSpaceWeight = RoomType.all.map(_.spaceWeight).sum
       val idealSpaceProportionPerRoomType = RoomType.byId.view.mapValues(_.spaceWeight / totalSpaceWeight)
       val gridCellsPerRoomType: Map[RoomTypeId, Int] =
-        roomLayout.roomGrid.indices.foldLeft(Map.empty[RoomTypeId, Int].withDefaultValue(0)) { (counts, idx) =>
-          val roomId = roomLayout.roomGrid(idx).get
-          val roomTypeId = rooms.find(_.id == roomId).get.roomType
-          counts + (roomTypeId -> (counts(roomTypeId) + 1))
+        layout.roomGrid.indices.foldLeft(Map.empty[RoomTypeId, Int].withDefaultValue(0)) { (counts, idx) =>
+          layout.roomGrid(idx) match {
+            case Some(roomId) =>
+              val roomTypeId = rooms.find(_.id == roomId).get.roomType
+              counts + (roomTypeId -> (counts(roomTypeId) + 1))
+            case None =>
+              counts
+          }
         }
       val actualSpaceProportionPerRoomType: Map[RoomTypeId, Double] = gridCellsPerRoomType.view.mapValues(_.toDouble / totalSpace).to(Map)
       val distanceFromIdeal: Double = RoomType.byId.keys.map { k =>

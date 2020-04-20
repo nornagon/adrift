@@ -17,7 +17,7 @@ object ArchitectTest {
     println(genome.evaluations)
     var n = 50
     var growthIterationLimit = Int.MaxValue
-    var gLayout = NEATArchitect.layout(genome, n)
+    var gLayout = genome.layout
 
     import java.awt.Color
 
