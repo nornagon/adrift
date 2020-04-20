@@ -94,7 +94,6 @@ object NEATArchitect {
 
     def best: Genome = members.par.maxBy(_.fitness)
 
-
     def findSpeciesOf(genome: NEATArchitect.Genome): Species =
       species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
         .getOrElse(throw new Exception(s"member of no species??? closest was ${species.view.map(_.representative.delta(genome)).min}"))
@@ -167,12 +166,12 @@ object NEATArchitect {
     rooms: Seq[RoomGene],
     connections: Seq[ConnectionGene],
     mutationRate: Int = 3,
-    seed: Int = 42
+    layoutSeed: Int = 42
   ) {
     def asDot: String =
       s"graph {\n${rooms.map(_.id.value.toString).mkString(";\n")};\n${connections.map(c => s"${c.a.value} -- ${c.b.value}").mkString(";\n")};\n}"
 
-    lazy val layout: RoomLayout = NEATArchitect.layout(this)(new Random(seed))
+    lazy val layout: RoomLayout = NEATArchitect.layout(this)(new Random(layoutSeed))
 
     {
       val allIds = rooms.view.map(_.id) ++ connections.view.map(_.id)
@@ -213,7 +212,7 @@ object NEATArchitect {
         math.abs(actualSpaceProportionPerRoomType.getOrElse(k, 0d) - idealSpaceProportionPerRoomType(k))
       }.sum
 
-      val spaceWeightCoefficient = 1d
+      val spaceWeightCoefficient = 2d
       // TODO: Why 2?
       val spaceWeightFactor = spaceWeightCoefficient * (2 - distanceFromIdeal)
 
@@ -258,27 +257,27 @@ object NEATArchitect {
     }
 
     def mutateAddRoom(nextId: => HistoricalId)(implicit random: Random): Genome = {
+      // split a random connection
+      val connection = random.pick(connections)
       val newRoomTypeId = random.pick(RoomType.byId.view.filterNot(_._2.special).keys)
-      val newRoomType = RoomType.byId(newRoomTypeId)
-      val existingCount = rooms.count(_.roomType == newRoomTypeId)
-      if (existingCount >= newRoomType.maxQuantity) return this
-
-      val roomGene = RoomGene(id = nextId, newRoomTypeId)
-
-      val otherRooms = random.nOf(random.between(1, 3), rooms).distinct
-
-      val connectionGenes = otherRooms.map { r =>
-        val (a, b) = if (r.id.value < roomGene.id.value) (r, roomGene) else (roomGene, r)
+      val newRoomGene = RoomGene(id = nextId, newRoomTypeId)
+      val newConnectionGenes = Seq(
         ConnectionGene(
           id = nextId,
-          a = a.id,
-          b = b.id,
-          weight = 1,
+          a = connection.a,
+          b = newRoomGene.id,
+          weight = connection.weight / 2,
           enabled = true
-        )
-      }
-
-      copy(rooms = rooms :+ roomGene, connections = connections ++ connectionGenes)
+        ),
+        ConnectionGene(
+          id = nextId,
+          a = connection.b,
+          b = newRoomGene.id,
+          weight = connection.weight / 2,
+          enabled = true
+        ),
+      )
+      copy(rooms = rooms :+ newRoomGene, connections = connections.filterNot(_ eq connection) ++ newConnectionGenes)
     }
 
     def mutateMutationRate()(implicit random: Random): Genome =
@@ -295,7 +294,7 @@ object NEATArchitect {
 
     def mutate(newId: => HistoricalId)(implicit random: Random): Genome = {
       val mutations = random.nFrom(random.between(0, mutationRate), mutationFunctions)(_._2).map(_._1)
-      mutations.foldLeft(this)((genome, mutate) => mutate(genome, random, newId _))
+      mutations.foldLeft(this.copy())((genome, mutate) => mutate(genome, random, newId _))
     }
 
     def delta(other: Genome): Double = {
@@ -624,7 +623,7 @@ object RoomType {
 
     RoomType("fabrication", spaceWeight = 50, minQuantity = 5, maxQuantity = 10),
 
-    RoomType("crew quarters", spaceWeight = 200, minQuantity = 1, maxQuantity = 500),
+    RoomType("crew quarters", spaceWeight = 200, minQuantity = 20, maxQuantity = 500),
     RoomType("promenade", spaceWeight = 100,minQuantity = 1,maxQuantity = 1),
     RoomType("dining", spaceWeight = 50,minQuantity = 4,maxQuantity = 10),
     RoomType("holo suite", spaceWeight = 10,minQuantity = 5,maxQuantity = 10),
