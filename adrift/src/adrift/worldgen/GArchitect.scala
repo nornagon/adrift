@@ -112,7 +112,7 @@ object NEATArchitect {
       // produce new individuals
       def speciesMate(species: Species): Genome = {
         val potentialParents = speciesMembers(species)
-        if (potentialParents.length < 2) return species.representative
+        if (potentialParents.length < 2) return species.representative.mutate(newId)
         val parent1 = random.chooseFrom(potentialParents)(_.fitness)
         val parent2 = random.chooseFrom(potentialParents.filterNot(_ eq parent1))(_.fitness)
         if (parent1.fitness > parent2.fitness) {
