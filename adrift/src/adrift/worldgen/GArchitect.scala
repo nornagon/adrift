@@ -163,7 +163,7 @@ object NEATArchitect {
     }
   }
 
-  def newPopulation(num:Int, speciationDelta: Double = 1d)(implicit random: Random): Population = {
+  def newPopulation(num:Int, speciationDelta: Double = 2d)(implicit random: Random): Population = {
     // Other implementations use a speciation threshold of 2-10 depending on the problem and ??? This is a guess.
     var nextId = 0
     def newId: HistoricalId = { nextId += 1; HistoricalId(nextId - 1) }
