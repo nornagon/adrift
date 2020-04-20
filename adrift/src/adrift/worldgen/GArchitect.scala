@@ -151,6 +151,7 @@ object NEATArchitect {
     rooms: Seq[RoomGene],
     connections: Seq[ConnectionGene],
     mutationRate: Int = 3,
+    seed: Int = 42
   ) {
     def asDot: String =
       s"graph {\n${rooms.map(_.id.value.toString).mkString(";\n")};\n${connections.map(c => s"${c.a.value} -- ${c.b.value}").mkString(";\n")};\n}"
@@ -175,9 +176,29 @@ object NEATArchitect {
           1
         }
       }).sum * roomTypeCoefficient
+
+      val roomLayout = layout(this)(new Random(seed))
+      val totalSpace = roomLayout.roomGrid.width * roomLayout.roomGrid.height
+      val totalSpaceWeight = RoomType.all.map(_.spaceWeight).sum
+      val idealSpaceProportionPerRoomType = RoomType.byId.view.mapValues(_.spaceWeight / totalSpaceWeight)
+      val gridCellsPerRoomType: Map[RoomTypeId, Int] =
+        roomLayout.roomGrid.indices.foldLeft(Map.empty[RoomTypeId, Int].withDefaultValue(0)) { (counts, idx) =>
+          val roomId = roomLayout.roomGrid(idx).get
+          val roomTypeId = rooms.find(_.id == roomId).get.roomType
+          counts + (roomTypeId -> (counts(roomTypeId) + 1))
+        }
+      val actualSpaceProportionPerRoomType: Map[RoomTypeId, Double] = gridCellsPerRoomType.view.mapValues(_.toDouble / totalSpace).to(Map)
+      val distanceFromIdeal: Double = RoomType.byId.keys.map { k =>
+        math.abs(actualSpaceProportionPerRoomType.getOrElse(k, 0d) - idealSpaceProportionPerRoomType(k))
+      }.sum
+
+      val spaceWeightCoefficient = 1d
+      // TODO: Why 2?
+      val spaceWeightFactor = spaceWeightCoefficient * (2 - distanceFromIdeal)
+
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
       // val affiinityEval = ???
-      Math.max(0,rtEval)
+      math.max(0, rtEval) + math.max(0, spaceWeightFactor)
     }
     val roomIdMap: Map[HistoricalId, RoomGene] = rooms.map(r => r.id).zip(rooms).toMap
     val connectionIdMap: Map[HistoricalId, ConnectionGene] = connections.map(c => c.id).zip(connections).toMap
