@@ -25,7 +25,6 @@ object ArchitectTest {
     frame.setDefaultCloseOperation(3)
 
     val colors = Seq(
-      Color.BLACK,
       Color.BLUE,
       Color.CYAN,
       Color.DARK_GRAY,
@@ -41,26 +40,12 @@ object ArchitectTest {
 
     val panel = new JPanel() {
       override def paint(g: Graphics): Unit = {
-        val minX = gLayout.roomCenters.map(_._2._1).min
-        val maxX = gLayout.roomCenters.map(_._2._1).max
-        val minY = gLayout.roomCenters.map(_._2._2).min
-        val maxY = gLayout.roomCenters.map(_._2._2).max
-        val bigger = if (maxY - minY > maxX - minX) maxY - minY else maxX - minX
-        val scale = 1000d / bigger
-
         g.setColor(Color.BLACK)
 
-/*
-        def f(p: (Double, Double)): (Int, Int) = (
-          ((p._1 - minX) * scale).round.toInt,
-          ((p._2 - minY) * scale).round.toInt
-        )
- */
-        def f(p: (Double, Double)): (Int, Int) = (
+        def round(p: (Double, Double)): (Int, Int) = (
           p._1.round.toInt,
           p._2.round.toInt
         )
-
 
         def colorForRoomType(rtId: RoomTypeId): Color =
           colors(((rtId.value % colors.size) + colors.size) % colors.size)
@@ -77,21 +62,12 @@ object ArchitectTest {
           }
         }
 
-/*
-        for ((rId, rect) <- gLayout.roomRects) {
-          g.setColor(colorForRoom(rId))
-          val (l, t) = f(rect.l, rect.t)
-          val (r, b) = f(rect.r, rect.b)
-          g.drawRect(l, t, r - l, b - t)
-        }
- */
-
         for (conn <- genome.connections) {
           val aPos = gLayout.roomCenters(conn.a)
           val bPos = gLayout.roomCenters(conn.b)
 
-          val (x1, y1) = f(aPos)
-          val (x2, y2) = f(bPos)
+          val (x1, y1) = round(aPos)
+          val (x2, y2) = round(bPos)
 
           if (math.abs(x2 - x1) < 1000 - math.abs(x2 - x1)) {
             g.setColor(new Color(0, 0, 0, 64))
@@ -103,7 +79,7 @@ object ArchitectTest {
         }
 
         for ((rId, p) <- gLayout.roomCenters) {
-          val (x, y) = f(p)
+          val (x, y) = round(p)
           g.setColor(new Color(0, 0, 0, 64))
           g.drawRect(x - 2, y - 2, 4, 4)
         }
