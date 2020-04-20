@@ -184,8 +184,7 @@ object NEATArchitect {
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
       val roomTypeCoefficient = 1d
-      val disallowed = Set("fore", "aft")
-      val rtEval = RoomType.all.filterNot(rt => disallowed contains rt.name).map(rt => {
+      val rtEval = RoomType.all.filterNot(_.special).map(rt => {
         val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt).toDouble
         if (relevantRooms > rt.maxQuantity) {
           rt.maxQuantity.toDouble/relevantRooms
@@ -259,7 +258,7 @@ object NEATArchitect {
     }
 
     def mutateAddRoom(nextId: => HistoricalId)(implicit random: Random): Genome = {
-      val newRoomTypeId = random.pick(RoomType.byId.keys)
+      val newRoomTypeId = random.pick(RoomType.byId.view.filterNot(_._2.special).keys)
       val newRoomType = RoomType.byId(newRoomTypeId)
       val existingCount = rooms.count(_.roomType == newRoomTypeId)
       if (existingCount >= newRoomType.maxQuantity) return this
@@ -383,7 +382,7 @@ object NEATArchitect {
   def layout(
     g: Genome,
     iterationLimit: Int = 50,
-    growthIterationLimit: Int = Int.MaxValue
+    growthIterationLimit: Int = 20000
   )(implicit random: Random): RoomLayout = {
     val cylinderCircumference = 360
     val cylinderLength = 270
@@ -482,12 +481,14 @@ object NEATArchitect {
 
     // Initialize rooms
     val roomRects = mutable.Map.empty[HistoricalId, Rect]
-    roomCenters.foreach {
-      case (id, pos) =>
-        val gridPos = findNearbyEmpty(pos._1.round.toInt, pos._2.round.toInt)
-        roomRects += (id -> Rect(gridPos._2, gridPos._1 + 1, gridPos._2 + 1, gridPos._1))
-        roomGrid(gridPos) = Some(id)
+    for ((id, pos) <- roomCenters; if !RoomType.byId(g.rooms.find(_.id == id).get.roomType).special) {
+      val gridPos = findNearbyEmpty(pos._1.round.toInt, pos._2.round.toInt)
+      roomRects += (id -> Rect(gridPos._2, gridPos._1 + 1, gridPos._2 + 1, gridPos._1))
+      roomGrid(gridPos) = Some(id)
     }
+
+    if (roomRects.isEmpty)
+      return RoomLayout(roomCenters, roomRects.toMap, roomGrid)
 
     // grow
     def allEmpty(x1: Int, y1: Int, x2: Int, y2: Int): Boolean = {
@@ -503,7 +504,7 @@ object NEATArchitect {
         case 1 => // r
           allEmpty(rect.r, rect.t, rect.r + 1, rect.b)
         case 2 => // b
-          rect.b < roomGrid.height - 1 && allEmpty(rect.l, rect.b, rect.r, rect.b + 1)
+          rect.b < roomGrid.height && allEmpty(rect.l, rect.b, rect.r, rect.b + 1)
         case 3 => // l
           allEmpty(rect.l - 1, rect.t, rect.l, rect.b)
       }
@@ -551,8 +552,10 @@ object NEATArchitect {
 
     def seek(s0: Int, d: Int, f: Int => Boolean): Int = {
       var s = s0
-      while (f(s))
+      while (f(s)) {
         s += d
+        assert(s.abs < 10000, s"seeking from $s0 in dir $d overflowed at $s")
+      }
       s - d
     }
 
@@ -599,7 +602,6 @@ object NEATArchitect {
       i += 1
     }
 
-
     RoomLayout(roomCenters, roomRects.toMap, roomGrid)
   }
 }
@@ -610,7 +612,9 @@ object RoomType {
     spaceWeight: Double,
     minQuantity:Int,
     maxQuantity:Int,
+    special: Boolean = false
   )
+
   val all: Seq[RoomType] = Seq(
     RoomType("command", spaceWeight = 10, minQuantity = 1, maxQuantity = 1),
 
@@ -626,8 +630,8 @@ object RoomType {
     RoomType("holo suite", spaceWeight = 10,minQuantity = 5,maxQuantity = 10),
     RoomType("lounge", spaceWeight = 10,minQuantity = 10,maxQuantity = 20),
 
-    RoomType("fore", spaceWeight = 100, minQuantity = 1, maxQuantity = 5),
-    RoomType("aft", spaceWeight = 100, minQuantity = 1, maxQuantity = 5),
+    RoomType("fore", spaceWeight = 100, minQuantity = 1, maxQuantity = 5, special = true),
+    RoomType("aft", spaceWeight = 100, minQuantity = 1, maxQuantity = 5, special = true),
   )
 
   val byId: Map[RoomTypeId, RoomType] = all.zipWithIndex.map {
