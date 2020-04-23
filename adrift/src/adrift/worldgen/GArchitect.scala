@@ -47,6 +47,21 @@ object NEATArchitect {
     def width: Int = r - l
     def height: Int = b - t
   }
+
+  def normalizeX(x: Double): Double =
+    ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
+  def normalizeXI(x: Int): Int =
+    ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
+  def normalizePosition(p: (Double, Double)): (Double, Double) = (normalizeX(p._1), p._2)
+
+  def distance(a: (Double, Double), b: (Double, Double)) = {
+    val na = normalizePosition(a)
+    val nb = normalizePosition(b)
+    val dx = math.min(math.abs(na._1 - nb._1), cylinderCircumference - math.abs(na._1 - nb._1))
+    val dy = na._2 - nb._2
+    math.sqrt(dx * dx + dy * dy)
+  }
+
   case class RoomLayout(
     roomCenters: Map[HistoricalId, (Double, Double)],
     roomRects: Map[HistoricalId, Rect],
@@ -250,11 +265,28 @@ object NEATArchitect {
       val squarenessFactor = averageSquareness * squarenessCoefficient
 
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
-      // val affiinityEval = ???
+      val affinityFactor = 1d
+      val affinityEval: Double = {
+        type Affinity = ((RoomTypeId, RoomTypeId), Double)
+        rooms.map( roomGene => {
+          val location = layout.roomCenters(roomGene.id)
+          val roomTypeId = roomGene.roomType
+          RoomType.affinities.filter(aff => aff._1._1 == roomTypeId).map((a:Affinity) => {
+            val relevantRooms: Seq[RoomGene] = rooms.filter(_.roomType == a._1._2)
+            val distances = relevantRooms.map(r => {
+              distance(location, layout.roomCenters(r.id))
+            })
+            Math.max(a._2 / distances.min, a._2)
+          }).sum / RoomType.totalAffinity(roomTypeId)
+        }).sum/rooms.length
+      }
+
+
       Map(
         "room counts" -> math.max(0, rtEval),
         "space weight" -> math.max(0, spaceWeightFactor),
         "squareness" -> squarenessFactor,
+        "affinity" -> affinityEval
       )
     }
 
@@ -446,11 +478,7 @@ object NEATArchitect {
       assert(idxA < idxB)
       (idxA, idxB) -> c.weight
     }.to(Map)
-    def normalizeX(x: Double): Double =
-      ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
-    def normalizeXI(x: Int): Int =
-      ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
-    def normalizePosition(p: (Double, Double)): (Double, Double) = (normalizeX(p._1), p._2)
+
     sm.initialize(
       g.rooms.size,
       neighbors = neighbs,
@@ -655,9 +683,35 @@ object RoomType {
     special: Boolean = false
   )
 
+  val affinityEntries: Map[(String,String), Double] = Map(
+    ("command", "fore") -> 10d,
+    ("command", "crew quarters") -> 3d,
+    ("engine room", "aft") -> 10d,
+    ("engine room", "fabrication") -> 3d,
+    ("crew quarters", "fore") -> 10d,
+    ("crew quarters", "promenade") -> 4d,
+    ("crew quarters", "dining") -> 5d,
+    ("crew quarters", "holo suite") -> 5d,
+    ("crew quarters", "lounge") -> 5d,
+  )
+  val affinities: Map[(RoomTypeId,RoomTypeId), Double] = {
+    affinityEntries.map(a => {
+      val rt1 = byName(a._1._1)
+      val rt2 = byName(a._1._2)
+      assert (rt1.value < rt2.value)
+      val rts = (rt1, rt2)
+      val value = a._2
+      rts->value
+    })
+  }
+  val totalAffinity: Map[RoomTypeId, Double] = {
+    all.zipWithIndex.map(rt => {
+      RoomTypeId(rt._2) -> affinities.filter(a => a._1._1 == rt._2).values.sum
+    }).toMap
+  }
+
   val all: Seq[RoomType] = Seq(
     RoomType("command", spaceWeight = 10, minQuantity = 1, maxQuantity = 1),
-
     RoomType("engine room", spaceWeight = 100, minQuantity = 1, maxQuantity = 5),
 
     RoomType("recycling", spaceWeight = 50, minQuantity = 1, maxQuantity = 5),
