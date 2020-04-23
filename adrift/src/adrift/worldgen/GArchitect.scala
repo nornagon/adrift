@@ -310,7 +310,7 @@ object NEATArchitect {
     }
 
     def mutateMutationRate()(implicit random: Random): Genome =
-      copy(mutationRate = math.max(1, mutationRate + random.between(-1, 1)))
+      copy(mutationRate = math.min(5, math.max(2, mutationRate + random.between(-1, 1))))
 
     val mutationFunctions = Seq(
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddRoom(newId())(r), 1f),
