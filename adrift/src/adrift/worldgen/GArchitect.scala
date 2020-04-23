@@ -54,7 +54,7 @@ object NEATArchitect {
     ((x % cylinderCircumference) + cylinderCircumference) % cylinderCircumference
   def normalizePosition(p: (Double, Double)): (Double, Double) = (normalizeX(p._1), p._2)
 
-  def distance(a: (Double, Double), b: (Double, Double)) = {
+  def distance(a: (Double, Double), b: (Double, Double)): Double = {
     val na = normalizePosition(a)
     val nb = normalizePosition(b)
     val dx = math.min(math.abs(na._1 - nb._1), cylinderCircumference - math.abs(na._1 - nb._1))
@@ -205,7 +205,7 @@ object NEATArchitect {
     def asDot: String =
       s"graph {\n${rooms.map(_.id.toString).mkString(";\n")};\n${connections.filter(_.enabled).map(c => s"${c.a} -- ${c.b}").mkString(";\n")};\n}"
 
-    def size = rooms.size + connections.size
+    def size: Int = rooms.size + connections.size
 
     lazy val layout: RoomLayout = {
       val start = Instant.now
@@ -222,7 +222,6 @@ object NEATArchitect {
       // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
-      val roomTypeCoefficient = 1d
       val rtEval = RoomType.all.filterNot(_.special).map(rt => {
         val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt).toDouble
         if (relevantRooms > rt.maxQuantity) {
@@ -232,7 +231,7 @@ object NEATArchitect {
         } else {
           1
         }
-      }).sum * roomTypeCoefficient
+      }).sum
 
       val totalSpace = layout.roomGrid.width * layout.roomGrid.height
       val totalSpaceWeight = RoomType.all.map(_.spaceWeight).sum
@@ -246,9 +245,8 @@ object NEATArchitect {
         math.abs(actualSpaceProportionPerRoomType.getOrElse(k, 0d) - idealSpaceProportionPerRoomType(k))
       }.sum
 
-      val spaceWeightCoefficient = 2d
       // TODO: Why 2?
-      val spaceWeightFactor = spaceWeightCoefficient * (2 - distanceFromIdeal)
+      val spaceWeightFactor = (2 - distanceFromIdeal)
 
       // aspect ratio. each room can earn up to 1 point for being square.
       assert(layout.roomRects.values.forall(r => r.width > 0 && r.height > 0), "room rects should be non-empty")
@@ -261,32 +259,34 @@ object NEATArchitect {
       }
       val averageSquareness = if (layout.roomRects.nonEmpty) squarenesses.sum / layout.roomRects.size else 0
       assert(averageSquareness >= 0 && averageSquareness <= 1, s"Average squareness should be in [0,1] but was ${averageSquareness}")
-      val squarenessCoefficient = 1d
-      val squarenessFactor = averageSquareness * squarenessCoefficient
-
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
+
       val affinityFactor = 1d
       val affinityEval: Double = {
         type Affinity = ((RoomTypeId, RoomTypeId), Double)
         rooms.map( roomGene => {
           val location = layout.roomCenters(roomGene.id)
           val roomTypeId = roomGene.roomType
-          RoomType.affinities.filter(aff => aff._1._1 == roomTypeId).map((a:Affinity) => {
-            val relevantRooms: Seq[RoomGene] = rooms.filter(_.roomType == a._1._2)
-            val distances = relevantRooms.map(r => {
-              distance(location, layout.roomCenters(r.id))
-            })
-            Math.max(a._2 / distances.min, a._2)
-          }).sum / RoomType.totalAffinity(roomTypeId)
-        }).sum/rooms.length
+          if (RoomType.totalAffinity(roomTypeId) > 0) {
+            RoomType.affinities.filter(aff => aff._1._1 == roomTypeId).map((a:Affinity) => {
+              val relevantRooms: Seq[RoomGene] = rooms.filter(_.roomType == a._1._2)
+              val distances = relevantRooms.map(r => {
+                distance(location, layout.roomCenters(r.id))
+              })
+              if (distances.isEmpty) {0d} else {
+                Math.max(a._2 / distances.min, a._2)
+              }
+            }).sum
+          } else {0}
+        }).sum / rooms.length
       }
-
+//      println("affinity: ", affinityEval)
 
       Map(
-        "room counts" -> math.max(0, rtEval),
-        "space weight" -> math.max(0, spaceWeightFactor),
-        "squareness" -> squarenessFactor,
-        "affinity" -> affinityEval
+      "room counts" -> 1d * math.max(0, rtEval),
+      "space weight" -> 2d * math.max(0, spaceWeightFactor),
+      "squareness" -> 1.5d * averageSquareness,
+      "affinity" -> 1.0d * affinityEval,
       )
     }
 
@@ -347,7 +347,7 @@ object NEATArchitect {
     }
 
     def mutateMutationRate()(implicit random: Random): Genome =
-      copy(mutationRate = math.max(1, mutationRate + random.between(-1, 1)))
+      copy(mutationRate = math.min(5, math.max(2, mutationRate + random.between(-1, 1))))
 
     val mutationFunctions = Seq(
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddRoom(newId())(r), 1f),
@@ -683,32 +683,6 @@ object RoomType {
     special: Boolean = false
   )
 
-  val affinityEntries: Map[(String,String), Double] = Map(
-    ("command", "fore") -> 10d,
-    ("command", "crew quarters") -> 3d,
-    ("engine room", "aft") -> 10d,
-    ("engine room", "fabrication") -> 3d,
-    ("crew quarters", "fore") -> 10d,
-    ("crew quarters", "promenade") -> 4d,
-    ("crew quarters", "dining") -> 5d,
-    ("crew quarters", "holo suite") -> 5d,
-    ("crew quarters", "lounge") -> 5d,
-  )
-  val affinities: Map[(RoomTypeId,RoomTypeId), Double] = {
-    affinityEntries.map(a => {
-      val rt1 = byName(a._1._1)
-      val rt2 = byName(a._1._2)
-      assert (rt1.value < rt2.value)
-      val rts = (rt1, rt2)
-      val value = a._2
-      rts->value
-    })
-  }
-  val totalAffinity: Map[RoomTypeId, Double] = {
-    all.zipWithIndex.map(rt => {
-      RoomTypeId(rt._2) -> affinities.filter(a => a._1._1 == rt._2).values.sum
-    }).toMap
-  }
 
   val all: Seq[RoomType] = Seq(
     RoomType("command", spaceWeight = 10, minQuantity = 1, maxQuantity = 1),
@@ -733,6 +707,37 @@ object RoomType {
   }.to(Map)
 
   val byName: Map[String, RoomTypeId] = byId.map { case (k, v) => v.name -> k }
+
+  val affinityEntries: Map[(String,String), Double] = Map(
+    ("command", "fore") -> 10d,
+    ("command", "crew quarters") -> 3d,
+    ("engine room", "aft") -> 10d,
+    ("engine room", "fabrication") -> 3d,
+    ("crew quarters", "fore") -> 10d,
+    ("crew quarters", "promenade") -> 4d,
+    ("crew quarters", "dining") -> 5d,
+    ("crew quarters", "holo suite") -> 5d,
+    ("crew quarters", "lounge") -> 5d,
+  )
+
+  val affinities: Map[(RoomTypeId,RoomTypeId), Double] = {
+    affinityEntries.map(a => {
+      val rt1 = byName(a._1._1)
+      val rt2 = byName(a._1._2)
+      assert (rt1.value < rt2.value)
+      val rts = (rt1, rt2)
+      val value = a._2
+      rts->value
+    })
+  }
+
+  val totalAffinity: Map[RoomTypeId, Double] = {
+    all.zipWithIndex.map(rt => {
+      RoomTypeId(rt._2) -> affinities.filter(a => a._1._1 == RoomTypeId(rt._2)).values.sum
+    }).toMap
+  }
+
+
 }
 case class Coordinates(x:Int,y:Int)
 case class Room(roomType: RoomTypeId, coords:Coordinates) {}
