@@ -207,7 +207,6 @@ object NEATArchitect {
       // This evaluate might create a room layout and perform evaluations on that layout.
       // Several evaluation metrics are important.
       // We should check and penalize if a genome doesn't have correct room quantities.
-      val roomTypeCoefficient = 1d
       val rtEval = RoomType.all.filterNot(_.special).map(rt => {
         val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt).toDouble
         if (relevantRooms > rt.maxQuantity) {
@@ -217,7 +216,7 @@ object NEATArchitect {
         } else {
           1
         }
-      }).sum * roomTypeCoefficient
+      }).sum
 
       val totalSpace = layout.roomGrid.width * layout.roomGrid.height
       val totalSpaceWeight = RoomType.all.map(_.spaceWeight).sum
@@ -231,9 +230,8 @@ object NEATArchitect {
         math.abs(actualSpaceProportionPerRoomType.getOrElse(k, 0d) - idealSpaceProportionPerRoomType(k))
       }.sum
 
-      val spaceWeightCoefficient = 2d
       // TODO: Why 2?
-      val spaceWeightFactor = spaceWeightCoefficient * (2 - distanceFromIdeal)
+      val spaceWeightFactor = (2 - distanceFromIdeal)
 
       // aspect ratio. each room can earn up to 1 point for being square.
       assert(layout.roomRects.values.forall(r => r.width > 0 && r.height > 0), "room rects should be non-empty")
@@ -246,15 +244,12 @@ object NEATArchitect {
       }
       val averageSquareness = if (layout.roomRects.nonEmpty) squarenesses.sum / layout.roomRects.size else 0
       assert(averageSquareness >= 0 && averageSquareness <= 1, s"Average squareness should be in [0,1] but was ${averageSquareness}")
-      val squarenessCoefficient = 1d
-      val squarenessFactor = averageSquareness * squarenessCoefficient
-
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
       // val affiinityEval = ???
       Map(
-        "room counts" -> math.max(0, rtEval),
-        "space weight" -> math.max(0, spaceWeightFactor),
-        "squareness" -> squarenessFactor,
+        "room counts" -> 1d * math.max(0, rtEval),
+        "space weight" -> 2d * math.max(0, spaceWeightFactor),
+        "squareness" -> 1.5d * averageSquareness,
       )
     }
 
