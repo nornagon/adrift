@@ -23,7 +23,7 @@ class Grid[T](val width: Int, val height: Int)(initial: => T) {
   }
   def contains(x: Int, y: Int): Boolean = x >= 0 && x < width && y >= 0 && y < height
   def contains(pos: (Int, Int)): Boolean = contains(pos._1, pos._2)
-  def indices: IndexedSeq[(Int, Int)] = for (y <- 0 until height; x <- 0 until width) yield (x, y)
+  def indices: Iterable[(Int, Int)] = (0 until height).view.flatMap((y: Int) => (0 until width).view.map(x => (x, y)))
 
   override def toString: String = {
     s"${this.getClass.getSimpleName}(" + (for (y <- 0 until height) yield {

@@ -70,12 +70,19 @@ object NEATArchitect {
       f"#${ret.generationNumber}%-2d (${duration.toMillis}%-4d ms)",
       f"Best fitness: ${best.fitness}%.3f",
       s"Pop size: ${ret.members.size} (${ret.speciesMembers.values.map(_.size).toSeq.sorted.reverse.mkString("+")})",
+      s"Total # genes: ${ret.members.map(_.size).sum}"
     ).mkString(" / "))
     ret
   }
 
-  def runGenerations(initial: Population, numGenerations: Int)(implicit random: Random): Population =
-    Iterable.iterate(initial, numGenerations)(runGeneration(_, initial.members.size)).last
+  def runGenerations(initial: Population, numGenerations: Int)(implicit random: Random): Population = {
+    val size = initial.members.size
+    var pop = initial
+    for (_ <- 1 to numGenerations) {
+      pop = runGeneration(pop, size)
+    }
+    pop
+  }
 
   def make()(implicit random: Random): RoomLayout = {
     val winner = runGenerations(newPopulation(10), 10).best
@@ -181,9 +188,15 @@ object NEATArchitect {
     layoutSeed: Int = 42
   ) {
     def asDot: String =
-      s"graph {\n${rooms.map(_.id.value.toString).mkString(";\n")};\n${connections.map(c => s"${c.a.value} -- ${c.b.value}").mkString(";\n")};\n}"
+      s"graph {\n${rooms.map(_.id.toString).mkString(";\n")};\n${connections.filter(_.enabled).map(c => s"${c.a} -- ${c.b}").mkString(";\n")};\n}"
 
-    lazy val layout: RoomLayout = NEATArchitect.layout(this)(new Random(layoutSeed))
+    def size = rooms.size + connections.size
+
+    lazy val layout: RoomLayout = {
+      val start = Instant.now
+      val l = NEATArchitect.layout(this)(new Random(layoutSeed))
+      l
+    }
 
     {
       val allIds = rooms.view.map(_.id) ++ connections.view.map(_.id)
@@ -209,16 +222,10 @@ object NEATArchitect {
       val totalSpace = layout.roomGrid.width * layout.roomGrid.height
       val totalSpaceWeight = RoomType.all.map(_.spaceWeight).sum
       val idealSpaceProportionPerRoomType = RoomType.byId.view.mapValues(_.spaceWeight / totalSpaceWeight)
-      val gridCellsPerRoomType: Map[RoomTypeId, Int] =
-        layout.roomGrid.indices.foldLeft(Map.empty[RoomTypeId, Int].withDefaultValue(0)) { (counts, idx) =>
-          layout.roomGrid(idx) match {
-            case Some(roomId) =>
-              val roomTypeId = rooms.find(_.id == roomId).get.roomType
-              counts + (roomTypeId -> (counts(roomTypeId) + 1))
-            case None =>
-              counts
-          }
-        }
+      val roomsById = rooms.view.map(r => r.id -> r).toMap
+      val gridCellsPerRoomType = mutable.Map.empty[RoomTypeId, Int].withDefaultValue(0)
+      for (idx <- layout.roomGrid.indices; roomId <- layout.roomGrid(idx))
+        gridCellsPerRoomType(roomsById(roomId).roomType) += 1
       val actualSpaceProportionPerRoomType: Map[RoomTypeId, Double] = gridCellsPerRoomType.view.mapValues(_.toDouble / totalSpace).to(Map)
       val distanceFromIdeal: Double = RoomType.byId.keys.map { k =>
         math.abs(actualSpaceProportionPerRoomType.getOrElse(k, 0d) - idealSpaceProportionPerRoomType(k))
@@ -427,13 +434,13 @@ object NEATArchitect {
     val roomIdToIdx: Map[HistoricalId, Int] = idxToRoomId.map { case (k, v) => v -> k }
     def neighbs(i: Int): IterableOnce[Int] = {
       val needle = g.rooms(i).id
-      g.connections.flatMap {
-        case c: ConnectionGene if c.enabled && c.a == needle => Some(roomIdToIdx(c.b))
-        case c: ConnectionGene if c.enabled && c.b == needle => Some(roomIdToIdx(c.a))
+      g.connections.filter(_.enabled).flatMap {
+        case c: ConnectionGene if c.a == needle => Some(roomIdToIdx(c.b))
+        case c: ConnectionGene if c.b == needle => Some(roomIdToIdx(c.a))
         case _ => None
       }
     }
-    val lengths: Map[(Int, Int), Double] = g.connections.view.map { c =>
+    val lengths: Map[(Int, Int), Double] = g.connections.filter(_.enabled).view.map { c =>
       val idxA = roomIdToIdx(c.a)
       val idxB = roomIdToIdx(c.b)
       assert(idxA < idxB)
@@ -514,6 +521,8 @@ object NEATArchitect {
     if (roomRects.isEmpty)
       return RoomLayout(roomCenters, roomRects.toMap, roomGrid)
 
+    val remainingGrowableRooms = mutable.Set.empty ++ roomRects.keySet
+
     // grow
     def allEmpty(x1: Int, y1: Int, x2: Int, y2: Int): Boolean = {
       for (x <- x1 until x2; y <- y1 until y2) { if (roomGrid(x, y).nonEmpty) return false }
@@ -535,7 +544,14 @@ object NEATArchitect {
     }
     def isGrowableAnyDir(rect: Rect): Boolean = (0 until 4).exists(isGrowable(rect, _))
     def findGrowableRoom(): Option[HistoricalId] = {
-      random.maybePick(roomRects.keys.view.filter { k => isGrowableAnyDir(roomRects(k)) })
+      while (remainingGrowableRooms.nonEmpty) {
+        val candidate = random.pick(remainingGrowableRooms)
+        if (isGrowableAnyDir(roomRects(candidate)))
+          return Some(candidate)
+        else
+          remainingGrowableRooms.remove(candidate)
+      }
+      None
     }
 
     def growRoomInDir(roomId: HistoricalId, dir: Int): Unit = {

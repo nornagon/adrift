@@ -52,7 +52,7 @@ class StressMajorization {
     */
   def initialize(
     numNodes: Int,
-    neighbors: Int => TraversableOnce[Int],
+    neighbors: Int => IterableOnce[Int],
     iterationLimit: Int,
     epsilon: Double,
     desiredEdgeLength: (Int, Int) => Double,
@@ -66,7 +66,7 @@ class StressMajorization {
     this.iterationLimit = iterationLimit
     this.epsilon = epsilon
     this.desiredEdgeLength = desiredEdgeLength
-    neighborCache = Array.tabulate(numNodes) { u => neighbors(u).toArray }
+    this.neighborCache = Array.tabulate(numNodes) { u => neighbors(u).iterator.toArray }
     this.positions = Array.tabulate(numNodes)(initialPosition)
     this.isFixedPosition = isFixedPosition
     this.distanceP = distance
@@ -75,9 +75,7 @@ class StressMajorization {
     val n = numNodes
     apsp = Array.fill(n, n)(0)
     for (source <- 0 until numNodes) {
-      val visited = dijkstra(source, apsp(source))
-      if (visited < numNodes)
-        assert(false, "Graph is disjoint")
+      dijkstra(source, apsp(source))
     }
     // init weight matrix
     w = Array.fill(n, n)(0d)
@@ -116,13 +114,12 @@ class StressMajorization {
   /**
     * Performs Dijkstra's all pairs shortest path algorithm.
     */
-  private def dijkstra(source: Int, dist: Array[Double]): Int = {
+  private def dijkstra(source: Int, dist: Array[Double]): Unit = {
     val nodes = new PriorityQueue[Int]((n1: Int, n2: Int) => java.lang.Double.compare(dist(n1), dist(n2)))
     val mark = new Array[Boolean](size)
     // init
     util.Arrays.fill(mark, false)
     dist(source) = 0
-    var visited = 1
     for (n <- 0 until size) {
       if (n != source) dist(n) = Integer.MAX_VALUE
       nodes.add(n)
@@ -130,13 +127,8 @@ class StressMajorization {
     // find shortest paths
     while (!nodes.isEmpty) {
       val u = nodes.poll
-      if (!mark(u)) visited += 1
       mark(u) = true
       for (v <- neighbors(u); if !mark(v)) {
-        // get e's desired length
-        //var el = .0
-        //if (e.hasProperty(StressOptions.DESIRED_EDGE_LENGTH)) el = e.getProperty(StressOptions.DESIRED_EDGE_LENGTH)
-        //else el = desiredEdgeLength
         val el = desiredEdgeLength(u, v)
         val d = dist(u) + el
         if (d < dist(v)) {
@@ -146,7 +138,26 @@ class StressMajorization {
         }
       }
     }
-    visited
+  }
+
+  private def isFullyConnected: Boolean = {
+    val dist = Array.fill(size)(Integer.MAX_VALUE)
+    val source = 0
+    val nodes = new PriorityQueue[Int]((n1: Int, n2: Int) => java.lang.Double.compare(dist(n1), dist(n2)))
+    val mark = new Array[Boolean](size)
+    util.Arrays.fill(mark, false)
+    dist(source) = 0
+    var visited = 0
+    nodes.add(source)
+    while (!nodes.isEmpty) {
+      val u = nodes.poll
+      if (!mark(u)) visited += 1
+      mark(u) = true
+      for (v <- neighbors(u); if !mark(v)) {
+        nodes.add(v)
+      }
+    }
+    visited == size
   }
 
   /**
@@ -163,7 +174,7 @@ class StressMajorization {
   }
   def position(u: Int): (Double, Double) = positions(u)
   private def setPosition(u: Int, pos: (Double, Double)): Unit = positions(u) = pos
-  private def neighbors(u: Int): TraversableOnce[Int] = neighborCache(u)
+  private def neighbors(u: Int): IterableOnce[Int] = neighborCache(u)
 
   /**
     * @return the stress value of the current node positioning.
