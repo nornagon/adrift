@@ -445,6 +445,13 @@ object NEATArchitect {
     Genome(roomGenes, connections.to(Seq), mutationRate)
   }
 
+  def timed[T](name: String)(f: => T): T = {
+    val begin = Instant.now
+    val r = f
+    println(f"$name took ${Duration.between(begin, Instant.now).toNanos / 1e6f}%.2f ms")
+    r
+  }
+
   def layout(
     g: Genome,
     iterationLimit: Int = 50,
@@ -461,7 +468,6 @@ object NEATArchitect {
       foreRooms.zip(forePositions).map { case (r, p) => r.id -> p }.toMap ++
         aftRooms.zip(aftPositions).map { case (r, p) => r.id -> p }
 
-    val sm = new StressMajorization()
     val idxToRoomId: Map[Int, HistoricalId] = g.rooms.view.zipWithIndex.map { case (r, i) => i -> r.id }.to(Map)
     val roomIdToIdx: Map[HistoricalId, Int] = idxToRoomId.map { case (k, v) => v -> k }
     def neighbs(i: Int): IterableOnce[Int] = {
@@ -478,25 +484,15 @@ object NEATArchitect {
       assert(idxA < idxB)
       (idxA, idxB) -> c.weight
     }.to(Map)
-
-    sm.initialize(
-      g.rooms.size,
+    val fdp = new ForceDirectedPlacement(
+      numNodes = g.rooms.size,
       neighbors = neighbs,
-      iterationLimit,
-      epsilon = 0.001,
       desiredEdgeLength = (u, v) => lengths(if (u < v) (u, v) else (v, u)),
       initialPosition = i => {
         val roomId = idxToRoomId(i)
         fixedPositionRooms.getOrElse(roomId, (random.between(0d, cylinderCircumference), random.between(0d, cylinderLength)))
       },
       isFixedPosition = u => fixedPositionRooms.contains(idxToRoomId(u)),
-      distance = (a, b) => {
-        val na = normalizePosition(a)
-        val nb = normalizePosition(b)
-        val dx = math.min(math.abs(na._1 - nb._1), cylinderCircumference - math.abs(na._1 - nb._1))
-        val dy = na._2 - nb._2
-        math.sqrt(dx * dx + dy * dy)
-      },
       diff = (p1, p2) => {
         val dx = {
           val x1 = p1._1
@@ -507,12 +503,12 @@ object NEATArchitect {
           math.min(dx, cylinderCircumference - dx) * math.signum(x1 - x2)
         }
         (dx, p1._2 - p2._2)
-      })
-    sm.execute()
+      },
+    )
+    timed("fdp") { fdp.run() }
     val roomCenters: Map[HistoricalId, (Double, Double)] = g.rooms.indices.view.map({ i =>
-      g.rooms(i).id -> normalizePosition(sm.position(i))
+      g.rooms(i).id -> normalizePosition(fdp.position(i))
     }).to(Map)
-
 
     // Room growth, inspired by A Constrained Growth Method for Procedural Floor Plan Generation
     // R. Lopes, T. Tutenel, R. M. Smelik,  K. J. de Kraker, R. Bidarra
