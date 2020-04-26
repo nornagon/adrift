@@ -75,6 +75,18 @@ class ForceDirectedPlacement(
       vy(v) -= dvy * bv
     }
 
+    // 1c. bounding
+    val bStr = 1
+    for (u <- 0 until numNodes) {
+      val uy = py(u)
+      if (uy < 0) {
+        vy(u) += -uy * bStr
+      } else if (uy > 270) {
+        vy(u) -= (uy - 270) * bStr
+      }
+    }
+
+
     // 2. update position based on v
 
     // p(t+dt) = p(t) + dt * v(t)
