@@ -207,11 +207,8 @@ object NEATArchitect {
 
     def size: Int = rooms.size + connections.size
 
-    lazy val layout: RoomLayout = {
-      val start = Instant.now
-      val l = NEATArchitect.layout(this)(new Random(layoutSeed))
-      l
-    }
+    lazy val layout: RoomLayout =
+      NEATArchitect.layout(this)(new Random(layoutSeed))
 
     {
       val allIds = rooms.view.map(_.id) ++ connections.view.map(_.id)
@@ -452,11 +449,7 @@ object NEATArchitect {
     r
   }
 
-  def layout(
-    g: Genome,
-    iterationLimit: Int = 50,
-    growthIterationLimit: Int = 20000
-  )(implicit random: Random): RoomLayout = {
+  def initializeFdp(g: Genome)(implicit random: Random): ForceDirectedPlacement = {
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
     val foreRooms = g.rooms.filter(_.roomType == foreRoomTypeId).sortBy(_.id.value)
@@ -484,7 +477,7 @@ object NEATArchitect {
       assert(idxA < idxB)
       (idxA, idxB) -> c.weight
     }.to(Map)
-    val fdp = new ForceDirectedPlacement(
+    new ForceDirectedPlacement(
       numNodes = g.rooms.size,
       neighbors = neighbs,
       desiredEdgeLength = (u, v) => lengths(if (u < v) (u, v) else (v, u)),
@@ -505,10 +498,21 @@ object NEATArchitect {
         (dx, p1._2 - p2._2)
       },
     )
-    timed("fdp") { fdp.run() }
-    val roomCenters: Map[HistoricalId, (Double, Double)] = g.rooms.indices.view.map({ i =>
+  }
+
+  def computeRoomCenters(g: Genome)(implicit random: Random): Map[HistoricalId, (Double, Double)] = {
+    val fdp = initializeFdp(g)
+    fdp.run()
+    g.rooms.indices.view.map({ i =>
       g.rooms(i).id -> normalizePosition(fdp.position(i))
     }).to(Map)
+  }
+
+  def layout(
+    g: Genome,
+    growthIterationLimit: Int = 20000
+  )(implicit random: Random): RoomLayout = {
+    val roomCenters = computeRoomCenters(g)
 
     // Room growth, inspired by A Constrained Growth Method for Procedural Floor Plan Generation
     // R. Lopes, T. Tutenel, R. M. Smelik,  K. J. de Kraker, R. Bidarra

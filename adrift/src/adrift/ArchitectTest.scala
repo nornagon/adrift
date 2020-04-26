@@ -4,7 +4,7 @@ import java.awt.event.{KeyEvent, KeyListener}
 import java.awt.{Dimension, Graphics}
 
 import adrift.worldgen.NEATArchitect.RoomTypeId
-import adrift.worldgen.{NEATArchitect, RoomType}
+import adrift.worldgen.{ForceDirectedPlacement, NEATArchitect, RoomType}
 import javax.swing.{JFrame, JPanel}
 
 import scala.util.Random
@@ -13,11 +13,12 @@ object ArchitectTest {
   def main(args: Array[String]): Unit = {
     var seed = 42
     implicit val random: Random = new Random(seed)
-    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(40), 200).best
+    val genome = NEATArchitect.runGenerations(NEATArchitect.newPopulation(40), 100).best
     println(genome.evaluations)
-    var n = 50
-    var growthIterationLimit = Int.MaxValue
-    var gLayout = genome.layout
+    val gLayout = genome.layout
+
+    val fdp: ForceDirectedPlacement = NEATArchitect.initializeFdp(genome)(new Random(genome.layoutSeed))
+    val alphaSequence = fdp.alphaSequence()
 
     import java.awt.Color
 
@@ -62,9 +63,12 @@ object ArchitectTest {
           }
         }
 
+        // draw the graph
+        val centers = genome.rooms.map(_.id).zipWithIndex.toMap.view.mapValues(fdp.position)
+        //val centers: Map[NEATArchitect.HistoricalId, (Double, Double)] = gLayout.roomCenters
         for (conn <- genome.connections) {
-          val aPos = gLayout.roomCenters(conn.a)
-          val bPos = gLayout.roomCenters(conn.b)
+          val aPos = centers(conn.a)
+          val bPos = centers(conn.b)
 
           val (x1, y1) = round(aPos)
           val (x2, y2) = round(bPos)
@@ -78,7 +82,7 @@ object ArchitectTest {
           }
         }
 
-        for ((rId, p) <- gLayout.roomCenters) {
+        for ((rId, p) <- centers) {
           val (x, y) = round(p)
           g.setColor(new Color(0, 0, 0, 64))
           g.drawRect(x - 2, y - 2, 4, 4)
@@ -114,32 +118,10 @@ object ArchitectTest {
 
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyChar == ' ') {
-          n += 10
-          growthIterationLimit = Int.MaxValue
-          println(n)
-          val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(seed))
-          println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
-          frame.repaint()
-        }
-        if (e.getKeyChar == 'i') {
-          if (growthIterationLimit == Int.MaxValue)
-            growthIterationLimit = 0
-          else
-            growthIterationLimit += 1000
-          println(growthIterationLimit)
-          val begin = System.nanoTime()
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(seed))
-          println(f"Took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
-          frame.repaint()
-        }
-        if (e.getKeyChar == 'r') {
-          seed = Random.nextInt()
-          println(seed)
-          growthIterationLimit = Int.MaxValue
-          n = 1
-          gLayout = NEATArchitect.layout(genome, n, growthIterationLimit)(new Random(seed))
-          frame.repaint()
+          if (alphaSequence.hasNext) {
+            fdp.step(alphaSequence.next)
+            frame.repaint()
+          }
         }
       }
 
