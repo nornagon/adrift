@@ -80,10 +80,12 @@ object NEATArchitect {
     val start = Instant.now()
     val ret = pop.mate(targetPopSize)
     val best = ret.best // trigger eval inside the timer
+    val worst = ret.worst // trigger eval inside the timer
     val duration = Duration.between(start, Instant.now())
     println(Seq(
       f"#${ret.generationNumber}%-2d (${duration.toMillis}%-4d ms)",
       f"Best fitness: ${best.fitness}%.3f",
+      f"Worst fitness: ${worst.fitness}%.3f",
       s"Pop size: ${ret.members.size} (${ret.speciesMembers.values.map(_.size).toSeq.sorted.reverse.mkString("+")})",
       s"Total # genes: ${ret.members.map(_.size).sum}"
     ).mkString(" / "))
@@ -125,6 +127,7 @@ object NEATArchitect {
       "No two species should have the same representative")
 
     def best: Genome = members.par.maxBy(_.fitness)
+    def worst: Genome = members.par.minBy(_.fitness)
 
     def findSpeciesOf(genome: NEATArchitect.Genome): Species =
       species.minByOption(_.representative.delta(genome)).filter(_.representative.delta(genome) < speciationDelta)
@@ -258,7 +261,6 @@ object NEATArchitect {
       assert(averageSquareness >= 0 && averageSquareness <= 1, s"Average squareness should be in [0,1] but was ${averageSquareness}")
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
 
-      val affinityFactor = 1d
       val affinityEval: Double = {
         type Affinity = ((RoomTypeId, RoomTypeId), Double)
         rooms.map( roomGene => {
@@ -271,7 +273,7 @@ object NEATArchitect {
                 distance(location, layout.roomCenters(r.id))
               })
               if (distances.isEmpty) {0d} else {
-                Math.max(a._2 / distances.min, a._2)
+                a._2 / distances.min
               }
             }).sum
           } else {0}
@@ -280,10 +282,10 @@ object NEATArchitect {
 //      println("affinity: ", affinityEval)
 
       Map(
-      "room counts" -> 1d * math.max(0, rtEval),
+      "room counts" -> .2d * math.max(0, rtEval),
       "space weight" -> 2d * math.max(0, spaceWeightFactor),
       "squareness" -> 1.5d * averageSquareness,
-      "affinity" -> 1.0d * affinityEval,
+      "affinity" -> 10d * affinityEval,
       )
     }
 
@@ -351,8 +353,8 @@ object NEATArchitect {
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateEnableConnection()(r), 1f),
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateDisableConnection()(r), 1f),
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddConnection(newId())(r), 1f),
-      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateConnectionWeight()(r), 1f),
-      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateMutationRate()(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateConnectionWeight()(r), 3f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateMutationRate()(r), .1f),
     )
 
     def mutate(newId: => HistoricalId)(implicit random: Random): Genome = {
@@ -413,7 +415,7 @@ object NEATArchitect {
     }
   }
 
-  def newGenome(newId: => HistoricalId, numForeAft: Int = 3): Genome = {
+  def newGenome(newId: => HistoricalId, numForeAft: Int = 3)(implicit random: Random): Genome = {
     val foreRoomTypeId = RoomType.byName("fore")
     val aftRoomTypeId = RoomType.byName("aft")
     val roomGenes: Seq[RoomGene] =
@@ -439,7 +441,37 @@ object NEATArchitect {
       connections += ConnectionGene(newId, HistoricalId(i), HistoricalId(i + numForeAft), cylinderLength, enabled = true)
     }
     val mutationRate = 3
-    Genome(roomGenes, connections.to(Seq), mutationRate)
+    var genome = Genome(roomGenes, connections.to(Seq), mutationRate)
+
+    // add the appropriate amount of each other room at a random location
+    def randomAddRoom(nextId: => HistoricalId, newRoomTypeId: RoomTypeId, genome:Genome)(implicit random: Random): Genome = {
+      // split a random connection
+      val connection = random.pick(genome.connections)
+      val newRoomGene = RoomGene(id = nextId, newRoomTypeId)
+      val newConnectionGenes = Seq(
+        ConnectionGene(
+          id = nextId,
+          a = connection.a,
+          b = newRoomGene.id,
+          weight = connection.weight / 2,
+          enabled = true
+        ),
+        ConnectionGene(
+          id = nextId,
+          a = connection.b,
+          b = newRoomGene.id,
+          weight = connection.weight / 2,
+          enabled = true
+        ),
+      )
+      genome.copy(rooms = genome.rooms :+ newRoomGene, connections = genome.connections.filterNot(_ eq connection) ++ newConnectionGenes)
+    }
+    RoomType.byId.keys.foreach(rtid => {
+      for(_ <- 0 until RoomType.byId(rtid).minQuantity) {
+        genome = randomAddRoom(newId, rtid, genome)
+      }
+    })
+    genome
   }
 
   def timed[T](name: String)(f: => T): T = {
@@ -690,13 +722,13 @@ object RoomType {
 
     RoomType("recycling", spaceWeight = 50, minQuantity = 1, maxQuantity = 5),
 
-    RoomType("fabrication", spaceWeight = 50, minQuantity = 5, maxQuantity = 10),
+    RoomType("fabrication", spaceWeight = 50, minQuantity = 3, maxQuantity = 10),
 
-    RoomType("crew quarters", spaceWeight = 200, minQuantity = 20, maxQuantity = 500),
+    RoomType("crew quarters", spaceWeight = 150, minQuantity = 5, maxQuantity = 500),
     RoomType("promenade", spaceWeight = 100,minQuantity = 1,maxQuantity = 1),
     RoomType("dining", spaceWeight = 50,minQuantity = 4,maxQuantity = 10),
-    RoomType("holo suite", spaceWeight = 10,minQuantity = 5,maxQuantity = 10),
-    RoomType("lounge", spaceWeight = 10,minQuantity = 10,maxQuantity = 20),
+    RoomType("holo suite", spaceWeight = 10,minQuantity = 2,maxQuantity = 10),
+    RoomType("lounge", spaceWeight = 10,minQuantity = 2,maxQuantity = 20),
 
     RoomType("fore", spaceWeight = 100, minQuantity = 1, maxQuantity = 5, special = true),
     RoomType("aft", spaceWeight = 100, minQuantity = 1, maxQuantity = 5, special = true),
@@ -709,15 +741,17 @@ object RoomType {
   val byName: Map[String, RoomTypeId] = byId.map { case (k, v) => v.name -> k }
 
   val affinityEntries: Map[(String,String), Double] = Map(
-    ("command", "fore") -> 10d,
     ("command", "crew quarters") -> 3d,
-    ("engine room", "aft") -> 10d,
+    ("command", "fore") -> 10d,
+//    ("command", "aft") -> -5d,
     ("engine room", "fabrication") -> 3d,
-    ("crew quarters", "fore") -> 10d,
-    ("crew quarters", "promenade") -> 4d,
-    ("crew quarters", "dining") -> 5d,
-    ("crew quarters", "holo suite") -> 5d,
-    ("crew quarters", "lounge") -> 5d,
+//    ("engine room", "fore") -> -5d,
+    ("engine room", "aft") -> 10d,
+    ("crew quarters", "fore") -> 1d,
+    ("crew quarters", "promenade") -> 1d,
+    ("crew quarters", "dining") -> 1d,
+    ("crew quarters", "holo suite") -> 1d,
+    ("crew quarters", "lounge") -> 1d,
   )
 
   val affinities: Map[(RoomTypeId,RoomTypeId), Double] = {
