@@ -219,10 +219,9 @@ object NEATArchitect {
     }
 
     lazy val evaluations: Map[String, Double] = {
-      // This evaluate might create a room layout and perform evaluations on that layout.
-      // Several evaluation metrics are important.
-      // We should check and penalize if a genome doesn't have correct room quantities.
-      val rtEval = RoomType.all.filterNot(_.special).map(rt => {
+      val rtEval = RoomType.nonSpecial.map(rt => {
+        // for each room type, compute a value 0-1 based on how good at being within the right range we are
+        // then average
         val relevantRooms = rooms.count(r => RoomType.byId(r.roomType) == rt).toDouble
         if (relevantRooms > rt.maxQuantity) {
           rt.maxQuantity.toDouble/relevantRooms
@@ -231,22 +230,26 @@ object NEATArchitect {
         } else {
           1
         }
-      }).sum
+      }).sum / RoomType.nonSpecial.size
+      assert(0 <= rtEval)
+      assert(rtEval <= 1)
 
       val totalSpace = layout.roomGrid.width * layout.roomGrid.height
-      val totalSpaceWeight = RoomType.all.map(_.spaceWeight).sum
-      val idealSpaceProportionPerRoomType = RoomType.byId.view.mapValues(_.spaceWeight / totalSpaceWeight)
+      val totalSpaceWeight = RoomType.nonSpecial.map(_.spaceWeight).sum
+      val idealSpaceProportionPerRoomType = RoomType.nonSpecialById.view.mapValues(_.spaceWeight / totalSpaceWeight)
       val roomsById = rooms.view.map(r => r.id -> r).toMap
       val gridCellsPerRoomType = mutable.Map.empty[RoomTypeId, Int].withDefaultValue(0)
       for (idx <- layout.roomGrid.indices; roomId <- layout.roomGrid(idx))
         gridCellsPerRoomType(roomsById(roomId).roomType) += 1
       val actualSpaceProportionPerRoomType: Map[RoomTypeId, Double] = gridCellsPerRoomType.view.mapValues(_.toDouble / totalSpace).to(Map)
-      val distanceFromIdeal: Double = RoomType.byId.keys.map { k =>
-        math.abs(actualSpaceProportionPerRoomType.getOrElse(k, 0d) - idealSpaceProportionPerRoomType(k))
-      }.sum
+      val distanceFromIdeal: Double = RoomType.nonSpecialById.keys.map { k =>
+        val actualSpaceProportion = actualSpaceProportionPerRoomType.getOrElse(k, 0d)
+        val idealSpaceProportion = idealSpaceProportionPerRoomType(k)
+        math.min(actualSpaceProportion, idealSpaceProportion) / math.max(actualSpaceProportion, idealSpaceProportion)
+      }.sum / RoomType.nonSpecial.size
 
-      // TODO: Why 2?
-      val spaceWeightFactor = (2 - distanceFromIdeal)
+      val spaceWeightFactor = distanceFromIdeal
+      assert(spaceWeightFactor >= 0 && spaceWeightFactor <= 1)
 
       // aspect ratio. each room can earn up to 1 point for being square.
       assert(layout.roomRects.values.forall(r => r.width > 0 && r.height > 0), "room rects should be non-empty")
@@ -261,35 +264,40 @@ object NEATArchitect {
       assert(averageSquareness >= 0 && averageSquareness <= 1, s"Average squareness should be in [0,1] but was ${averageSquareness}")
       // we should check room affinities, probably - reward rooms for being close to / having tight edge weights to rooms they 'want' to be near (as we determine it)
 
+      val maxDistance = math.sqrt(cylinderLength * cylinderLength + cylinderCircumference.toDouble / 2 * cylinderCircumference.toDouble / 2)
       val affinityEval: Double = {
         type Affinity = ((RoomTypeId, RoomTypeId), Double)
         rooms.map( roomGene => {
           val location = layout.roomCenters(roomGene.id)
           val roomTypeId = roomGene.roomType
           if (RoomType.totalAffinity(roomTypeId) > 0) {
-            RoomType.affinities.filter(aff => aff._1._1 == roomTypeId).map((a:Affinity) => {
+            val relevantAffinities = RoomType.affinities.filter(aff => aff._1._1 == roomTypeId)
+            relevantAffinities.map((a:Affinity) => {
               val relevantRooms: Seq[RoomGene] = rooms.filter(_.roomType == a._1._2)
               val distances = relevantRooms.map(r => {
                 distance(location, layout.roomCenters(r.id))
               })
               if (distances.isEmpty) {0d} else {
-                a._2 / distances.min
+                val distanceToClosestRoomInSpaceshipWidths = distances.min / maxDistance
+                math.sqrt(1 - distanceToClosestRoomInSpaceshipWidths)
               }
-            }).sum
+            }).sum / relevantAffinities.size
           } else {0}
         }).sum / rooms.length
       }
+
+      assert(affinityEval >= 0 && affinityEval <= 1, s"affinity eval out of range: $affinityEval")
 //      println("affinity: ", affinityEval)
 
       Map(
-      "room counts" -> .2d * math.max(0, rtEval),
-      "space weight" -> 2d * math.max(0, spaceWeightFactor),
-      "squareness" -> 1.5d * averageSquareness,
-      "affinity" -> 10d * affinityEval,
+      "room counts" -> 1d * math.max(0, rtEval),
+      "space weight" -> 1d * math.max(0, spaceWeightFactor),
+      "squareness" -> 1d * averageSquareness,
+      "affinity" -> 1d * affinityEval,
       )
     }
 
-    def fitness: Double = evaluations.values.sum
+    def fitness: Double = evaluations.values.sum / evaluations.values.size
     val roomIdMap: Map[HistoricalId, RoomGene] = rooms.map(r => r.id).zip(rooms).toMap
     val connectionIdMap: Map[HistoricalId, ConnectionGene] = connections.map(c => c.id).zip(connections).toMap
 
@@ -318,7 +326,7 @@ object NEATArchitect {
     def mutateEnableConnection()(implicit random: Random): Genome = mutateRandomConnection(_.copy(enabled = true))
     def mutateConnectionWeight()(implicit random: Random): Genome = mutateRandomConnection { c =>
       // in cannonical NEAT this has some chance to become a new random value, and some other chance to bump up / down slightly
-      c.copy(weight = math.max(1, if (random.oneIn(10)) 100 + random.nextGaussian() * 100 else c.weight * (1 + random.nextGaussian() * 0.1)))
+      c.copy(weight = math.max(1, if (random.oneIn(10)) 100 + random.nextGaussian() * 50 else c.weight * (1 + random.nextGaussian() * 0.1)))
     }
 
     def mutateAddRoom(nextId: => HistoricalId)(implicit random: Random): Genome = {
@@ -350,9 +358,9 @@ object NEATArchitect {
 
     val mutationFunctions = Seq(
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddRoom(newId())(r), 1f),
-      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateEnableConnection()(r), 1f),
-      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateDisableConnection()(r), 1f),
-      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddConnection(newId())(r), 1f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateEnableConnection()(r), 2f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateDisableConnection()(r), 2f),
+      ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateAddConnection(newId())(r), 3f),
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateConnectionWeight()(r), 3f),
       ((g: Genome, r: Random, newId: () => HistoricalId) => g.mutateMutationRate()(r), .1f),
     )
@@ -730,28 +738,32 @@ object RoomType {
     RoomType("holo suite", spaceWeight = 10,minQuantity = 2,maxQuantity = 10),
     RoomType("lounge", spaceWeight = 10,minQuantity = 2,maxQuantity = 20),
 
-    RoomType("fore", spaceWeight = 100, minQuantity = 1, maxQuantity = 5, special = true),
-    RoomType("aft", spaceWeight = 100, minQuantity = 1, maxQuantity = 5, special = true),
+    RoomType("fore", spaceWeight = 0, minQuantity = 1, maxQuantity = 5, special = true),
+    RoomType("aft", spaceWeight = 0, minQuantity = 1, maxQuantity = 5, special = true),
   )
+
+  val nonSpecial: Seq[RoomType] = all.filterNot(_.special)
 
   val byId: Map[RoomTypeId, RoomType] = all.zipWithIndex.map {
     case (rt, id) => RoomTypeId(id) -> rt
   }.to(Map)
 
+  val nonSpecialById: Map[RoomTypeId, RoomType] = byId.filterNot(_._2.special)
+
   val byName: Map[String, RoomTypeId] = byId.map { case (k, v) => v.name -> k }
 
   val affinityEntries: Map[(String,String), Double] = Map(
-    ("command", "crew quarters") -> 3d,
+    //("command", "crew quarters") -> 3d,
     ("command", "fore") -> 10d,
 //    ("command", "aft") -> -5d,
-    ("engine room", "fabrication") -> 3d,
+    //("engine room", "fabrication") -> 3d,
 //    ("engine room", "fore") -> -5d,
     ("engine room", "aft") -> 10d,
-    ("crew quarters", "fore") -> 1d,
-    ("crew quarters", "promenade") -> 1d,
-    ("crew quarters", "dining") -> 1d,
-    ("crew quarters", "holo suite") -> 1d,
-    ("crew quarters", "lounge") -> 1d,
+    //("crew quarters", "fore") -> 1d,
+    //("crew quarters", "promenade") -> 1d,
+    //("crew quarters", "dining") -> 1d,
+    //("crew quarters", "holo suite") -> 1d,
+    //("crew quarters", "lounge") -> 1d,
   )
 
   val affinities: Map[(RoomTypeId,RoomTypeId), Double] = {
