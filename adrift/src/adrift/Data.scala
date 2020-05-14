@@ -128,7 +128,7 @@ object Data {
   implicit private val configuration: Configuration = Configuration.default.withDefaults
   private val matcher = FileSystems.getDefault.getPathMatcher("glob:**.{yml,yaml}")
 
-  implicit val itemKindDecoder: Decoder[YamlObject.ItemKind] = deriveDecoder[YamlObject.ItemKind].prepare {
+  implicit val itemKindDecoder: Decoder[YamlObject.ItemKind] = deriveConfiguredDecoder[YamlObject.ItemKind].prepare {
     _.withFocus(j => j.mapObject(o => { if (!o.contains("parts")) o.add("parts", Json.arr()) else o }))
   }
 
@@ -140,10 +140,15 @@ object Data {
           ex => throw new RuntimeException(s"Failed to parse $f", ex),
           identity
         )
-        java.util.Arrays.stream(xs.asArray.get.toArray)
+        xs.asArray match {
+          case Some(arr) =>
+            java.util.Arrays.stream(arr.toArray)
+          case None =>
+            throw new RuntimeException(s"Expected $f to contain an array")
+        }
       }
       .collect(Collectors.toList[Json]).asScala.toSeq
-      .groupBy(obj => obj.hcursor.get[String]("type").right.getOrElse { throw new RuntimeException(s"Failed to parse (missing 'type' key): $obj") })
+      .groupBy(obj => obj.hcursor.get[String]("type").getOrElse { throw new RuntimeException(s"Failed to parse (missing 'type' key): $obj") })
 
     val operations: Map[String, ItemOperation] = ymls("operation")
       .map(obj => obj.as[ItemOperation]
