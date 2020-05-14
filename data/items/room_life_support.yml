@@ -38,3 +38,7 @@
   description: laser-catylized reactions break sewage waste down into constituent materials and store it in tanks for reuse
   display: LARGE_EQUIPMENT
 
+- type: item
+  name: nutrient paste dispenser
+  description: converts a variety of biomass into barely palletable sludge that will fill your stomach and is unlikely to do you harm.
+  display: LARGE_EQUIPMENT

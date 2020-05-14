@@ -1,0 +1,12 @@
+
+- type: roomgen
+  name: medical
+  algorithm: Furnish
+  options:
+    items:
+      each:
+        - repeat:
+            type: {each: [ medical cabinet, {group: medical tool}, {group: medical supplies}]}
+            wall_adjacent: true
+          count: 3-6
+        - type: gurney

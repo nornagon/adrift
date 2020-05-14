@@ -48,3 +48,75 @@
    - {type: D-size modular panel, count: 1, disassembled_with: SCREWING}
    - {type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: LARGE_EQUIPMENT
+
+
+- type: item
+  name: stasis heart
+  description: A heart in a stasis container. Might still be good?
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: stasis lung
+  description: A lung in a stasis container. If you get pneumonia this might come in handy?
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: stasis liver
+  description: A liver in a stasis container. Now you can drink till your liver dies and just replace it.
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: stasis kidney
+  description: A kidney in a stasis container. It could be full of kidney stones, though.  These stasis organs are risky.
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: gauze
+  description: sterile gauze in a disposable package
+  display: SMALL_COMPONENT
+
+- type: item
+  name: splint
+  description: a flexible splint to conform to the area needed, then rigidify it by triggering the catalyst.
+  display: MEDIUM_COMPONENT
+
+- type: item
+  name: pain killers
+  description: a bottle of pills that will numb you to the pain of the world.
+  display: SMALL_COMPONENT
+
+- type: item
+  name: medications
+  description: a placeholder item that will get replaced with a variety of medications at some future date (ping the devs!)
+  display: SMALL_COMPONENT
+
+- type: item
+  name: sterilization swab
+  description: a gauze pad saturated in a substance anaethma to microscopic life.
+  display: SMALL_COMPONENT
+
+- type: item group
+  name: medical tool
+  choose:
+    - scalpel
+    - scissors
+    - dermal regenerator
+    - hypospray
+
+- type: item group
+  name: medical supplies
+  choose:
+    - preserved organ
+    - gauze
+    - splint
+    - medications
+    - pain killers
+    - sterilization swab
+
+- type: item group
+  name: preserved organ
+  choose:
+    - stasis heart
+    - stasis lung
+    - stasis kidney
+    - stasis liver

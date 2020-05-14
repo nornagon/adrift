@@ -71,3 +71,38 @@
   name: medium wheel
   description: A standard passive caster-style equipment wheel. Like on a shopping cart.
   display: LARGE_COMPONENT
+
+- type: item
+  name: dust bunny
+  description: a clump of hair, dirt and who knows what else - given time, it might start hopping of its own accord.
+  display: RAW_BLOCK
+
+- type: item
+  name: empty bottle
+  description: It was once full but now empty - like your visions for the future.
+  display: RAW_BLOCK
+
+- type: item
+  name: empty can
+  description: Maybe there were beans in here? or tuna? Some form of sustenance.  No more.
+  display: RAW_BLOCK
+
+- type: item
+  name: crumpled paper
+  description: Somebody thought this was important enough to kill a tree for.  Now it's garbage.
+  display: RAW_BLOCK
+
+- type: item
+  name: plastic scraps
+  description: degraded bits of plastic - maybe it was once a bottle? or a comb?
+  display: RAW_BLOCK
+
+
+- type: item_group
+  name: trash
+  choose:
+    - dust bunny
+    - empty bottle
+    - empty can
+    - crumpled paper
+    - plastic scraps
