@@ -15,8 +15,8 @@ object BSPArchitect {
   val cylinderLength = 270
 
   case class Rect(l: Int, t: Int, r: Int, b: Int) {
-    require(r > l)
-    require(b > t)
+    require(r > l, s"Rect must have r > l, but was $this")
+    require(b > t, s"Rect must have b > t, but was $this")
 
     def area: Int = (r - l) * (b - t)
     def width: Int = r - l
@@ -75,7 +75,8 @@ object BSPArchitect {
 
   def generate()(implicit random: Random): Layout = {
     val bounds = Rect(0, 0, cylinderCircumference, cylinderLength)
-    val initialCuts = Seq(-1, cylinderCircumference / 3, cylinderCircumference * 2 / 3)
+    val numVerticalCorridors = random.between(1, 4)
+    val initialCuts = Seq(-1) ++ Seq.tabulate(numVerticalCorridors)(i => cylinderCircumference * i / numVerticalCorridors).tail
     val initialRooms = splitHorizontal(bounds, (initialCuts :+ cylinderCircumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
     val rooms = initialRooms.flatMap(r => subdivideRecursive(r, 3)).iterator.to(Seq)
     Layout(bounds, rooms)
