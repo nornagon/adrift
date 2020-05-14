@@ -334,8 +334,34 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val schematic = generateSchematic()
     val initialState = generateDetails(schematic)
     damage(initialState)
-    initialState.refresh()
     initialState
+  }
+
+  def generateWorldBSP: GameState = {
+    val layout = BSPArchitect.generate()
+    val state = new GameState(data, new Random(random.nextLong()))
+    val (width, height) = (layout.bounds.width + 1, layout.bounds.height + 1)
+
+    val levelId = LevelId("main")
+    val level = Level(
+      terrain = new CylinderGrid(width, height)(data.terrain("floor")),
+      temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
+      gasComposition = new CylinderGrid(width, height)(GasComposition(4, 9, 1))
+    )
+    state.levels(levelId) = level
+
+    for (room <- layout.rooms) {
+      for (y <- room.t to room.b) {
+        level.terrain(room.l, y) = data.terrain("wall")
+        level.terrain(room.r, y) = data.terrain("wall")
+      }
+      for (x <- room.l to room.r) {
+        level.terrain(x, room.t) = data.terrain("wall")
+        level.terrain(x, room.b) = data.terrain("wall")
+      }
+    }
+
+    state
   }
 
   def generateWorldGA: GameState = {
@@ -374,8 +400,6 @@ case class WorldGen(data: Data)(implicit random: Random) {
         }
       }
     }
-
-    state.refresh()
 
     state
   }

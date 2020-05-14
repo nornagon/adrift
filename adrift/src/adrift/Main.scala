@@ -51,6 +51,7 @@ object Main {
 
     //javax(); return
     val useGA = args.contains("--ga")
+    val useBSP = args.contains("--bsp")
     val load = args.contains("--load")
 
     val dataPath = Paths.get("data")
@@ -69,7 +70,8 @@ object Main {
       } else {
         implicit val random: Random = new Random(12367)
         val gen = WorldGen(data)
-        val state = if (useGA) gen.generateWorldGA else gen.generateWorld
+        val state = if (useGA) gen.generateWorldGA else if (useBSP) gen.generateWorldBSP else gen.generateWorld
+        state.refresh()
         //val start = System.nanoTime()
         //Bson.encode(Serialization.save(state), Files.newOutputStream(savePath))
         //println(f"Save took ${(System.nanoTime() - start) / 1e6}%.1f ms")

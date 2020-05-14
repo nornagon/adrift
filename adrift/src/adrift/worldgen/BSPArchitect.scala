@@ -31,19 +31,19 @@ object BSPArchitect {
   def subdivideHorizontal(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] = {
     require(0 <= t && t <= 1, "t must be in [0,1]")
     require(corridorWidth >= 0, "corridor width must be non-negative")
-    val corridorSpace = if (corridorWidth == 0) 0 else 1 + corridorWidth + 1 // with walls
+    val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
     require(r.width >= 1 + corridorSpace + 1, "room too small to subdivide")
     val cut = 1 + ((r.width - (1 + corridorSpace + 1)) * t).round.toInt
-    splitHorizontal(r, Seq((0, cut), (cut + corridorSpace, r.width)))
+    splitHorizontal(r, Seq((0, cut), (cut + corridorSpace - 1, r.width)))
   }
 
   def subdivideVertical(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] = {
     require(0 <= t && t <= 1, "t must be in [0,1]")
     require(corridorWidth >= 0, "corridor width must be non-negative")
-    val corridorSpace = if (corridorWidth == 0) 0 else 1 + corridorWidth + 1 // with walls
+    val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
     require(r.height >= 1 + corridorSpace + 1, "room too small to subdivide")
     val cut = 1 + ((r.height - (1 + corridorSpace + 1)) * t).round.toInt
-    splitVertical(r, Seq((0, cut), (cut + corridorSpace, r.height)))
+    splitVertical(r, Seq((0, cut), (cut + corridorSpace - 1, r.height)))
   }
 
   def clamp01(d: Double) = math.max(0, math.min(1, d))
@@ -73,7 +73,18 @@ object BSPArchitect {
     }
   }
 
-  def test() = subdivideRecursive(Rect(0, 0, 100, 100), 3)(new Random(42))
+  def test() = subdivideRecursive(Rect(0, 0, cylinderCircumference, cylinderLength), 3)(new Random(42))
+
+  case class Layout(
+    bounds: Rect,
+    rooms: Seq[Rect]
+  )
+
+  def generate()(implicit random: Random): Layout = {
+    val bounds = Rect(0, 0, cylinderCircumference, cylinderLength)
+    val rooms = subdivideRecursive(bounds, 3).iterator.to(Seq)
+    Layout(bounds, rooms)
+  }
 
   def main(args: Array[String]): Unit = {
     val frame = new JFrame("Adrift")
@@ -119,9 +130,5 @@ object BSPArchitect {
 
       override def keyReleased(e: KeyEvent): Unit = {}
     })
-  }
-
-  def generate(): GameState = {
-    ???
   }
 }
