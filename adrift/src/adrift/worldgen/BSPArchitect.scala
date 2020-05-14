@@ -68,8 +68,6 @@ object BSPArchitect {
     }
   }
 
-  def test() = subdivideRecursive(Rect(0, 0, cylinderCircumference, cylinderLength), 3)(new Random(42))
-
   case class Layout(
     bounds: Rect,
     rooms: Seq[Rect]
@@ -77,7 +75,9 @@ object BSPArchitect {
 
   def generate()(implicit random: Random): Layout = {
     val bounds = Rect(0, 0, cylinderCircumference, cylinderLength)
-    val rooms = subdivideRecursive(bounds, 3).iterator.to(Seq)
+    val initialCuts = Seq(-1, cylinderCircumference / 3, cylinderCircumference * 2 / 3)
+    val initialRooms = splitHorizontal(bounds, (initialCuts :+ cylinderCircumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
+    val rooms = initialRooms.flatMap(r => subdivideRecursive(r, 3)).iterator.to(Seq)
     Layout(bounds, rooms)
   }
 
@@ -85,7 +85,7 @@ object BSPArchitect {
     val frame = new JFrame("Adrift")
     frame.setDefaultCloseOperation(3)
 
-    val rects = test().iterator.to(Seq)
+    val rects = generate()(new Random(42)).rooms
 
     val colors = Seq(
       Color.BLUE,
