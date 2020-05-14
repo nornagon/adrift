@@ -381,7 +381,7 @@ class GameState(var data: Data, val random: Random) {
         case Some(itemKind) =>
           itemKind.generateItem()
         case None =>
-          throw new RuntimeException(s"No item with name \"$itemKindName\"")
+          throw new RuntimeException(s"""No item with name "$itemKindName"""")
       }
     }
   }
