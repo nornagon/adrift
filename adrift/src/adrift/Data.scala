@@ -47,7 +47,7 @@ object YamlObject {
     items: Seq[JsonObject] = Seq.empty,
     connections: Map[String, String] = Map.empty,
   ) {
-    for (line <- layout.lines.asInstanceOf[java.util.stream.Stream[String]].iterator().asScala; char <- line; if !char.isSpaceChar)
+    for (line <- layout.linesIterator; char <- line; if !char.isSpaceChar)
       assert(defs.contains(char.toString), s"'$char' not present in defs of room '$name'")
   }
 
