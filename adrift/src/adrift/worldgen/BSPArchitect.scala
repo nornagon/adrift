@@ -21,12 +21,12 @@ object BSPArchitect {
     def area: Int = (r - l) * (b - t)
     def width: Int = r - l
     def height: Int = b - t
+
+    def flip: Rect = Rect(t, l, b, r)
   }
 
   def splitHorizontal(rect: Rect, spans: IterableOnce[(Int, Int)]): Iterator[Rect] =
     for ((l, r) <- spans) yield Rect(rect.l + l, rect.t, rect.l + r, rect.b)
-  def splitVertical(rect: Rect, spans: IterableOnce[(Int, Int)]): Iterator[Rect] =
-    for ((t, b) <- spans) yield Rect(rect.l, rect.t + t, rect.r, rect.t + b)
 
   def subdivideHorizontal(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] = {
     require(0 <= t && t <= 1, "t must be in [0,1]")
@@ -37,14 +37,8 @@ object BSPArchitect {
     splitHorizontal(r, Seq((0, cut), (cut + corridorSpace - 1, r.width)))
   }
 
-  def subdivideVertical(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] = {
-    require(0 <= t && t <= 1, "t must be in [0,1]")
-    require(corridorWidth >= 0, "corridor width must be non-negative")
-    val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
-    require(r.height >= 1 + corridorSpace + 1, "room too small to subdivide")
-    val cut = 1 + ((r.height - (1 + corridorSpace + 1)) * t).round.toInt
-    splitVertical(r, Seq((0, cut), (cut + corridorSpace - 1, r.height)))
-  }
+  def subdivideVertical(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] =
+    subdivideHorizontal(r.flip, corridorWidth, t).map(_.flip)
 
   def clamp01(d: Double) = math.max(0, math.min(1, d))
   def subdivideRecursive(r: Rect, corridorWidth: Int)(implicit random: Random): IterableOnce[Rect] = {
@@ -53,6 +47,7 @@ object BSPArchitect {
     def splitValue: Double = clamp01(random.nextGaussian() * 0.2 + 0.5)
     val corridorsRequired = r.area > 1000
     val minCorridorWidth = if (corridorsRequired) 1 else 0
+
     if (divideHorizontal) {
       // Horizontal
       if (r.width < (1 + 1 + corridorWidth + 1 + 1) || r.area < 100) {
@@ -110,7 +105,7 @@ object BSPArchitect {
       override def paint(g: Graphics): Unit = {
         g.setColor(Color.BLACK)
         for (r <- rects) {
-          g.drawRect(r.l * 8, r.t * 8, r.width * 8, r.height * 8)
+          g.drawRect(r.l * 4, r.t * 4, r.width * 4, r.height * 4)
         }
       }
     }

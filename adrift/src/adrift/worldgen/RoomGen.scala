@@ -11,7 +11,12 @@ trait RoomGen {
   def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit
 }
 
-case class FurnishItem(`type`: Table[String], wall_adjacent: Boolean = false, nearby: Option[Table[String]])
+case class FurnishItem(
+  `type`: Table[String],
+  wall_adjacent: Boolean = false,
+  nearby: Option[Table[String]]
+)
+
 case class Furnish(items: Table[FurnishItem]) extends RoomGen {
   override def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
     val cellSet = cells.toSet

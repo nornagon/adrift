@@ -350,6 +350,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     )
     state.levels(levelId) = level
 
+
     for (room <- layout.rooms) {
       for (y <- room.t to room.b) {
         level.terrain(room.l, y) = data.terrain("wall")
@@ -359,6 +360,10 @@ case class WorldGen(data: Data)(implicit random: Random) {
         level.terrain(x, room.t) = data.terrain("wall")
         level.terrain(x, room.b) = data.terrain("wall")
       }
+
+      val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
+
+      data.roomgens("quarters").generate(state, levelId, cells)
     }
 
     state
