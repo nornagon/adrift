@@ -48,6 +48,11 @@
   display: BED
 
 - type: item
+  name: couch
+  description: a lump of soft thing.
+  display: BED
+
+- type: item
   name: closet
   description: closet
   display: HUMAN_EQUIPMENT

@@ -395,8 +395,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
 
     for (room <- layout.rooms) {
       val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
-
-      data.roomgens("quarters").generate(state, levelId, cells)
+      data.roomgens(random.oneOf("quarters", "lounge", "medical")).generate(state, levelId, cells)
     }
 
     state

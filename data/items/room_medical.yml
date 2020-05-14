@@ -95,7 +95,7 @@
   description: a gauze pad saturated in a substance anaethma to microscopic life.
   display: SMALL_COMPONENT
 
-- type: item group
+- type: item_group
   name: medical tool
   choose:
     - scalpel
@@ -103,17 +103,17 @@
     - dermal regenerator
     - hypospray
 
-- type: item group
+- type: item_group
   name: medical supplies
   choose:
-    - preserved organ
+    - {group: preserved organ}
     - gauze
     - splint
     - medications
     - pain killers
     - sterilization swab
 
-- type: item group
+- type: item_group
   name: preserved organ
   choose:
     - stasis heart

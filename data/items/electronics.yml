@@ -31,7 +31,7 @@
 - { type: item, name: "M7E power supply", description: "This beast of a power supply compensates for inefficiency with even more power.", display: LARGE_BOX }
 
 - type: item
-  name: flat_display
+  name: flat display
   description: flexible modular electronic display medium. Opto-electronic connector cable transmits power, data and illumination.
   display: SMALL_PLATE
 

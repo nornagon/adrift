@@ -97,7 +97,6 @@
   description: degraded bits of plastic - maybe it was once a bottle? or a comb?
   display: RAW_BLOCK
 
-
 - type: item_group
   name: trash
   choose:
