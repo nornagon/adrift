@@ -376,8 +376,14 @@ class GameState(var data: Data, val random: Random) {
   def sampleItem(table: Population.Table[String]): Seq[Item] = {
     for {
       itemKindName <- table.sample()(random, data.itemGroups.view.mapValues(_.choose))
-      itemKind = data.items(itemKindName)
-    } yield itemKind.generateItem()
+    } yield {
+      data.items.get(itemKindName) match {
+        case Some(itemKind) =>
+          itemKind.generateItem()
+        case None =>
+          throw new RuntimeException(s"No item with name \"$itemKindName\"")
+      }
+    }
   }
 
   def movePlayer(l: Location): Unit = {
