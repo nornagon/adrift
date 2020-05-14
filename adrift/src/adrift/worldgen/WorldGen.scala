@@ -337,6 +337,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     initialState
   }
 
+  def clamp01(d: Double) = math.max(0, math.min(1, d))
   def generateWorldBSP: GameState = {
     val layout = BSPArchitect.generate()
     val state = new GameState(data, new Random(random.nextLong()))
@@ -350,8 +351,11 @@ case class WorldGen(data: Data)(implicit random: Random) {
     )
     state.levels(levelId) = level
 
+    val isCorridor = new CylinderGrid(width, height)(true)
 
     for (room <- layout.rooms) {
+      for (y <- room.t to room.b; x <- room.l to room.r) isCorridor(x, y) = false
+
       for (y <- room.t to room.b) {
         level.terrain(room.l, y) = data.terrain("wall")
         level.terrain(room.r, y) = data.terrain("wall")
@@ -360,7 +364,36 @@ case class WorldGen(data: Data)(implicit random: Random) {
         level.terrain(x, room.t) = data.terrain("wall")
         level.terrain(x, room.b) = data.terrain("wall")
       }
+    }
 
+    for (room <- layout.rooms) {
+      val canGenerateDoorOnLeft = isCorridor.get(room.l - 1, room.t).contains(true)
+      val canGenerateDoorOnRight = isCorridor.get(room.r + 1, room.t).contains(true)
+      val canGenerateDoorOnTop = isCorridor.get(room.l, room.t - 1).contains(true)
+      val canGenerateDoorOnBottom = isCorridor.get(room.l, room.b + 1).contains(true)
+      val possibleDoorPositions: Seq[(Int, Int)] = {
+        (if (canGenerateDoorOnLeft) {
+          val doorPosition = (clamp01(0.5 + random.nextGaussian() * 0.2) * math.max(0, room.b - room.t - 2)).round.toInt + room.t + 1
+          Seq((room.l, doorPosition))
+        } else Seq.empty) ++ (if (canGenerateDoorOnRight) {
+          val doorPosition = (clamp01(0.5 + random.nextGaussian() * 0.2) * math.max(0, room.b - room.t - 2)).round.toInt + room.t + 1
+          Seq((room.r, doorPosition))
+        } else Seq.empty) ++ (if (canGenerateDoorOnTop) {
+          val doorPosition = (clamp01(0.5 + random.nextGaussian() * 0.2) * math.max(0, room.r - room.l - 2)).round.toInt + room.l + 1
+          Seq((doorPosition, room.t))
+        } else Seq.empty) ++ (if (canGenerateDoorOnBottom) {
+          val doorPosition = (clamp01(0.5 + random.nextGaussian() * 0.2) * math.max(0, room.r - room.l - 2)).round.toInt + room.l + 1
+          Seq((doorPosition, room.b))
+        } else Seq.empty)
+      }
+      if (possibleDoorPositions.nonEmpty) {
+        val (x, y) = random.pick(possibleDoorPositions)
+        level.terrain(x, y) = data.terrain("floor")
+        generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(Location(levelId, x, y))))
+      }
+    }
+
+    for (room <- layout.rooms) {
       val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
 
       data.roomgens("quarters").generate(state, levelId, cells)
@@ -518,7 +551,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
   }
 
   def generateItem(itemGroup: ItemGroup): Seq[Item] = {
-    itemGroup.choose.sample()(random, data.itemGroups.mapValues(_.choose)).map { itemId =>
+    itemGroup.choose.sample()(random, data.itemGroups.view.mapValues(_.choose)).map { itemId =>
       data.items(itemId).generateItem()
     }
   }
