@@ -1,6 +1,6 @@
 package adrift.items.behaviors
 
-import adrift.GameState
+import adrift.{Audio, GameState}
 import adrift.items.Message._
 import adrift.items._
 
@@ -17,12 +17,14 @@ case class DoorOpener(
         isOpen = true
         state.sendMessage(self, Message.ToolUsed(null))
         state.markPermeabilityDirty(state.getItemTile(self))
+        Audio.play("assets/tng_door_open.mp3")
       }
     case Deactivate =>
       if (state.isFunctional(self)) {
         isOpen = false
         state.sendMessage(self, Message.ToolUsed(null))
         state.markPermeabilityDirty(state.getItemTile(self))
+        Audio.play("assets/tng_door_close.mp3")
       }
     case msg: IsOpaque =>
       msg.opaque = !isOpen
