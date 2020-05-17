@@ -6,7 +6,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import adrift.display.{Display, GLFWDisplay}
 import adrift.worldgen.WorldGen
 import com.sun.nio.file.SensitivityWatchEventModifier
-import javax.sound.sampled.AudioSystem
 
 import scala.util.Random
 
@@ -31,7 +30,7 @@ object Main {
         val k = watcher.take()
         val root = keyToPath(k)
         val es = k.pollEvents()
-        import scala.collection.JavaConverters._
+        import scala.jdk.CollectionConverters._
         for (e <- es.asScala) {
           e.context() match {
             case p: Path =>

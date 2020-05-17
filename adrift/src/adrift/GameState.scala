@@ -388,7 +388,7 @@ class GameState(var data: Data, val random: Random) {
 
   def movePlayer(l: Location): Unit = {
     val oldPos = player
-    player = l
+    player = normalize(l)
     items.lookup(InHands()).foreach(sendMessage(_, Message.Hauled(from = oldPos, to = player)))
     broadcastPlayerMoved()
   }
@@ -471,14 +471,19 @@ class GameState(var data: Data, val random: Random) {
     val newVisible = mutable.Set.empty[(Int, Int)]
     newVisible += ((player.x, player.y))
     val opaque = (dx: Int, dy: Int) => isOpaque(player + (dx, dy))
+    val level = levels(player.levelId)
+    def normalizeX(x: Int): Int = {
+      if (x >= 0 && x < level.width) return x
+      level.terrain.normalizeX(x)
+    }
     FOV.castShadows(radius = sightRadius, opaqueApply = true, opaque, (x, y) => {
-      newVisible.add((player.x + x, player.y + y))
+      newVisible.add((normalizeX(player.x + x), player.y + y))
     })
     visible = newVisible.toSet
   }
 
   def isVisible(location: Location): Boolean =
-    location.levelId == player.levelId && visible.contains(location.xy)
+    location.levelId == player.levelId && visible.contains(normalize(location).xy)
 
   def nearbyItems: Seq[Item] = {
     val onFloor = for {
