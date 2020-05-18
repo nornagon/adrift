@@ -169,11 +169,6 @@ case class WFC(parts: Seq[String], defs: Map[String, PaletteDef]) extends RoomGe
             state.sampleItem(table) foreach {
               state.items.put(_, OnFloor(Location(levelId, tx, ty)))
             }
-            val items = table.sample()(r, state.data.itemGroups.view.mapValues(_.choose))
-            items.foreach { item_kind_id =>
-              val itemKind = state.data.items(item_kind_id)
-              state.items.put(itemKind.generateItem(), OnFloor(Location(levelId, tx, ty)))
-            }
           }
         }
       case None =>
