@@ -6,10 +6,10 @@ import java.util.stream.Collectors
 import adrift.Population.Table
 import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
 import adrift.worldgen.RoomGen
+import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe.generic.extras.semiauto._
-import io.circe._
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -133,6 +133,19 @@ object Data {
   }
 
   def parse(dir: Path): Data = {
+    def parseError(`type`: String, obj: Json, ex: DecodingFailure): Nothing = {
+      throw new RuntimeException(s"Failed to parse ${`type`} at ${CursorOp.opsToPath(ex.history)}: ${ex.message}\nObject: $obj")
+    }
+    // Like obj.as[A] but it unwraps any errors and produces a nice(-ish) error message if the decoding fails.
+    def parse[A](obj: Json)(implicit d: Decoder[A]): A =
+      obj.as[A].fold(
+        ex => {
+          val objType = obj.asObject.flatMap(_("type")).flatMap(_.asString).getOrElse("unknown")
+          parseError(objType, obj, ex)
+        },
+        identity
+      )
+
     val ymls: Map[String, Seq[Json]] = Files.walk(dir)
       .filter(matcher.matches _)
       .flatMap[Json] { f =>
@@ -140,57 +153,53 @@ object Data {
           ex => throw new RuntimeException(s"Failed to parse $f", ex),
           identity
         )
-        xs.asArray match {
-          case Some(arr) =>
-            java.util.Arrays.stream(arr.toArray)
-          case None =>
-            throw new RuntimeException(s"Expected $f to contain an array")
-        }
+        xs.asArray.map(arr => java.util.Arrays.stream(arr.toArray))
+          .getOrElse(throw new RuntimeException(s"Expected $f to contain an array"))
       }
       .collect(Collectors.toList[Json]).asScala.toSeq
       .groupBy(obj => obj.hcursor.get[String]("type").getOrElse { throw new RuntimeException(s"Failed to parse (missing 'type' key): $obj") })
 
     val operations: Map[String, ItemOperation] = ymls("operation")
-      .map(obj => obj.as[ItemOperation]
-        .fold(ex => throw new RuntimeException(s"Failed to parse operation: $obj", ex), identity))
+      .map(parse[ItemOperation])
       .groupBy(_.id).map { case (k, v) => assert(v.length == 1); k -> v.head }
 
     val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
 
     val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item_group")
-      .map(obj => obj.as[YamlObject.ItemGroup]
-        .fold(ex => throw new RuntimeException(s"Failed to parse item_group: $obj", ex), identity))
+      .map(parse[YamlObject.ItemGroup])
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head
       }
 
     val rooms: Map[String, YamlObject.RoomDef] = ymls("room")
-      .map(obj => obj.as[YamlObject.RoomDef]
-        .fold(ex => throw new RuntimeException(s"Failed to parse room: $obj", ex), identity))
+      .map(parse[YamlObject.RoomDef])
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one room with name $k"); k -> v.head
       }
 
     val roomgens: Map[String, RoomGen] = ymls("roomgen")
-      .map(obj => obj.as[YamlObject.RoomGen]
-        .fold(ex => throw new RuntimeException(s"Failed to parse roomgen: $obj", ex), identity))
+      .map(parse[YamlObject.RoomGen])
       .groupBy(_.name).map { case (k: String, v: Seq[YamlObject.RoomGen]) =>
         assert(v.length == 1, s"More than one roomgen with name $k"); k -> v.head
       }
       .map { case (k: String, v: YamlObject.RoomGen) =>
-        k -> RoomGen.decoders(v.algorithm).decodeJson(Json.fromJsonObject(v.options)).fold(throw _, identity)
+        val roomgen = RoomGen.decoders(v.algorithm)
+          .decodeJson(Json.fromJsonObject(v.options))
+          .fold(
+            ex => parseError(s"roomgen options for '$k'", Json.fromJsonObject(v.options), ex),
+            identity
+          )
+        k -> roomgen
       }
 
     val terrain: Map[String, Terrain] = ymls("terrain")
-      .map(obj => obj.as[Terrain]
-        .fold(ex => throw new RuntimeException(s"Failed to parse terrain: $obj", ex), identity))
+      .map(parse[Terrain])
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one terrain with name $k"); k -> v.head
       }
 
     val sectors: Map[String, YamlObject.SectorDef] = ymls("sector")
-      .map(obj => obj.as[YamlObject.SectorDef]
-        .fold(ex => throw new RuntimeException(s"Failed to parse sector: $obj", ex), identity))
+      .map(parse[YamlObject.SectorDef])
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one sector with name $k"); k -> v.head
       }
@@ -200,7 +209,7 @@ object Data {
     val display: DisplayData = {
       val displays = ymls("display")
       assert(displays.size == 1, "Must have exactly one display object")
-      displays.head.as[DisplayData].fold(throw _, identity)
+      parse[DisplayData](displays.head)
     }
 
     Data(

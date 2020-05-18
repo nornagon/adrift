@@ -87,7 +87,7 @@ case class WFC(parts: Seq[String], defs: Map[String, PaletteDef]) extends RoomGe
     )
   }
 
-  private lazy val partTiles: Seq[Tile] = for {
+  private val partTiles: Seq[Tile] = for {
     (part, i) <- parts.zipWithIndex
       tile <- {
         val lines = part.split("\n")
@@ -111,7 +111,7 @@ case class WFC(parts: Seq[String], defs: Map[String, PaletteDef]) extends RoomGe
         tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated)
       }
   } yield tile
-  private lazy val missingTiles = {
+  private val missingTiles = {
     partTiles.zipWithIndex.flatMap { case (t, i) =>
       // if there's no tile that could possibly match |t| to the left...
       (t.left match {
@@ -135,7 +135,7 @@ case class WFC(parts: Seq[String], defs: Map[String, PaletteDef]) extends RoomGe
       })
     }
   }.distinctBy(t => (t.left, t.right, t.up, t.down, t.value))
-  private lazy val allTiles = partTiles ++ missingTiles
+  private val allTiles = partTiles ++ missingTiles
 
   def matchesHorizontal(left: Tile, right: Tile): Boolean = {
     (left.right, right.left) match {
