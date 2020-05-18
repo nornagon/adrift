@@ -59,7 +59,14 @@ object WaveFunctionCollapse {
     (true , true , true , true ) -> "┼",
   )
 
-  def graphSolve(gts: GraphTileSet, width: Int, height: Int, random: Random, mustConnect: ((Int, Int), (Int, Int)) => Boolean = (_, _) => false): Option[Seq[Seq[Int]]] = {
+  def graphSolve(
+    gts: GraphTileSet,
+    width: Int,
+    height: Int,
+    random: Random,
+    mustConnect: ((Int, Int), (Int, Int)) => Boolean = (_, _) => false,
+    noisy: Boolean = false
+  ): Option[Seq[Seq[Int]]] = {
     val model = new GraphModel()
     // lb is the lower bound of the graph, i.e. everything in |lb| must be in the final graph
     val lb = new UndirectedGraph(
@@ -198,7 +205,8 @@ object WaveFunctionCollapse {
     }
 
 
-    solver.plugMonitor(new LogStatEveryXXms(solver, 1000))
+    if (noisy)
+      solver.plugMonitor(new LogStatEveryXXms(solver, 1000))
     if (false) {
       solver.plugMonitor(new ISearchMonitor with IMonitorOpenNode {
         var i = 0
@@ -215,8 +223,10 @@ object WaveFunctionCollapse {
     solver.limitNode(10000)
 
     if (solver.solve()) {
-      solver.printStatistics()
-      printGraph(connectivity.getValue)
+      if (noisy) {
+        solver.printStatistics()
+        printGraph(connectivity.getValue)
+      }
       Some(Seq.tabulate(width, height) { (x, y) => tiles(y * width + x).getValue })
     } else {
       println("Failed to solve")
