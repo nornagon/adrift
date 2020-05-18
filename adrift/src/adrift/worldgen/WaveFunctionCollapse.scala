@@ -114,15 +114,17 @@ object WaveFunctionCollapse {
       val connectedHorizontally = gts.connectedHorizontal(t1, t2)
       allowedHorizontal.add(t1, t2, if (connectedHorizontally) 1 else 0)
     }
+    assert(allowedHorizontal.isFeasible, "No tiles could be placed next to each other horizontally")
     // same for vertically.
     val allowedVertical = new Tuples
     for (t1 <- 0 until gts.size; t2 <- 0 until gts.size; if gts.allowedVertical(t1, t2)) {
       val connectedVertically = gts.connectedVertical(t1, t2)
       allowedVertical.add(t1, t2, if (connectedVertically) 1 else 0)
     }
+    assert(allowedVertical.isFeasible, "No tiles could be placed next to each other vertically")
 
-    //val leftEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(-1, t)) yield t)(collection.breakOut)
-    //val rightEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(t, -1)) yield t)(collection.breakOut)
+    val leftEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(-1, t)) yield t).to(Array)
+    val rightEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedHorizontal(t, -1)) yield t).to(Array)
     val topEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedVertical(-1, t)) yield t).to(Array)
     val bottomEdgeAllowed: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedVertical(t, -1)) yield t).to(Array)
 
@@ -133,15 +135,23 @@ object WaveFunctionCollapse {
         model.member(tiles(y*width+x), topEdgeAllowed).post()
       if (y == height - 1)
         model.member(tiles(y*width+x), bottomEdgeAllowed).post()
+      if (x == 0)
+        model.member(tiles(y*width+x), leftEdgeAllowed).post()
+      if (x == width - 1)
+        model.member(tiles(y*width+x), rightEdgeAllowed).post()
+
       val allowedInThisSector: Array[Int] = (for (t <- 0 until gts.size; if gts.allowedAt(x, y, t)) yield t).to(Array)
+      assert(allowedInThisSector.length > 0, s"Zero allowed tiles at $x,$y")
       model.member(tiles(y * width + x), allowedInThisSector).post()
       val connectedRight = model.boolVar(s"edge([$x,$y] - [${(x+1)%width},$y])")
       model.edgeChanneling(connectivity, connectedRight, y*width+x, y*width+(x+1)%width).post()
-      model.table(
-        Array(tiles(y * width + x), tiles(y * width + (x + 1)%width), connectedRight),
-        allowedHorizontal,
-        "GACSTR+"
-      ).post()
+      if (x < width - 1) {
+        model.table(
+          Array(tiles(y * width + x), tiles(y * width + (x + 1)), connectedRight),
+          allowedHorizontal,
+          "GACSTR+"
+        ).post()
+      }
       if (y < height - 1) {
         val connectedDown = model.boolVar(s"edge([$x,$y] - [$x,${y+1}])")
         model.edgeChanneling(connectivity, connectedDown, y*width+x, (y+1)*width+x).post()
@@ -211,6 +221,7 @@ object WaveFunctionCollapse {
     } else {
       println("Failed to solve")
       solver.printStatistics()
+      println(solver.getContradictionException)
       None
     }
   }

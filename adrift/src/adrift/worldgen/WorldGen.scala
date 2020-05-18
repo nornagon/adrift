@@ -65,9 +65,15 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
     }
 
+    val roomTypes = Seq("quarters", "lounge", "medical", "wfc-test")
+
     for (room <- layout.rooms) {
-      val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
-      data.roomgens(random.oneOf("quarters", "lounge", "medical")).generate(state, levelId, cells)
+      if (room.width > 2 && room.height > 2) {
+        val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
+        data.roomgens(random.pick(roomTypes)).generate(state, levelId, cells)
+      } else {
+        println(s"Warning: tiny room: ${room.width} x ${room.height}")
+      }
     }
 
     state

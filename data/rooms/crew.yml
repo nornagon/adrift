@@ -56,6 +56,42 @@
         - { type: { each: [ desk, { group: small tools } ] }, wall_adjacent: true, nearby: chair }
         - { type: { each: [ closet, { group: clothing } ] }, wall_adjacent: true }
 
+- type: roomgen
+  name: wfc-test
+  algorithm: WFC
+  options:
+    parts:
+      - |
+        xxx
+        ...
+        ...
+      - |
+        xxxxx
+        ..o..
+        .....
+        ..j..
+        .....
+        .....
+      - |
+        .....
+        .....
+        ..h..
+        .....
+        .....
+      - |
+        xxx
+        x..
+        x..
+      - |
+        ...
+        ...
+        ...
+    defs:
+      .: { terrain: floor }
+      o: { items: { each: [ ship power outlet, thick power cable ] } }
+      j: { items: table }
+      h: { items: chair }
+
 - type: room
   name: quarters 2
   rotatable: true
