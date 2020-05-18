@@ -62,6 +62,7 @@ case class WFC(parts: Seq[String], defs: Map[String, PaletteDef]) extends RoomGe
   sealed trait AdjacencyType
   case class Matching(c: Char) extends AdjacencyType
   case class Internal(s: String) extends AdjacencyType
+  case object Any extends AdjacencyType
 
   parts.view.flatMap(_.toCharArray).to(Set).filterNot(c => c == 'x' || c == '\n') foreach { c =>
     assert(defs.contains(c.toString), s"Expected defs to contain '$c'")
@@ -85,58 +86,94 @@ case class WFC(parts: Seq[String], defs: Map[String, PaletteDef]) extends RoomGe
       down = left,
     )
   }
-  private lazy val allTiles = for {
-    (part, i) <- parts.zipWithIndex
-    tile <- {
-      val lines = part.split("\n")
-      // for now, only support rectangles
-      val width = lines.head.length
-      val height = lines.length
-      assert(lines.forall(l => l.length == width), s"WFC parts must be rectangular")
-      val grid = new Grid(width, height)(' ')
-      for (y <- 0 until height; x <- 0 until width)
-        grid(x, y) = lines(y)(x)
-      val tiles = for (y <- 1 until height - 1; x <- 1 until width - 1) yield {
-        Tile(
-          s"Part $i at $x,$y",
-          value = grid(x, y),
-          left = if (x == 1) Matching(grid(x - 1, y)) else Internal(s"Part $i ${x-1},$y h"),
-          right = if (x == width - 2) Matching(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
-          up = if (y == 1) Matching(grid(x, y - 1)) else Internal(s"Part $i $x,${y-1} v"),
-          down = if (y == height - 2) Matching(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
-        )
-      }
-      tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated)
-    }
-  } yield tile
 
-  val gts = new GraphTileSet {
+  private lazy val partTiles: Seq[Tile] = for {
+    (part, i) <- parts.zipWithIndex
+      tile <- {
+        val lines = part.split("\n")
+        // for now, only support rectangles
+        val width = lines.head.length
+        val height = lines.length
+        assert(lines.forall(l => l.length == width), "WFC parts must be rectangular for now")
+        val grid = new Grid(width, height)(' ')
+        for (y <- 0 until height; x <- 0 until width)
+          grid(x, y) = lines(y)(x)
+        val tiles = for (y <- 1 until height - 1; x <- 1 until width - 1) yield {
+          Tile(
+            s"Part $i at $x,$y",
+            value = grid(x, y),
+            left = if (x == 1) Matching(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
+            right = if (x == width - 2) Matching(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
+            up = if (y == 1) Matching(grid(x, y - 1)) else Internal(s"Part $i $x,${y - 1} v"),
+            down = if (y == height - 2) Matching(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
+          )
+        }
+        tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated)
+      }
+  } yield tile
+  private lazy val missingTiles = {
+    partTiles.zipWithIndex.flatMap { case (t, i) =>
+      // if there's no tile that could possibly match |t| to the left...
+      (t.left match {
+        case Matching(c) if c != 'x' && (!partTiles.exists(matchesHorizontal(_, t))) =>
+          // generate a new tile that will.
+          println(s"Tile $t was not matchable on the left")
+          Seq(Tile(s"generated to match $i to the left", c, Any, right = Matching(t.value), Any, Any))
+        case _ => Seq.empty
+      }) ++ (t.right match {
+        case Matching(c) if c != 'x' && (!partTiles.exists(matchesHorizontal(t, _))) =>
+          Seq(Tile(s"generated to match $i to the right", c, left = Matching(t.value), Any, Any, Any))
+        case _ => Seq.empty
+      }) ++ (t.up match {
+        case Matching(c) if c != 'x' && (!partTiles.exists(matchesVertical(_, t))) =>
+          Seq(Tile(s"generated to match $i to the up", c, Any, Any, Any, down = Matching(t.value)))
+        case _ => Seq.empty
+      }) ++ (t.down match {
+        case Matching(c) if c != 'x' && (!partTiles.exists(matchesVertical(t, _))) =>
+          Seq(Tile(s"generated to match $i to the down", c, Any, Any, up = Matching(t.value), Any))
+        case _ => Seq.empty
+      })
+    }
+  }.distinctBy(t => (t.left, t.right, t.up, t.down, t.value))
+  private lazy val allTiles = partTiles ++ missingTiles
+
+  def matchesHorizontal(left: Tile, right: Tile): Boolean = {
+    (left.right, right.left) match {
+      case (Any, Matching(x)) => left.value == x
+      case (Matching(x), Any) => right.value == x
+      case (Any, Any) => true
+      case (lr: Internal, rl: Internal) => lr == rl
+      case (lr: Matching, rl: Matching) => right.value == lr.c && left.value == rl.c
+      case _ => false
+    }
+  }
+
+  def matchesVertical(top: Tile, bottom: Tile): Boolean = {
+    (top.down, bottom.up) match {
+      case (Any, Matching(x)) => top.value == x
+      case (Matching(x), Any) => bottom.value == x
+      case (Any, Any) => true
+      case (ud: Internal, du: Internal) => ud == du
+      case (ud: Matching, du: Matching) => bottom.value == ud.c && top.value == du.c
+      case _ => false
+    }
+  }
+
+  private lazy val gts = new GraphTileSet {
     override def size: Int = allTiles.size
 
     /** true if |left| can be placed to the left of |right| */
     override def allowedHorizontal(left: Int, right: Int): Boolean = {
       if (left < 0) return allTiles(right).left == Matching('x')
       if (right < 0) return allTiles(left).right == Matching('x')
-      val leftTile = allTiles(left)
-      val rightTile = allTiles(right)
-      (leftTile.right, rightTile.left) match {
-        case (lr: Internal, rl: Internal) => lr == rl
-        case (lr: Matching, rl: Matching) => rightTile.value == lr.c && leftTile.value == rl.c
-        case _ => false
-      }
+      matchesHorizontal(allTiles(left), allTiles(right))
     }
 
     /** true if |top| can be placed above |bottom| */
     override def allowedVertical(top: Int, bottom: Int): Boolean = {
       if (top < 0) return allTiles(bottom).up == Matching('x')
       if (bottom < 0) return allTiles(top).down == Matching('x')
-      val topTile = allTiles(top)
-      val bottomTile = allTiles(bottom)
-      (topTile.down, bottomTile.up) match {
-        case (ud: Internal, du: Internal) => ud == du
-        case (ud: Matching, du: Matching) => bottomTile.value == ud.c && topTile.value == du.c
-        case _ => false
-      }
+      matchesVertical(allTiles(top), allTiles(bottom))
     }
 
     /** true if the player can navigate from |left| to |right| */
