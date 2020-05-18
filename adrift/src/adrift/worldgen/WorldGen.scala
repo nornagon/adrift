@@ -65,7 +65,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
     }
 
-    val roomTypes = Seq("quarters", "lounge", "medical", "wfc-test")
+    val roomTypes = Seq("quarters", "lounge", "medical", "cryopods")
 
     for (room <- layout.rooms) {
       if (room.width > 2 && room.height > 2) {

@@ -92,6 +92,60 @@
       j: { items: table }
       h: { items: chair }
 
+- type: roomgen
+  name: cryopods
+  algorithm: WFC
+  options:
+    parts:
+      - |
+        xxx
+        ...
+        ...
+      - |
+        xxx
+        .0.
+        ...
+      - |
+        xxx
+        0.0
+        ...
+      - |
+        xxx
+        x..
+        x..
+      - |
+        xxx
+        x.0
+        x..
+      - |
+        xxx
+        x0.
+        x..
+      - |
+        xxx
+        x..
+        x0.
+      - |
+        ...
+        ...
+        ...
+      - |
+        ....
+        .TT.
+        ....
+      - |
+        .T.
+        ...
+        ...
+      - |
+        .0.
+        ...
+        ...
+    defs:
+      .: { terrain: floor }
+      0: { items: [cryocasket] }
+      T: { items: [gurney] }
+
 - type: room
   name: quarters 2
   rotatable: true
