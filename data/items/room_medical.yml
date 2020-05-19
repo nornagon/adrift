@@ -95,6 +95,11 @@
   description: a gauze pad saturated in a substance anaethma to microscopic life.
   display: SMALL_COMPONENT
 
+- type: item
+  name: bloody rag
+  description: It looks like someone changed their dressing but didn't bother to clean up. And it must have been quite the wound, too.
+  display: CLOTHING
+
 - type: item_group
   name: medical tool
   choose:

@@ -3,6 +3,8 @@ package adrift
 import scala.collection.mutable
 
 class Grid[T](val width: Int, val height: Int)(initial: => T) {
+  def normalizeX(x: Int): Int = x
+
   val cells: mutable.Seq[T] = mutable.Seq.fill[T](width * height)(initial)
   def apply(x: Int, y: Int): T = {
     require(contains(x, y), s"Coordinate ($x, $y) was out of range $width x $height")
@@ -33,7 +35,7 @@ class Grid[T](val width: Int, val height: Int)(initial: => T) {
 }
 
 class CylinderGrid[T](width: Int, height: Int)(initial: => T) extends Grid[T](width, height)(initial) {
-  def normalizeX(x: Int): Int = ((x % width) + width) % width
+  override def normalizeX(x: Int): Int = ((x % width) + width) % width
   def normalize(xy: (Int, Int)): (Int, Int) =
     (normalizeX(xy._1), xy._2)
 

@@ -55,6 +55,12 @@
         .TT.
         ....
       - |
+        xxxxxx
+        ..HH..
+        ...h..
+        ......
+        ......
+      - |
         .0.
         ...
         ...
@@ -62,3 +68,5 @@
       .: { terrain: floor }
       0: { items: [cryocasket] }
       T: { items: [gurney] }
+      H: { items: { each: [medical cabinet, {optional: {repeat: {group: medical supplies}, count: 2-5}, chance: 20% }] } }
+      h: { items: { optional: bloody rag, chance: 10% } }

@@ -298,6 +298,12 @@ class GLFWDisplay extends Display {
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
             case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
             case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))
+            case _ if lastState.isRoomTest =>
+              key match {
+                case GLFW_KEY_R if (mods & GLFW_MOD_SUPER) != 0 =>
+                  pushAction(Action.Regenerate)
+                case _ =>
+              }
             case _ =>
           }
         }

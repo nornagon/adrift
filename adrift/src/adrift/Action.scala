@@ -1,8 +1,6 @@
 package adrift
 import adrift.items.{Item, ItemKind, ItemOperation}
-sealed trait Action {
-
-}
+sealed trait Action
 
 object Action {
   case class PlayerMove(dx: Int, dy: Int) extends Action
@@ -19,4 +17,6 @@ object Action {
 
   case object Quit extends Action
   case class ReloadData(data: Data) extends Action
+
+  case object Regenerate extends Action
 }

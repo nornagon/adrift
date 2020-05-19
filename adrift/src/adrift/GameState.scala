@@ -20,9 +20,9 @@ case class Location(levelId: LevelId, x: Int, y: Int) {
 }
 
 case class Level(
-  var terrain: CylinderGrid[Terrain],
-  var temperature: CylinderGrid[Double],
-  var gasComposition: CylinderGrid[GasComposition],
+  var terrain: Grid[Terrain],
+  var temperature: Grid[Double],
+  var gasComposition: Grid[GasComposition],
 ) {
   val width: Int = terrain.width
   val height: Int = terrain.height
@@ -95,6 +95,20 @@ case class Level(
     }
   }
 }
+object Level {
+  def emptyCylinder(data: Data, width: Int, height: Int)(implicit random: Random): Level =
+    Level(
+      terrain = new CylinderGrid(width, height)(data.terrain("floor")),
+      temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
+      gasComposition = new CylinderGrid(width, height)(GasComposition(4, 9, 1))
+    )
+  def emptySquare(data: Data, width: Int, height: Int)(implicit random: Random): Level =
+    Level(
+      terrain = new Grid(width, height)(data.terrain("floor")),
+      temperature = new Grid(width, height)(random.between(250d, 270d)),
+      gasComposition = new Grid(width, height)(GasComposition(4, 9, 1))
+    )
+}
 
 class GameState(var data: Data, val random: Random) {
   var levels = mutable.Map.empty[LevelId, Level]
@@ -102,6 +116,8 @@ class GameState(var data: Data, val random: Random) {
   var player: Location = Location(LevelId("main"), 0, 0)
   var bodyTemp: Double = 310
   var internalCalories: Int = 8000
+
+  var isRoomTest: Boolean = false
 
   val items = new {
     def put(item: Item, location: ItemLocation): Unit = itemDb.put(item, normalize(location))
