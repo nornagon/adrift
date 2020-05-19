@@ -100,7 +100,7 @@
   description: It looks like someone changed their dressing but didn't bother to clean up. And it must have been quite the wound, too.
   display: CLOTHING
 
-- type: item_group
+- type: item group
   name: medical tool
   choose:
     - scalpel
@@ -108,7 +108,7 @@
     - dermal regenerator
     - hypospray
 
-- type: item_group
+- type: item group
   name: medical supplies
   choose:
     - {group: preserved organ}
@@ -118,7 +118,7 @@
     - pain killers
     - sterilization swab
 
-- type: item_group
+- type: item group
   name: preserved organ
   choose:
     - stasis heart

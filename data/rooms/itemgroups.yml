@@ -1,12 +1,12 @@
 
-- type: item_group
+- type: item group
   name: automatic door
   choose:
     each:
       - automatic door
       - mounted presence sensor
 
-- type: item_group
+- type: item group
   name: small tools
   choose:
     - screwdriver
@@ -14,29 +14,29 @@
     - box cutter
     - soldering iron
 
-- type: item_group
+- type: item group
   name: electronic equipment
   choose:
     - { group: small electronics}
     - { group: power systems}
     - { group: control systems}
 
-- type: item_group
+- type: item group
   name: small electronics
   choose: { each: [ group: eboards, group: flex component pile ] }
 
 
-- type: item_group
+- type: item group
   name: eboards
   choose: [micro e-board, standard e-board, mega e-board ]
 
 
-- type: item_group
+- type: item group
   name: flex component pile
   choose:
     - { repeat: flex component, count: 2d4 }
 
-- type: item_group
+- type: item group
   name: power systems
   choose:
     - ship power adapter
@@ -52,7 +52,7 @@
     - M7E power supply
     - rechargeable battery
 
-- type: item_group
+- type: item group
   name: control systems
   choose: 
    - microcontroller

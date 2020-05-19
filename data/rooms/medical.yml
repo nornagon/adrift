@@ -69,7 +69,7 @@
       H: { items: { each: [ medical cabinet, { group: cryopods medical cabinet contents } ] } }
       h: { items: { optional: bloody rag, chance: 10% } }
 
-- type: item_group
+- type: item group
   name: cryopods medical cabinet contents
   choose:
     - chance: 20%

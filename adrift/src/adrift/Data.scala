@@ -143,7 +143,7 @@ object Data {
 
     val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
 
-    val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item_group")
+    val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item group")
       .map(parse[YamlObject.ItemGroup])
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head

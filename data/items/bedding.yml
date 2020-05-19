@@ -1,4 +1,4 @@
-- type: item_group
+- type: item group
   name: bedding
   choose:
     - bed sheet
