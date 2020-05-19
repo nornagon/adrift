@@ -10,3 +10,61 @@
             wall_adjacent: true
           count: 3-6
         - type: gurney
+
+- type: roomgen
+  name: cryopods
+  algorithm: WFC
+  options:
+    parts:
+      - |
+        xxx
+        ...
+        ...
+      - |
+        xxx
+        .0.
+        ...
+      - |
+        xxx
+        0.0
+        ...
+      - |
+        xxx
+        x..
+        x..
+      - |
+        xxx
+        x.0
+        x..
+      - |
+        xxx
+        x0.
+        x..
+      - |
+        xxx
+        x..
+        x0.
+      - |
+        ...
+        ...
+        ...
+      - |
+        ....
+        .TT.
+        ....
+      - |
+        xxxxxx
+        ..HH..
+        ...h..
+        ......
+        ......
+      - |
+        .0.
+        ...
+        ...
+    defs:
+      .: { terrain: floor }
+      0: { items: [cryocasket] }
+      T: { items: [gurney] }
+      H: { items: { each: [medical cabinet, {optional: {repeat: {group: medical supplies}, count: 2-5}, chance: 20% }] } }
+      h: { items: { optional: bloody rag, chance: 10% } }

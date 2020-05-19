@@ -8,7 +8,7 @@ import mill.eval.Result
 object adrift extends ScalaModule {
 
   val lwjglVersion = "3.1.2"
-  override def forkArgs = Seq("-Xmx12g") ++ (
+  override def forkArgs = Seq("-Xmx4g") ++ (
     if (System.getProperty("os.name") startsWith "Mac")
       Seq("-XstartOnFirstThread")
     else Seq.empty)
@@ -25,7 +25,7 @@ object adrift extends ScalaModule {
     try Result.Success(Jvm.runSubprocess(
       mainClass,
       runClasspath().map(_.path),
-      jvmArgs = Seq.empty,
+      jvmArgs = forkArgs(),
       envArgs = forkEnv(),
       mainArgs = args,
       workingDir = forkWorkingDir()
