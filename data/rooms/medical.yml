@@ -66,5 +66,16 @@
       .: { terrain: floor }
       0: { items: [cryocasket] }
       T: { items: [gurney] }
-      H: { items: { each: [medical cabinet, {optional: {repeat: {group: medical supplies}, count: 2-5}, chance: 20% }] } }
+      H: { items: { each: [ medical cabinet, { group: cryopods medical cabinet contents } ] } }
       h: { items: { optional: bloody rag, chance: 10% } }
+
+- type: item_group
+  name: cryopods medical cabinet contents
+  choose:
+    - chance: 20%
+      optional:
+        choose:
+          - repeat: { group: medical supplies }
+            count: 2-5
+          - repeat: { group: medical tool }
+            count: 1-2
