@@ -127,8 +127,12 @@ object Data {
           ex => throw new RuntimeException(s"Failed to parse $f", ex),
           identity
         )
-        xs.asArray.map(arr => java.util.Arrays.stream(arr.toArray))
-          .getOrElse(throw new RuntimeException(s"Expected $f to contain an array"))
+        if (xs == Json.False)
+          // circe parses the empty document as 'false'. Ignore it.
+          java.util.stream.Stream.empty()
+        else
+          xs.asArray.map(arr => java.util.Arrays.stream(arr.toArray))
+            .getOrElse(throw new RuntimeException(s"Expected $f to contain an array, but found ${xs.name}"))
       }
       .collect(Collectors.toList[Json]).asScala.toSeq
       .groupBy(obj => obj.hcursor.get[String]("type").getOrElse { throw new RuntimeException(s"Failed to parse (missing 'type' key): $obj") })
