@@ -1,0 +1,208 @@
+- type: room
+  name: quarters
+  rotatable: true
+  flippable: true
+  layout: |
+    ==VDD
+    t....
+    ---..
+    dc..o
+    d....
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs: &defs-quarters
+    .: { terrain: floor }
+    V: { items: { each: [ thermostat, heating vent ] } }
+    =: { items: [ bed ] }
+    -: { terrain: wall }
+    d: { items: { each: [ desk, {group: small tools} ] } }
+    c: { items: [ chair ] }
+    D: { items: { each: [ closet, {group: clothing} ] } }
+    t: { items: [ side table ] }
+    o: { items: { each: [ ship power outlet, thick power cable ] } }
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: quarters-gen
+  rotatable: true
+  layout: |
+    .....
+    .....
+    .....
+    .....
+    .....
+  gen: quarters-old
+  connections:
+    0,0 down: DOOR
+  defs:
+    .: { terrain: floor }
+
+- type: roomgen
+  name: quarters-old
+  algorithm: Furnish
+  options:
+    items:
+      each:
+        - repeat:
+            type: { each: [ bed, { group: bedding } ] }
+            wall_adjacent: true
+            nearby: { optional: [ side table ], chance: 50% }
+          count: 1-2
+        - { optional: { type: { each: [ thermostat, heating vent ] }, wall_adjacent: true }, chance: 50% }
+        - { type: { each: [ desk, { group: small tools } ] }, wall_adjacent: true, nearby: chair }
+        - { type: { each: [ closet, { group: clothing } ] }, wall_adjacent: true }
+
+- type: room
+  name: quarters 2
+  rotatable: true
+  flippable: true
+  layout: |
+    D.ddd
+    D..c.
+    .....
+    =-...
+    =-...
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs: *defs-quarters
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: twin quarters
+  rotatable: true
+  flippable: true
+  layout: |
+    =tddD
+    =.c..
+    ....D
+    =..cd
+    =t..d
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs: *defs-quarters
+  items:
+    - area: "0,0-1,0"
+      group: bedding
+      count: 2
+
+- type: room
+  name: break room
+  rotatable: true
+  flippable: true
+  layout: |
+    .c..H
+    ctc..
+    ctc.d
+    .c...
+    .....
+  connections:
+    0,0 down: DOOR
+  default_terrain: floor
+  defs:
+    .: {}
+    c: { items: [ chair ] }
+    t: { items: [ table ] }
+    d: {}
+    H: {}
+#    d: { items: [ display ] }
+#    H: { items: [ food paste dispenser ] }
+
+- type: room
+  name: observation deck
+  rotatable: false
+  flippable: false
+  layout: |
+    ///////////////////////
+    .......................
+    ...............t.......
+    .h.cc.h........tttttttt
+    .h....h........s.s.s.s.
+    ..h..h.................
+    .......................
+    .......................
+    .......................
+    .......................
+    .......................
+  connections:
+    0,0 left: WALL
+    3,0 right: WALL
+    0,0 up: SPACE
+    1,0 up: SPACE
+    2,0 up: SPACE
+    3,0 up: SPACE
+    0,1 down: OPEN
+    1,1 down: OPEN
+    2,1 down: OPEN
+    3,1 down: OPEN
+    0,1 left: OPEN
+    3,1 right: OPEN
+  defs:
+    .: { terrain: floor }
+    /: { terrain: transparent polycarbonate window }
+    h: { items: [chair] }
+    t: {} #{ items: [counter] }
+    s: {} #{ items: [metal stool] }
+    c: {} #{ items: [low metal table] }
+
+- type: room
+  name: hall
+  layout: |
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+    ...........
+  defs:
+    .: { terrain: floor }
+  connections:
+    "0,1 down": DOOR
+  rotatable: true
+
+- type: room
+  name: cryopods
+  rotatable: true
+  layout: |
+    .....
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    T....
+    O...O
+    ....T
+    .....
+  defs:
+    .: {}
+    O: { items: [cryocasket] }
+    T: {} # { items: [cryo-display] }
+  connections:
+    0,0 up: DOOR
