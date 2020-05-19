@@ -1,10 +1,8 @@
 package adrift.worldgen
 
-import java.awt.{Color, Dimension, Graphics}
 import java.awt.event.{KeyEvent, KeyListener}
+import java.awt.{Color, Dimension, Graphics}
 
-import adrift.GameState
-import adrift.worldgen.NEATArchitect.RoomTypeId
 import javax.swing.{JFrame, JPanel}
 
 import scala.util.Random

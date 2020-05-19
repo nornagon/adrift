@@ -10,7 +10,7 @@ import scala.util.Random
 
 case class WorldGen(data: Data)(implicit random: Random) {
   def clamp01(d: Double) = math.max(0, math.min(1, d))
-  def generateWorldBSP: GameState = {
+  def generateWorld: GameState = {
     val layout = BSPArchitect.generate()
     val state = new GameState(data, new Random(random.nextLong()))
     val (width, height) = (layout.bounds.width + 1, layout.bounds.height + 1)
@@ -76,52 +76,6 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
     }
 
-    state
-  }
-
-  def generateWorldGA: GameState = {
-    val layout = NEATArchitect.make()
-    val state = new GameState(data, new Random(random.nextLong()))
-
-    val width = layout.roomGrid.width
-    val height = layout.roomGrid.height
-
-    val levelId = LevelId("main")
-    val level = Level(
-      terrain = new CylinderGrid(width, height)(data.terrain("floor")),
-      temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
-      gasComposition = new CylinderGrid(width, height)(GasComposition(4, 9, 1))
-    )
-    state.levels(levelId) = level
-
-    for (x <- 0 until width) {
-      for (y <- 1 until height) {
-        val up = layout.roomGrid(x, y - 1)
-        val here = layout.roomGrid(x, y)
-        if (here != up) {
-          level.terrain(x, y) = data.terrain("wall")
-        }
-      }
-    }
-
-    for (y <- 0 until height) {
-      for (x <- 0 until width) {
-        val left = layout.roomGrid(x - 1, y)
-        val here = layout.roomGrid(x, y)
-        if (here != left) {
-          level.terrain(x, y) = data.terrain("wall")
-          if (level.terrain.contains(x, y + 1))
-            level.terrain(x, y + 1) = data.terrain("wall")
-        }
-      }
-    }
-
-    state
-  }
-
-  def generateWorld: GameState = {
-    val state = new WFCArchitect(data).generateWorld
-    damage(state)
     state
   }
 

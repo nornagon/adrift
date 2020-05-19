@@ -36,44 +36,18 @@ object YamlObject {
     choose: Table[String]
   )
 
-  case class RoomDef(
-    name: String,
-    rotatable: Boolean = false,
-    flippable: Boolean = false,
-    layout: String,
-    defs: Map[String, JsonObject] = Map.empty,
-    gen: Option[String] = None,
-    default_terrain: String = "floor",
-    items: Seq[JsonObject] = Seq.empty,
-    connections: Map[String, String] = Map.empty,
-  ) {
-    for (line <- layout.linesIterator; char <- line; if !char.isSpaceChar)
-      assert(defs.contains(char.toString), s"'$char' not present in defs of room '$name'")
-  }
-
   case class RoomGen(
     name: String,
     algorithm: String,
     options: JsonObject
-  )
-
-  case class SectorRoom(
-    room: String,
-  )
-
-  case class SectorDef(
-    name: String,
-    rooms: Seq[SectorRoom]
   )
 }
 
 case class Data(
   items: Map[String, ItemKind],
   itemGroups: Map[String, YamlObject.ItemGroup],
-  rooms: Map[String, YamlObject.RoomDef],
   roomgens: Map[String, RoomGen],
   terrain: Map[String, Terrain],
-  sectors: Map[String, YamlObject.SectorDef],
   display: DisplayData,
 )
 
@@ -171,12 +145,6 @@ object Data {
         case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head
       }
 
-    val rooms: Map[String, YamlObject.RoomDef] = ymls("room")
-      .map(parse[YamlObject.RoomDef])
-      .groupBy(_.name).map {
-        case (k, v) => assert(v.length == 1, s"More than one room with name $k"); k -> v.head
-      }
-
     val roomgens: Map[String, RoomGen] = ymls("roomgen")
       .map(parse[YamlObject.RoomGen])
       .groupBy(_.name).map { case (k: String, v: Seq[YamlObject.RoomGen]) =>
@@ -198,14 +166,6 @@ object Data {
         case (k, v) => assert(v.length == 1, s"More than one terrain with name $k"); k -> v.head
       }
 
-    val sectors: Map[String, YamlObject.SectorDef] = ymls("sector")
-      .map(parse[YamlObject.SectorDef])
-      .groupBy(_.name).map {
-        case (k, v) => assert(v.length == 1, s"More than one sector with name $k"); k -> v.head
-      }
-    for ((name, sd) <- sectors; r <- sd.rooms)
-      assert(rooms.contains(r.room), s"Sector '$name' references room '${r.room}', but that room doesn't exist")
-
     val display: DisplayData = {
       val displays = ymls("display")
       assert(displays.size == 1, "Must have exactly one display object")
@@ -215,10 +175,8 @@ object Data {
     Data(
       items,
       itemGroups,
-      rooms,
       roomgens,
       terrain,
-      sectors,
       display
     )
   }
