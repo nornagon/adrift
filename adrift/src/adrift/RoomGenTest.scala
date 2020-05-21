@@ -10,11 +10,13 @@ import scala.util.{Random, Try}
 object RoomGenTest {
   def main(args: Array[String]): Unit = {
     val dataPath = Paths.get("data")
-    val data = Data.parse(dataPath)
     val display: Display = new GLFWDisplay
     val random = new Random
 
+    val initialData = Data.parse(dataPath)
+
     var state: GameState = null
+    def data = if (state == null) initialData else state.data
     def regenerate(seed: Long): Unit = {
       implicit val random = new Random(seed)
       val width = math.max(3, math.min(15, 10 + random.nextGaussian() * 5)).round.toInt
@@ -23,7 +25,9 @@ object RoomGenTest {
       state.refresh()
       state.recalculateFOV()
     }
-    regenerate(random.nextLong)
+    Iterator.continually(Try { regenerate(random.nextLong) }).take(5).find(_.isSuccess) getOrElse {
+      throw new RuntimeException(s"Couldn't generate a room")
+    }
 
     display.init()
     display.update(state)
