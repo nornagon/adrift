@@ -14,6 +14,7 @@ import org.chocosolver.solver.variables.IntVar
 import org.chocosolver.util.objects.graphs.UndirectedGraph
 import org.chocosolver.util.objects.setDataStructures.SetType
 
+import scala.collection.mutable
 import scala.util.Random
 
 object WaveFunctionCollapse {
@@ -21,6 +22,9 @@ object WaveFunctionCollapse {
     def size: Int
     def propagator(dir: Int, t: Int): Set[Int]
   }
+
+  /** constrain that the total number of tiles set to any of |ts| falls in [lb, ub] */
+  case class CountConstraint(ts: Iterable[Int], lb: Int, ub: Int)
 
   trait GraphTileSet {
     def size: Int
@@ -37,6 +41,8 @@ object WaveFunctionCollapse {
     def allowedAt(x: Int, y: Int, t: Int): Boolean
 
     def weight(t: Int): Double = 1
+
+    def countConstraints: Iterable[CountConstraint] = Iterable.empty
   }
 
   val display = Map(
@@ -168,6 +174,20 @@ object WaveFunctionCollapse {
           "GACSTR+"
         ).post()
       }
+    }
+
+    val counts = mutable.Map.empty[Int, IntVar]
+
+    for (cc <- gts.countConstraints) {
+      val relevantCounts: Array[IntVar] = cc.ts.map(t => counts.getOrElseUpdate(t, {
+        val count = model.intVar(s"Count of $t", 0, width * height)
+        model.count(t, tiles, count).post()
+        count
+      })).to(Array)
+
+      assert(cc.lb <= cc.ub)
+      val count = model.intVar(math.max(0, cc.lb), math.min(cc.ub, width * height))
+      model.sum(relevantCounts, "=", count).post()
     }
 
     val solver = model.getSolver
