@@ -66,10 +66,12 @@ object PartWithOpts {
 case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends RoomGen {
   sealed trait AdjacencyType {
     def rotated: AdjacencyType = this
+    def flipped: AdjacencyType = this
   }
   case class Matching(c: Char) extends AdjacencyType
-  case class Internal(s: String, r: Int = 0) extends AdjacencyType {
+  case class Internal(s: String, r: Int = 0, f: Boolean = false) extends AdjacencyType {
     override def rotated: AdjacencyType = copy(r = (r + 1) % 4)
+    override def flipped: AdjacencyType = copy(f = !f)
   }
   case object Any extends AdjacencyType
 
@@ -94,6 +96,12 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       right = down.rotated,
       down = left.rotated,
     )
+    def flippedX: Tile = copy(
+      left = right.flipped,
+      right = left.flipped,
+      up = up,
+      down = down,
+    )
   }
 
   private def tilesFromPart(part: PartWithOpts, i: Int) = {
@@ -115,7 +123,8 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
         down = if (y == height - 2) Matching(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
       )
     }
-    tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated)
+    tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
+    tiles.map(_.flippedX) ++ tiles.map(_.flippedX.rotated) ++ tiles.map(_.flippedX.rotated.rotated) ++ tiles.map(_.flippedX.rotated.rotated.rotated)
   }
 
   private val partTiles: Seq[Tile] = for {
