@@ -12,3 +12,64 @@
         - { optional: { type: { each: [ thermostat, heating vent ] }, wall_adjacent: true }, chance: 50% }
         - { type: { each: [ desk, { group: small tools } ] }, wall_adjacent: true, nearby: chair }
         - { type: { each: [ closet, { group: clothing } ] }, wall_adjacent: true }
+
+- type: roomgen
+  name: quarters-wfc
+  algorithm: WFC
+  options:
+    parts:
+      - |
+        xxx
+        ...
+        ...
+      - |
+        xxx
+        x..
+        x..
+      - |
+        ...
+        ...
+        ...
+      - min: 1
+        max: 2
+        part: |
+          xxx
+          xb.
+          xb.
+          x..
+      - |
+        xxx
+        b..
+        ...
+      - |
+        xxx
+        ..b
+        ...
+      - |
+        ...
+        b..
+        ...
+      - max: 1
+        part: |
+          xxxx
+          .dd.
+          ..c.
+          ....
+      - |
+        ...
+        c..
+        ...
+      - |
+        xxx
+        d..
+        ...
+      - |
+        ...
+        ..d
+        ...
+
+    defs:
+      .: { terrain: floor }
+      b: { items: { each: [ bed, { group: bedding } ] } }
+      d: { items: { each: [ desk ] } }
+      c: { items: { each: [ chair ] } }
