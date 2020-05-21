@@ -7,7 +7,7 @@ import org.chocosolver.solver.constraints.extension.Tuples
 import org.chocosolver.solver.search.loop.monitors.{IMonitorOpenNode, ISearchMonitor}
 import org.chocosolver.solver.search.strategy.Search
 import org.chocosolver.solver.search.strategy.selectors.values.{IntDomainRandom, IntValueSelector}
-import org.chocosolver.solver.search.strategy.selectors.variables.FirstFail
+import org.chocosolver.solver.search.strategy.selectors.variables.{FirstFail, VariableEvaluator, VariableSelector}
 import org.chocosolver.solver.search.strategy.strategy.IntStrategy
 import org.chocosolver.solver.trace.LogStatEveryXXms
 import org.chocosolver.solver.variables.IntVar
@@ -186,7 +186,7 @@ object WaveFunctionCollapse {
       })).to(Array)
 
       assert(cc.lb <= cc.ub)
-      val count = model.intVar(math.max(0, cc.lb), math.min(cc.ub, width * height))
+      val count = model.intVar(s"Sum counts: [${cc.ts.mkString(", ")}]", math.max(0, cc.lb), math.min(cc.ub, width * height))
       model.sum(relevantCounts, "=", count).post()
     }
 
@@ -196,7 +196,7 @@ object WaveFunctionCollapse {
         Search.sequencer(
           new IntStrategy(
             tiles,
-            new FirstFail(model),
+            new SmallDomainRandom(model, random.nextLong),
             new IntDomainWeightedRandom(random, gts.weight)
           ),
           new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
@@ -317,4 +317,19 @@ class IntDomainWeightedRandom(rand: Random, weighting: Int => Double) extends In
     }
     rand.chooseFrom(vals)(weighting)
   }
+}
+
+class SmallDomainRandom(model: Model, seed: Long) extends VariableSelector[IntVar] with VariableEvaluator[IntVar] {
+  import adrift.RandomImplicits._
+  private val random: Random = new Random(seed)
+
+  override def getVariable(variables: Array[IntVar]): IntVar = {
+    val uninstantiated = variables.filterNot(_.isInstantiated)
+    if (uninstantiated.isEmpty) return null
+    val smallestDomain = uninstantiated.view.map(_.getDomainSize).min
+    val candidates = uninstantiated.filter(_.getDomainSize == smallestDomain)
+    random.pick(candidates)
+  }
+
+  override def evaluate(variable: IntVar): Double = variable.getDomainSize
 }
