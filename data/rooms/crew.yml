@@ -67,9 +67,39 @@
         ...
         ..d
         ...
+      - |
+        xxxxx
+        xtsX.
+        x..X.
+        xX+X.
+        x....
+      - |
+        xX+X.
+        x....
+        x....
+      - |
+        xxx
+        X..
+        X..
+        X..
+        ...
 
     defs:
       .: { terrain: floor }
       b: { items: { each: [ bed, { group: bedding } ] } }
       d: { items: { each: [ desk ] } }
       c: { items: { each: [ chair ] } }
+      s: { items: { each: [ sink ] } }
+      t: { items: { each: [ toilet ] } }
+      X: { terrain: wall }
+      +: { items: { group: automatic door } }
+
+- type: item
+  name: sink
+  description: A metal sink bolted to the wall.
+  display: SINK
+
+- type: item
+  name: toilet
+  description: A metal bowl for, you know.
+  display: CHAIR_LIGHT

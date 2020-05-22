@@ -105,6 +105,10 @@
       char: "\u00D2" # ╥
       fg: brown
       layer: -1
+    CHAIR_LIGHT:
+      char: "\u00D2" # ╥
+      fg: light_gray
+      layer: -1
     DESK:
       char: "\u00D1" # ╤
       fg: brown
@@ -163,3 +167,6 @@
     DIRT:
       char: " "
       bg: dark_gray
+    SINK:
+      char: "\u0008" # ◘
+      fg: light_gray
