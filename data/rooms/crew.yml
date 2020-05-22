@@ -55,6 +55,20 @@
           xxx
           .C.
           ...
+      - max: 2
+        part: |
+          ...
+          .%%
+          .%%
+          .%%
+          ...
+      - max: 3
+        part: |
+          ...
+          %%%
+          %%%
+          %%%
+          ...
 
     defs:
       .: { terrain: floor }
@@ -66,6 +80,7 @@
       X: { terrain: wall }
       +: { items: { group: automatic door } }
       C: { items: { each: [ closet, {group: clothing} ] } }
+      "%": { items: rug }
 
 - type: item
   name: sink
@@ -74,5 +89,10 @@
 
 - type: item
   name: toilet
-  description: A metal bowl for, you know.
+  description: A metal bowl for, well, you know.
   display: CHAIR_LIGHT
+
+- type: item
+  name: rug
+  description: A touch of homeliness.
+  display: RUG

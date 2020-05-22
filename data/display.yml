@@ -170,3 +170,7 @@
     SINK:
       char: "\u0008" # ◘
       fg: light_gray
+    RUG:
+      char: "#"
+      bg: red
+      fg: yellow
