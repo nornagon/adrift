@@ -67,13 +67,19 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   sealed trait AdjacencyType {
     def rotated: AdjacencyType = this
     def flipped: AdjacencyType = this
+
+    def matchesEdge: Boolean = false
   }
-  case class Matching(c: Char) extends AdjacencyType
+  case class Matching(c: Char) extends AdjacencyType {
+    override def matchesEdge: Boolean = c == 'x'
+  }
   case class Internal(s: String, r: Int = 0, f: Boolean = false) extends AdjacencyType {
     override def rotated: AdjacencyType = copy(r = (r + 1) % 4)
     override def flipped: AdjacencyType = copy(f = !f)
   }
-  case object Any extends AdjacencyType
+  case object Any extends AdjacencyType {
+    override def matchesEdge: Boolean = true
+  }
 
   parts.view.flatMap(_.part.toCharArray).to(Set).filterNot(c => c == 'x' || c == '\n') foreach { c =>
     assert(defs.contains(c.toString), s"Expected defs to contain '$c'")
@@ -133,7 +139,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   } yield tile
 
   private val missingTiles = {
-    partTiles.zipWithIndex.flatMap { case (t, i) =>
+    partTiles.flatMap { t =>
       // if there's no tile that could possibly match |t| to the left...
       (t.left match {
         case Matching(c) if c != 'x' && (!partTiles.exists(matchesHorizontal(_, t))) =>
@@ -180,20 +186,25 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     }
   }
 
+  allTiles.foreach(t => assert(t.left == Matching('x') || allTiles.exists(k => matchesHorizontal(k, t)), s"No tile matches $t on the left"))
+  allTiles.foreach(t => assert(t.right == Matching('x') || allTiles.exists(k => matchesHorizontal(t, k)), s"No tile matches $t on the right"))
+  allTiles.foreach(t => assert(t.up == Matching('x') || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
+  allTiles.foreach(t => assert(t.down == Matching('x') || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
+
   private lazy val gts = new GraphTileSet {
     override def size: Int = allTiles.size
 
     /** true if |left| can be placed to the left of |right| */
     override def allowedHorizontal(left: Int, right: Int): Boolean = {
-      if (left < 0) return allTiles(right).left == Matching('x')
-      if (right < 0) return allTiles(left).right == Matching('x')
+      if (left < 0) return allTiles(right).left.matchesEdge
+      if (right < 0) return allTiles(left).right.matchesEdge
       matchesHorizontal(allTiles(left), allTiles(right))
     }
 
     /** true if |top| can be placed above |bottom| */
     override def allowedVertical(top: Int, bottom: Int): Boolean = {
-      if (top < 0) return allTiles(bottom).up == Matching('x')
-      if (bottom < 0) return allTiles(top).down == Matching('x')
+      if (top < 0) return allTiles(bottom).up.matchesEdge
+      if (bottom < 0) return allTiles(top).down.matchesEdge
       matchesVertical(allTiles(top), allTiles(bottom))
     }
 

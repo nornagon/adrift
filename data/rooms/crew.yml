@@ -37,52 +37,24 @@
           xb.
           xb.
           x..
-      - |
-        xxx
-        b..
-        ...
-      - |
-        xxx
-        ..b
-        ...
-      - |
-        ...
-        b..
-        ...
       - max: 1
         part: |
           xxxx
           .dd.
           ..c.
           ....
-      - |
-        ...
-        c..
-        ...
-      - |
-        xxx
-        d..
-        ...
-      - |
-        ...
-        ..d
-        ...
-      - |
-        xxxxx
-        xtsX.
-        x..X.
-        xX+X.
-        x....
-      - |
-        xX+X.
-        x....
-        x....
-      - |
-        xxx
-        X..
-        X..
-        X..
-        ...
+      - max: 1
+        part: |
+          xxxxx
+          xtsX.
+          x..X.
+          xX+X.
+          x....
+      - max: 2
+        part: |
+          xxx
+          .C.
+          ...
 
     defs:
       .: { terrain: floor }
@@ -93,6 +65,7 @@
       t: { items: { each: [ toilet ] } }
       X: { terrain: wall }
       +: { items: { group: automatic door } }
+      C: { items: { each: [ closet, {group: clothing} ] } }
 
 - type: item
   name: sink
