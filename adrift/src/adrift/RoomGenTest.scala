@@ -48,6 +48,7 @@ object RoomGenTest {
   }
 
   def generate(data: Data, roomgen: RoomGen, width: Int, height: Int)(implicit random: Random): GameState = {
+    println(s"Generating $width x $height room...")
     val state = new GameState(data, random)
     val levelId = LevelId("main")
     val level = Level.emptySquare(data, width, height)

@@ -71,7 +71,10 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     def matchesEdge: Boolean = false
   }
   case class Matching(c: Char) extends AdjacencyType {
-    override def matchesEdge: Boolean = c == 'x'
+    override def matchesEdge: Boolean = false
+  }
+  case object Edge extends AdjacencyType {
+    override def matchesEdge: Boolean = true
   }
   case class Internal(s: String, r: Int = 0, f: Boolean = false) extends AdjacencyType {
     override def rotated: AdjacencyType = copy(r = (r + 1) % 4)
@@ -81,7 +84,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     override def matchesEdge: Boolean = true
   }
 
-  parts.view.flatMap(_.part.toCharArray).to(Set).filterNot(c => c == 'x' || c == '\n') foreach { c =>
+  parts.view.flatMap(_.part.toCharArray).to(Set).filterNot(c => c == 'x' || c == '*' || c == '\n') foreach { c =>
     assert(defs.contains(c.toString), s"Expected defs to contain '$c'")
   }
 
@@ -119,14 +122,19 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     val grid = new Grid(width, height)(' ')
     for (y <- 0 until height; x <- 0 until width)
       grid(x, y) = lines(y)(x)
+    def charToAdj(c: Char): AdjacencyType = c match {
+      case '*' => Any
+      case 'x' => Edge
+      case _ => Matching(c)
+    }
     val tiles = for (y <- 1 until height - 1; x <- 1 until width - 1) yield {
       Tile(
         partId = if (y == 1 && x == 1) Some(i) else None,
         value = grid(x, y),
-        left = if (x == 1) Matching(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
-        right = if (x == width - 2) Matching(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
-        up = if (y == 1) Matching(grid(x, y - 1)) else Internal(s"Part $i $x,${y - 1} v"),
-        down = if (y == height - 2) Matching(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
+        left = if (x == 1) charToAdj(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
+        right = if (x == width - 2) charToAdj(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
+        up = if (y == 1) charToAdj(grid(x, y - 1)) else Internal(s"Part $i $x,${y - 1} v"),
+        down = if (y == height - 2) charToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
       )
     }
     tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
@@ -142,21 +150,21 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     partTiles.flatMap { t =>
       // if there's no tile that could possibly match |t| to the left...
       (t.left match {
-        case Matching(c) if c != 'x' && (!partTiles.exists(matchesHorizontal(_, t))) =>
+        case Matching(c) if !partTiles.exists(matchesHorizontal(_, t)) =>
           // generate a new tile that will.
           println(s"Tile $t was not matchable on the left")
           Seq(Tile(c, Any, right = Matching(t.value), Any, Any))
         case _ => Seq.empty
       }) ++ (t.right match {
-        case Matching(c) if c != 'x' && (!partTiles.exists(matchesHorizontal(t, _))) =>
+        case Matching(c) if !partTiles.exists(matchesHorizontal(t, _)) =>
           Seq(Tile(c, left = Matching(t.value), Any, Any, Any))
         case _ => Seq.empty
       }) ++ (t.up match {
-        case Matching(c) if c != 'x' && (!partTiles.exists(matchesVertical(_, t))) =>
+        case Matching(c) if !partTiles.exists(matchesVertical(_, t)) =>
           Seq(Tile(c, Any, Any, Any, down = Matching(t.value)))
         case _ => Seq.empty
       }) ++ (t.down match {
-        case Matching(c) if c != 'x' && (!partTiles.exists(matchesVertical(t, _))) =>
+        case Matching(c) if !partTiles.exists(matchesVertical(t, _)) =>
           Seq(Tile(c, Any, Any, up = Matching(t.value), Any))
         case _ => Seq.empty
       })
@@ -186,10 +194,10 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     }
   }
 
-  allTiles.foreach(t => assert(t.left == Matching('x') || allTiles.exists(k => matchesHorizontal(k, t)), s"No tile matches $t on the left"))
-  allTiles.foreach(t => assert(t.right == Matching('x') || allTiles.exists(k => matchesHorizontal(t, k)), s"No tile matches $t on the right"))
-  allTiles.foreach(t => assert(t.up == Matching('x') || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
-  allTiles.foreach(t => assert(t.down == Matching('x') || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
+  allTiles.foreach(t => assert(t.left == Edge || allTiles.exists(k => matchesHorizontal(k, t)), s"No tile matches $t on the left"))
+  allTiles.foreach(t => assert(t.right == Edge || allTiles.exists(k => matchesHorizontal(t, k)), s"No tile matches $t on the right"))
+  allTiles.foreach(t => assert(t.up == Edge || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
+  allTiles.foreach(t => assert(t.down == Edge || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
 
   private lazy val gts = new GraphTileSet {
     override def size: Int = allTiles.size
