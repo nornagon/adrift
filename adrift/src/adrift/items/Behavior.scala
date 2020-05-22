@@ -43,6 +43,7 @@ object Behavior {
     "Block" -> Decoder[Block].widen,
     "Edible" -> Decoder[Edible].widen,
     "Broken" -> Decoder[Broken].widen,
+    "DisplaysConnectedTo" -> Decoder[DisplaysConnectedTo].widen
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveEncoder
@@ -70,6 +71,7 @@ object Behavior {
     case b: Block => Encoder[Block].apply(b)
     case b: Edible => Encoder[Edible].apply(b)
     case b: Broken => Encoder[Broken].apply(b)
+    case b: DisplaysConnectedTo => Encoder[DisplaysConnectedTo].apply(b)
   }))
 }
 

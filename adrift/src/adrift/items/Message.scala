@@ -1,6 +1,6 @@
 package adrift.items
 
-import adrift.Location
+import adrift.{Location, Terrain}
 
 trait Message
 
@@ -14,6 +14,7 @@ object Message {
   case class IsPermeable(var permeable: Boolean = true) extends Message
   case class PickUp(var ok: Boolean = true) extends Message
   case class Display(var display: String) extends Message
+  case class DisplayConnectedTo(terrain: Terrain, var connected: Boolean = false) extends Message
 
   case class VisibleConditions(var conditions: Seq[String] = Seq.empty) extends Message
 

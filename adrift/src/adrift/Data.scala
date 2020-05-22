@@ -105,21 +105,20 @@ object Data {
   implicit val itemKindDecoder: Decoder[YamlObject.ItemKind] = deriveConfiguredDecoder[YamlObject.ItemKind].prepare {
     _.withFocus(j => j.mapObject(o => { if (!o.contains("parts")) o.add("parts", Json.arr()) else o }))
   }
+  private def parseError(`type`: String, obj: Json, ex: DecodingFailure): Nothing = {
+    throw new RuntimeException(s"Failed to parse ${`type`} at ${CursorOp.opsToPath(ex.history)}: ${ex.message}\nObject: $obj")
+  }
+  // Like obj.as[A] but it unwraps any errors and produces a nice(-ish) error message if the decoding fails.
+  private def parse[A](obj: Json)(implicit d: Decoder[A]): A =
+    obj.as[A].fold(
+      ex => {
+        val objType = obj.asObject.flatMap(_("type")).flatMap(_.asString).getOrElse("unknown")
+        parseError(objType, obj, ex)
+      },
+      identity
+    )
 
   def parse(dir: Path): Data = {
-    def parseError(`type`: String, obj: Json, ex: DecodingFailure): Nothing = {
-      throw new RuntimeException(s"Failed to parse ${`type`} at ${CursorOp.opsToPath(ex.history)}: ${ex.message}\nObject: $obj")
-    }
-    // Like obj.as[A] but it unwraps any errors and produces a nice(-ish) error message if the decoding fails.
-    def parse[A](obj: Json)(implicit d: Decoder[A]): A =
-      obj.as[A].fold(
-        ex => {
-          val objType = obj.asObject.flatMap(_("type")).flatMap(_.asString).getOrElse("unknown")
-          parseError(objType, obj, ex)
-        },
-        identity
-      )
-
     val ymls: Map[String, Seq[Json]] = Files.walk(dir)
       .filter(matcher.matches _)
       .flatMap[Json] { f =>
@@ -186,12 +185,7 @@ object Data {
   }
 
   private def parseItems(items: Seq[Json], operations: Map[String, ItemOperation]): Map[String, ItemKind] = {
-    val itemDefs = items.map(itemObj =>
-      itemObj.as[YamlObject.ItemKind].fold(
-        ex => throw new RuntimeException(itemObj.toString(), ex),
-        identity
-      )
-    )
+    val itemDefs = items.map(parse[YamlObject.ItemKind])
     val itemsById: Map[String, YamlObject.ItemKind] = itemDefs.groupBy(_.name).map {
       case (k, v) =>
         assert(v.size == 1, s"more than one item with the name '$k'")

@@ -15,6 +15,7 @@
     - Affixed: {}
     - DoorOpener: {}
     - UsesElectricity: { perUse: 30 }
+    - DisplaysConnectedTo: { terrainTypes: [ wall ] }
 
 - type: item
   name: mounted presence sensor

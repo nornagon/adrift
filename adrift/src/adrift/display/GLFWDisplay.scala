@@ -77,10 +77,10 @@ object Appearance {
     (char, fg, bg)
   }
 
-  def charForWall(center: Terrain, left: Terrain, up: Terrain, right: Terrain, down: Terrain, viewingFrom: Dir): Char = {
+  def charForWall(center: Terrain, connectLeft: Boolean, connectUp: Boolean, connectRight: Boolean, connectDown: Boolean, viewingFrom: Dir): Char = {
     import CP437.BoxDrawing._
     import Dir._
-    ((left == center, up == center, right == center, down == center) match {
+    ((connectLeft, connectUp, connectRight, connectDown) match {
       case (false, false, false, false) => 254
       case (false, false, false, true)
         | (false, true, false, false)
@@ -154,12 +154,13 @@ object Appearance {
     state.sendMessage(item, Message.Display(item.kind.display)).display
 
   def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {
-    val level = state.levels(state.player.levelId)
+    val levelId = state.player.levelId
+    val level = state.levels(levelId)
     if (x == state.player.x && y == state.player.y) {
       val (char, fg, bg, _) = state.data.display.getDisplay("PLAYER")
       (char, fg, bg)
     } else if (level.terrain.contains(x, y)) {
-      val items = state.items.lookup(OnFloor(Location(state.player.levelId, x, y)))
+      val items = state.items.lookup(OnFloor(Location(levelId, x, y)))
         .filter(item => displayForItem(state, item) != "INVISIBLE")
       if (items.nonEmpty) {
         // reversed so that we get the _last_ item in the list that has the highest layer instead of the _first_.
@@ -173,14 +174,16 @@ object Appearance {
           (char, fg, bg)
         }
       } else {
-        def apparent(x: Int, y: Int): Option[Terrain] = {
-          if (level.terrain.contains(x, y))
-            Some(level.terrain((x, y)))
-          else None
-        }
-
         val terrain = level.terrain(x, y)
+
         if (terrain.connects) {
+          def apparent(x: Int, y: Int): Option[Terrain] = {
+            if (state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.DisplayConnectedTo(terrain)).connected)
+              Some(terrain)
+            else
+              level.terrain.get(x, y)
+          }
+
           val left = apparent(x - 1, y)
           val up = apparent(x, y - 1)
           val right = apparent(x + 1, y)
@@ -188,10 +191,10 @@ object Appearance {
           val viewedFrom = Dir.from((state.player.x, state.player.y), (x, y))
           val (_, fg, bg, _) = state.data.display.getDisplay(terrain.display)
           (charForWall(terrain,
-            left.orNull,
-            up.orNull,
-            right.orNull,
-            down.orNull,
+            terrain == left.orNull,
+            terrain == up.orNull,
+            terrain == right.orNull,
+            terrain == down.orNull,
             viewedFrom), fg, bg)
         } else {
           charForTerrain(state, terrain)
