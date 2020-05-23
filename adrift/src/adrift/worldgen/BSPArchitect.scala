@@ -71,11 +71,11 @@ object BSPArchitect {
     rooms: Seq[Rect]
   )
 
-  def generate()(implicit random: Random): Layout = {
-    val bounds = Rect(0, 0, cylinderCircumference, cylinderLength)
+  def generate(circumference: Int = cylinderCircumference, length: Int = cylinderLength)(implicit random: Random): Layout = {
+    val bounds = Rect(0, 0, circumference, length)
     val numVerticalCorridors = random.between(1, 4)
-    val initialCuts = Seq(-1) ++ Seq.tabulate(numVerticalCorridors)(i => cylinderCircumference * i / numVerticalCorridors).tail
-    val initialRooms = splitHorizontal(bounds, (initialCuts :+ cylinderCircumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
+    val initialCuts = Seq(-1) ++ Seq.tabulate(numVerticalCorridors)(i => circumference * i / numVerticalCorridors).tail
+    val initialRooms = splitHorizontal(bounds, (initialCuts :+ circumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
     val rooms = initialRooms.flatMap(r => subdivideRecursive(r, 3)).iterator.to(Seq)
     Layout(bounds, rooms)
   }
@@ -84,7 +84,7 @@ object BSPArchitect {
     val frame = new JFrame("Adrift")
     frame.setDefaultCloseOperation(3)
 
-    val rects = generate()(new Random(42)).rooms
+    val rects = generate(200, 100)(new Random(42)).rooms
 
     val colors = Seq(
       Color.BLUE,
@@ -102,7 +102,10 @@ object BSPArchitect {
 
     val panel = new JPanel() {
       override def paint(g: Graphics): Unit = {
+        g.setColor(Color.WHITE)
+        g.fillRect(0, 0, getWidth, getHeight)
         g.setColor(Color.BLACK)
+        g.translate(10, 10)
         for (r <- rects) {
           g.drawRect(r.l * 4, r.t * 4, r.width * 4, r.height * 4)
         }
