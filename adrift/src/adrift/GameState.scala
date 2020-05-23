@@ -158,6 +158,7 @@ class GameState(var data: Data, val random: Random) {
   }
 
   var walkThroughWalls = false
+  var seeThroughWalls = false
   var showTempDebug = false
   var showGasDebug = false
 
@@ -486,7 +487,7 @@ class GameState(var data: Data, val random: Random) {
   def recalculateFOV(): Unit = {
     val newVisible = mutable.Set.empty[(Int, Int)]
     newVisible += ((player.x, player.y))
-    val opaque = (dx: Int, dy: Int) => isOpaque(player + (dx, dy))
+    val opaque = (dx: Int, dy: Int) => !seeThroughWalls && isOpaque(player + (dx, dy))
     val level = levels(player.levelId)
     def normalizeX(x: Int): Int = {
       if (x >= 0 && x < level.width) return x
