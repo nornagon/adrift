@@ -199,7 +199,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   allTiles.foreach(t => assert(t.up == Edge || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
   allTiles.foreach(t => assert(t.down == Edge || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
 
-  private lazy val gts = new GraphTileSet {
+  private val gts = new GraphTileSet {
     override def size: Int = allTiles.size
 
     /** true if |left| can be placed to the left of |right| */

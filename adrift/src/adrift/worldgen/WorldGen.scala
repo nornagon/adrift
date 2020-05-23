@@ -71,7 +71,14 @@ case class WorldGen(data: Data)(implicit random: Random) {
     for (room <- layout.rooms) {
       if (room.width > 2 && room.height > 2) {
         val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
-        data.roomgens(random.pick(roomTypes)).generate(state, levelId, cells)
+        val roomType = random.pick(roomTypes)
+        try {
+          data.roomgens(roomType).generate(state, levelId, cells)
+        } catch {
+          case e: Throwable =>
+            println(s"Error generating $roomType of size ${room.width} x ${room.height}")
+            e.printStackTrace()
+        }
       } else {
         println(s"Warning: tiny room: ${room.width} x ${room.height}")
       }
