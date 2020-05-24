@@ -170,7 +170,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       })
     }
   }.distinctBy(t => (t.left, t.right, t.up, t.down, t.value))
-  private val allTiles = partTiles ++ missingTiles
+  private val allTiles: Array[Tile] = (partTiles ++ missingTiles).to(Array)
 
   def matchesHorizontal(left: Tile, right: Tile): Boolean = {
     (left.right, right.left) match {

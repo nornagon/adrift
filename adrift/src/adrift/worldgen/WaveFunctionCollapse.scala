@@ -4,6 +4,8 @@ import org.chocosolver.graphsolver.GraphModel
 import org.chocosolver.graphsolver.search.strategy.GraphSearch
 import org.chocosolver.solver._
 import org.chocosolver.solver.constraints.extension.Tuples
+import org.chocosolver.solver.search.SearchState
+import org.chocosolver.solver.search.limits.FailCounter
 import org.chocosolver.solver.search.loop.monitors.{IMonitorOpenNode, ISearchMonitor}
 import org.chocosolver.solver.search.strategy.Search
 import org.chocosolver.solver.search.strategy.selectors.values.{IntDomainRandom, IntValueSelector}
@@ -197,7 +199,7 @@ object WaveFunctionCollapse {
           new IntStrategy(
             tiles,
             new SmallDomainRandom(model, random.nextLong),
-            new IntDomainWeightedRandom(random, gts.weight)
+            new IntDomainWeightedRandom(random.nextLong, gts.weight)
           ),
           new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
         ),
@@ -240,7 +242,8 @@ object WaveFunctionCollapse {
     }
     //solver.setGeometricalRestart(2, 1.5, new FailCounter(model, 5000), 100)
     //solver.limitTime("30s")
-    solver.limitNode(10000)
+    solver.setLubyRestart(500, new FailCounter(model, 0), 500)
+    solver.limitNode(100 * width * height)
 
     if (solver.solve()) {
       if (noisy) {
@@ -249,9 +252,10 @@ object WaveFunctionCollapse {
       }
       Some(Seq.tabulate(width, height) { (x, y) => tiles(y * width + x).getValue })
     } else {
-      println("Failed to solve")
+      println(s"Failed to solve - ${if (solver.getSearchState == SearchState.STOPPED) "Limit reached" else "Contradiction"}")
       solver.printStatistics()
-      println(solver.getContradictionException)
+      if (solver.getSearchState != SearchState.STOPPED)
+        println(solver.getContradictionException)
       None
     }
   }
@@ -303,7 +307,8 @@ object WaveFunctionCollapse {
 }
 
 
-class IntDomainWeightedRandom(rand: Random, weighting: Int => Double) extends IntValueSelector {
+class IntDomainWeightedRandom(seed: Long, weighting: Int => Double) extends IntValueSelector {
+  private val random = new Random(seed)
   import adrift.RandomImplicits._
   override def selectValue(iv: IntVar): Int = {
     val vals = new Array[Int](iv.getDomainSize)
@@ -315,7 +320,7 @@ class IntDomainWeightedRandom(rand: Random, weighting: Int => Double) extends In
       i = iv.nextValue(i)
       j += 1
     }
-    rand.chooseFrom(vals)(weighting)
+    random.chooseFrom(vals)(weighting)
   }
 }
 
