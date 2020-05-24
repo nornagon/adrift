@@ -5,7 +5,38 @@ import java.nio.file.Paths
 import adrift.display.{Display, GLFWDisplay, GLFWWindow}
 import adrift.worldgen.RoomGen
 
-import scala.util.{Random, Try}
+import scala.util.{Failure, Random, Success, Try}
+
+object RoomGenSizeTest {
+  def main(args: Array[String]): Unit = {
+    val dataPath = Paths.get("data")
+    val data = Data.parse(dataPath)
+    val roomGen = data.roomgens(args(0))
+    for (width <- 5 to 20; height <- 5 to 20) {
+      val state = new GameState(data, new Random(42))
+      val levelId = LevelId("main")
+      val level = Level.emptySquare(data, width, height)(new Random(42))
+      state.levels(levelId) = level
+      for (y <- 0 until height) {
+        level.terrain(0, y) = data.terrain("wall")
+        level.terrain(width - 1, y) = data.terrain("wall")
+      }
+      for (x <- 0 until width) {
+        level.terrain(x, 0) = data.terrain("wall")
+        level.terrain(x, height - 1) = data.terrain("wall")
+      }
+      val cells = for (y <- 1 until height - 1; x <- 1 until width - 1) yield (x, y)
+      Try {
+        roomGen.generate(state, levelId, cells)(new Random(42))
+      } match {
+        case Success(value) =>
+          println(s"Successfully generated for size $width x $height")
+        case Failure(exception) =>
+          println(s"Couldn't generate for size $width x $height")
+      }
+    }
+  }
+}
 
 object RoomGenTest {
   def main(args: Array[String]): Unit = {

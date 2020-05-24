@@ -26,17 +26,17 @@ object BSPArchitect {
   def splitHorizontal(rect: Rect, spans: IterableOnce[(Int, Int)]): Iterator[Rect] =
     for ((l, r) <- spans) yield Rect(rect.l + l, rect.t, rect.l + r, rect.b)
 
-  def subdivideHorizontal(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] = {
+  def subdivideHorizontal(r: Rect, corridorWidth: Int, t: Double, margin: Int = 1): Iterator[Rect] = {
     require(0 <= t && t <= 1, "t must be in [0,1]")
     require(corridorWidth >= 0, "corridor width must be non-negative")
     val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
-    require(r.width >= 1 + corridorSpace + 1, "room too small to subdivide")
-    val cut = 1 + ((r.width - (1 + corridorSpace + 1)) * t).round.toInt
+    require(r.width >= margin + corridorSpace + margin, "room too small to subdivide")
+    val cut = margin + ((r.width - (margin + corridorSpace + margin)) * t).round.toInt
     splitHorizontal(r, Seq((0, cut), (cut + corridorSpace - 1, r.width)))
   }
 
-  def subdivideVertical(r: Rect, corridorWidth: Int, t: Double): Iterator[Rect] =
-    subdivideHorizontal(r.flip, corridorWidth, t).map(_.flip)
+  def subdivideVertical(r: Rect, corridorWidth: Int, t: Double, margin: Int = 1): Iterator[Rect] =
+    subdivideHorizontal(r.flip, corridorWidth, t, margin).map(_.flip)
 
   def clamp01(d: Double) = math.max(0, math.min(1, d))
   def subdivideRecursive(r: Rect, corridorWidth: Int)(implicit random: Random): IterableOnce[Rect] = {
@@ -45,23 +45,28 @@ object BSPArchitect {
     def splitValue: Double = clamp01(random.nextGaussian() * 0.2 + 0.5)
     val corridorsRequired = r.area > 1000
     val minCorridorWidth = if (corridorsRequired) 1 else 0
+    val childCorridorWidth = math.max(minCorridorWidth, corridorWidth - 1)
+
+    val minRoomDimension = 5
+    val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
+    val minDimension = minRoomDimension + corridorSpace + minRoomDimension
 
     if (divideHorizontal) {
       // Horizontal
-      if (r.width < (1 + 1 + corridorWidth + 1 + 1) || r.area < 100) {
+      if (r.width < minDimension || r.area < 100) {
         // Can't be further subdivided.
         Seq(r)
       } else {
-        subdivideHorizontal(r, corridorWidth, splitValue)
-          .flatMap(r => subdivideRecursive(r, math.max(minCorridorWidth, corridorWidth - 1)))
+        subdivideHorizontal(r, corridorWidth, splitValue, minRoomDimension)
+          .flatMap(r => subdivideRecursive(r, childCorridorWidth))
       }
     } else {
       // Vertical
-      if (r.height < (1 + 1 + corridorWidth + 1 + 1) || r.area < 100) {
+      if (r.height < minDimension || r.area < 100) {
         Seq(r)
       } else {
-        subdivideVertical(r, corridorWidth, splitValue)
-          .flatMap(r => subdivideRecursive(r, math.max(minCorridorWidth, corridorWidth - 1)))
+        subdivideVertical(r, corridorWidth, splitValue, minRoomDimension)
+          .flatMap(r => subdivideRecursive(r, childCorridorWidth))
       }
     }
   }
@@ -84,21 +89,7 @@ object BSPArchitect {
     val frame = new JFrame("Adrift")
     frame.setDefaultCloseOperation(3)
 
-    val rects = generate(200, 100)(new Random(42)).rooms
-
-    val colors = Seq(
-      Color.BLUE,
-      Color.CYAN,
-      Color.DARK_GRAY,
-      Color.GRAY,
-      Color.GREEN,
-      Color.LIGHT_GRAY,
-      Color.MAGENTA,
-      Color.ORANGE,
-      Color.PINK,
-      Color.RED,
-      Color.YELLOW,
-    )
+    val rects = generate()(new Random(42)).rooms
 
     val panel = new JPanel() {
       override def paint(g: Graphics): Unit = {
