@@ -174,3 +174,6 @@
       char: "#"
       bg: red
       fg: yellow
+    TRASH:
+      char: "\u00fd" # ²
+      fg: brown

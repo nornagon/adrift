@@ -25,7 +25,7 @@ object adrift extends ScalaModule {
     try Result.Success(Jvm.runSubprocess(
       mainClass,
       runClasspath().map(_.path),
-      jvmArgs = forkArgs(),
+      jvmArgs = if (mainClass.contains("RoomGenTest")) forkArgs() else Seq.empty,
       envArgs = forkEnv(),
       mainArgs = args,
       workingDir = forkWorkingDir()

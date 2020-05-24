@@ -1,18 +1,86 @@
 - type: roomgen
   name: lounge
-  algorithm: Furnish
+  algorithm: WFC
   options:
-    items:
-      each:
-        - repeat:
-            type: { each: [ couch, { repeat: {group: trash}, count: 1-4 } ] }
-            nearby: { optional: [ side table ], chance: 50% }
-          count: 4-5
-        - { optional: { type: { each: [ thermostat, heating vent ] }, wall_adjacent: true }, chance: 50% }
-        - { type: {optional: {each: [ desk, { group: small tools } ] , wall_adjacent: true, nearby: chair }, chance: 75%}}
-        - { type: nutrient paste dispenser, wall_adjacent: true }
-        - repeat:
-            type: flat display
-            wall_adjacent: true
-          count: 1-4
-        - type: holographic projector
+    parts:
+      - |
+        xxx
+        *.*
+        ***
+      - |
+        xxx
+        x.*
+        x**
+      - |
+        ***
+        *.*
+        ***
+      - |
+        xxxxx
+        *hhh*
+        *...*
+      - |
+        xxxxx
+        *.D.*
+        *...*
+      - |
+        xxxxxxx
+        *....R*
+        *=====*
+        *.s.s.*
+        *.....*
+      - |
+        *****
+        *.c.*
+        *.Tc*
+        *...*
+        *****
+      - |
+        *****
+        *.c.*
+        *.T.*
+        *.c.*
+        *****
+      - max: 1
+        part: |
+          xxx
+          *V*
+          *.*
+      - max: 1
+        part: |
+          xxx
+          *P*
+          *.*
+    defs:
+      .: { terrain: floor }
+      h: { items: { each: [ couch, { optional: { repeat: { group: trash }, count: 1-4 }, chance: 20% } ] } }
+      V: { items: { each: [ thermostat, heating vent ] } }
+      P: { items: nutrient paste dispenser }
+      =: { items: { each: [ counter ] } }
+      s: { items: { each: [ stool ] } }
+      R: { items: { each: [ refrigerator ] } }
+      T: { items: { each: [ table, { optional: { group: lounge toys }, chance: 20% } ] } }
+      c: { items: { each: [ chair ] } }
+      D: { items: { each: [ flat display ] } }
+
+- type: item
+  name: deck of cards
+  description: Aces high.
+  display: SMALL_BOX
+
+- type: item group
+  name: lounge toys
+  choose:
+    - deck of cards
+
+- type: item
+  name: counter
+  description: A flat surface, affixed to the wall or floor. I've never seen it count.
+  display: DESK
+  behavior:
+    - Affixed: {}
+
+- type: item
+  name: stool
+  description: For sitting. You could sit on it. If you wanted.
+  display: CHAIR
