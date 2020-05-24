@@ -194,16 +194,18 @@ object WaveFunctionCollapse {
 
     val solver = model.getSolver
     solver.setSearch(
-      Search.lastConflict(
+      Search.conflictOrderingSearch(
         Search.sequencer(
+          // this strategy is fairly close to Wave Function Collapse:
+          // 1. pick a random tile to fix among those tiles that have the smallest number of options available,
+          // 2. set it to a random value
           new IntStrategy(
             tiles,
             new SmallDomainRandom(model, random.nextLong),
             new IntDomainWeightedRandom(random.nextLong, gts.weight)
           ),
           new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
-        ),
-        5
+        )
       )
     )
 
