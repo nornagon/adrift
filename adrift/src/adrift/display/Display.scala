@@ -11,4 +11,3 @@ trait Display {
 
   def postAction(action: Action): Unit
 }
-

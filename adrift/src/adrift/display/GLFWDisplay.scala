@@ -226,109 +226,7 @@ trait Screen {
   def render(renderer: GlyphRenderer): Unit
 }
 
-case class Font(texture: Texture, tileWidth: Int, tileHeight: Int, scaleFactor: Int = 1)
-
-class GLFWWindow {
-  private var window: Long = 0
-  private var spriteBatch: SpriteBatch = _
-
-  def onChar(cb: Int => Unit): Unit =
-    glfwSetCharCallback(window, (window: Long, c: Int) => cb(c))
-  def onKey(cb: (Int, Int, Int, Int) => Unit): Unit =
-    glfwSetKeyCallback(
-      window,
-      (window: Long, key: Int, scancode: Int, action: Int, mods: Int) => cb(key, scancode, action, mods)
-    )
-  def onClose(cb: () => Unit): Unit =
-    glfwSetWindowCloseCallback(window, (window: Long) => cb())
-
-  def init(): Unit = {
-    GLFWErrorCallback.createPrint(System.err).set()
-
-    if (!glfwInit()) {
-      throw new IllegalStateException("Unable to initialize GLFW")
-    }
-
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
-
-    window = glfwCreateWindow(640, 480, "Adrift", 0, 0)
-    if (window == 0)
-      throw new RuntimeException("Failed to create GLFW window")
-
-    glfwMakeContextCurrent(window)
-    glfwSwapInterval(1)
-
-    GL.createCapabilities()
-
-    spriteBatch = SpriteBatch.create
-  }
-
-  class Graphics(val spriteBatch: SpriteBatch) {
-    def glyphs(font: Font): GlyphRenderer =
-      new GlyphRenderer(
-        spriteBatch,
-        font.tileWidth,
-        font.tileHeight,
-        font.tileWidth * font.scaleFactor,
-        font.tileHeight * font.scaleFactor,
-        font.texture
-      )
-  }
-
-  def framebufferSize: (Int, Int) = {
-    val wBuf = BufferUtils.createIntBuffer(1)
-    val hBuf = BufferUtils.createIntBuffer(1)
-    glfwGetFramebufferSize(window, wBuf, hBuf)
-    (wBuf.get(), hBuf.get())
-  }
-  def setSize(width: Int, height: Int): Unit =
-    glfwSetWindowSize(window, width, height)
-  def size: (Int, Int) = {
-    val wBuf = BufferUtils.createIntBuffer(1)
-    val hBuf = BufferUtils.createIntBuffer(1)
-    glfwGetWindowSize(window, wBuf, hBuf)
-    (wBuf.get(), hBuf.get())
-  }
-
-  def isVisible: Boolean =
-    glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE
-
-  def show(): Unit = glfwShowWindow(window)
-
-  def shouldClose: Boolean = glfwWindowShouldClose(window)
-
-  def render(f: Graphics => Unit): Unit = {
-    val (fbWidth, fbHeight) = framebufferSize
-
-    glViewport(0, 0, fbWidth, fbHeight)
-    val (windowWidth, windowHeight) = size
-    spriteBatch.resize(windowWidth, windowHeight)
-
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-    glClearColor(0, 0, 0, 1)
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-    spriteBatch.begin()
-
-    f(new Graphics(spriteBatch))
-
-    spriteBatch.end()
-
-    glfwSwapBuffers(window)
-  }
-}
-
-class GLFWDisplay extends Display {
-  lazy val font: Font = Font(
-    texture = Texture.fromImage(Image.fromFile("cp437_8x8.png")),
-    tileWidth = 8,
-    tileHeight = 8,
-    scaleFactor = 2
-  )
-  private var window: GLFWWindow = new GLFWWindow
+class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   private var lastState: GameState = _
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
@@ -412,10 +310,10 @@ class GLFWDisplay extends Display {
 
   def render(state: GameState): Unit = {
     val worldHeightChars = windowHeightChars - 1;
-    {
-      val (fbWidth, fbHeight) = window.framebufferSize
-      if (fbWidth != windowWidthChars * screenCharWidth || fbHeight != windowHeightChars * screenCharHeight)
-        window.setSize(windowWidthChars * screenCharWidth, windowHeightChars * screenCharHeight)
+    val (fbWidth, fbHeight) = window.framebufferSize
+    if (fbWidth != windowWidthChars * screenCharWidth || fbHeight != windowHeightChars * screenCharHeight) {
+      window.setSize(windowWidthChars * screenCharWidth, windowHeightChars * screenCharHeight)
+      window.center()
     }
     if (!window.isVisible)
       window.show()

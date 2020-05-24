@@ -2,7 +2,7 @@ package adrift
 
 import java.nio.file.Paths
 
-import adrift.display.{Display, GLFWDisplay}
+import adrift.display.{Display, GLFWDisplay, GLFWWindow}
 import adrift.worldgen.RoomGen
 
 import scala.util.{Random, Try}
@@ -10,7 +10,7 @@ import scala.util.{Random, Try}
 object RoomGenTest {
   def main(args: Array[String]): Unit = {
     val dataPath = Paths.get("data")
-    val display: Display = new GLFWDisplay
+    val display: Display = new GLFWDisplay(new GLFWWindow, Main.font)
     val random = new Random
 
     val initialData = Data.parse(dataPath)
