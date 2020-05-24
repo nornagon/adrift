@@ -3,7 +3,7 @@ package adrift
 import java.nio.file._
 
 import adrift.display.glutil.{Image, Texture}
-import adrift.display.{Display, Font, GLFWDisplay, GLFWWindow, GlyphRenderer}
+import adrift.display._
 import adrift.worldgen.WorldGen
 
 import scala.util.Random
@@ -16,6 +16,10 @@ object Main {
     private var buffer = Seq.empty[String]
     def println(s: String): Unit = {
       buffer :++= GlyphRenderer.wrapString(widthInGlyphs, Integer.MAX_VALUE, s)
+      render()
+    }
+    def updateLastLine(s: String): Unit = {
+      buffer = buffer.init :+ s
       render()
     }
     def init(): Unit = {
@@ -59,9 +63,15 @@ object Main {
         state
       } else {
         loadingScreen.println("Generating map...")
+        loadingScreen.println("")
+        def printProgress(t: Double): Unit = {
+          val width = 30
+          val numEqs = (t * width).round.toInt
+          loadingScreen.updateLastLine(f"  [${"=" * numEqs}>${" " * (width - numEqs)}] ${t * 100}%.0f%%")
+        }
         implicit val random: Random = new Random(12367)
         val gen = WorldGen(data)
-        val state = gen.generateWorld
+        val state = gen.generateWorld(reportProgress = printProgress)
         state.refresh()
         state
       }

@@ -118,7 +118,10 @@ object GlyphRenderer {
       currentLine.append(word)
     }
     if (currentLine.isEmpty)
-      lines.to(Seq)
+      if (lines.isEmpty)
+        Seq("")
+      else
+        lines.to(Seq)
     else
       (lines :+ currentLine.toString()).to(Seq)
   }

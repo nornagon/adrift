@@ -10,7 +10,7 @@ import scala.util.Random
 
 case class WorldGen(data: Data)(implicit random: Random) {
   def clamp01(d: Double) = math.max(0, math.min(1, d))
-  def generateWorld: GameState = {
+  def generateWorld(reportProgress: Double => Unit = (d: Double) => {}): GameState = {
     val layout = BSPArchitect.generate()
     val state = new GameState(data, new Random(random.nextLong()))
     val (width, height) = (layout.bounds.width + 1, layout.bounds.height + 1)
@@ -68,7 +68,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     // for now, just scatter the rooms around the place
     val roomTypes = data.roomgens.keys
 
-    for (room <- layout.rooms) {
+    for ((room, i) <- layout.rooms.zipWithIndex) {
       if (room.width > 2 && room.height > 2) {
         val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
         val roomType = random.pick(roomTypes)
@@ -82,6 +82,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
       } else {
         println(s"Warning: tiny room: ${room.width} x ${room.height}")
       }
+      reportProgress((i + 1).toDouble / layout.rooms.size)
     }
 
     state
