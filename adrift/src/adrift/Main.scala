@@ -3,7 +3,7 @@ package adrift
 import java.nio.file._
 
 import adrift.display.glutil.{Image, Texture}
-import adrift.display.{Display, Font, GLFWDisplay, GLFWWindow}
+import adrift.display.{Display, Font, GLFWDisplay, GLFWWindow, GlyphRenderer}
 import adrift.worldgen.WorldGen
 
 import scala.util.Random
@@ -11,30 +11,45 @@ import scala.util.Random
 object Main {
   lazy val font: Font = Font(Texture.fromImage(Image.fromFile("cp437_8x8.png")), 8, 8, 2)
 
+  class LoadingScreen(win: GLFWWindow, font: Font) {
+    val (widthInGlyphs, heightInGlyphs) = (80, 24)  // just for the loading screen.
+    private var buffer = Seq.empty[String]
+    def println(s: String): Unit = {
+      buffer :++= GlyphRenderer.wrapString(widthInGlyphs, Integer.MAX_VALUE, s)
+      render()
+    }
+    def init(): Unit = {
+      win.init()
+      win.setSize(font.tileWidth * font.scaleFactor * widthInGlyphs, font.tileHeight * font.scaleFactor * heightInGlyphs)
+      win.center()
+      win.show()
+      win.poll()
+    }
+
+    def render(): Unit = {
+      win.render { g =>
+        val gr = g.glyphs(font)
+        for ((l, y) <- buffer.zipWithIndex) {
+          gr.drawString(0, y, l)
+        }
+      }
+    }
+  }
+
   def main(args: Array[String]): Unit = {
     val win = new GLFWWindow
-    win.init()
-    val (widthInGlyphs, heightInGlyphs) = (80, 24)
-    win.setSize(font.tileWidth * font.scaleFactor * widthInGlyphs, font.tileHeight * font.scaleFactor * heightInGlyphs)
-    win.center()
-    win.show()
-    win.poll()
+    val loadingScreen = new LoadingScreen(win, font)
+    loadingScreen.init()
     val load = args.contains("--load")
 
     val dataPath = Paths.get("data")
-    win.render { g =>
-      val gr = g.glyphs(font)
-      gr.drawString(0, 0, "Loading data...")
-    }.poll()
+    loadingScreen.println("Loading data...")
     val data = Data.parse(dataPath)
 
     val savePath = Paths.get("save.bson")
     val state =
       if (Files.exists(savePath) && load) {
-        win.render { g =>
-          val gr = g.glyphs(font)
-          gr.drawString(0, 0, s"Loading from $savePath...")
-        }.poll()
+        loadingScreen.println(s"Loading from $savePath...")
         val start = System.nanoTime()
         val json = Bson.decode(Files.newInputStream(savePath))
         println(f"Parse took ${(System.nanoTime() - start) / 1e6}%.1f ms")
@@ -43,10 +58,7 @@ object Main {
         println(f"Load took ${(System.nanoTime() - start2) / 1e6}%.1f ms")
         state
       } else {
-        win.render { g =>
-          val gr = g.glyphs(font)
-          gr.drawString(0, 0, "Generating map...")
-        }.poll()
+        loadingScreen.println("Generating map...")
         implicit val random: Random = new Random(12367)
         val gen = WorldGen(data)
         val state = gen.generateWorld

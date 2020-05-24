@@ -85,6 +85,23 @@ class GlyphRenderer(
     }
   }
 
+  def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {
+    for ((line, cy) <- GlyphRenderer.wrapString(maxWidth, maxHeight, s).zipWithIndex) {
+      drawString(x, y + cy, line)
+    }
+  }
+
+  def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, lines: Seq[String]): Unit = {
+    drawBox(left, top, width, lines.size + 2)
+    if (title != null)
+      drawString(left + 1, top, s"[$title]", maxWidth = width-2)
+    for ((l, i) <- lines.zipWithIndex) {
+      drawString(left + 1, top + 1 + i, l, width - 2)
+    }
+  }
+}
+
+object GlyphRenderer {
   def wrapString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] = {
     val lines = mutable.Buffer.empty[String]
     val currentLine = new mutable.StringBuilder()
@@ -104,20 +121,5 @@ class GlyphRenderer(
       lines.to(Seq)
     else
       (lines :+ currentLine.toString()).to(Seq)
-  }
-
-  def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {
-    for ((line, cy) <- wrapString(maxWidth, maxHeight, s).zipWithIndex) {
-      drawString(x, y + cy, line)
-    }
-  }
-
-  def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, lines: Seq[String]): Unit = {
-    drawBox(left, top, width, lines.size + 2)
-    if (title != null)
-      drawString(left + 1, top, s"[$title]", maxWidth = width-2)
-    for ((l, i) <- lines.zipWithIndex) {
-      drawString(left + 1, top + 1 + i, l, width - 2)
-    }
   }
 }

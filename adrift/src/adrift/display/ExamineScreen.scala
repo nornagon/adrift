@@ -34,7 +34,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends 
 
   override def render(renderer: GlyphRenderer): Unit = {
     val width = 30
-    val descriptionLines = renderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
+    val descriptionLines = GlyphRenderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
     val actionLines: Seq[String] = Seq.empty ++
       (if (item.parts.nonEmpty) Some("[D]isassemble") else None) ++
       (if (!state.items.lookup(item).isInstanceOf[Worn] && state.sendMessage(item, Message.CanWear()).ok) Some("[w]ear") else None) ++
