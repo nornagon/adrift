@@ -7,17 +7,22 @@ import scala.collection.mutable
 
 class GlyphRenderer(
   spriteBatch: SpriteBatch,
+  /** how big is a tile in the source texture */
   tileWidth: Int,
   tileHeight: Int,
+  /** how big is a tile when drawn to to the screen */
   screenTileWidth: Int,
   screenTileHeight: Int,
   font: Texture,
 ) {
+  /** Number of tiles in each row in the source texture. */
   private val tilesPerRow: Int = font.width / tileWidth
-  require(font.width / tileWidth.toFloat - tilesPerRow == 0)
+  require(
+    font.width / tileWidth.toFloat - tilesPerRow == 0,
+    s"tileWidth ($tileWidth) must divide texture width (${font.width}) evenly"
+  )
 
   def drawChar(
-    tex: Texture,
     x: Int,
     y: Int,
     c: Int,
@@ -28,7 +33,7 @@ class GlyphRenderer(
       val cx = 0xdb % tilesPerRow
       val cy = 0xdb / tilesPerRow
       spriteBatch.drawRegion(
-        tex,
+        font,
         cx * tileWidth, cy * tileHeight,
         tileWidth, tileHeight,
         x * screenTileWidth, y * screenTileHeight,
@@ -39,7 +44,7 @@ class GlyphRenderer(
     val cx = c % tilesPerRow
     val cy = c / tilesPerRow
     spriteBatch.drawRegion(
-      tex,
+      font,
       cx * tileWidth, cy * tileHeight,
       tileWidth, tileHeight,
       x * screenTileWidth, y * screenTileHeight,
@@ -50,19 +55,19 @@ class GlyphRenderer(
 
   def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = {
     import CP437.BoxDrawing
-    drawChar(font, x, y, BoxDrawing.__RD)
-    drawChar(font, x + w - 1, y, BoxDrawing.L__D)
-    drawChar(font, x, y + h - 1, BoxDrawing._UR_)
-    drawChar(font, x + w - 1, y + h - 1, BoxDrawing.LU__)
+    drawChar(x, y, BoxDrawing.__RD)
+    drawChar(x + w - 1, y, BoxDrawing.L__D)
+    drawChar(x, y + h - 1, BoxDrawing._UR_)
+    drawChar(x + w - 1, y + h - 1, BoxDrawing.LU__)
     for (iy <- 1 until (h - 1); ix <- 1 until (w - 1))
-      drawChar(font, x + ix, y + iy, ' ')
+      drawChar(x + ix, y + iy, ' ')
     for (ix <- 1 until (w - 1)) {
-      drawChar(font, x + ix, y, BoxDrawing.L_R_)
-      drawChar(font, x + ix, y + h - 1, BoxDrawing.L_R_)
+      drawChar(x + ix, y, BoxDrawing.L_R_)
+      drawChar(x + ix, y + h - 1, BoxDrawing.L_R_)
     }
     for (iy <- 1 until (h - 1)) {
-      drawChar(font, x, y + iy, BoxDrawing._U_D)
-      drawChar(font, x + w - 1, y + iy, BoxDrawing._U_D)
+      drawChar(x, y + iy, BoxDrawing._U_D)
+      drawChar(x + w - 1, y + iy, BoxDrawing._U_D)
     }
   }
 
@@ -76,7 +81,7 @@ class GlyphRenderer(
   ): Unit = {
     for ((c, i) <- s.view.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return
-      drawChar(font, x + i, y, c, fg, bg)
+      drawChar(x + i, y, c, fg, bg)
     }
   }
 

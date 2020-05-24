@@ -25,7 +25,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def render(renderer: GlyphRenderer): Unit = {
     val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
     val (left, right, top, bottom) = display.cameraBounds(state)
-    renderer.drawChar(display.font, x - left, y - top, char, fg=Color.Black, bg=Color.White)
+    renderer.drawChar(x - left, y - top, char, fg=Color.Black, bg=Color.White)
     val width = 20
     val anchor =
       if (x - left <= (right - left) / 2 - 1)

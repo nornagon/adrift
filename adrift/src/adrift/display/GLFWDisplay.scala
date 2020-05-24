@@ -3,8 +3,7 @@ package adrift.display
 import adrift._
 import adrift.display.CP437.BoxDrawing
 import adrift.display.glutil.{Image, SpriteBatch, Texture}
-import adrift.items.{Item, Message}
-import adrift.items.behaviors
+import adrift.items.{Item, Message, behaviors}
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -131,8 +130,8 @@ object Appearance {
     val unrolled = unrolledItem.behaviors.collectFirst { case u: behaviors.Unrolled => u }.get
     val prevDir = Dir.from(unrolled.fromCell, (x, y))
     val nextDir = unrolled.toCell.map(Dir.from(_, (x, y))).getOrElse(prevDir.opposite)
-    import Dir._
     import CP437.BoxDrawing._
+    import Dir._
     val char = (prevDir, nextDir) match {
       case (N, S) | (S, N) => _U_D
       case (E, W) | (W, E) => L_R_
@@ -227,10 +226,109 @@ trait Screen {
   def render(renderer: GlyphRenderer): Unit
 }
 
-class GLFWDisplay extends Display {
+case class Font(texture: Texture, tileWidth: Int, tileHeight: Int, scaleFactor: Int = 1)
+
+class GLFWWindow {
   private var window: Long = 0
-  var font: Texture = _
   private var spriteBatch: SpriteBatch = _
+
+  def onChar(cb: Int => Unit): Unit =
+    glfwSetCharCallback(window, (window: Long, c: Int) => cb(c))
+  def onKey(cb: (Int, Int, Int, Int) => Unit): Unit =
+    glfwSetKeyCallback(
+      window,
+      (window: Long, key: Int, scancode: Int, action: Int, mods: Int) => cb(key, scancode, action, mods)
+    )
+  def onClose(cb: () => Unit): Unit =
+    glfwSetWindowCloseCallback(window, (window: Long) => cb())
+
+  def init(): Unit = {
+    GLFWErrorCallback.createPrint(System.err).set()
+
+    if (!glfwInit()) {
+      throw new IllegalStateException("Unable to initialize GLFW")
+    }
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
+
+    window = glfwCreateWindow(640, 480, "Adrift", 0, 0)
+    if (window == 0)
+      throw new RuntimeException("Failed to create GLFW window")
+
+    glfwMakeContextCurrent(window)
+    glfwSwapInterval(1)
+
+    GL.createCapabilities()
+
+    spriteBatch = SpriteBatch.create
+  }
+
+  class Graphics(val spriteBatch: SpriteBatch) {
+    def glyphs(font: Font): GlyphRenderer =
+      new GlyphRenderer(
+        spriteBatch,
+        font.tileWidth,
+        font.tileHeight,
+        font.tileWidth * font.scaleFactor,
+        font.tileHeight * font.scaleFactor,
+        font.texture
+      )
+  }
+
+  def framebufferSize: (Int, Int) = {
+    val wBuf = BufferUtils.createIntBuffer(1)
+    val hBuf = BufferUtils.createIntBuffer(1)
+    glfwGetFramebufferSize(window, wBuf, hBuf)
+    (wBuf.get(), hBuf.get())
+  }
+  def setSize(width: Int, height: Int): Unit =
+    glfwSetWindowSize(window, width, height)
+  def size: (Int, Int) = {
+    val wBuf = BufferUtils.createIntBuffer(1)
+    val hBuf = BufferUtils.createIntBuffer(1)
+    glfwGetWindowSize(window, wBuf, hBuf)
+    (wBuf.get(), hBuf.get())
+  }
+
+  def isVisible: Boolean =
+    glfwGetWindowAttrib(window, GLFW_VISIBLE) == GLFW_TRUE
+
+  def show(): Unit = glfwShowWindow(window)
+
+  def shouldClose: Boolean = glfwWindowShouldClose(window)
+
+  def render(f: Graphics => Unit): Unit = {
+    val (fbWidth, fbHeight) = framebufferSize
+
+    glViewport(0, 0, fbWidth, fbHeight)
+    val (windowWidth, windowHeight) = size
+    spriteBatch.resize(windowWidth, windowHeight)
+
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+    glClearColor(0, 0, 0, 1)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+    spriteBatch.begin()
+
+    f(new Graphics(spriteBatch))
+
+    spriteBatch.end()
+
+    glfwSwapBuffers(window)
+  }
+}
+
+class GLFWDisplay extends Display {
+  lazy val font: Font = Font(
+    texture = Texture.fromImage(Image.fromFile("cp437_8x8.png")),
+    tileWidth = 8,
+    tileHeight = 8,
+    scaleFactor = 2
+  )
+  private var window: GLFWWindow = new GLFWWindow
   private var lastState: GameState = _
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
@@ -253,26 +351,12 @@ class GLFWDisplay extends Display {
   }
 
   def init(): Unit = {
-    GLFWErrorCallback.createPrint(System.err).set()
-
-    if (!glfwInit()) {
-      throw new IllegalStateException("Unable to initialize GLFW")
-    }
-
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
-
-    window = glfwCreateWindow(640, 480, "Adrift", 0, 0)
-    if (window == 0)
-      throw new RuntimeException("Failed to create GLFW window")
-
-    glfwSetCharCallback(window, (window: Long, char: Int) => {
-      if (screens.nonEmpty) {
+    window.init()
+    window.onChar { char: Int =>
+      if (screens.nonEmpty)
         screens.last.char(char)
-      }
-    })
-
-    glfwSetKeyCallback(window, (window: Long, key: Int, scancode: Int, action: Int, mods: Int) => {
+    }
+    window.onKey { (key: Int, scancode: Int, action: Int, mods: Int) =>
       if (screens.nonEmpty) {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
           popScreen()
@@ -311,16 +395,10 @@ class GLFWDisplay extends Display {
           }
         }
       }
-    })
-    glfwSetWindowCloseCallback(window, (_: Long) => pushAction(Action.Quit))
-
-    glfwMakeContextCurrent(window)
-    glfwSwapInterval(1)
-
-    GL.createCapabilities()
-
-    font = Texture.fromImage(Image.fromFile("cp437_8x8.png"))
-    spriteBatch = SpriteBatch.create
+    }
+    window.onClose { () =>
+      pushAction(Action.Quit)
+    }
   }
 
   def cameraBounds(state: GameState): (Int, Int, Int, Int) = {
@@ -333,46 +411,33 @@ class GLFWDisplay extends Display {
   }
 
   def render(state: GameState): Unit = {
-    val worldHeightChars = windowHeightChars - 1
-    val wBuf = BufferUtils.createIntBuffer(1)
-    val hBuf = BufferUtils.createIntBuffer(1)
-    glfwGetWindowSize(window, wBuf, hBuf)
-    if (wBuf.get(0) != windowWidthChars * screenCharWidth || hBuf.get(0) != windowHeightChars * screenCharHeight)
-      glfwSetWindowSize(window, windowWidthChars * screenCharWidth, windowHeightChars * screenCharHeight)
-    val visible = glfwGetWindowAttrib(window, GLFW_VISIBLE)
-    if (visible == GLFW_FALSE)
-      glfwShowWindow(window)
-    glfwGetFramebufferSize(window, wBuf, hBuf)
-    glViewport(0, 0, wBuf.get(), hBuf.get())
-    glClearColor(0, 0, 0, 1)
-
-    spriteBatch.resize(screenCharWidth * windowWidthChars, screenCharHeight * windowHeightChars)
-
-    val renderer = new GlyphRenderer(spriteBatch, 8, 8, screenCharWidth, screenCharHeight, font)
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-    val left = state.player.x - windowWidthChars/2
-    val right = left + windowWidthChars
-    val top = state.player.y - worldHeightChars/2
-    val bottom = top + worldHeightChars
-
-    spriteBatch.begin()
-
-    renderWorld(state, renderer, left, right, top, bottom)
-    val message = state.message.getOrElse(Appearance.messageAtCell(state, state.player))
-    renderer.drawString(0, worldHeightChars, message)
-    renderer.drawString(windowWidthChars - 10, worldHeightChars, f"${state.bodyTemp - 273}%.1f C")
-
-    for (screen <- screens) {
-      screen.render(renderer)
+    val worldHeightChars = windowHeightChars - 1;
+    {
+      val (fbWidth, fbHeight) = window.framebufferSize
+      if (fbWidth != windowWidthChars * screenCharWidth || fbHeight != windowHeightChars * screenCharHeight)
+        window.setSize(windowWidthChars * screenCharWidth, windowHeightChars * screenCharHeight)
     }
+    if (!window.isVisible)
+      window.show()
 
-    spriteBatch.end()
+    window.render { g =>
+      val left = state.player.x - windowWidthChars/2
+      val right = left + windowWidthChars
+      val top = state.player.y - worldHeightChars/2
+      val bottom = top + worldHeightChars
 
-    glfwSwapBuffers(window)
+      val glyphRenderer = g.glyphs(font)
+
+      renderWorld(state, glyphRenderer, left, right, top, bottom)
+
+      val message = state.message.getOrElse(Appearance.messageAtCell(state, state.player))
+      glyphRenderer.drawString(0, worldHeightChars, message)
+      glyphRenderer.drawString(windowWidthChars - 10, worldHeightChars, f"${state.bodyTemp - 273}%.1f C")
+
+      for (screen <- screens) {
+        screen.render(glyphRenderer)
+      }
+    }
   }
 
   private def renderWorld(
@@ -394,10 +459,10 @@ class GLFWDisplay extends Display {
             val pctNoise = (1 - k) * 0.1f
             k * (1 - pctNoise) + math.random().toFloat * pctNoise
           }
-        renderer.drawChar(font, x - left, y - top, char, fg.darken(d), bg.darken(d))
+        renderer.drawChar(x - left, y - top, char, fg.darken(d), bg.darken(d))
       } else {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(font, x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
+        renderer.drawChar(x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
 
       val level = state.levels(levelId)
@@ -405,7 +470,7 @@ class GLFWDisplay extends Display {
       if (state.showGasDebug && level.gasComposition.contains(x, y)) {
         val gc = level.gasComposition(x, y)
         val color = Color(0, 0, gc.oxygen.toFloat / 15, 0.3f)
-        renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
+        renderer.drawChar(x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
 
       if (state.showTempDebug && level.temperature.contains(x, y)) {
@@ -414,7 +479,7 @@ class GLFWDisplay extends Display {
           Color((1 - math.exp(-(temp - 273)/30)).toFloat, 0, 0, 0.3f)
         else
           Color(0, 0, (1 - math.exp((temp - 273)/30)).toFloat, 0.3f)
-        renderer.drawChar(font, x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
+        renderer.drawChar(x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
     }
   }
@@ -441,5 +506,5 @@ class GLFWDisplay extends Display {
     glfwPostEmptyEvent()
   }
 
-  override def running: Boolean = !glfwWindowShouldClose(window)
+  override def running: Boolean = !window.shouldClose
 }
