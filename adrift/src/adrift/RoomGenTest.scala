@@ -4,6 +4,7 @@ import java.nio.file.Paths
 
 import adrift.display.{Display, GLFWDisplay, GLFWWindow}
 import adrift.worldgen.RoomGen
+import adrift.RandomImplicits._
 
 import scala.util.{Failure, Random, Success, Try}
 
@@ -92,6 +93,14 @@ object RoomGenTest {
       level.terrain(x, 0) = data.terrain("wall")
       level.terrain(x, height-1) = data.terrain("wall")
     }
+    val possibleDoorLocations = for {
+      y <- 0 until height
+      x <- 0 until width
+      if (x == 0 || x == width - 1 || y == 0 || y == height - 1) && !(x == 0 && y == 0) && !(x == width - 1 && y == 0) && !(x == width - 1 && y == height - 1) && !(x == 0 && y == height - 1)
+    } yield (x, y)
+    val door = random.pick(possibleDoorLocations)
+    level.terrain(door) = data.terrain("floor")
+    state.sampleItem(data.itemGroups("automatic door").choose).foreach(state.items.put(_, OnFloor(Location(levelId, door._1, door._2))))
     val cells = for (y <- 1 until height - 1; x <- 1 until width - 1) yield (x, y)
     roomgen.generate(state, levelId, cells)
     state.player = Location(levelId, width / 2, height / 2)

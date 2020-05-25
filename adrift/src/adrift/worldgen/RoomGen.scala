@@ -69,6 +69,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     def flipped: AdjacencyType = this
 
     def matchesEdge: Boolean = false
+    def matchesEdgeDoor: Boolean = false
   }
   case class Matching(c: Char) extends AdjacencyType {
     override def matchesEdge: Boolean = false
@@ -76,12 +77,16 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   case object Edge extends AdjacencyType {
     override def matchesEdge: Boolean = true
   }
+  case object EdgeDoor extends AdjacencyType {
+    override def matchesEdgeDoor: Boolean = true
+  }
   case class Internal(s: String, r: Int = 0, f: Boolean = false) extends AdjacencyType {
     override def rotated: AdjacencyType = copy(r = (r + 1) % 4)
     override def flipped: AdjacencyType = copy(f = !f)
   }
   case object Any extends AdjacencyType {
     override def matchesEdge: Boolean = true
+    override def matchesEdgeDoor: Boolean = true
   }
 
   parts.view.flatMap(_.part.toCharArray).to(Set).filterNot(c => c == 'x' || c == '*' || c == '\n') foreach { c =>
@@ -122,19 +127,20 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     val grid = new Grid(width, height)(' ')
     for (y <- 0 until height; x <- 0 until width)
       grid(x, y) = lines(y)(x)
-    def charToAdj(c: Char): AdjacencyType = c match {
+    def edgeCharToAdj(c: Char): AdjacencyType = c match {
       case '*' => Any
       case 'x' => Edge
+      case '+' => EdgeDoor
       case _ => Matching(c)
     }
     val tiles = for (y <- 1 until height - 1; x <- 1 until width - 1) yield {
       Tile(
         partId = if (y == 1 && x == 1) Some(i) else None,
         value = grid(x, y),
-        left = if (x == 1) charToAdj(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
-        right = if (x == width - 2) charToAdj(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
-        up = if (y == 1) charToAdj(grid(x, y - 1)) else Internal(s"Part $i $x,${y - 1} v"),
-        down = if (y == height - 2) charToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
+        left = if (x == 1) edgeCharToAdj(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
+        right = if (x == width - 2) edgeCharToAdj(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
+        up = if (y == 1) edgeCharToAdj(grid(x, y - 1)) else Internal(s"Part $i $x,${y - 1} v"),
+        down = if (y == height - 2) edgeCharToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
       )
     }
     tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
@@ -170,7 +176,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       })
     }
   }.distinctBy(t => (t.left, t.right, t.up, t.down, t.value))
-  private val allTiles: Array[Tile] = (partTiles ++ missingTiles).to(Array)
+  private val allTiles: Seq[Tile] = (partTiles ++ missingTiles).to(IndexedSeq)
 
   def matchesHorizontal(left: Tile, right: Tile): Boolean = {
     (left.right, right.left) match {
@@ -199,7 +205,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   allTiles.foreach(t => assert(t.up == Edge || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
   allTiles.foreach(t => assert(t.down == Edge || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
 
-  private val gts = new GraphTileSet {
+  private def gts(isDoorEdge: (Int, Int) => Boolean): GraphTileSet = new GraphTileSet {
     override def size: Int = allTiles.size
 
     /** true if |left| can be placed to the left of |right| */
@@ -222,7 +228,13 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     /** true if the player can navigate from |top| to |bottom| */
     override def connectedVertical(top: Int, bottom: Int): Boolean = true
 
-    override def allowedAt(x: Int, y: Int, t: Int): Boolean = true
+    override def allowedAt(x: Int, y: Int, t: Int): Boolean = {
+      val tile = allTiles(t)
+      (!isDoorEdge(x - 1, y) || tile.left.matchesEdgeDoor) &&
+        (!isDoorEdge(x + 1, y) || tile.right.matchesEdgeDoor) &&
+        (!isDoorEdge(x, y - 1) || tile.up.matchesEdgeDoor) &&
+        (!isDoorEdge(x, y + 1) || tile.down.matchesEdgeDoor)
+    }
 
     override def countConstraints: Iterable[WaveFunctionCollapse.CountConstraint] = {
       for (i <- parts.indices; if parts(i).min.nonEmpty || parts(i).max.nonEmpty) yield {
@@ -242,7 +254,11 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     val width = xmax - xmin + 1
     val height = ymax - ymin + 1
     assert(cells.size == width * height, "WFC only supports rectangular rooms currently")
-    WaveFunctionCollapse.graphSolve(gts, width, height, r) match {
+    def isDoorEdge(x: Int, y: Int): Boolean = {
+      (x < 0 || x >= width || y < 0 || y >= height) &&
+        state.terrain(Location(levelId, xmin + x, ymin + y)).exists(_.name == "floor")
+    }
+    WaveFunctionCollapse.graphSolve(gts(isDoorEdge), width, height, r) match {
       case Some(result) =>
         for (y <- 0 until height; x <- 0 until width) {
           val tile = allTiles(result(x)(y))
