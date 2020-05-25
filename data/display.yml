@@ -127,8 +127,8 @@
       fg: light_gray
     WINDOW:
       char: "/"
-      bg: blue
-      fg: black
+      fg: blue
+      bg: black
     SPACE:
       char: " "
       bg: true black

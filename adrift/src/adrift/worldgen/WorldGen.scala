@@ -23,6 +23,13 @@ case class WorldGen(data: Data)(implicit random: Random) {
     )
     state.levels(levelId) = level
 
+    for (x <- 0 until width) {
+      // 19 is the only prime factor of 361.
+      val terrain = data.terrain(if (x % 19 == 0) "transparent polycarbonate window" else "wall")
+      level.terrain(x, 0) = terrain
+      level.terrain(x, height - 1) = terrain
+    }
+
     val isCorridor = new CylinderGrid(width, height)(true)
 
     for (room <- layout.rooms) {
@@ -84,6 +91,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
       }
       reportProgress((i + 1).toDouble / layout.rooms.size)
     }
+
+    state.player = Location(levelId, 0, 1)
 
     state
   }

@@ -74,9 +74,10 @@ object BSPArchitect {
 
   def generate(circumference: Int, length: Int)(implicit random: Random): Layout = {
     val bounds = Rect(0, 0, circumference, length)
+    val insetBounds = Rect(0, 4, circumference, length - 4)
     val numVerticalCorridors = random.between(1, 4)
     val initialCuts = Seq(-1) ++ Seq.tabulate(numVerticalCorridors)(i => circumference * i / numVerticalCorridors).tail
-    val initialRooms = splitHorizontal(bounds, (initialCuts :+ circumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
+    val initialRooms = splitHorizontal(insetBounds, (initialCuts :+ circumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
     val rooms = initialRooms.flatMap(r => subdivideRecursive(r, 3)).iterator.to(Seq)
     Layout(bounds, rooms)
   }
