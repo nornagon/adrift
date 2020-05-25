@@ -11,7 +11,7 @@ import scala.util.Random
 case class WorldGen(data: Data)(implicit random: Random) {
   def clamp01(d: Double) = math.max(0, math.min(1, d))
   def generateWorld(reportProgress: Double => Unit = (d: Double) => {}): GameState = {
-    val layout = BSPArchitect.generate()
+    val layout = BSPArchitect.generate(360, 270)
     val state = new GameState(data, new Random(random.nextLong()))
     val (width, height) = (layout.bounds.width + 1, layout.bounds.height + 1)
 

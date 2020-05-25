@@ -8,10 +8,6 @@ import javax.swing.{JFrame, JPanel}
 import scala.util.Random
 
 object BSPArchitect {
-  // TODO: make these parameters to the algorithm
-  val cylinderCircumference = 360
-  val cylinderLength = 270
-
   case class Rect(l: Int, t: Int, r: Int, b: Int) {
     require(r > l, s"Rect must have r > l, but was $this")
     require(b > t, s"Rect must have b > t, but was $this")
@@ -76,7 +72,7 @@ object BSPArchitect {
     rooms: Seq[Rect]
   )
 
-  def generate(circumference: Int = cylinderCircumference, length: Int = cylinderLength)(implicit random: Random): Layout = {
+  def generate(circumference: Int, length: Int)(implicit random: Random): Layout = {
     val bounds = Rect(0, 0, circumference, length)
     val numVerticalCorridors = random.between(1, 4)
     val initialCuts = Seq(-1) ++ Seq.tabulate(numVerticalCorridors)(i => circumference * i / numVerticalCorridors).tail
@@ -89,7 +85,7 @@ object BSPArchitect {
     val frame = new JFrame("Adrift")
     frame.setDefaultCloseOperation(3)
 
-    val rects = generate()(new Random(42)).rooms
+    val rects = generate(360, 270)(new Random(42)).rooms
 
     val panel = new JPanel() {
       override def paint(g: Graphics): Unit = {
