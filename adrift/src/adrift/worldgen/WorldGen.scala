@@ -5,7 +5,9 @@ import adrift.YamlObject.ItemGroup
 import adrift._
 import adrift.items.Item
 import adrift.items.behaviors.Broken
+import adrift.worldgen.BSPArchitect.Rect
 
+import scala.collection.mutable
 import scala.util.Random
 
 case class WorldGen(data: Data)(implicit random: Random) {
@@ -75,12 +77,15 @@ case class WorldGen(data: Data)(implicit random: Random) {
     // for now, just scatter the rooms around the place
     val roomTypes = data.roomgens.keys
 
+    val roomTypeAssignments = mutable.Buffer.empty[(Rect, String)]
+
     for ((room, i) <- layout.rooms.zipWithIndex) {
       if (room.width > 2 && room.height > 2) {
         val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
         val roomType = random.pick(roomTypes)
         try {
           data.roomgens(roomType).generate(state, levelId, cells)
+          roomTypeAssignments += ((room, roomType))
         } catch {
           case e: Throwable =>
             println(s"Error generating $roomType of size ${room.width} x ${room.height}")
@@ -92,7 +97,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
       reportProgress((i + 1).toDouble / layout.rooms.size)
     }
 
-    state.player = Location(levelId, 0, 1)
+    val playerStartRoom = random.pick(roomTypeAssignments.filter(_._2 == "cryopods"))._1
+    state.player = Location(levelId, playerStartRoom.center)
 
     state
   }

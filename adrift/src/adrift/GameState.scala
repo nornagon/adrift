@@ -18,6 +18,9 @@ case class Location(levelId: LevelId, x: Int, y: Int) {
   def +(dx: Int, dy: Int): Location = copy(levelId, x + dx, y + dy)
   def xy: (Int, Int) = (x, y)
 }
+object Location {
+  def apply(levelId: LevelId, pos: (Int, Int)): Location = Location(levelId, pos._1, pos._2)
+}
 
 case class Level(
   var terrain: Grid[Terrain],

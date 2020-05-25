@@ -15,6 +15,7 @@ object BSPArchitect {
     def area: Int = (r - l) * (b - t)
     def width: Int = r - l
     def height: Int = b - t
+    def center: (Int, Int) = ((l + r) / 2, (t + b) / 2)
 
     def flip: Rect = Rect(t, l, b, r)
   }
