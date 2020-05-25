@@ -2,13 +2,8 @@ package adrift.display
 
 import adrift._
 import adrift.display.CP437.BoxDrawing
-import adrift.display.glutil.{Image, SpriteBatch, Texture}
 import adrift.items.{Item, Message, behaviors}
-import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
-import org.lwjgl.glfw.GLFWErrorCallback
-import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11._
 
 import scala.collection.mutable
 
@@ -230,9 +225,9 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   private var lastState: GameState = _
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
-  val windowHeightChars = 48
-  val screenCharWidth = 16
-  val screenCharHeight = 16
+  val windowHeightChars = 60
+  private val screenCharWidth = font.tileWidth * font.scaleFactor
+  private val screenCharHeight = font.tileHeight * font.scaleFactor
 
   private val screens = mutable.ListBuffer.empty[Screen]
 
@@ -309,7 +304,6 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   }
 
   def render(state: GameState): Unit = {
-    val worldHeightChars = windowHeightChars - 1;
     val (fbWidth, fbHeight) = window.framebufferSize
     if (fbWidth != windowWidthChars * screenCharWidth || fbHeight != windowHeightChars * screenCharHeight) {
       window.setSize(windowWidthChars * screenCharWidth, windowHeightChars * screenCharHeight)
@@ -319,18 +313,72 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
       window.show()
 
     window.render { g =>
-      val left = state.player.x - windowWidthChars/2
-      val right = left + windowWidthChars
-      val top = state.player.y - worldHeightChars/2
-      val bottom = top + worldHeightChars
-
       val glyphRenderer = g.glyphs(font)
+      val worldHeightChars = windowHeightChars - 1
+      val sidebarWidth = 20
+      val sidebarRect = Rect(windowWidthChars - sidebarWidth, 0, windowWidthChars, windowHeightChars)
+      val worldWidthChars = windowWidthChars - sidebarRect.width
 
-      renderWorld(state, glyphRenderer, left, right, top, bottom)
+      val worldRect = Rect(
+        l = state.player.x - worldWidthChars / 2,
+        t = state.player.y - worldHeightChars / 2,
+        r = state.player.x - worldWidthChars / 2 + worldWidthChars,
+        b = state.player.y - worldHeightChars / 2 + worldHeightChars
+      )
+      renderWorld(state, glyphRenderer, worldRect, 0, 0)
 
-      val message = state.message.getOrElse(Appearance.messageAtCell(state, state.player))
-      glyphRenderer.drawString(0, worldHeightChars, message)
-      glyphRenderer.drawString(windowWidthChars - 10, worldHeightChars, f"${state.bodyTemp - 273}%.1f C")
+      val Seq(top, mid, bot) = sidebarRect.cutVertical(Seq(0, 4, 20, windowHeightChars)).toSeq
+      glyphRenderer.drawBox(top)
+      glyphRenderer.drawString(top.l + 1, top.t + 1, f"BT: ${state.bodyTemp - 273}%.1f C")
+
+      glyphRenderer.drawBox(mid);
+      {
+        val held = state.items.lookup(InHands())
+        var y = 0
+        glyphRenderer.drawString(mid.l + 1, mid.t + 1 + y, "Held")
+        y += 1
+        held.zipWithIndex.foreach {
+          case (item, i) =>
+            glyphRenderer.drawString(
+              mid.l + 2,
+              mid.t + 1 + y + i,
+              state.itemDisplayName(item),
+              maxWidth = mid.width - 4
+            )
+        }
+        y += held.size
+        glyphRenderer.drawString(mid.l + 1, mid.t + 1 + y, "Worn")
+        y += 1
+        val worn = state.items.lookup(Worn())
+        worn.zipWithIndex.foreach {
+          case (item, i) =>
+            glyphRenderer.drawString(
+              mid.l + 2,
+              mid.t + 1 + y + i,
+              state.itemDisplayName(item),
+              maxWidth = mid.width - 4
+            )
+        }
+      }
+
+      glyphRenderer.drawBox(bot);
+      {
+        val maxMessageAge = 300
+        val oldestMessageTime = state.currentTime - maxMessageAge
+        val wrappedLines = state.messages.filter(_._2 >= oldestMessageTime)
+          .flatMap(m => GlyphRenderer.wrapString(bot.width - 2, Integer.MAX_VALUE, m._1).map((_, m._2)))
+        val lines = wrappedLines.slice(wrappedLines.size - (bot.height - 2), wrappedLines.size)
+        val top = bot.b - 1 - lines.size
+        lines.zipWithIndex.foreach {
+          case ((line, time), y) =>
+            val lineAge = state.currentTime - time
+            val color =
+              if (lineAge < 30) Color.White
+              else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
+              else Color(0.2f, 0.2f, 0.2f, 1.0f)
+            glyphRenderer.drawString(bot.l + 1, top + y, line, fg = color)
+        }
+      }
 
       for (screen <- screens) {
         screen.render(glyphRenderer)
@@ -341,11 +389,11 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   private def renderWorld(
     state: GameState,
     renderer: GlyphRenderer,
-    left: Int,
-    right: Int,
-    top: Int,
-    bottom: Int
+    worldRect: Rect,
+    screenLeft: Int,
+    screenTop: Int,
   ): Unit = {
+    val Rect(left, top, right, bottom) = worldRect
     val levelId = state.player.levelId
     for (y <- top until bottom; x <- left until right) {
       if (state.isVisible(Location(levelId, x, y))) {
@@ -357,10 +405,10 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
             val pctNoise = (1 - k) * 0.1f
             k * (1 - pctNoise) + math.random().toFloat * pctNoise
           }
-        renderer.drawChar(x - left, y - top, char, fg.darken(d), bg.darken(d))
+        renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg.darken(d), bg.darken(d))
       } else {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(x - left, y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
+        renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
       }
 
       val level = state.levels(levelId)
@@ -368,7 +416,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
       if (state.showGasDebug && level.gasComposition.contains(x, y)) {
         val gc = level.gasComposition(x, y)
         val color = Color(0, 0, gc.oxygen.toFloat / 15, 0.3f)
-        renderer.drawChar(x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
+        renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
 
       if (state.showTempDebug && level.temperature.contains(x, y)) {
@@ -377,7 +425,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
           Color((1 - math.exp(-(temp - 273)/30)).toFloat, 0, 0, 0.3f)
         else
           Color(0, 0, (1 - math.exp((temp - 273)/30)).toFloat, 0.3f)
-        renderer.drawChar(x - left, y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
+        renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
     }
   }

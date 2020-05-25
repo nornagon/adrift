@@ -30,7 +30,9 @@
       fg: brown
       layer: 50
     FLOOR:
-      char: " "
+      char: "\u00b0"
+      fg: true black
+      bg: black
       layer: -50
     ELEVATOR_WALL:
       char: "\u00C5" # ┼

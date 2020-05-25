@@ -19,6 +19,8 @@ object Serialization {
     levels: Map[LevelId, Level],
     items: ItemDatabase,
     player: Location,
+    currentTime: Int,
+    messages: Seq[(String, Int)],
     bodyTemp: Double
   ) {
     def toGameState(data: Data): GameState = {
@@ -27,17 +29,21 @@ object Serialization {
       state.itemDb = items
       state.player = player
       state.bodyTemp = bodyTemp
+      state.currentTime = currentTime
+      state.messages = messages
       state.refresh()
       state
     }
   }
   object GameStateSerialized{
     def fromGameState(state: GameState): GameStateSerialized = GameStateSerialized(
-      state.random,
-      state.levels.toMap,
-      state.itemDb,
-      state.player,
-      state.bodyTemp
+      random = state.random,
+      levels = state.levels.toMap,
+      items = state.itemDb,
+      player = state.player,
+      currentTime = state.currentTime,
+      messages = state.messages,
+      bodyTemp = state.bodyTemp,
     )
   }
 

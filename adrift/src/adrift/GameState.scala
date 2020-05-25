@@ -119,6 +119,7 @@ class GameState(var data: Data, val random: Random) {
   var player: Location = Location(LevelId("main"), 0, 0)
   var bodyTemp: Double = 310
   var internalCalories: Int = 8000
+  var currentTime = 0
 
   var isRoomTest: Boolean = false
 
@@ -166,9 +167,8 @@ class GameState(var data: Data, val random: Random) {
   var showGasDebug = false
 
 
-  private var _message: Option[String] = None
-  def message: Option[String] = _message
-  def putMessage(message: String): Unit = _message = Some(message)
+  var messages: Seq[(String, Int)] = Seq.empty
+  def putMessage(message: String): Unit = messages :+= ((message, currentTime))
 
   def elapse(durationSec: Int): Unit = {
     for (_ <- 0 until durationSec) {
@@ -179,11 +179,11 @@ class GameState(var data: Data, val random: Random) {
       checkBodyTemp()
       internalCalories -= 1
       checkHunger()
+      currentTime += 1
     }
   }
 
   def receive(action: Action): Unit = {
-    _message = None
     action match {
       case Action.PlayerMove(dx, dy) =>
         if (canWalk(player + (dx, dy)) || walkThroughWalls) {

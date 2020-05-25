@@ -5,7 +5,6 @@ import adrift.YamlObject.ItemGroup
 import adrift._
 import adrift.items.Item
 import adrift.items.behaviors.Broken
-import adrift.worldgen.BSPArchitect.Rect
 
 import scala.collection.mutable
 import scala.util.Random

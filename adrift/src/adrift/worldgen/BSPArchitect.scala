@@ -3,33 +3,19 @@ package adrift.worldgen
 import java.awt.event.{KeyEvent, KeyListener}
 import java.awt.{Color, Dimension, Graphics}
 
+import adrift.Rect
 import javax.swing.{JFrame, JPanel}
 
 import scala.util.Random
 
 object BSPArchitect {
-  case class Rect(l: Int, t: Int, r: Int, b: Int) {
-    require(r > l, s"Rect must have r > l, but was $this")
-    require(b > t, s"Rect must have b > t, but was $this")
-
-    def area: Int = (r - l) * (b - t)
-    def width: Int = r - l
-    def height: Int = b - t
-    def center: (Int, Int) = ((l + r) / 2, (t + b) / 2)
-
-    def flip: Rect = Rect(t, l, b, r)
-  }
-
-  def splitHorizontal(rect: Rect, spans: IterableOnce[(Int, Int)]): Iterator[Rect] =
-    for ((l, r) <- spans) yield Rect(rect.l + l, rect.t, rect.l + r, rect.b)
-
   def subdivideHorizontal(r: Rect, corridorWidth: Int, t: Double, margin: Int = 1): Iterator[Rect] = {
     require(0 <= t && t <= 1, "t must be in [0,1]")
     require(corridorWidth >= 0, "corridor width must be non-negative")
     val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
     require(r.width >= margin + corridorSpace + margin, "room too small to subdivide")
     val cut = margin + ((r.width - (margin + corridorSpace + margin)) * t).round.toInt
-    splitHorizontal(r, Seq((0, cut), (cut + corridorSpace - 1, r.width)))
+    r.splitHorizontal(Seq((0, cut), (cut + corridorSpace - 1, r.width)))
   }
 
   def subdivideVertical(r: Rect, corridorWidth: Int, t: Double, margin: Int = 1): Iterator[Rect] =
@@ -78,7 +64,7 @@ object BSPArchitect {
     val insetBounds = Rect(0, 4, circumference, length - 4)
     val numVerticalCorridors = random.between(1, 4)
     val initialCuts = Seq(-1) ++ Seq.tabulate(numVerticalCorridors)(i => circumference * i / numVerticalCorridors).tail
-    val initialRooms = splitHorizontal(insetBounds, (initialCuts :+ circumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
+    val initialRooms = insetBounds.splitHorizontal((initialCuts :+ circumference).sliding(2).map(s => (s(0) + 2, s(1) - 2)))
     val rooms = initialRooms.flatMap(r => subdivideRecursive(r, 3)).iterator.to(Seq)
     Layout(bounds, rooms)
   }

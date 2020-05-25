@@ -17,9 +17,9 @@
   options:
     parts:
       - |
-        xxx
-        ...
-        ...
+        ***
+        *.*
+        ***
       - min: 1
         part: |
           xxx
@@ -29,10 +29,6 @@
         xxx
         0.0
         ...
-      - |
-        xxx
-        x..
-        x..
       - |
         xxx
         x.0
@@ -45,10 +41,6 @@
         xxx
         x..
         x0.
-      - |
-        ...
-        ...
-        ...
       - max: 2
         part: |
           ....
@@ -60,10 +52,6 @@
         ...h..
         ......
         ......
-      - |
-        .0.
-        ...
-        ...
     defs:
       .: { terrain: floor }
       0: { items: [cryocasket] }

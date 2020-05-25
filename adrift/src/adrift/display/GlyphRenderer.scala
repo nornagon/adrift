@@ -1,6 +1,6 @@
 package adrift.display
 
-import adrift.Color
+import adrift.{Color, Rect}
 import adrift.display.glutil.{SpriteBatch, Texture}
 
 import scala.collection.mutable
@@ -53,21 +53,24 @@ class GlyphRenderer(
     )
   }
 
-  def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = {
+  def drawBox(rect: Rect, fg: Color = Color.White, bg: Color = Color.Black): Unit =
+    drawBox(rect.l, rect.t, rect.width, rect.height, fg, bg)
+  def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = drawBox(x, y, w, h, Color.White, Color.Black)
+  def drawBox(x: Int, y: Int, w: Int, h: Int, fg: Color, bg: Color): Unit = {
     import CP437.BoxDrawing
-    drawChar(x, y, BoxDrawing.__RD)
-    drawChar(x + w - 1, y, BoxDrawing.L__D)
-    drawChar(x, y + h - 1, BoxDrawing._UR_)
-    drawChar(x + w - 1, y + h - 1, BoxDrawing.LU__)
+    drawChar(x, y, BoxDrawing.__RD, fg, bg)
+    drawChar(x + w - 1, y, BoxDrawing.L__D, fg, bg)
+    drawChar(x, y + h - 1, BoxDrawing._UR_, fg, bg)
+    drawChar(x + w - 1, y + h - 1, BoxDrawing.LU__, fg, bg)
     for (iy <- 1 until (h - 1); ix <- 1 until (w - 1))
-      drawChar(x + ix, y + iy, ' ')
+      drawChar(x + ix, y + iy, ' ', fg, bg)
     for (ix <- 1 until (w - 1)) {
-      drawChar(x + ix, y, BoxDrawing.L_R_)
-      drawChar(x + ix, y + h - 1, BoxDrawing.L_R_)
+      drawChar(x + ix, y, BoxDrawing.L_R_, fg, bg)
+      drawChar(x + ix, y + h - 1, BoxDrawing.L_R_, fg, bg)
     }
     for (iy <- 1 until (h - 1)) {
-      drawChar(x, y + iy, BoxDrawing._U_D)
-      drawChar(x + w - 1, y + iy, BoxDrawing._U_D)
+      drawChar(x, y + iy, BoxDrawing._U_D, fg, bg)
+      drawChar(x + w - 1, y + iy, BoxDrawing._U_D, fg, bg)
     }
   }
 
