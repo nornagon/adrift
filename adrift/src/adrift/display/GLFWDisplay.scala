@@ -294,13 +294,38 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
     }
   }
 
-  def cameraBounds(state: GameState): (Int, Int, Int, Int) = {
-    val worldHeightChars = windowHeightChars - 1
+  def cameraBounds(state: GameState): Rect = {
+    val worldHeightChars = windowHeightChars
     val left = state.player.x - windowWidthChars/2
     val right = left + windowWidthChars
     val top = state.player.y - worldHeightChars/2
     val bottom = top + worldHeightChars
-    (left, right, top, bottom)
+    Rect(left, top, right, bottom)
+  }
+
+  def worldToScreen(state: GameState)(worldCoords: (Int, Int)): Option[(Int, Int)] = {
+    val wr = worldRect(state)
+    val (wx, wy) = worldCoords
+    val offX = wx - wr.l
+    val offY = wy - wr.t
+    if (offX >= 0 && offY >= 0 && offX < wr.width && offY < wr.height)
+      Some((offX, offY))
+    else
+      None
+  }
+
+  val sidebarWidth = 20
+  val sidebarRect = Rect(windowWidthChars - sidebarWidth, 0, windowWidthChars, windowHeightChars)
+  val worldHeightChars = windowHeightChars
+  val worldWidthChars = windowWidthChars - sidebarRect.width
+
+  def worldRect(state: GameState): Rect = {
+    Rect(
+      l = state.player.x - worldWidthChars / 2,
+      t = state.player.y - worldHeightChars / 2,
+      r = state.player.x - worldWidthChars / 2 + worldWidthChars,
+      b = state.player.y - worldHeightChars / 2 + worldHeightChars
+    )
   }
 
   def render(state: GameState): Unit = {
@@ -314,10 +339,6 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
 
     window.render { g =>
       val glyphRenderer = g.glyphs(font)
-      val worldHeightChars = windowHeightChars - 1
-      val sidebarWidth = 20
-      val sidebarRect = Rect(windowWidthChars - sidebarWidth, 0, windowWidthChars, windowHeightChars)
-      val worldWidthChars = windowWidthChars - sidebarRect.width
 
       val worldRect = Rect(
         l = state.player.x - worldWidthChars / 2,

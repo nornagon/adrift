@@ -45,14 +45,15 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val width = 30
     selectedItem foreach { item =>
       val loc = state.items.lookup(item)
-      val (left, _, top, _) = display.cameraBounds(state)
       loc match {
         case OnFloor(loc) =>
           val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
-          renderer.drawChar(loc.x - left, loc.y - top, char, fg=Color.Black, bg=Color.White)
+          val Some((sx, sy)) = display.worldToScreen(state)(loc.xy)
+          renderer.drawChar(sx, sy, char, fg=Color.Black, bg=Color.White)
         case InHands() | Worn() =>
           val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
-          renderer.drawChar(state.player.x - left, state.player.y - top, char, fg=Color.Black, bg=Color.White)
+          val Some((sx, sy)) = display.worldToScreen(state)(state.player.xy)
+          renderer.drawChar(sx, sy, char, fg=Color.Black, bg=Color.White)
         case Inside(otherItem) =>
           // TODO: recursively find the location of otherItem until something is worn, in hands, or on the floor.
       }
