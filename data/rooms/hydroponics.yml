@@ -1,0 +1,51 @@
+- type: roomgen
+  name: hydroponics bay
+  algorithm: WFC
+  options:
+    parts:
+      - |
+        ***
+        *.*
+        ***
+      - |
+        xxxxx
+        *BBB*
+        *...*
+        *BBB*
+      - |
+        XXXXX
+        *BBB*
+        *...*
+      - |
+        *...*
+        *BBB*
+        *...*
+        *BBB*
+      - |
+        xxxxx
+        *BBB*
+        *...*
+      - |
+        xxxxxx
+        xC..+.
+        xC..X*
+        xXXXX*
+        x*****
+    defs:
+      .: { terrain: floor }
+      B: { items: { each: [grow pod] } }
+      C: { items: { each: [compost bin] } }
+      X: { terrain: wall }
+      +: { items: { group: automatic door } }
+
+- type: item
+  name: grow pod
+  display: LARGE_EQUIPMENT
+  description: Basically a tub of water.
+  behavior:
+    - Affixed: {}
+
+- type: item
+  name: compost bin
+  display: LARGE_EQUIPMENT
+  description: A large cylindrical hopper with a motor that slowly rotates the drum.
