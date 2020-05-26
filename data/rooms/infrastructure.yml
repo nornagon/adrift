@@ -1,0 +1,167 @@
+- type: roomgen
+  name: infrastructure
+  algorithm: Furnish
+  options:
+    items:
+      each:
+        - repeat:
+            type: { each: [ bed, { group: bedding } ] }
+            wall_adjacent: true
+            nearby: { optional: [ side table ], chance: 50% }
+          count: 1-2
+        - { optional: { type: { each: [ thermostat, heating vent ] }, wall_adjacent: true }, chance: 50% }
+        - { type: { each: [ desk, { group: small tools } ] }, wall_adjacent: true, nearby: chair }
+        - { type: { each: [ closet, { group: clothing } ] }, wall_adjacent: true }
+
+- type: roomgen
+  name: infrastructure-wfc
+  algorithm: WFC
+  #    Infrastructure hubs serve a variety of purposes.
+  #   Some will have equipment racks for a variety of purposes, including:
+  #     life support (incl. temperature regulation, gas balance, etc)
+  #     intra-ship communications
+  #     power systems management
+  # There will also typically be some bulky equipment used for those same
+  #   activities, (plumbing, water heating, etc) as well as perhaps emergency power generators
+  #   or life support gear and other emergency equipment - fire extinguishers, emergency oxygen tanks, etc.
+  #   AAdditionally the infrastructure rooms will contain access hatches to the jeffries tubes.
+  options:
+    parts:
+    # Flooring
+      - |
+        ***
+        *.*
+        ***
+    # Air mixing system
+      - max: 2
+        part: |
+          xxxxxxxx
+          .EaAOCC.
+          ........
+    # Air Temperature Control
+      - max: 1
+        part: |
+         xxxx
+         .Ehc
+    # data / comms equipment
+      - max: 3
+        part: |
+          ....
+          .dd.
+          .dd.
+          ....
+    # power system
+      - max: 1
+        part: |
+          ....
+          .GP.
+          ....
+    #waste processing
+      - max: 2
+        part: |
+          xxxxxx
+          .wBbw.
+          ......
+    # Jeffries tube entrance
+      - max: 2
+        part: |
+          ...
+          .H.
+          ...
+
+    defs:
+      .: { terrain: floor }
+      x: { terrain: wall }
+      E: { items: { each: [ electronics rack ] } }
+      A: { items: { each: [ air mix system ] } }
+      a: { items: { each: [ air purification ] } }
+      O: { items: { each: [ oxygen canister ] } }
+      C: { items: { group: gas canister } }
+      h: { items: { each: [ air heater ] } }
+      H: { items: { each: [ jeffries hatch] } }
+      c: { items: { each: [ air cooler ] } }
+      d: { items: { group: data equipment } }
+      P: { items: { group: power equipment } }
+      G: { items: { each: [ generator ] } }
+      B: { items: { each: [ sewage decomposition ] } }
+      b: { items: { each: [ water purification ] } }
+      w: { items: { each: [ liquid tank ] } }
+      "%": { items: rug }
+
+- type: item
+  name: electronics rack
+  description: A bank of electronic boards - definitely used to control something important.
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: air mix system
+  description: keeps the ratios of O2, N2 and CO2 suitable for human and plant life
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: air purification
+  description: a system for removing a variety of toxins and neutralizing infectious agents from the air
+  display: LARGE_EQUIPMENT
+
+- type: item group
+  name: gas canister
+  choose:
+    - oxygen tank
+    - CO2 tank
+    - nitrogen tank
+
+- type: item
+  name: oxygen tank
+  description: a big canister for storing and transporting life-giving oxygen.
+  display: LARGE_ROD
+
+- type: item
+  name: CO2 tank
+  description: a canister designed for transporting solid carbon dioxide pellets
+  display: LARGE_ROD
+
+- type: item
+  name: nitrogen tank
+  description: a double-walled vac system for moving liquid nitrogen. Built-in optional gassifier.
+  display: LARGE_ROD
+
+- type: item
+  name: hydrogen tank
+  description: grown from a crystal seed, this tank can sustain impossible pressures without leaking. It's transparent, so you can see the baby-blue liquid hydrogen inside.
+  display: LARGE_ROD
+
+- type: item
+  name: generator
+  description: A highly efficient combustion generator with automated carbon resequestration.  Feed carbon and oxygen in, get heat and compressed CO2 out.
+  display: MEDIUM_EQUIPMENT
+
+
+- type: item group
+  name: power equipment
+  choose:
+    - power cable
+
+- type: item group
+  name: data equipment
+  choose:
+    - flex pcb
+
+- type: item
+  name: water purification
+  description: the best way to make sure water is just water is to decompose and recompose it.  Then add in some salts an minerals
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: sewage decomposition
+  description: laser-catylized reactions break sewage waste down into constituent materials and store it in tanks for reuse
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: liquid tank
+  description: A large storage tank for some sort of liquid... Could be water? Or maybe it's acid.  Or worse.
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: jeffries hatch
+  description: A sturily built hatch in the floor.  Access to the maintenance tunnels, probably.
+  display: HATCH

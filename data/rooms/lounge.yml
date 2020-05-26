@@ -84,3 +84,8 @@
   name: stool
   description: For sitting. You could sit on it. If you wanted.
   display: CHAIR
+
+- type: item
+  name: nutrient paste dispenser
+  description: converts a variety of biomass into barely palletable sludge that will fill your stomach and is unlikely to do you harm.
+  display: LARGE_EQUIPMENT
