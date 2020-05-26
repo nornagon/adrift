@@ -226,9 +226,6 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
   val windowHeightChars = 60
-  private val screenCharWidth = font.tileWidth * font.scaleFactor
-  private val screenCharHeight = font.tileHeight * font.scaleFactor
-
   private val screens = mutable.ListBuffer.empty[Screen]
 
   private [display] def pushScreen(screen: Screen): Unit = {
@@ -294,15 +291,6 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
     }
   }
 
-  def cameraBounds(state: GameState): Rect = {
-    val worldHeightChars = windowHeightChars
-    val left = state.player.x - windowWidthChars/2
-    val right = left + windowWidthChars
-    val top = state.player.y - worldHeightChars/2
-    val bottom = top + worldHeightChars
-    Rect(left, top, right, bottom)
-  }
-
   def worldToScreen(state: GameState)(worldCoords: (Int, Int)): Option[(Int, Int)] = {
     val wr = worldRect(state)
     val (wx, wy) = worldCoords
@@ -315,23 +303,26 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   }
 
   val sidebarWidth = 20
-  val sidebarRect = Rect(windowWidthChars - sidebarWidth, 0, windowWidthChars, windowHeightChars)
-  val worldHeightChars = windowHeightChars
-  val worldWidthChars = windowWidthChars - sidebarRect.width
+  val screenRect = Rect(0, 0, windowWidthChars, windowHeightChars)
+  val Seq(worldViewRect, sidebarRect) = screenRect.cutHorizontal(Seq(0, screenRect.width - sidebarWidth, screenRect.width)).to(Seq)
 
   def worldRect(state: GameState): Rect = {
     Rect(
-      l = state.player.x - worldWidthChars / 2,
-      t = state.player.y - worldHeightChars / 2,
-      r = state.player.x - worldWidthChars / 2 + worldWidthChars,
-      b = state.player.y - worldHeightChars / 2 + worldHeightChars
+      l = state.player.x - worldViewRect.width / 2,
+      t = state.player.y - worldViewRect.height / 2,
+      r = state.player.x - worldViewRect.width / 2 + worldViewRect.width,
+      b = state.player.y - worldViewRect.height / 2 + worldViewRect.height
     )
   }
 
   def render(state: GameState): Unit = {
     val (fbWidth, fbHeight) = window.framebufferSize
-    if (fbWidth != windowWidthChars * screenCharWidth || fbHeight != windowHeightChars * screenCharHeight) {
-      window.setSize(windowWidthChars * screenCharWidth, windowHeightChars * screenCharHeight)
+    if (fbWidth != windowWidthChars * (font.tileWidth * font.scaleFactor) ||
+      fbHeight != windowHeightChars * (font.tileHeight * font.scaleFactor)) {
+      window.setSize(
+        windowWidthChars * (font.tileWidth * font.scaleFactor),
+        windowHeightChars * (font.tileHeight * font.scaleFactor)
+      )
       window.center()
     }
     if (!window.isVisible)
@@ -340,13 +331,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
     window.render { g =>
       val glyphRenderer = g.glyphs(font)
 
-      val worldRect = Rect(
-        l = state.player.x - worldWidthChars / 2,
-        t = state.player.y - worldHeightChars / 2,
-        r = state.player.x - worldWidthChars / 2 + worldWidthChars,
-        b = state.player.y - worldHeightChars / 2 + worldHeightChars
-      )
-      renderWorld(state, glyphRenderer, worldRect, 0, 0)
+      renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
       val Seq(top, mid, bot) = sidebarRect.cutVertical(Seq(0, 4, 20, windowHeightChars)).toSeq
       glyphRenderer.drawBox(top)
