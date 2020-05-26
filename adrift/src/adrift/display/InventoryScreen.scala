@@ -44,19 +44,10 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val anchor = (1, 1)
     val width = 30
     selectedItem foreach { item =>
-      val loc = state.items.lookup(item)
-      loc match {
-        case OnFloor(loc) =>
-          val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
-          val Some((sx, sy)) = display.worldToScreen(state)(loc.xy)
-          renderer.drawChar(sx, sy, char, fg=Color.Black, bg=Color.White)
-        case InHands() | Worn() =>
-          val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
-          val Some((sx, sy)) = display.worldToScreen(state)(state.player.xy)
-          renderer.drawChar(sx, sy, char, fg=Color.Black, bg=Color.White)
-        case Inside(otherItem) =>
-          // TODO: recursively find the location of otherItem until something is worn, in hands, or on the floor.
-      }
+      val loc = state.getItemTile(item)
+      val (char, _, _, _) = Appearance.canonicalCharForItem(state, item)
+      val Some((sx, sy)) = display.worldToScreen(state)(loc.xy)
+      renderer.drawChar(sx, sy, char, fg=Color.Black, bg=Color.White)
     }
     renderer.drawBox(anchor._1, anchor._2, width, anchor._2 + 2 + nearbyItems.size)
     renderer.drawString(anchor._1 + 1, anchor._2 + 1, "Nearby")
