@@ -241,7 +241,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
   }
 
   def init(): Unit = {
-    window.init()
+    window.init(width = windowWidthChars * font.tileWidth * font.scaleFactor, height = windowHeightChars * font.tileHeight * font.scaleFactor)
     window.onChar { char: Int =>
       if (screens.nonEmpty)
         screens.last.char(char)

@@ -125,12 +125,12 @@ class GameState(var data: Data, val random: Random) {
   var mapMemory = mutable.Map.empty[LevelId, Grid[Option[(Char, Color, Color)]]]
 
   def remembered(loc: Location): Option[(Char, Color, Color)] =
-    mapMemory.get(loc.levelId).flatMap(_(loc.xy))
+    mapMemory.get(loc.levelId).flatMap(_.getOrElse(loc.xy, None))
 
   def updateMemory(): Unit = {
     val level = levels(player.levelId)
     val memory = mapMemory.getOrElseUpdate(player.levelId, new Grid[Option[(Char, Color, Color)]](level.width, level.height)(None))
-    for ((x, y) <- visible)
+    for ((x, y) <- visible; if memory.contains(x, y))
       memory(x, y) = Some(Appearance.charAtPosition(this, x, y))
   }
 
