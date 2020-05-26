@@ -17,6 +17,7 @@ object Serialization {
   case class GameStateSerialized(
     random: Random,
     levels: Map[LevelId, Level],
+    memory: Map[LevelId, Grid[Option[(Char, Color, Color)]]],
     items: ItemDatabase,
     player: Location,
     currentTime: Int,
@@ -31,6 +32,7 @@ object Serialization {
       state.bodyTemp = bodyTemp
       state.currentTime = currentTime
       state.messages = messages
+      state.mapMemory = mutable.Map.empty ++ memory
       state.refresh()
       state
     }
@@ -39,6 +41,7 @@ object Serialization {
     def fromGameState(state: GameState): GameStateSerialized = GameStateSerialized(
       random = state.random,
       levels = state.levels.toMap,
+      memory = state.mapMemory.toMap,
       items = state.itemDb,
       player = state.player,
       currentTime = state.currentTime,
@@ -102,6 +105,9 @@ object Serialization {
 
   implicit val encodeLocation: Encoder[Location] = deriveEncoder[Location]
   implicit val decodeLocation: Decoder[Location] = deriveDecoder[Location]
+
+  implicit val encodeColor: Encoder[Color] = deriveEncoder[Color]
+  implicit val decodeColor: Decoder[Color] = deriveDecoder[Color]
 
   implicit val encodeGasComposition: Encoder[GasComposition] = deriveEncoder
   implicit val decodeGasComposition: Decoder[GasComposition] = deriveDecoder

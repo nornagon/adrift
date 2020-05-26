@@ -2,6 +2,7 @@ package adrift
 
 import adrift.Action.AssemblyAction
 import adrift.RandomImplicits._
+import adrift.display.Appearance
 import adrift.items.Message.{IsFunctional, Provides}
 import adrift.items._
 import adrift.items.behaviors.{PartiallyDisassembled, Tool}
@@ -120,6 +121,18 @@ class GameState(var data: Data, val random: Random) {
   var bodyTemp: Double = 310
   var internalCalories: Int = 8000
   var currentTime = 0
+  // TODO: save the _logical_ display here rather than the physical display
+  var mapMemory = mutable.Map.empty[LevelId, Grid[Option[(Char, Color, Color)]]]
+
+  def remembered(loc: Location): Option[(Char, Color, Color)] =
+    mapMemory.get(loc.levelId).flatMap(_(loc.xy))
+
+  def updateMemory(): Unit = {
+    val level = levels(player.levelId)
+    val memory = mapMemory.getOrElseUpdate(player.levelId, new Grid[Option[(Char, Color, Color)]](level.width, level.height)(None))
+    for ((x, y) <- visible)
+      memory(x, y) = Some(Appearance.charAtPosition(this, x, y))
+  }
 
   var isRoomTest: Boolean = false
 
@@ -500,6 +513,7 @@ class GameState(var data: Data, val random: Random) {
       newVisible.add((normalizeX(player.x + x), player.y + y))
     })
     visible = newVisible.toSet
+    updateMemory()
   }
 
   def isVisible(location: Location): Boolean =

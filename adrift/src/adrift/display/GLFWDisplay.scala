@@ -413,10 +413,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
           }
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg.darken(d), bg.darken(d))
       } else {
-        // TODO: implement map memory
-        val cellIsRemembered = state.seeThroughWalls
-        if (cellIsRemembered) {
-          val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
+        state.remembered(Location(levelId, x, y)) foreach { case (char, _, _) =>
           renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
         }
       }
