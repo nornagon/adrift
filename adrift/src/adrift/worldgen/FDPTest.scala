@@ -1,12 +1,11 @@
-package adrift
+package adrift.worldgen
 
 import java.awt.event.{KeyEvent, KeyListener}
-
-import scala.util.Random
 import java.awt.{Dimension, Graphics}
 
-import adrift.worldgen.ForceDirectedPlacement
 import javax.swing.{JFrame, JPanel}
+
+import scala.util.Random
 
 object FDPTest {
   def main(args: Array[String]): Unit = {
