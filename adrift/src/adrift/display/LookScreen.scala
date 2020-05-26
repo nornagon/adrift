@@ -23,24 +23,34 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
-    display.worldToScreen(state)(x, y) match {
-      case Some((sx, sy)) =>
-        renderer.drawChar(sx, sy, char, fg=Color.Black, bg=Color.White)
-        val width = 20
-        val anchor = (1, 1)
+    val loc = Location(state.player.levelId, x, y)
+    val isVisible = state.isVisible(loc)
+    val width = 20
+    val anchor = (1, 1)
+    if (isVisible) {
+      val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
+      display.worldToScreen(state)(x, y) match {
+        case Some((sx, sy)) =>
+          renderer.drawChar(sx, sy, char, fg = Color.Black, bg = Color.White)
 
-        val terrain = state.levels(levelId).terrain(x, y)
-        val items = state.items.lookup(OnFloor(Location(levelId, x, y)))
+          val terrain = state.levels(levelId).terrain(x, y)
+          val items = state.items.lookup(OnFloor(Location(levelId, x, y)))
 
-        renderer.frame(
-          left = anchor._1, top = anchor._2,
-          width = width,
-          lines = Seq(terrain.name) ++
-            items.take(9).map(_.kind.name) ++
-            (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
-        )
-      case None =>
+          renderer.frame(
+            left = anchor._1, top = anchor._2,
+            width = width,
+            lines = Seq(terrain.name) ++
+              items.take(9).map(_.kind.name) ++
+              (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
+          )
+        case None =>
+      }
+    } else {
+      display.worldToScreen(state)(x, y) match {
+        case Some((sx, sy)) =>
+          renderer.drawChar(sx, sy, ' ', fg = Color.Black, bg = Color.White)
+        case None =>
+      }
     }
   }
 }

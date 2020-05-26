@@ -402,7 +402,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
     val Rect(left, top, right, bottom) = worldRect
     val levelId = state.player.levelId
     for (y <- top until bottom; x <- left until right) {
-      if (state.isVisible(Location(levelId, x, y))) {
+      if (state.isVisible(Location(levelId, x, y)) || state.seeThroughWalls) {
         val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
         val d: Float =
           if (state.sightRadius > 20) 1f
@@ -413,8 +413,12 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
           }
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg.darken(d), bg.darken(d))
       } else {
-        val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
-        renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
+        // TODO: implement map memory
+        val cellIsRemembered = state.seeThroughWalls
+        if (cellIsRemembered) {
+          val (char, fg, bg) = Appearance.charAtPosition(state, x, y)
+          renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
+        }
       }
 
       val level = state.levels(levelId)
