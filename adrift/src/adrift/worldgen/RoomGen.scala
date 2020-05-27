@@ -8,7 +8,13 @@ import io.circe.{Decoder, HCursor, Json, JsonObject}
 
 import scala.util.Random
 
-trait RoomGen {
+case class RoomGen(
+  algorithm: RoomGenAlgorithm,
+  minArea: Int,
+  maxArea: Int,
+)
+
+trait RoomGenAlgorithm {
   def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit
 }
 
@@ -18,7 +24,7 @@ case class FurnishItem(
   nearby: Option[Table[String]]
 )
 
-case class Furnish(items: Table[FurnishItem]) extends RoomGen {
+case class Furnish(items: Table[FurnishItem]) extends RoomGenAlgorithm {
   override def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
     val cellSet = cells.toSet
     def isWallAdjacent(p: (Int, Int)): Boolean = {
@@ -63,7 +69,7 @@ object PartWithOpts {
     for { part <- c.as[String] } yield PartWithOpts(part)
   implicit val decoder: Decoder[PartWithOpts] = decodeFromString or derivedDecoder
 }
-case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends RoomGen {
+case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends RoomGenAlgorithm {
   sealed trait AdjacencyType {
     def rotated: AdjacencyType = this
     def flipped: AdjacencyType = this
@@ -279,19 +285,20 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   }
 }
 
-object RoomGen {
+object RoomGenAlgorithm {
   import cats.syntax.functor._
   import io.circe.generic.extras.Configuration
   import io.circe.generic.extras.auto._
   import io.circe.{Decoder, Encoder}
   implicit private val configuration: Configuration = Configuration.default.withDefaults.withDiscriminator("type")
 
-  val decoders: Map[String, Decoder[RoomGen]] = Map(
+  val decoders: Map[String, Decoder[RoomGenAlgorithm]] = Map(
     "Furnish" -> Decoder[Furnish].widen,
     "WFC" -> Decoder[WFC].widen,
   )
 
-  implicit val encodeBehavior: Encoder[RoomGen] = (b: RoomGen) => Json.fromJsonObject(JsonObject.singleton(b.getClass.getSimpleName, b match {
+  implicit val encodeBehavior: Encoder[RoomGenAlgorithm] = (b: RoomGenAlgorithm) => Json.fromJsonObject(JsonObject.singleton(b.getClass.getSimpleName, b match {
     case b: Furnish => Encoder[Furnish].apply(b)
+    case b: WFC => Encoder[WFC].apply(b)
   }))
 }

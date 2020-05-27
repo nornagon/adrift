@@ -144,7 +144,7 @@
 - type: item group
   name: data equipment
   choose:
-    - flex pcb
+    - flex component
 
 - type: item
   name: water purification

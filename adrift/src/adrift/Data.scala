@@ -5,7 +5,7 @@ import java.util.stream.Collectors
 
 import adrift.Population.Table
 import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
-import adrift.worldgen.RoomGen
+import adrift.worldgen.{RoomGen, RoomGenAlgorithm}
 import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
@@ -39,6 +39,8 @@ object YamlObject {
   case class RoomGen(
     name: String,
     algorithm: String,
+    minArea: Int = 0,
+    maxArea: Int = Integer.MAX_VALUE,
     options: JsonObject
   )
 }
@@ -153,14 +155,14 @@ object Data {
       .groupBy(_.name).map { case (k: String, v: Seq[YamlObject.RoomGen]) =>
         assert(v.length == 1, s"More than one roomgen with name $k"); k -> v.head
       }
-      .map { case (k: String, v: YamlObject.RoomGen) =>
-        val roomgen = RoomGen.decoders(v.algorithm)
+      .map { case (k, v) =>
+        val algorithm = RoomGenAlgorithm.decoders(v.algorithm)
           .decodeJson(Json.fromJsonObject(v.options))
           .fold(
             ex => parseError(s"roomgen options for '$k'", Json.fromJsonObject(v.options), ex),
             identity
           )
-        k -> roomgen
+        k -> RoomGen(algorithm = algorithm, minArea = v.minArea, maxArea = v.maxArea)
       }
 
     val terrain: Map[String, Terrain] = ymls("terrain")

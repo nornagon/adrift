@@ -18,14 +18,9 @@ object BSPArchitect {
     r.splitHorizontal(Seq((0, cut), (cut + corridorSpace - 1, r.width)))
   }
 
-  def subdivideVertical(r: Rect, corridorWidth: Int, t: Double, margin: Int = 1): Iterator[Rect] =
-    subdivideHorizontal(r.flip, corridorWidth, t, margin).map(_.flip)
-
   def clamp01(d: Double) = math.max(0, math.min(1, d))
-  def subdivideRecursive(r: Rect, corridorWidth: Int)(implicit random: Random): IterableOnce[Rect] = {
-    // 1. Which way are we going to divide?
-    val divideHorizontal = r.width > r.height || (r.width == r.height && random.nextBoolean())
-    def splitValue: Double = clamp01(random.nextGaussian() * 0.2 + 0.5)
+  def subdivideRecursiveHorizontal(r: Rect, corridorWidth: Int)(implicit random: Random): IterableOnce[Rect] = {
+    val splitValue = clamp01(random.nextGaussian() * 0.2 + 0.5)
     val corridorsRequired = r.area > 1000
     val minCorridorWidth = if (corridorsRequired) 1 else 0
     val childCorridorWidth = math.max(minCorridorWidth, corridorWidth - 1)
@@ -34,24 +29,22 @@ object BSPArchitect {
     val corridorSpace = if (corridorWidth == 0) 1 else 1 + corridorWidth + 1 // with walls
     val minDimension = minRoomDimension + corridorSpace + minRoomDimension
 
-    if (divideHorizontal) {
-      // Horizontal
-      if (r.width < minDimension || r.area < 100) {
-        // Can't be further subdivided.
-        Seq(r)
-      } else {
-        subdivideHorizontal(r, corridorWidth, splitValue, minRoomDimension)
-          .flatMap(r => subdivideRecursive(r, childCorridorWidth))
-      }
+    if (r.width < minDimension || r.area < 100 || (r.area < 1000 && random.nextInt(10) == 0)) {
+      // Can't be further subdivided.
+      Seq(r)
     } else {
-      // Vertical
-      if (r.height < minDimension || r.area < 100) {
-        Seq(r)
-      } else {
-        subdivideVertical(r, corridorWidth, splitValue, minRoomDimension)
-          .flatMap(r => subdivideRecursive(r, childCorridorWidth))
-      }
+      subdivideHorizontal(r, corridorWidth, splitValue, minRoomDimension)
+        .flatMap(r => subdivideRecursive(r, childCorridorWidth))
     }
+  }
+
+  def subdivideRecursive(r: Rect, corridorWidth: Int)(implicit random: Random): IterableOnce[Rect] = {
+    // 1. Which way are we going to divide?
+    val divideHorizontal = r.width > r.height || (r.width == r.height && random.nextBoolean())
+    if (divideHorizontal)
+      subdivideRecursiveHorizontal(r, corridorWidth)
+    else
+      subdivideRecursiveHorizontal(r.flip, corridorWidth).iterator.map(_.flip)
   }
 
   case class Layout(

@@ -79,11 +79,14 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val roomTypeAssignments = mutable.Buffer.empty[(Rect, String)]
 
     for ((room, i) <- layout.rooms.zipWithIndex) {
+      val matchingRoomTypes = roomTypes.filter { t =>
+        room.area >= data.roomgens(t).minArea && room.area <= data.roomgens(t).maxArea
+      }
       if (room.width > 2 && room.height > 2) {
         val cells: Seq[(Int, Int)] = for (x <- room.l + 1 to room.r - 1; y <- room.t + 1 to room.b - 1) yield (x, y)
-        val roomType = random.pick(roomTypes)
+        val roomType = random.pick(matchingRoomTypes)
         try {
-          data.roomgens(roomType).generate(state, levelId, cells)
+          data.roomgens(roomType).algorithm.generate(state, levelId, cells)
           roomTypeAssignments += ((room, roomType))
         } catch {
           case e: Throwable =>
