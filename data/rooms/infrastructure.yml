@@ -55,6 +55,7 @@
           ......
     # Jeffries tube entrance
       - max: 2
+      - min: 1
         part: |
           ...
           .H.
