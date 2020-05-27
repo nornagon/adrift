@@ -5,7 +5,7 @@ import java.util.stream.Collectors
 
 import adrift.Population.Table
 import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
-import adrift.worldgen.{RoomGen, RoomGenAlgorithm}
+import adrift.worldgen.{RoomGen, RoomGenAlgorithm, WFC}
 import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
@@ -150,6 +150,27 @@ object Data {
         case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head
       }
 
+    def checkValid(referrer: String, name: String, table: Table[String]): Unit = {
+      table match {
+        case Population.TableItem(item) =>
+          if (!items.contains(item))
+            println(s"Warning: $referrer '$name' referred to item '$item', which was not defined.")
+        case Population.TableGroup(group) =>
+          if (!itemGroups.contains(group))
+            println(s"Warning: $referrer '$name' referred to item group '$group', which was not defined.")
+        case Population.TableChoose(choose) =>
+          choose.foreach { tce => checkValid(referrer, name, tce.subtable) }
+        case Population.TableEach(each) =>
+          each.foreach(checkValid(referrer, name, _))
+        case Population.TableRepeat(_, repeat) =>
+          checkValid(referrer, name, repeat)
+        case Population.TableOptional(_, optional) =>
+          checkValid(referrer, name, optional)
+      }
+    }
+
+    itemGroups foreach { case (name, ig) => checkValid("item group", name, ig.choose) }
+
     val roomgens: Map[String, RoomGen] = ymls("roomgen")
       .map(parse[YamlObject.RoomGen])
       .groupBy(_.name).map { case (k: String, v: Seq[YamlObject.RoomGen]) =>
@@ -164,6 +185,18 @@ object Data {
           )
         k -> RoomGen(algorithm = algorithm, minArea = v.minArea, maxArea = v.maxArea)
       }
+
+    roomgens foreach { case (name, rg) =>
+      rg.algorithm match {
+        case WFC(parts, defs) =>
+          defs.values.foreach { pd =>
+            pd.items.foreach { items =>
+              checkValid("WFC roomgen", name, items)
+            }
+          }
+        case _ =>
+      }
+    }
 
     val terrain: Map[String, Terrain] = ymls("terrain")
       .map(parse[Terrain])
