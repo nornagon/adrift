@@ -6,6 +6,7 @@ trait Message
 
 object Message {
   case class PlayerMove(loc: Location) extends Message
+  case class PlayerBump(loc: Location) extends Message
   case object Activate extends Message
   case object Deactivate extends Message
   case object Tick extends Message

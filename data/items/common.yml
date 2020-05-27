@@ -32,6 +32,18 @@
     - MotionSensor: { radius: 1 }
 
 - type: item
+  name: mounted button
+  description: A manually operated momentary switch, mounted to the wall. You could press it.
+  display: MEDIUM_COMPONENT
+  parts:
+    - { type: micro e-board, disassembled_with: SCREWING }
+    - { type: A-size frame, disassembled_with: SCREWING }
+    - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
+  behavior:
+    - Affixed: {}
+    - BumpActivated: {}
+
+- type: item
   name: manual door
   description: A standard sturdy, manually operated door.
   parts:

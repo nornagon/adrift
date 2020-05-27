@@ -7,6 +7,13 @@
       - mounted presence sensor
 
 - type: item group
+  name: manually operated door
+  choose:
+    each:
+      - automatic door
+      - mounted button
+
+- type: item group
   name: small tools
   choose:
     - screwdriver

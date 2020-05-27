@@ -69,7 +69,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
       if (possibleDoorPositions.nonEmpty) {
         val (x, y) = random.pick(possibleDoorPositions)
         level.terrain(x, y) = data.terrain("floor")
-        generateItem(data.itemGroups("automatic door")).foreach(state.items.put(_, OnFloor(Location(levelId, x, y))))
+        val doorType = random.oneOf("automatic door", "manually operated door")
+        generateItem(data.itemGroups(doorType)).foreach(state.items.put(_, OnFloor(Location(levelId, x, y))))
       }
     }
 

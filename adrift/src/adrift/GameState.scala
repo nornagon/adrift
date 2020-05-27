@@ -3,9 +3,9 @@ package adrift
 import adrift.Action.AssemblyAction
 import adrift.RandomImplicits._
 import adrift.display.Appearance
-import adrift.items.Message.{IsFunctional, Provides}
+import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
 import adrift.items._
-import adrift.items.behaviors.{PartiallyDisassembled, Tool}
+import adrift.items.behaviors.PartiallyDisassembled
 
 import scala.collection.mutable
 import scala.util.Random
@@ -201,6 +201,9 @@ class GameState(var data: Data, val random: Random) {
       case Action.PlayerMove(dx, dy) =>
         if (canWalk(player + (dx, dy)) || walkThroughWalls) {
           movePlayer(player + (dx, dy))
+        } else {
+          val loc = player + (dx, dy)
+          broadcastToLocation(OnFloor(loc), PlayerBump(loc))
         }
         elapse(1)
 
