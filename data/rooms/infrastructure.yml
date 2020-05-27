@@ -3,15 +3,6 @@
   algorithm: Furnish
   options:
     items:
-      each:
-        - repeat:
-            type: { each: [ bed, { group: bedding } ] }
-            wall_adjacent: true
-            nearby: { optional: [ side table ], chance: 50% }
-          count: 1-2
-        - { optional: { type: { each: [ thermostat, heating vent ] }, wall_adjacent: true }, chance: 50% }
-        - { type: { each: [ desk, { group: small tools } ] }, wall_adjacent: true, nearby: chair }
-        - { type: { each: [ closet, { group: clothing } ] }, wall_adjacent: true }
 
 - type: roomgen
   name: infrastructure-wfc
