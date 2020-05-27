@@ -1,10 +1,4 @@
 - type: roomgen
-  name: infrastructure
-  algorithm: Furnish
-  options:
-    items:
-
-- type: roomgen
   name: infrastructure-wfc
   algorithm: WFC
   #    Infrastructure hubs serve a variety of purposes.
@@ -55,7 +49,7 @@
           ......
     # Jeffries tube entrance
       - max: 2
-      - min: 1
+        min: 1
         part: |
           ...
           .H.
