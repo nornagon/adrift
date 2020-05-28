@@ -111,11 +111,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     GlyphRenderer.wrap(is(selected).kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
     sprintln("")
     val actions = Seq(
-      "o" -> CS("open", Seq(Ann(0, 1, lightGreen))),
-      "d" -> CS("diagnose", Seq(Ann(0, 1, lightGreen))),
-      "r" -> CS("remove", Seq(Ann(0, 1, lightGreen))),
-    )
-    val actionStr = wrapCS(actions.map(_._2).reduce(_ + CS(" ", Seq.empty) + _), width - 2)
+      Option.when(is(selected).parts.nonEmpty)(CS("open", Seq(Ann(0, 1, lightGreen)))),
+      Some(CS("diagnose", Seq(Ann(0, 1, lightGreen)))),
+      Some(CS("remove", Seq(Ann(0, 1, lightGreen)))),
+    ).flatten
+    val actionStr = wrapCS(actions.reduce(_ + CS(" ", Seq.empty) + _), width - 2)
     actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
   }
 }
