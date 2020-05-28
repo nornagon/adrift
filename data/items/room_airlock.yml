@@ -1,4 +1,32 @@
 - type: item
+  name: airlock door
+  description: An airtight door specially designed with interlocks to prevent it from opening if its linked door is open.
+  parts:
+    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
+    - {type: flex component, count: 4, disassembled_with: SOLDERING}
+    - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
+    - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
+    - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
+  display: DOOR_CLOSED
+
+
+- type: item
+  name: spacesuit dock
+  description: a rack that supports the spacesuit and keeps its batteries charged
+  parts:
+    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
+    - {type: flex component, count: 4, disassembled_with: SOLDERING}
+    - {type: C-size modular panel, count: 4, disassembled_with: SCREWING}
+    - {type: C-size modular rod, count: 6, disassembled_with: SCREWING}
+    - {type: D-size modular panel, count: 2, disassembled_with: SCREWING}
+    - {type: D-size modular rod, count: 4, disassembled_with: SCREWING}
+  display: MEDIUM_EQUIPMENT
+
+- type: item
   name: spacesuit
   description: a snug, armored, human casing with integrated atmosphere and waste processing systems designed for hand assembly
   parts:

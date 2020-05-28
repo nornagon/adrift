@@ -1,15 +1,30 @@
 
 - type: roomgen
   name: medical
-  algorithm: Furnish
+  algorithm: WFC
   options:
-    items:
-      each:
-        - repeat:
-            type: {each: [ medical cabinet, {group: medical tool}, {group: medical supplies}]}
-            wall_adjacent: true
-          count: 3-6
-        - type: gurney
+    parts:
+#     Floor
+      - |
+        ***
+        *.*
+        ***
+#     Medical Cabinet
+      - max: 5
+        part: |
+          xxx
+          .C.
+          *.*
+#     Gurney
+      - |
+        ...
+        .G.
+        ...
+    defs:
+      .: { terrain: floor }
+      C: { items: {each: [ medical cabinet, { group: medical tool }, { group: medical supplies } ] } }
+      G: { items: [gurney]}
+
 
 - type: roomgen
   name: cryopods

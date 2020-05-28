@@ -1,5 +1,5 @@
 - type: roomgen
-  name: infrastructure-wfc
+  name: infrastructure
   algorithm: WFC
   #    Infrastructure hubs serve a variety of purposes.
   #   Some will have equipment racks for a variety of purposes, including:
@@ -61,7 +61,7 @@
       E: { items: { each: [ electronics rack ] } }
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
-      O: { items: { each: [ oxygen canister ] } }
+      O: { items: { each: [ oxygen tank ] } }
       C: { items: { group: gas canister } }
       h: { items: { each: [ air heater ] } }
       H: { items: { each: [ jeffries hatch] } }
@@ -95,6 +95,16 @@
     - oxygen tank
     - CO2 tank
     - nitrogen tank
+
+- type: item
+  name: air heater
+  description: a bulky unit for dumping large amounts of heat into some air
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: air cooler
+  description: a bulky unit which extracts heat from air and stores it for later use in making tea.
+  display: LARGE_EQUIPMENT
 
 - type: item
   name: oxygen tank

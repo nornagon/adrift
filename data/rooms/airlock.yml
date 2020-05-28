@@ -1,0 +1,53 @@
+
+- type: roomgen
+  minArea: 12
+  maxArea: 24
+  name: airlock
+  algorithm: WFC
+  options:
+    parts:
+#   Floor
+    - |
+      ***
+      *.*
+      ***
+
+#   Interior Access Door
+    - min: 1
+      max: 1
+      part: |
+        xxxxxx
+        *X..X*
+        *XDDX*
+        **..**
+      #   Interior Access Door
+#    - |
+#      xxxxxx
+#      *X..X*
+#      *XDDX*
+#      **..**
+
+##   Space Access Door
+#    - min: 1
+#      max: 1
+#        ssss
+#      part: |
+#        xxxxxx
+#        *X..X*
+#        *XDDX*
+#        **..**
+
+#   Spacesuit And Dock
+    - max: 6
+      part: |
+        xxx
+        .S.
+        ...
+
+    defs:
+      .: { terrain: floor }
+      +: { items: { group: automatic door } }
+      X: { terrain: wall }
+      s: { terrain: empty space }
+      D: { items: [airlock door] }
+      S: { items: { each: [spacesuit, spacesuit dock] } }
