@@ -13,7 +13,7 @@
   description: A box of electronics to adapt from ship power to any other kind of power supply.
   parts:
     - { type: micro e-board, count: 1, disassembled_with: SCREWING }
-    - { type: flex component, count: 21, disassembled_with: SOLDERING }
+    - { type: flex component, count: 2, disassembled_with: SOLDERING }
     - { type: microprocessor, count: 1, disassembled_with: SOLDERING }
   display: MEDIUM_BOX
   behavior:

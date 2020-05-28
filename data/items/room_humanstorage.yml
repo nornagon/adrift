@@ -45,9 +45,9 @@
   name: cryocasket
   description: A top-of-the-line system for maintaining a human alive at low temperature and minimum metabolic rate.
   parts:
-    - { type: refrigerator, count: 2, disassembled_with: SCREWING }
+    - { type: refrigerator, count: 1, disassembled_with: SCREWING }
     - { type: D-size frame, count: 4, disassembled_with: SCREWING }
-    - { type: cryo-door, count: 10, disassembled_with: SCREWING }
+    - { type: cryo-door, count: 1, disassembled_with: SCREWING }
     - { type: type IC screw, count: 6, disassembled_with: SCREWING }
     - { type: type IB screw, count: 10, disassembled_with: SCREWING }
   display: CRYOCASKET
