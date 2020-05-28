@@ -5,7 +5,7 @@ import adrift.RandomImplicits._
 import adrift.display.Appearance
 import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
 import adrift.items._
-import adrift.items.behaviors.PartiallyDisassembled
+import adrift.items.behaviors.{Opened, PartiallyDisassembled}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -207,6 +207,24 @@ class GameState(var data: Data, val random: Random) {
         }
         elapse(1)
 
+      case Action.Open(item) =>
+        if (sendMessage(item, Message.IsOpened()).opened) {
+          putMessage(s"The ${itemDisplayName(item)} is already open.")
+        } else {
+          elapse(10)
+          item.behaviors += Opened()
+          putMessage(s"You open the ${itemDisplayName(item)}.")
+        }
+
+      case Action.Close(item) =>
+        if (!sendMessage(item, Message.IsOpened()).opened) {
+          putMessage(s"The ${itemDisplayName(item)} isn't open.")
+        } else {
+          elapse(10)
+          item.behaviors --= item.behaviors.filter(_.isInstanceOf[Opened])
+          putMessage(s"You close the ${itemDisplayName(item)}.")
+        }
+
       case Action.Disassemble(item) =>
         var anyRemoved = false
         item.parts = item.parts.filter { p =>
@@ -227,7 +245,7 @@ class GameState(var data: Data, val random: Random) {
         if (item.parts.isEmpty) {
           items.delete(item)
           elapse(10)
-          putMessage(s"You take apart the ${item.kind.name}.")
+          putMessage(s"You take apart the ${itemDisplayName(item)}.")
         } else if (anyRemoved) {
           elapse(10)
           putMessage(s"You weren't able to completely take apart the ${itemDisplayName(item)}.")

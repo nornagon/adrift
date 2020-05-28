@@ -1,7 +1,7 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
-import adrift.items.Item
-import adrift.{Color, GameState, Location, OnFloor}
+import adrift.items.{Item, Message}
+import adrift.{Action, Color, GameState, Location, OnFloor}
 import org.lwjgl.glfw.GLFW._
 
 object DirectionKey {
@@ -26,7 +26,9 @@ class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Scr
       key match {
         case DirectionKey((dx, dy)) =>
           display.popScreen()
-          display.pushScreen(new ExamineScreen(display, state, state.player + (dx, dy)))
+          val location = state.player + (dx, dy)
+          if (state.items.lookup(OnFloor(location)).nonEmpty)
+            display.pushScreen(new ExamineScreen(display, state, location))
         case _ =>
       }
     }
@@ -42,6 +44,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
 
+  def isOpened(item: Item): Boolean =
+    state.sendMessage(item, Message.IsOpened()).opened
+
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
       key match {
@@ -52,8 +57,15 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           val n = items.size
           selected = (selected + 1) % n
         case GLFW_KEY_O if items(selected).parts.nonEmpty =>
-          openStack :+= items(selected)
-          selected = 0
+          val item = items(selected)
+          if (isOpened(item) || { state.receive(Action.Open(item)); isOpened(item) }) {
+            openStack :+= item
+            selected = 0
+          }
+        case GLFW_KEY_C if items(selected).parts.nonEmpty =>
+          val item = items(selected)
+          if (isOpened(item))
+            state.receive(Action.Close(item))
         case GLFW_KEY_ESCAPE | DirectionKey(-1, 0) if openStack.nonEmpty =>
           display.preventDefault()
           val wasSelected = openStack.last
@@ -105,20 +117,29 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     openStack.zipWithIndex.foreach { case (it, idx) =>
       val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
       sprintln(prefix + state.itemDisplayName(it))
+      if (isOpened(it)) {
+        renderer.drawChar(sx + width, sy + nextY - 1, 0xff, fg = lightGreen, bg = darkGreen)
+      }
     }
     val is = items
     for (y <- is.indices) {
       val bg = if (y == selected) selectedGreen else darkGreen
       val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == is.size - 1) "\u00c0" else "\u00c3")
-      sprintln(prefix + state.itemDisplayName(is(y)), bg = bg)
+      val item = is(y)
+      sprintln(prefix + state.itemDisplayName(item), bg = bg)
+      if (isOpened(item)) {
+        renderer.drawChar(sx + width, sy + nextY - 1, 0xff, fg = lightGreen, bg = bg)
+      }
     }
     sprintln("")
-    GlyphRenderer.wrap(is(selected).kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
+    val item = is(selected)
+    GlyphRenderer.wrap(item.kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
     sprintln("")
     val actions = Seq(
-      Option.when(is(selected).parts.nonEmpty)(CS("open", Seq(Ann(0, 1, lightGreen)))),
+      Option.when(item.parts.nonEmpty && !isOpened(item))(CS("open", Seq(Ann(0, 1, lightGreen)))),
+      Option.when(item.parts.nonEmpty && isOpened(item))(CS("close", Seq(Ann(0, 1, lightGreen)))),
       Some(CS("diagnose", Seq(Ann(0, 1, lightGreen)))),
-      Some(CS("remove", Seq(Ann(0, 1, lightGreen)))),
+      Option.when(openStack.nonEmpty)(CS("remove", Seq(Ann(0, 1, lightGreen)))),
     ).flatten
     val actionStr = wrapCS(actions.reduce(_ + CS(" ", Seq.empty) + _), width - 2)
     actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))

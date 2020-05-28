@@ -43,4 +43,6 @@ object Message {
 
   case class Eat(var calories: Int = 0) extends Message
   case class IsEdible(var edible: Boolean = false) extends Message
+
+  case class IsOpened(var opened: Boolean = false) extends Message
 }
