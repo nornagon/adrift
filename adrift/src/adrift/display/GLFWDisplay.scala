@@ -270,10 +270,6 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
             case GLFW_KEY_N => pushAction(Action.PlayerMove(1, 1))
             case GLFW_KEY_PERIOD => pushAction(Action.Wait(1))
             case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
-            case _ =>
-          }
-        } else if (action == GLFW_RELEASE) {
-          key match {
             case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
             case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))

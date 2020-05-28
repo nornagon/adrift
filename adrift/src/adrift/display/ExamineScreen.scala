@@ -37,8 +37,21 @@ class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Scr
 }
 
 class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) extends Screen {
-  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+  var selected: Int = 0
+  private def items = state.items.lookup(OnFloor(location))
 
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+      key match {
+        case DirectionKey((0, -1)) =>
+          val n = items.size
+          selected = (selected + n - 1) % n
+        case DirectionKey((0, 1)) =>
+          val n = items.size
+          selected = (selected + 1) % n
+        case _ =>
+      }
+    }
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
@@ -50,7 +63,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     val disabledGreen = Color.fromBytes(77, 102, 0)
     val selectedGreen = Color.fromBytes(0, 140, 0)
     val darkGreen = Color.fromBytes(32, 64, 0)
-    renderer.drawChar(sx, sy, char, fg, bg = darkGreen)
+    renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
     var nextY = 0
     def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen): Unit =
@@ -65,7 +78,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
       for ((s, anns) <- ss.parts) {
         val fg = anns.lastOption.map(_.fg).getOrElse(defaultFg)
-        val maxWidth = width - 2 - x
+        val maxWidth = width - 1 - x
         renderer.drawString(left + x, top + y, s, fg = fg, bg = bg, maxWidth = maxWidth)
         x += math.min(maxWidth, s.length)
       }
@@ -79,14 +92,15 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
       nextY += 1
     }
-    val items = state.items.lookup(OnFloor(location))
-    for { y <- items.indices } {
-      val bg = if (y == 0) selectedGreen else darkGreen
-      sprintln(state.itemDisplayName(items(y)), bg = bg)
+    val is = items
+    for { y <- is.indices } {
+      val bg = if (y == selected) selectedGreen else darkGreen
+      sprintln(state.itemDisplayName(is(y)), bg = bg)
     }
     sprintln("")
+    GlyphRenderer.wrap(is(selected).kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
+    sprintln("")
     val actions = Seq(
-      "e" -> CS("examine", Seq(Ann(0, 1, lightGreen))),
       "o" -> CS("open", Seq(Ann(0, 1, lightGreen))),
       "d" -> CS("diagnose", Seq(Ann(0, 1, lightGreen))),
       "r" -> CS("remove", Seq(Ann(0, 1, lightGreen))),
