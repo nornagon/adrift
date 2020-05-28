@@ -54,6 +54,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         case GLFW_KEY_O if items(selected).parts.nonEmpty =>
           openStack :+= items(selected)
           selected = 0
+        case GLFW_KEY_ESCAPE if openStack.nonEmpty =>
+          display.preventDefault()
+          openStack = openStack.init
         case _ =>
       }
     }

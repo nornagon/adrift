@@ -243,6 +243,9 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
     pendingActions.add(a)
   }
 
+  private var defaultPrevented = false
+  def preventDefault(): Unit = defaultPrevented = true
+
   def init(): Unit = {
     window.init(width = windowWidthChars * font.tileWidth * font.scaleFactor, height = windowHeightChars * font.tileHeight * font.scaleFactor)
     window.onChar { char: Int =>
@@ -251,10 +254,11 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
     }
     window.onKey { (key: Int, scancode: Int, action: Int, mods: Int) =>
       if (screens.nonEmpty) {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        defaultPrevented = false
+        screens.last.key(key, scancode, action, mods)
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS && !defaultPrevented) {
           popScreen()
         } else {
-          screens.last.key(key, scancode, action, mods)
           render(lastState)
         }
       } else {
