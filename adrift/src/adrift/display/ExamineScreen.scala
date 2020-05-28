@@ -54,9 +54,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         case GLFW_KEY_O if items(selected).parts.nonEmpty =>
           openStack :+= items(selected)
           selected = 0
-        case GLFW_KEY_ESCAPE if openStack.nonEmpty =>
+        case GLFW_KEY_ESCAPE | DirectionKey(-1, 0) if openStack.nonEmpty =>
           display.preventDefault()
+          val wasSelected = openStack.last
           openStack = openStack.init
+          selected = math.max(0, items.indexOf(wasSelected))
         case _ =>
       }
     }
