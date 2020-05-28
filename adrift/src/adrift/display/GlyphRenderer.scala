@@ -14,6 +14,7 @@ class GlyphRenderer(
   screenTileWidth: Int,
   screenTileHeight: Int,
   font: Texture,
+  val bounds: Rect,
 ) {
   /** Number of tiles in each row in the source texture. */
   private val tilesPerRow: Int = font.width / tileWidth
@@ -127,5 +128,158 @@ object GlyphRenderer {
         lines.to(Seq)
     else
       (lines :+ currentLine.toString()).to(Seq)
+  }
+
+  case class Ann(from: Int, until: Int, fg: Color) {
+    require(from <= until, s"annotation must have from <= until but was ($from, $until)")
+    def intersects(from: Int, until: Int): Boolean = this.until > from && this.from < until
+    def intersection(from: Int, until: Int): Option[Ann] = {
+      if (intersects(from, until)) {
+        Some(Ann(math.max(from, this.from), math.min(until, this.until), fg))
+      } else None
+    }
+
+    def +(x: Int): Ann = copy(from = from + x, until = until + x)
+    def -(x: Int): Ann = copy(from = from - x, until = until - x)
+  }
+  case class CS(s: String, as: Seq[Ann]) {
+    def parts: Seq[(String, Seq[Ann])] =
+      for (i <- s.indices) yield (String.valueOf(s(i)), as.filter(_.intersects(i, i + 1)))
+
+    def substring(start: Int, end: Int): CS =
+      CS(s.substring(start, end), as.flatMap(_.intersection(start, end)).map(_ - start))
+
+    def length: Int = s.length
+
+    def splitAt(i: Int): (CS, CS) = {
+      val (l, r) = s.splitAt(i)
+      (CS(l, as.flatMap(_.intersection(0, l.length))), CS(r, as.flatMap(_.intersection(l.length, s.length))))
+    }
+
+    def +(other: CS): CS =
+      CS(s + other.s, as ++ other.as.map(_ + s.length))
+  }
+  object CS { def empty: CS = CS("", Seq.empty) }
+
+  // Adapted from https://github.com/apache/commons-lang/blob/9747b14/src/main/java/org/apache/commons/lang3/text/WordUtils.java#L274
+  // Copyright 2001-2020 The Apache Software Foundation
+  def wrap(str: String, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[String] = {
+    import java.util.regex.Pattern
+    import scala.util.control.Breaks._
+    if (str == null) return Seq.empty
+    val patternToWrapOn = Pattern.compile(wrapOn)
+    val inputLineLength = str.length
+    var offset = 0
+    var wrappedLine = Seq.empty[String]
+    def append(string: String, start: Int, end: Int): Unit = {
+      if (wrappedLine.isEmpty)
+        wrappedLine = Seq("")
+      wrappedLine = wrappedLine.init :+ (wrappedLine.last + str.substring(start, end))
+    }
+    breakable {
+      while (offset < inputLineLength) {
+        var spaceToWrapAt = -1
+        var matcher = patternToWrapOn.matcher(str.substring(offset, Math.min(Math.min(Integer.MAX_VALUE, offset + wrapLength + 1L).toInt, inputLineLength)))
+        var shouldContinue = false
+        if (matcher.find) {
+          if (matcher.start == 0) {
+            offset += matcher.end
+            shouldContinue = true
+          } else {
+            spaceToWrapAt = matcher.start + offset
+          }
+        }
+        if (!shouldContinue) {
+          // only last line without leading spaces is left
+          if (inputLineLength - offset <= wrapLength) break
+          while (matcher.find) spaceToWrapAt = matcher.start + offset
+          if (spaceToWrapAt >= offset) { // normal case
+            append(str, offset, spaceToWrapAt)
+            wrappedLine :+= ""
+            offset = spaceToWrapAt + 1
+          } else { // really long word or URL
+            if (wrapLongWords) { // wrap really long word one line at a time
+              append(str, offset, wrapLength + offset)
+              wrappedLine :+= ""
+              offset += wrapLength
+            } else { // do not wrap really long word, just extend beyond limit
+              matcher = patternToWrapOn.matcher(str.substring(offset + wrapLength))
+              if (matcher.find) spaceToWrapAt = matcher.start + offset + wrapLength
+              if (spaceToWrapAt >= 0) {
+                append(str, offset, spaceToWrapAt)
+                wrappedLine :+= ""
+                offset = spaceToWrapAt + 1
+              } else {
+                append(str, offset, str.length)
+                offset = inputLineLength
+              }
+            }
+          }
+        }
+      }
+    }
+    // Whatever is left in line is short enough to just pass through
+    append(str, offset, str.length)
+    wrappedLine
+  }
+
+  def wrapCS(str: CS, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[CS] = {
+    import java.util.regex.Pattern
+    import scala.util.control.Breaks._
+    if (str == null) return Seq.empty
+    val patternToWrapOn = Pattern.compile(wrapOn)
+    val inputLineLength = str.length
+    var offset = 0
+    var wrappedLine = Seq.empty[CS]
+    def append(string: CS, start: Int, end: Int): Unit = {
+      if (wrappedLine.isEmpty)
+        wrappedLine = Seq(CS.empty)
+      wrappedLine = wrappedLine.init :+ (wrappedLine.last + str.substring(start, end))
+    }
+    breakable {
+      while (offset < inputLineLength) {
+        var spaceToWrapAt = -1
+        var matcher = patternToWrapOn.matcher(str.s.substring(offset, Math.min(Math.min(Integer.MAX_VALUE, offset + wrapLength + 1L).toInt, inputLineLength)))
+        var shouldContinue = false
+        if (matcher.find) {
+          if (matcher.start == 0) {
+            offset += matcher.end
+            shouldContinue = true
+          } else {
+            spaceToWrapAt = matcher.start + offset
+          }
+        }
+        if (!shouldContinue) {
+          // only last line without leading spaces is left
+          if (inputLineLength - offset <= wrapLength) break
+          while (matcher.find) spaceToWrapAt = matcher.start + offset
+          if (spaceToWrapAt >= offset) { // normal case
+            append(str, offset, spaceToWrapAt)
+            wrappedLine :+= CS.empty
+            offset = spaceToWrapAt + 1
+          } else { // really long word or URL
+            if (wrapLongWords) { // wrap really long word one line at a time
+              append(str, offset, wrapLength + offset)
+              wrappedLine :+= CS.empty
+              offset += wrapLength
+            } else { // do not wrap really long word, just extend beyond limit
+              matcher = patternToWrapOn.matcher(str.s.substring(offset + wrapLength))
+              if (matcher.find) spaceToWrapAt = matcher.start + offset + wrapLength
+              if (spaceToWrapAt >= 0) {
+                append(str, offset, spaceToWrapAt)
+                wrappedLine :+= CS.empty
+                offset = spaceToWrapAt + 1
+              } else {
+                append(str, offset, str.length)
+                offset = inputLineLength
+              }
+            }
+          }
+        }
+      }
+    }
+    // Whatever is left in line is short enough to just pass through
+    append(str, offset, str.length)
+    wrappedLine
   }
 }

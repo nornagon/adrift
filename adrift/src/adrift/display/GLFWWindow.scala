@@ -1,5 +1,6 @@
 package adrift.display
 
+import adrift.Rect
 import adrift.display.glutil.{SpriteBatch, Texture}
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW._
@@ -9,7 +10,7 @@ import org.lwjgl.opengl.GL11._
 
 case class Font(texture: Texture, tileWidth: Int, tileHeight: Int, scaleFactor: Int = 1)
 
-class Graphics(val spriteBatch: SpriteBatch) {
+class Graphics(val bounds: Rect, val spriteBatch: SpriteBatch) {
   def glyphs(font: Font): GlyphRenderer =
     new GlyphRenderer(
       spriteBatch,
@@ -17,7 +18,8 @@ class Graphics(val spriteBatch: SpriteBatch) {
       font.tileHeight,
       font.tileWidth * font.scaleFactor,
       font.tileHeight * font.scaleFactor,
-      font.texture
+      font.texture,
+      Rect(0, 0, bounds.width / (font.tileWidth * font.scaleFactor), bounds.height / (font.tileHeight * font.scaleFactor))
     )
 }
 
@@ -105,7 +107,7 @@ class GLFWWindow() {
 
     spriteBatch.begin()
 
-    f(new Graphics(spriteBatch))
+    f(new Graphics(Rect(0, 0, size._1, size._2), spriteBatch))
 
     spriteBatch.end()
 

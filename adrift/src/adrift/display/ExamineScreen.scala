@@ -1,58 +1,97 @@
 package adrift.display
-
-import adrift.items.{Item, Message}
-import adrift.{GameState, Action, Worn}
+import adrift.display.CP437.BoxDrawing
+import adrift.{Color, GameState, Location, OnFloor}
 import org.lwjgl.glfw.GLFW._
 
-class ExamineScreen(display: GLFWDisplay, state: GameState, item: Item) extends Screen {
-  private val anchor = (5, 3)
-  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
-    if (action == GLFW_PRESS) {
+object DirectionKey {
+  def unapply(key: Int): Option[(Int, Int)] =
       key match {
-        case GLFW_KEY_D if (mods & GLFW_MOD_SHIFT) != 0 =>
-          if (item.parts.nonEmpty)
-            display.pushScreen(new DisassembleScreen(display, state, item))
-        case GLFW_KEY_W =>
-          if (!state.items.lookup(item).isInstanceOf[Worn] && state.sendMessage(item, Message.CanWear()).ok) {
-            display.pushAction(Action.Wear(item))
-            display.popScreen()
-          }
-        case GLFW_KEY_E =>
-          if (state.isEdible(item)) {
-            display.pushAction(Action.Eat(item))
-            display.popScreen()
-          }
-        case GLFW_KEY_T =>
-          if (state.items.lookup(item).isInstanceOf[Worn]) {
-            display.pushAction(Action.TakeOff(item))
-            display.popScreen()
-          }
+        case GLFW_KEY_LEFT | GLFW_KEY_H => Some((-1, 0))
+        case GLFW_KEY_DOWN | GLFW_KEY_J => Some((0, 1))
+        case GLFW_KEY_UP | GLFW_KEY_K => Some((0, -1))
+        case GLFW_KEY_RIGHT | GLFW_KEY_L => Some((1, 0))
+        case GLFW_KEY_Y => Some((-1, -1))
+        case GLFW_KEY_U => Some((1, -1))
+        case GLFW_KEY_B => Some((-1, 1))
+        case GLFW_KEY_N => Some((1, 1))
+        case _ => None
+      }
+
+}
+
+class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Screen {
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    if (action == GLFW_RELEASE) {
+      key match {
+        case DirectionKey((dx, dy)) =>
+          display.popScreen()
+          display.pushScreen(new ExamineScreen(display, state, state.player + (dx, dy)))
         case _ =>
       }
     }
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    val width = 30
-    val descriptionLines = GlyphRenderer.wrapString(maxWidth = width - 2, maxHeight = 9, item.kind.description)
-    val actionLines: Seq[String] = Seq.empty ++
-      (if (item.parts.nonEmpty) Some("[D]isassemble") else None) ++
-      (if (!state.items.lookup(item).isInstanceOf[Worn] && state.sendMessage(item, Message.CanWear()).ok) Some("[w]ear") else None) ++
-      (if (state.isEdible(item)) Some("[e]at") else None) ++
-      (if (state.items.lookup(item).isInstanceOf[Worn]) Some("[t]ake off") else None)
-    renderer.frame(
-      left = anchor._1, top = anchor._2,
-      width = width,
-      title = item.kind.name,
-      lines = descriptionLines ++
-        (if (item.parts.nonEmpty)
-          Seq("", "Parts:") ++
-          item.parts.groupBy(state.itemDisplayName).map {
-            case (displayName, items) if items.size == 1 => displayName
-            case (displayName, items) => s"${items.size} x $displayName"
-          }
-        else Seq.empty) ++
-        (if (actionLines.nonEmpty) Seq("") ++ actionLines else Seq.empty)
+    renderer.frame(renderer.bounds.center._1 - 8, 0, 16, null, Seq("Examine where?"))
+  }
+}
+
+class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) extends Screen {
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+
+  }
+
+  override def render(renderer: GlyphRenderer): Unit = {
+    import GlyphRenderer.{CS, Ann, wrapCS}
+    val width = 24
+    val Some((sx, sy)) = display.worldToScreen(state)(location.xy)
+    val (char, fg, bg) = Appearance.charAtPosition(state, location)
+    val lightGreen = Color.fromBytes(217, 255, 102)
+    val disabledGreen = Color.fromBytes(77, 102, 0)
+    val selectedGreen = Color.fromBytes(0, 140, 0)
+    val darkGreen = Color.fromBytes(32, 64, 0)
+    renderer.drawChar(sx, sy, char, fg, bg = darkGreen)
+    renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
+    var nextY = 0
+    def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen): Unit =
+      sprintlnColored(CS(s, Seq(Ann(0, s.length, fg))), bg = bg)
+    def sprintlnColored(ss: CS, defaultFg: Color = lightGreen, bg: Color = darkGreen): Unit = {
+      val left = sx + 2
+      val top = nextY + sy
+      var x = 0
+      val y = 0
+      renderer.drawChar(left + x, top + y, 0xdd, fg = lightGreen, bg = bg)
+      x += 1
+
+      for ((s, anns) <- ss.parts) {
+        val fg = anns.lastOption.map(_.fg).getOrElse(defaultFg)
+        val maxWidth = width - 2 - x
+        renderer.drawString(left + x, top + y, s, fg = fg, bg = bg, maxWidth = maxWidth)
+        x += math.min(maxWidth, s.length)
+      }
+
+      while (x < width - 1) {
+        renderer.drawChar(left + x, top + y, ' ', bg = bg)
+        x += 1
+      }
+
+      renderer.drawChar(left + x, top + y, 0xde, fg = lightGreen, bg = bg)
+
+      nextY += 1
+    }
+    val items = state.items.lookup(OnFloor(location))
+    for { y <- items.indices } {
+      val bg = if (y == 0) selectedGreen else darkGreen
+      sprintln(state.itemDisplayName(items(y)), bg = bg)
+    }
+    sprintln("")
+    val actions = Seq(
+      "e" -> CS("examine", Seq(Ann(0, 1, lightGreen))),
+      "o" -> CS("open", Seq(Ann(0, 1, lightGreen))),
+      "d" -> CS("diagnose", Seq(Ann(0, 1, lightGreen))),
+      "r" -> CS("remove", Seq(Ann(0, 1, lightGreen))),
     )
+    val actionStr = wrapCS(actions.map(_._2).reduce(_ + CS(" ", Seq.empty) + _), width - 2)
+    actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
   }
 }

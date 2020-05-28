@@ -147,10 +147,13 @@ object Appearance {
   def displayForItem(state: GameState, item: Item): String =
     state.sendMessage(item, Message.Display(item.kind.display)).display
 
-  def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) = {
-    val levelId = state.player.levelId
+  def charAtPosition(state: GameState, x: Int, y: Int): (Char, Color, Color) =
+    charAtPosition(state, Location(state.player.levelId, x, y))
+  def charAtPosition(state: GameState, loc: Location): (Char, Color, Color) = {
+    val levelId = loc.levelId
     val level = state.levels(levelId)
-    if (x == state.player.x && y == state.player.y) {
+    val (x, y) = loc.xy
+    if (loc == state.player) {
       val (char, fg, bg, _) = state.data.display.getDisplay("PLAYER")
       (char, fg, bg)
     } else if (level.terrain.contains(x, y)) {
@@ -271,7 +274,7 @@ class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
           }
         } else if (action == GLFW_RELEASE) {
           key match {
-            case GLFW_KEY_I => pushScreen(new InventoryScreen(this, lastState))
+            case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
             case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
             case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))

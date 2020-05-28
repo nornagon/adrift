@@ -61,24 +61,24 @@ object Color {
   implicit val decoder: Decoder[Color] = { (h: HCursor) =>
     h.as[String].flatMap {
       case hexColor(r, g, b, null) =>
-        Right(Color(
-          Integer.parseUnsignedInt(r, 16) / 255f,
-          Integer.parseUnsignedInt(g, 16) / 255f,
-          Integer.parseUnsignedInt(b, 16) / 255f,
-          1f
+        Right(Color.fromBytes(
+          Integer.parseUnsignedInt(r, 16),
+          Integer.parseUnsignedInt(g, 16),
+          Integer.parseUnsignedInt(b, 16),
         ))
       case hexColor(r, g, b, a) =>
-        Right(Color(
-          Integer.parseUnsignedInt(r, 16) / 255f,
-          Integer.parseUnsignedInt(g, 16) / 255f,
-          Integer.parseUnsignedInt(b, 16) / 255f,
-          Integer.parseUnsignedInt(a, 16) / 255f
+        Right(Color.fromBytes(
+          Integer.parseUnsignedInt(r, 16),
+          Integer.parseUnsignedInt(g, 16),
+          Integer.parseUnsignedInt(b, 16),
+          Integer.parseUnsignedInt(a, 16)
         ))
       case other => Left(DecodingFailure(s"Failed to parse color: '$other'", h.history))
     }
   }
-  val White = Color(1f, 1f, 1f, 1f)
-  val Black = Color(0f, 0f, 0f, 1f)
+  def fromBytes(r: Int, g: Int, b: Int, a: Int = 255): Color = Color(r / 255f, g / 255f, b / 255f, a / 255f)
+  val White: Color = Color(1f, 1f, 1f, 1f)
+  val Black: Color = Color(0f, 0f, 0f, 1f)
 }
 
 case class DisplayProps(
