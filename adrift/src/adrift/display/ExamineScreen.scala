@@ -1,5 +1,6 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
+import adrift.items.Item
 import adrift.{Color, GameState, Location, OnFloor}
 import org.lwjgl.glfw.GLFW._
 
@@ -38,7 +39,8 @@ class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Scr
 
 class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) extends Screen {
   var selected: Int = 0
-  private def items = state.items.lookup(OnFloor(location))
+  private var openStack: Seq[Item] = Seq.empty
+  private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -49,6 +51,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         case DirectionKey((0, 1)) =>
           val n = items.size
           selected = (selected + 1) % n
+        case GLFW_KEY_O if items(selected).parts.nonEmpty =>
+          openStack :+= items(selected)
+          selected = 0
         case _ =>
       }
     }
@@ -92,10 +97,15 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
       nextY += 1
     }
+    openStack.zipWithIndex.foreach { case (it, idx) =>
+      val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
+      sprintln(prefix + state.itemDisplayName(it))
+    }
     val is = items
-    for { y <- is.indices } {
+    for (y <- is.indices) {
       val bg = if (y == selected) selectedGreen else darkGreen
-      sprintln(state.itemDisplayName(is(y)), bg = bg)
+      val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == is.size - 1) "\u00c0" else "\u00c3")
+      sprintln(prefix + state.itemDisplayName(is(y)), bg = bg)
     }
     sprintln("")
     GlyphRenderer.wrap(is(selected).kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
