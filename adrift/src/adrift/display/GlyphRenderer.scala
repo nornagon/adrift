@@ -89,12 +89,6 @@ class GlyphRenderer(
     }
   }
 
-  def drawStringWrapped(x: Int, y: Int, maxWidth: Int, maxHeight: Int, s: String): Unit = {
-    for ((line, cy) <- GlyphRenderer.wrapString(maxWidth, maxHeight, s).zipWithIndex) {
-      drawString(x, y + cy, line)
-    }
-  }
-
   def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, lines: Seq[String]): Unit = {
     drawBox(left, top, width, lines.size + 2)
     if (title != null)
@@ -106,29 +100,8 @@ class GlyphRenderer(
 }
 
 object GlyphRenderer {
-  def wrapString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] = {
-    val lines = mutable.Buffer.empty[String]
-    val currentLine = new mutable.StringBuilder()
-    for (word <- s.split("\\s")) {
-      val wordWithSpace = (if (currentLine.nonEmpty) " " else "") + word
-      if (currentLine.size + wordWithSpace.length >= maxWidth) {
-        lines.append(currentLine.toString())
-        currentLine.clear()
-      }
-      // TODO: ellipsis
-      if (lines.size >= maxHeight) return lines.to(Seq)
-      if (currentLine.nonEmpty)
-        currentLine.append(" ")
-      currentLine.append(word)
-    }
-    if (currentLine.isEmpty)
-      if (lines.isEmpty)
-        Seq("")
-      else
-        lines.to(Seq)
-    else
-      (lines :+ currentLine.toString()).to(Seq)
-  }
+  def wrapString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] =
+    wrap(s, maxWidth).take(maxHeight)
 
   case class Ann(from: Int, until: Int, fg: Color) {
     require(from <= until, s"annotation must have from <= until but was ($from, $until)")
