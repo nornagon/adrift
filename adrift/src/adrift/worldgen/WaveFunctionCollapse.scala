@@ -16,6 +16,7 @@ import org.chocosolver.solver.variables.IntVar
 import org.chocosolver.util.objects.graphs.UndirectedGraph
 import org.chocosolver.util.objects.setDataStructures.SetType
 
+import scala.collection.immutable.ArraySeq
 import scala.collection.mutable
 import scala.util.Random
 
@@ -335,7 +336,7 @@ class SmallDomainRandom(model: Model, seed: Long) extends VariableSelector[IntVa
     if (uninstantiated.isEmpty) return null
     val smallestDomain = uninstantiated.view.map(_.getDomainSize).min
     val candidates = uninstantiated.filter(_.getDomainSize == smallestDomain)
-    random.pick(candidates)
+    random.pick(ArraySeq.unsafeWrapArray(candidates))
   }
 
   override def evaluate(variable: IntVar): Double = variable.getDomainSize

@@ -45,9 +45,10 @@ object Behavior {
     "Broken" -> Decoder[Broken].widen,
     "DisplaysConnectedTo" -> Decoder[DisplaysConnectedTo].widen,
     "BumpActivated" -> Decoder[BumpActivated].widen,
+    "Opened" -> Decoder[Opened].widen,
   )
 
-  implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveEncoder
+  implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveConfiguredEncoder
 
   implicit val encodeBehavior: Encoder[Behavior] = (b: Behavior) => Json.fromJsonObject(JsonObject.singleton(b.getClass.getSimpleName, b match {
     case b: MotionSensor => Encoder[MotionSensor].apply(b)
@@ -74,6 +75,7 @@ object Behavior {
     case b: Broken => Encoder[Broken].apply(b)
     case b: DisplaysConnectedTo => Encoder[DisplaysConnectedTo].apply(b)
     case b: BumpActivated => Encoder[BumpActivated].apply(b)
+    case b: Opened => Encoder[Opened].apply(b)
   }))
 }
 

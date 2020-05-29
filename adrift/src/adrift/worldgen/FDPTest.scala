@@ -44,6 +44,7 @@ object FDPTest {
           g.drawLine(ux.round.toInt, uy.round.toInt, vx.round.toInt, vy.round.toInt)
         }
         for (u <- 0 until nodes) {
+          import scala.language.implicitConversions
           implicit def round(x: Double): Int = x.round.toInt
           val (x, y) = ps(u)
           g.setColor(Color.BLACK)

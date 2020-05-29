@@ -2,6 +2,7 @@ package adrift
 
 object RandomImplicits {
   implicit class ExtendedRandom(r: scala.util.Random) {
+    import Ordering.Double.TotalOrdering
     /** Returns an angle in the range [0, 2pi) */
     def angle: Double = r.nextDouble() * 2 * Math.PI
     /** Returns true one time out of n (on average) */

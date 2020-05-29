@@ -16,6 +16,8 @@ object adrift extends ScalaModule {
 
   override def mainClass = Some("adrift.Main")
 
+  override def scalacOptions = Seq("-feature", "-deprecation")
+
   override def repositories = super.repositories ++ Seq(
     MavenRepository("https://oss.sonatype.org/content/repositories/snapshots/"),
     MavenRepository("https://oss.sonatype.org/content/repositories/releases/")

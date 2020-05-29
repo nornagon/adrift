@@ -66,7 +66,7 @@ class DisassembleScreen(display: GLFWDisplay, state: GameState, item: Item) exte
       val UIActiveDisabled = Color(1f, 0f, 0f, 1f)
     }
 
-    renderer.frame(left = anchor._1, top = anchor._2, width = 40, lines = lines)
+    renderer.frame(left = anchor._1, top = anchor._2, width = 40, lines = lines.toSeq)
     renderer.drawString(anchor._1 + 2, anchor._2 + lines.length,
       if (button == 0) "[Nevermind]" else " Nevermind ",
       fg=if (button == 0) Color(1f, 1f, 1f, 1f) else Color(0.5f, 0.5f, 0.5f, 1f))

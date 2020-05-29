@@ -136,7 +136,7 @@ class GameState(var data: Data, val random: Random) {
 
   var isRoomTest: Boolean = false
 
-  val items = new {
+  class NormalizedItemDb(itemDb: ItemDatabase, normalize: ItemLocation => ItemLocation) {
     def put(item: Item, location: ItemLocation): Unit = itemDb.put(item, normalize(location))
     def delete(item: Item): Unit = itemDb.delete(item)
     def lookup(item: Item): ItemLocation = itemDb.lookup(item)
@@ -145,6 +145,8 @@ class GameState(var data: Data, val random: Random) {
     def all: Iterable[Item] = itemDb.all
     def move(item: Item, location: ItemLocation): Unit = itemDb.move(item, normalize(location))
   }
+
+  val items = new NormalizedItemDb(itemDb, normalize)
 
   def normalize(l: Location): Location = {
     val level = levels(l.levelId)
@@ -329,6 +331,8 @@ class GameState(var data: Data, val random: Random) {
         }
 
       case Action.Quit =>
+
+      case Action.Regenerate =>
 
       case Action.ReloadData(newData) =>
         println("Reloaded data.")
@@ -569,7 +573,7 @@ class GameState(var data: Data, val random: Random) {
             return None
           }
           // NB. parts and tools are assumed to be non-overlapping
-          val tools = candidateTools.mapValues(_.head)
+          val tools = candidateTools.view.mapValues(_.head)
 
           parts.flatMap(part => Seq.fill(part.count)(part.operation)).zip(candidateComponents).map {
             case (op, item) =>

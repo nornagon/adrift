@@ -128,7 +128,7 @@ class StressMajorization {
     while (!nodes.isEmpty) {
       val u = nodes.poll
       mark(u) = true
-      for (v <- neighbors(u); if !mark(v)) {
+      for (v <- neighbors(u).iterator; if !mark(v)) {
         val el = desiredEdgeLength(u, v)
         val d = dist(u) + el
         if (d < dist(v)) {
@@ -153,7 +153,7 @@ class StressMajorization {
       val u = nodes.poll
       if (!mark(u)) visited += 1
       mark(u) = true
-      for (v <- neighbors(u); if !mark(v)) {
+      for (v <- neighbors(u).iterator; if !mark(v)) {
         nodes.add(v)
       }
     }

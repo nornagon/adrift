@@ -11,7 +11,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
   val item = raw"item (.+)".r
   var input = ""
 
-  def longestCommonPrefix(strs: Traversable[String]): String = {
+  def longestCommonPrefix(strs: Iterable[String]): String = {
     if (strs.isEmpty) return ""
     val minLen = strs.view.map(_.length).min
     var low = 1
@@ -24,7 +24,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
     strs.head.substring(0, (low + high) / 2)
   }
 
-  private def isCommonPrefix(strs: Traversable[String], len: Int): Boolean = {
+  private def isCommonPrefix(strs: Iterable[String], len: Int): Boolean = {
     val str1 = strs.head.substring(0, len)
     strs.tail.forall(_.startsWith(str1))
   }

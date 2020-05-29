@@ -45,7 +45,7 @@ case class AnnualPlant(
   }
 
   def produce(state: GameState, self: Item): Unit = {
-    val itemKindNames = produces.sample()(state.random, state.data.itemGroups.mapValues(_.choose))
+    val itemKindNames = produces.sample()(state.random, state.data.itemGroups.view.mapValues(_.choose))
     if (itemKindNames.nonEmpty) {
       val items = itemKindNames.map(itemKindName => state.data.items(itemKindName).generateItem())
       self.parts ++= items

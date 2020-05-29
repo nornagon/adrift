@@ -188,7 +188,7 @@ object Serialization {
 
     val db = new ItemDatabase
     for ((loc, item) <- locItems) {
-      val decodedLoc: ItemLocation = loc.as[ItemLocation].right.get
+      val decodedLoc: ItemLocation = loc.as[ItemLocation].fold(throw _, identity)
       db.put(item, decodedLoc)
     }
 

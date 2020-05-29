@@ -19,15 +19,12 @@ case class CircuitSignal(signal: Int) extends Message {
   def not(): CircuitSignal = CircuitSignal(!this.toBin)
   def avg(cs: CircuitSignal): CircuitSignal = CircuitSignal((signal + cs.signal)/2)
   def clamp(value: Int): Int = {
-    if (value > 255) {255}
-    else if (value < 0){0}
-    else {value.round.toInt}
+    if (value > 255) 255
+    else if (value < 0) 0
+    else value
   }
   def clamp: CircuitSignal = CircuitSignal(clamp(signal))
-  def SigToBin(value: Int): Boolean = {
-    if(value > 127){true} 
-    else {false}
-  }
+  def SigToBin(value: Int): Boolean = value > 127
   def toBin: Boolean = SigToBin(signal)
 }
 
