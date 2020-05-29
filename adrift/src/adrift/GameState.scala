@@ -136,7 +136,7 @@ class GameState(var data: Data, val random: Random) {
 
   var isRoomTest: Boolean = false
 
-  class NormalizedItemDb(itemDb: ItemDatabase, normalize: ItemLocation => ItemLocation) {
+  class NormalizedItemDb() {
     def put(item: Item, location: ItemLocation): Unit = itemDb.put(item, normalize(location))
     def delete(item: Item): Unit = itemDb.delete(item)
     def lookup(item: Item): ItemLocation = itemDb.lookup(item)
@@ -146,7 +146,7 @@ class GameState(var data: Data, val random: Random) {
     def move(item: Item, location: ItemLocation): Unit = itemDb.move(item, normalize(location))
   }
 
-  val items = new NormalizedItemDb(itemDb, normalize)
+  val items = new NormalizedItemDb()
 
   def normalize(l: Location): Location = {
     val level = levels(l.levelId)
