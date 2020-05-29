@@ -4,7 +4,6 @@ sealed trait Action
 
 object Action {
   case class PlayerMove(dx: Int, dy: Int) extends Action
-  case class Disassemble(item: Item) extends Action
   case class Open(item: Item) extends Action
   case class Close(item: Item) extends Action
   case class AssemblyAction(tool: Item, part: Item, operation: ItemOperation)
@@ -21,4 +20,7 @@ object Action {
   case class ReloadData(data: Data) extends Action
 
   case object Regenerate extends Action
+
+  case class Remove(parent: Item, item: Item) extends Action
+
 }

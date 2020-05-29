@@ -107,9 +107,12 @@ class GLFWWindow() {
 
     spriteBatch.begin()
 
-    f(new Graphics(Rect(0, 0, size._1, size._2), spriteBatch))
+    try {
+      f(new Graphics(Rect(0, 0, size._1, size._2), spriteBatch))
+    } finally {
+      spriteBatch.end()
+    }
 
-    spriteBatch.end()
 
     glfwSwapBuffers(window)
 

@@ -227,31 +227,15 @@ class GameState(var data: Data, val random: Random) {
           putMessage(s"You close the ${itemDisplayName(item)}.")
         }
 
-      case Action.Disassemble(item) =>
-        var anyRemoved = false
-        item.parts = item.parts.filter { p =>
-          val disassembleOp = item.kind.parts.find(_.kind == p.kind).get.operation
-          if (disassembleOp.id == "HANDLING") {
-            items.put(p, OnFloor(player))
-            false
-          } else {
-            val tool = nearbyItems.find { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }
-            if (tool.nonEmpty) {
-              items.put(p, OnFloor(player))
-              anyRemoved = true
-            }
-            tool.isEmpty
-          }
-        }
-
-        if (item.parts.isEmpty) {
-          items.delete(item)
+      case Action.Remove(parent, item) =>
+        val disassembleOp = parent.kind.parts.find(_.kind == item.kind).get.operation
+        if (disassembleOp.id == "HANDLING" ||
+          nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }) {
+          items.put(item, OnFloor(player))
+          parent.parts = parent.parts.filterNot(_ eq item)
+          if (parent.parts.isEmpty) items.delete(parent)
           elapse(10)
-          putMessage(s"You take apart the ${itemDisplayName(item)}.")
-        } else if (anyRemoved) {
-          elapse(10)
-          putMessage(s"You weren't able to completely take apart the ${itemDisplayName(item)}.")
-          item.behaviors.append(PartiallyDisassembled())
+          putMessage(s"You remove the ${itemDisplayName(item)} from the ${itemDisplayName(parent)}.")
         } else {
           putMessage(s"You don't have the tools to do that.")
         }

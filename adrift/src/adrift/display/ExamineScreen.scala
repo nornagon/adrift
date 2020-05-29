@@ -55,7 +55,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       when(openable)("open", 'o', GLFW_KEY_O, () => doOpen(item)),
       when(openable && isOpened(item))("close", 'c', GLFW_KEY_C, () => doClose(item)),
       when(true)("diagnose", 'd', GLFW_KEY_D, () => doDiagnose(item)),
-      when(openStack.nonEmpty)("remove", 'r', GLFW_KEY_R, () => doRemove(item)),
+      when(openStack.nonEmpty)("remove", 'r', GLFW_KEY_R, () => doRemove(openStack.last, item)),
     ).flatten
   }
 
@@ -75,10 +75,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
   }
 
-  private def doRemove(item: Item): Unit = {
-
+  private def doRemove(parent: Item, item: Item): Unit = {
+    if (parent.parts.contains(item))
+      state.receive(Action.Remove(parent, item))
+    selected = math.min(selected, parent.parts.size - 1)
   }
-
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
