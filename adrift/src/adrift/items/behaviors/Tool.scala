@@ -28,6 +28,9 @@ case class UsesElectricity(perUse: Int) extends Behavior {
   ): Unit = message match {
     case t: Message.IsFunctional =>
       t.functional &&= state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok
+    case t: Message.VisibleConditions =>
+      if (!state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok)
+        t.conditions :+= "unpowered"
     case t: Message.ToolUsed =>
       state.sendMessage(self, Message.DrawCharge(amount = perUse))
     case t: Message.ChargeAvailable =>

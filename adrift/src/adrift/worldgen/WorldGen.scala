@@ -103,6 +103,8 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val playerStartRoom = random.pick(roomTypeAssignments.filter(_._2 == "cryopods"))._1
     state.player = Location(levelId, playerStartRoom.center)
 
+    damage(state)
+
     state
   }
 

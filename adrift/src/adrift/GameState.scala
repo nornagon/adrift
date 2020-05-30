@@ -5,7 +5,6 @@ import adrift.RandomImplicits._
 import adrift.display.Appearance
 import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
 import adrift.items._
-import adrift.items.behaviors.PartiallyDisassembled
 
 import scala.collection.mutable
 import scala.util.Random
@@ -123,6 +122,14 @@ class GameState(var data: Data, val random: Random) {
   var currentTime = 0
   // TODO: save the _logical_ display here rather than the physical display
   var mapMemory = mutable.Map.empty[LevelId, Grid[Option[(Char, Color, Color)]]]
+  val circuits: mutable.Map[String, Circuit] = {
+    val m = mutable.Map.empty[String, Circuit]
+    m.withDefault { k =>
+      val c = Circuit(k, 500, 500)
+      m(k) = c
+      c
+    }
+  }
 
   def remembered(loc: Location): Option[(Char, Color, Color)] =
     mapMemory.get(loc.levelId).flatMap(_.getOrElse(loc.xy, None))
@@ -168,12 +175,6 @@ class GameState(var data: Data, val random: Random) {
   def die(reason: String): Unit = {
     putMessage("You die.")
     deathReason = Some(reason)
-  }
-
-  lazy val circuits: mutable.Map[String, Circuit] = mutable.Map.empty[String, Circuit].withDefault { k =>
-    val c = Circuit(k, 500, 500)
-    circuits(k) = c
-    c
   }
 
   var walkThroughWalls = false
@@ -381,9 +382,12 @@ class GameState(var data: Data, val random: Random) {
     message
   }
 
+  def visibleConditions(item: Item): Seq[String] =
+    sendMessage(item, Message.VisibleConditions()).conditions
+
   def itemDisplayName(item: Item): String = {
     var name = item.kind.name
-    val conditions = sendMessage(item, Message.VisibleConditions()).conditions
+    val conditions = visibleConditions(item)
     if (conditions.nonEmpty)
       name += s" (${conditions.mkString(", ")})"
     name

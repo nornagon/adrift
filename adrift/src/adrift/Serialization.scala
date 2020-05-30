@@ -1,7 +1,8 @@
 package adrift
 
 import adrift.items.{Behavior, Item, ItemId}
-import io.circe.{KeyDecoder, KeyEncoder}
+import io.circe.generic.extras.Configuration
+import io.circe.{Codec, KeyDecoder, KeyEncoder}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -10,14 +11,16 @@ object Serialization {
   import java.io._
   import java.util.Base64
 
-  import io.circe.generic.semiauto._
+  import io.circe.generic.extras.semiauto._
   import io.circe.syntax._
   import io.circe.{Decoder, Encoder, HCursor, Json}
+  implicit private val configuration: Configuration = Configuration.default.withDefaults
 
   case class GameStateSerialized(
     random: Random,
     levels: Map[LevelId, Level],
     memory: Map[LevelId, Grid[Option[(Char, Color, Color)]]],
+    circuits: Map[String, Circuit] = Map.empty,
     items: ItemDatabase,
     player: Location,
     currentTime: Int,
@@ -33,6 +36,7 @@ object Serialization {
       state.currentTime = currentTime
       state.messages = messages
       state.mapMemory = mutable.Map.empty ++ memory
+      for ((k, v) <- circuits) state.circuits(k) = v
       state.refresh()
       state
     }
@@ -47,6 +51,7 @@ object Serialization {
       currentTime = state.currentTime,
       messages = state.messages,
       bodyTemp = state.bodyTemp,
+      circuits = state.circuits.toMap,
     )
   }
 
@@ -103,14 +108,10 @@ object Serialization {
   implicit val encodeLevelId: Encoder[LevelId] = (t: LevelId) => t.id.asJson
   implicit def decodeLevelId: Decoder[LevelId] = (c: HCursor) => c.as[String].map(LevelId)
 
-  implicit val encodeLocation: Encoder[Location] = deriveEncoder[Location]
-  implicit val decodeLocation: Decoder[Location] = deriveDecoder[Location]
-
-  implicit val encodeColor: Encoder[Color] = deriveEncoder[Color]
-  implicit val decodeColor: Decoder[Color] = deriveDecoder[Color]
-
-  implicit val encodeGasComposition: Encoder[GasComposition] = deriveEncoder
-  implicit val decodeGasComposition: Decoder[GasComposition] = deriveDecoder
+  implicit val circuitCodec: Codec[Circuit] = deriveConfiguredCodec[Circuit]
+  implicit val locationCodec: Codec[Location] = deriveConfiguredCodec[Location]
+  implicit val encodeColor: Codec[Color] = deriveConfiguredCodec[Color]
+  implicit val gasCompositionCodec: Codec[GasComposition] = deriveConfiguredCodec[GasComposition]
 
   implicit val encodeItemLocation: Encoder[ItemLocation] = {
     case OnFloor(Location(levelId, x, y)) =>
@@ -212,10 +213,13 @@ object Serialization {
       Level(terrain, temperature, gasComposition)
 
   implicit val encodeGameState: Encoder[GameState] =
-    deriveEncoder[GameStateSerialized].contramap(GameStateSerialized.fromGameState _)
+    deriveConfiguredEncoder[GameStateSerialized].contramap(GameStateSerialized.fromGameState)
   implicit def decodeGameState(implicit data: Data): Decoder[GameState] =
-    deriveDecoder[GameStateSerialized].map(_.toGameState(data))
+    deriveConfiguredDecoder[GameStateSerialized].map(_.toGameState(data))
 
   def save(state: GameState): Json = Encoder[GameState].apply(state)
-  def load(implicit data: Data, json: Json): GameState = Decoder[GameState].decodeJson(json).fold(e => throw new RuntimeException(s"Error loading save", e), c => c)
+  def load(implicit data: Data, json: Json): GameState =
+    Decoder[GameState]
+      .decodeJson(json)
+      .fold(e => throw new RuntimeException(s"Error loading save", e), identity)
 }

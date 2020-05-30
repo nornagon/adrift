@@ -95,10 +95,13 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     val width = 24
     val Some((sx, sy)) = display.worldToScreen(state)(location.xy)
     val (char, fg, bg) = Appearance.charAtPosition(state, location)
+
     val lightGreen = Color.fromBytes(217, 255, 102)
     val disabledGreen = Color.fromBytes(77, 102, 0)
     val selectedGreen = Color.fromBytes(0, 140, 0)
     val darkGreen = Color.fromBytes(32, 64, 0)
+    val red = Color.fromBytes(255, 51, 51)
+
     renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
     var nextY = 0
@@ -130,17 +133,28 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     }
     openStack.zipWithIndex.foreach { case (it, idx) =>
       val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
-      sprintln(prefix + state.itemDisplayName(it))
+      sprintln(prefix + it.kind.name)
+      if (!state.isFunctional(it)) {
+        renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = darkGreen)
+      }
     }
     val is = items
     for (y <- is.indices) {
       val bg = if (y == selected) selectedGreen else darkGreen
       val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == is.size - 1) "\u00c0" else "\u00c3")
       val item = is(y)
-      sprintln(prefix + state.itemDisplayName(item), bg = bg)
+      sprintln(prefix + item.kind.name, bg = bg)
+      if (!state.isFunctional(item)) {
+        renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = bg)
+      }
     }
     sprintln("")
     val item = is(selected)
+    val conditions = state.visibleConditions(item)
+    for (condition <- conditions) {
+      sprintln(condition, fg = red)
+    }
+    if (conditions.nonEmpty) sprintln("")
     GlyphRenderer.wrap(item.kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
     sprintln("")
     val actionCS = actions(item).map {
