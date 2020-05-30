@@ -105,10 +105,11 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     right: AdjacencyType,
     up: AdjacencyType,
     down: AdjacencyType,
-    partId: Option[Int] = None,
+    partId: Int = -1,
+    isFirst: Boolean = false,
   ) {
     override def toString: String = {
-      s"T[$value, l=$left, r=$right, u=$up, d=$down p=${partId.getOrElse('?')}]"
+      s"T[$value, l=$left, r=$right, u=$up, d=$down p=$partId]"
     }
     def rotated: Tile = copy(
       left = up.rotated,
@@ -141,7 +142,8 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     }
     val tiles = for (y <- 1 until height - 1; x <- 1 until width - 1) yield {
       Tile(
-        partId = if (y == 1 && x == 1) Some(i) else None,
+        partId = i,
+        isFirst = y == 1 && x == 1,
         value = grid(x, y),
         left = if (x == 1) edgeCharToAdj(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
         right = if (x == width - 2) edgeCharToAdj(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
@@ -244,10 +246,48 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
 
     override def countConstraints: Iterable[WaveFunctionCollapse.CountConstraint] = {
       for (i <- parts.indices; if parts(i).min.nonEmpty || parts(i).max.nonEmpty) yield {
-        val representatives = allTiles.indices.filter(t => allTiles(t).partId.contains(i))
+        val representatives = allTiles.indices.filter { ti => val t = allTiles(ti); t.isFirst && t.partId == i }
         val lb = parts(i).min.getOrElse(0)
         val ub = parts(i).max.getOrElse(Integer.MAX_VALUE)
         WaveFunctionCollapse.CountConstraint(representatives, lb, ub)
+      }
+    }
+  }
+
+  def generateChars(width: Int, height: Int, isDoorEdge: (Int, Int) => Boolean, watcher: ((Int, Int) => Tile) => Unit = null)(implicit r: Random): Grid[Tile] = {
+    val decisionCb = if (watcher != null) {
+      (value: (Int, Int) => Int) => {
+        val valueAsTile = (x: Int, y: Int) => {
+          val v = value(x, y); if (v >= 0) allTiles(v) else null
+        }
+        watcher(valueAsTile)
+      }
+    } else null
+    WaveFunctionCollapse.graphSolve(gts(isDoorEdge), width, height, r, decisionCallback = decisionCb) match {
+      case Some(result) =>
+        val grid = new Grid[Tile](width, height)(null)
+        for (y <- 0 until height; x <- 0 until width) {
+          val tile = allTiles(result(x)(y))
+          grid(x, y) = tile
+        }
+        grid
+      case None =>
+        throw new RuntimeException(s"Failed to generate $width x $height room")
+    }
+  }
+
+  def fill(state: GameState, levelId: LevelId, xmin: Int, ymin: Int, tileGrid: Grid[Tile]): Unit = {
+    for (y <- 0 until tileGrid.height; x <- 0 until tileGrid.width) {
+      val tile = tileGrid(x, y)
+      val paletteDef = defs(tile.value.toString)
+      val terrain = paletteDef.terrain
+      val tx = xmin + x
+      val ty = ymin + y
+      state.levels(levelId).terrain(tx, ty) = state.data.terrain(terrain.getOrElse("floor"))
+      paletteDef.items.foreach { table =>
+        state.sampleItem(table) foreach {
+          state.items.put(_, OnFloor(Location(levelId, tx, ty)))
+        }
       }
     }
   }
@@ -264,24 +304,8 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       (x < 0 || x >= width || y < 0 || y >= height) &&
         state.terrain(Location(levelId, xmin + x, ymin + y)).exists(_.name == "floor")
     }
-    WaveFunctionCollapse.graphSolve(gts(isDoorEdge), width, height, r) match {
-      case Some(result) =>
-        for (y <- 0 until height; x <- 0 until width) {
-          val tile = allTiles(result(x)(y))
-          val paletteDef = defs(tile.value.toString)
-          val terrain = paletteDef.terrain
-          val tx = xmin + x
-          val ty = ymin + y
-          state.levels(levelId).terrain(tx, ty) = state.data.terrain(terrain.getOrElse("floor"))
-          paletteDef.items.foreach { table =>
-            state.sampleItem(table) foreach {
-              state.items.put(_, OnFloor(Location(levelId, tx, ty)))
-            }
-          }
-        }
-      case None =>
-        throw new RuntimeException(s"Failed to generate $width x $height room")
-    }
+    val tileGrid = generateChars(width, height, isDoorEdge)
+    fill(state, levelId, xmin, ymin, tileGrid)
   }
 }
 

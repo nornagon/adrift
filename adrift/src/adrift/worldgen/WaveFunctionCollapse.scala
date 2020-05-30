@@ -6,7 +6,7 @@ import org.chocosolver.solver._
 import org.chocosolver.solver.constraints.extension.Tuples
 import org.chocosolver.solver.search.SearchState
 import org.chocosolver.solver.search.limits.FailCounter
-import org.chocosolver.solver.search.loop.monitors.{IMonitorOpenNode, ISearchMonitor}
+import org.chocosolver.solver.search.loop.monitors.{IMonitorDownBranch, IMonitorOpenNode, ISearchMonitor}
 import org.chocosolver.solver.search.strategy.Search
 import org.chocosolver.solver.search.strategy.selectors.values.{IntDomainRandom, IntValueSelector}
 import org.chocosolver.solver.search.strategy.selectors.variables.{FirstFail, VariableEvaluator, VariableSelector}
@@ -74,7 +74,8 @@ object WaveFunctionCollapse {
     height: Int,
     random: Random,
     mustConnect: ((Int, Int), (Int, Int)) => Boolean = (_, _) => false,
-    noisy: Boolean = false
+    noisy: Boolean = false,
+    decisionCallback: ((Int, Int) => Int) => Unit = null,
   ): Option[Seq[Seq[Int]]] = {
     val model = new GraphModel()
     // lb is the lower bound of the graph, i.e. everything in |lb| must be in the final graph
@@ -240,6 +241,19 @@ object WaveFunctionCollapse {
           if (i % 100 == 0)
             printGraph(connectivity.getValue)
           i += 1
+        }
+      })
+    }
+    if (decisionCallback != null) {
+      solver.plugMonitor(new ISearchMonitor with IMonitorDownBranch {
+        override def afterDownBranch(left: Boolean): Unit = {
+          decisionCallback((x: Int, y: Int) => {
+            val intVar = tiles(y * width + x)
+            if (intVar.getDomainSize == 1)
+              intVar.getValue
+            else
+              -1
+          })
         }
       })
     }

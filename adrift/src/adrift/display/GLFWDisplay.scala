@@ -224,7 +224,7 @@ trait Screen {
   def render(renderer: GlyphRenderer): Unit
 }
 
-class GLFWDisplay(window: GLFWWindow, font: Font) extends Display {
+class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
   private var lastState: GameState = _
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80

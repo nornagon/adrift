@@ -5,32 +5,29 @@
   algorithm: WFC
   options:
     parts:
-      - |
-        xxx
-        *.*
-        ***
-      - |
-        xxx
-        x.*
-        x**
+      # empty space is allowed anywhere
       - |
         ***
         *.*
         ***
+      # a sofa next to the wall
       - |
         xxxxx
         *hhh*
         *...*
+      # a TV on the wall with some space next to it
       - |
         xxxxx
         *.D.*
         *...*
+      # a bar with a refrigerator and some stools
       - |
         xxxxxxx
         *....R*
         *=====*
         *.s.s.*
         *.....*
+      # chairs and tables
       - |
         *****
         *.c.*
@@ -43,11 +40,13 @@
         *.T.*
         *.c.*
         *****
+      # heating vent
       - max: 1
         part: |
           xxx
           *V*
           *.*
+      # replicator
       - max: 1
         part: |
           xxx
