@@ -5,7 +5,7 @@ import adrift.RandomImplicits._
 import adrift.display.Appearance
 import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
 import adrift.items._
-import adrift.items.behaviors.{Opened, PartiallyDisassembled}
+import adrift.items.behaviors.PartiallyDisassembled
 
 import scala.collection.mutable
 import scala.util.Random
@@ -208,24 +208,6 @@ class GameState(var data: Data, val random: Random) {
           broadcastToLocation(OnFloor(loc), PlayerBump(loc))
         }
         elapse(1)
-
-      case Action.Open(item) =>
-        if (sendMessage(item, Message.IsOpened()).opened) {
-          putMessage(s"The ${itemDisplayName(item)} is already open.")
-        } else {
-          elapse(10)
-          item.behaviors += Opened()
-          putMessage(s"You open the ${itemDisplayName(item)}.")
-        }
-
-      case Action.Close(item) =>
-        if (!sendMessage(item, Message.IsOpened()).opened) {
-          putMessage(s"The ${itemDisplayName(item)} isn't open.")
-        } else {
-          elapse(10)
-          item.behaviors --= item.behaviors.filter(_.isInstanceOf[Opened])
-          putMessage(s"You close the ${itemDisplayName(item)}.")
-        }
 
       case Action.Remove(parent, item) =>
         val disassembleOp = parent.kind.parts.find(_.kind == item.kind).get.operation

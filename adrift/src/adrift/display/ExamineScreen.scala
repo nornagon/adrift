@@ -45,30 +45,18 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
 
-  def isOpened(item: Item): Boolean =
-    state.sendMessage(item, Message.IsOpened()).opened
-
   private def actions(item: Item): Seq[(String, Char, Int, () => Unit)] = {
     import Option.when
-    val openable = item.parts.nonEmpty
     Seq(
-      when(openable)("open", 'o', GLFW_KEY_O, () => doOpen(item)),
-      when(openable && isOpened(item))("close", 'c', GLFW_KEY_C, () => doClose(item)),
+      when(item.parts.nonEmpty)("open", 'o', GLFW_KEY_O, () => doOpen(item)),
       when(true)("diagnose", 'd', GLFW_KEY_D, () => doDiagnose(item)),
       when(openStack.nonEmpty)("remove", 'r', GLFW_KEY_R, () => doRemove(openStack.last, item)),
     ).flatten
   }
 
   private def doOpen(item: Item): Unit = {
-    if (isOpened(item) || { state.receive(Action.Open(item)); isOpened(item) }) {
-      openStack :+= item
-      selected = 0
-    }
-  }
-
-  private def doClose(item: Item): Unit = {
-    if (isOpened(item))
-      state.receive(Action.Close(item))
+    openStack :+= item
+    selected = 0
   }
 
   private def doDiagnose(item: Item): Unit = {
@@ -143,9 +131,6 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     openStack.zipWithIndex.foreach { case (it, idx) =>
       val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
       sprintln(prefix + state.itemDisplayName(it))
-      if (isOpened(it)) {
-        renderer.drawChar(sx + width, sy + nextY - 1, 0xff, fg = lightGreen, bg = darkGreen)
-      }
     }
     val is = items
     for (y <- is.indices) {
@@ -153,9 +138,6 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == is.size - 1) "\u00c0" else "\u00c3")
       val item = is(y)
       sprintln(prefix + state.itemDisplayName(item), bg = bg)
-      if (isOpened(item)) {
-        renderer.drawChar(sx + width, sy + nextY - 1, 0xff, fg = lightGreen, bg = bg)
-      }
     }
     sprintln("")
     val item = is(selected)
