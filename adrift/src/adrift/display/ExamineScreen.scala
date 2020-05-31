@@ -1,5 +1,6 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
+import adrift.display.GlyphRenderer.{Ann, ColoredString}
 import adrift.items.behaviors.Tool
 import adrift.items.{Item, ItemOperation, Message}
 import adrift.{Action, Color, GameState, Location, OnFloor}
@@ -45,12 +46,32 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
 
-  private def actions(item: Item): Seq[(String, Char, Int, () => Unit)] = {
+  private val lightGreen = Color.fromBytes(217, 255, 102)
+  private val disabledGreen = Color.fromBytes(77, 102, 0)
+  private val selectedGreen = Color.fromBytes(0, 140, 0)
+  private val darkGreen = Color.fromBytes(32, 64, 0)
+  private val red = Color.fromBytes(255, 51, 51)
+
+  case class Command(name: String, execute: () => Unit) {
+    private val pat = raw"(.*)\{(.)\}(.*)".r
+    val (char, display) = name match {
+      case pat(pre, char, post) =>
+        (char, ColoredString(pre) + ColoredString(char).ann(0, char.length, lightGreen) + ColoredString(post))
+    }
+    val key: Int = GLFW_KEY_A + char.charAt(0) - 'a'
+  }
+
+  private def commands(item: Item): Seq[Command] = {
     import Option.when
     Seq(
-      when(item.parts.nonEmpty)("open", 'o', GLFW_KEY_O, () => doOpen(item)),
-      when(true)("diagnose", 'd', GLFW_KEY_D, () => doDiagnose(item)),
-      when(openStack.nonEmpty)("remove", 'r', GLFW_KEY_R, () => doRemove(openStack.last, item)),
+      when(item.parts.nonEmpty)
+        (Command("{o}pen",  () => doOpen(item))),
+
+      when(true)
+        (Command("{d}iagnose", () => doDiagnose(item))),
+
+      when(openStack.nonEmpty)
+        (Command("{r}emove", () => doRemove(openStack.last, item))),
     ).flatten
   }
 
@@ -85,29 +106,23 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           selected = math.max(0, items.indexOf(wasSelected))
         case k =>
           val selectedItem = items(selected)
-          actions(selectedItem).find(_._3 == k) foreach { _._4() }
+          commands(selectedItem).find(_.key == k) foreach { _.execute() }
       }
     }
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import GlyphRenderer.{CS, Ann, wrapCS}
+    import GlyphRenderer.{ColoredString, Ann, wrapCS}
     val width = 24
     val Some((sx, sy)) = display.worldToScreen(state)(location.xy)
     val (char, fg, bg) = Appearance.charAtPosition(state, location)
-
-    val lightGreen = Color.fromBytes(217, 255, 102)
-    val disabledGreen = Color.fromBytes(77, 102, 0)
-    val selectedGreen = Color.fromBytes(0, 140, 0)
-    val darkGreen = Color.fromBytes(32, 64, 0)
-    val red = Color.fromBytes(255, 51, 51)
 
     renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
     var nextY = 0
     def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen): Unit =
-      sprintlnColored(CS(s, Seq(Ann(0, s.length, fg))), bg = bg)
-    def sprintlnColored(ss: CS, defaultFg: Color = lightGreen, bg: Color = darkGreen): Unit = {
+      sprintlnColored(ColoredString(s, Seq(Ann(0, s.length, fg))), bg = bg)
+    def sprintlnColored(ss: ColoredString, defaultFg: Color = lightGreen, bg: Color = darkGreen): Unit = {
       val left = sx + 2
       val top = nextY + sy
       var x = 0
@@ -157,12 +172,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     if (conditions.nonEmpty) sprintln("")
     GlyphRenderer.wrap(item.kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
     sprintln("")
-    val actionCS = actions(item).map {
-      case (str, c, _, _) =>
-        val idx = str.indexOf(c)
-        CS(str, Seq(Ann(idx, idx + 1, lightGreen)))
-    }
-    val actionStr = wrapCS(actionCS.reduce(_ + CS(" ", Seq.empty) + _), width - 2)
+    val actionCS = commands(item).map(_.display)
+    val actionStr = wrapCS(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _), width - 2)
     actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
   }
 }
