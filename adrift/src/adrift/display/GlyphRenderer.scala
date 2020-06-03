@@ -133,6 +133,7 @@ object GlyphRenderer {
       ColoredString(s + other.s, as ++ other.as.map(_ + s.length))
 
     def ann(from: Int, until: Int, fg: Color): ColoredString = copy(as = as :+ Ann(from, until, fg))
+    def withFg(fg: Color): ColoredString = copy(as = Seq(Ann(0, s.length, fg)))
   }
   object ColoredString {
     def empty: ColoredString = ColoredString("", Seq.empty)

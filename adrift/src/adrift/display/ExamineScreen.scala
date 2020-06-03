@@ -1,9 +1,9 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
-import adrift.display.GlyphRenderer.{Ann, ColoredString}
-import adrift.items.behaviors.Tool
-import adrift.items.{Item, ItemOperation, Message}
-import adrift.{Action, Color, GameState, Location, OnFloor}
+import adrift.display.GlyphRenderer.ColoredString
+import adrift.items.Item
+import adrift._
+import adrift.items.Message.Provides
 import org.lwjgl.glfw.GLFW._
 
 object DirectionKey {
@@ -51,12 +51,15 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private val selectedGreen = Color.fromBytes(0, 140, 0)
   private val darkGreen = Color.fromBytes(32, 64, 0)
   private val red = Color.fromBytes(255, 51, 51)
+  private val disabledRed = Color.fromBytes(102, 0, 0)
 
-  case class Command(name: String, execute: () => Unit) {
+  case class Command(name: String, execute: () => Unit, available: Boolean = true) {
     private val pat = raw"(.*)\{(.)\}(.*)".r
+    private def color = if (available) disabledGreen else disabledRed
+    private def highlightColor = if (available) lightGreen else red
     val (char, display) = name match {
       case pat(pre, char, post) =>
-        (char, ColoredString(pre) + ColoredString(char).ann(0, char.length, lightGreen) + ColoredString(post))
+        (char, ColoredString(pre).withFg(color) + ColoredString(char).withFg(highlightColor) + ColoredString(post).withFg(color))
     }
     val key: Int = GLFW_KEY_A + char.charAt(0) - 'a'
   }
@@ -65,13 +68,17 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     import Option.when
     Seq(
       when(item.parts.nonEmpty)
-        (Command("{o}pen",  () => doOpen(item))),
+        (Command("{o}pen", () => doOpen(item))),
 
       when(true)
         (Command("{d}iagnose", () => doDiagnose(item))),
 
       when(openStack.nonEmpty)
-        (Command("{r}emove", () => doRemove(openStack.last, item))),
+        (Command("{r}emove", () => doRemove(openStack.last, item), available = {
+          val parent = openStack.last
+          val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
+          state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides)
+        })),
     ).flatten
   }
 
@@ -112,7 +119,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import GlyphRenderer.{ColoredString, Ann, wrapCS}
+    import GlyphRenderer.{Ann, ColoredString, wrapCS}
     val width = 24
     val Some((sx, sy)) = display.worldToScreen(state)(location.xy)
     val (char, fg, bg) = Appearance.charAtPosition(state, location)
