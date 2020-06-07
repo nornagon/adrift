@@ -17,7 +17,8 @@ object Message {
   case class Display(var display: String) extends Message
   case class DisplayConnectedTo(terrain: Terrain, var connected: Boolean = false) extends Message
 
-  case class VisibleConditions(var conditions: Seq[String] = Seq.empty) extends Message
+  case class Conditions(var conditions: Seq[String] = Seq.empty) extends Message
+  case class VisibleConditions(var conditions: Seq[String]) extends Message
 
   case class UseTool(op: ItemOperation, var ok: Boolean = false) extends Message
   case class ToolUsed(op: ItemOperation) extends Message
@@ -43,4 +44,6 @@ object Message {
 
   case class Eat(var calories: Int = 0) extends Message
   case class IsEdible(var edible: Boolean = false) extends Message
+
+  case class Diagnose() extends Message
 }

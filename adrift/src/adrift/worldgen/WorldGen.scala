@@ -10,6 +10,23 @@ import scala.collection.mutable
 import scala.util.Random
 
 case class WorldGen(data: Data)(implicit random: Random) {
+  def generateEmptyWorld(): GameState = {
+    val state = new GameState(data, new Random(random.nextLong()))
+    val width = 50
+    val height = 50
+
+    val levelId = LevelId("main")
+    val level = Level(
+      terrain = new Grid(width, height)(data.terrain("floor")),
+      temperature = new Grid(width, height)(random.between(250d, 270d)),
+      gasComposition = new Grid(width, height)(GasComposition(4, 9, 1))
+    )
+    state.levels(levelId) = level
+
+    state.player = Location(levelId, width / 2, height / 2)
+    state
+  }
+
   def clamp01(d: Double) = math.max(0, math.min(1, d))
   def generateWorld(reportProgress: Double => Unit = (d: Double) => {}): GameState = {
     val layout = BSPArchitect.generate(360, 270)

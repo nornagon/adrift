@@ -8,18 +8,17 @@ import org.lwjgl.glfw.GLFW._
 
 object DirectionKey {
   def unapply(key: Int): Option[(Int, Int)] =
-      key match {
-        case GLFW_KEY_LEFT | GLFW_KEY_H => Some((-1, 0))
-        case GLFW_KEY_DOWN | GLFW_KEY_J => Some((0, 1))
-        case GLFW_KEY_UP | GLFW_KEY_K => Some((0, -1))
-        case GLFW_KEY_RIGHT | GLFW_KEY_L => Some((1, 0))
-        case GLFW_KEY_Y => Some((-1, -1))
-        case GLFW_KEY_U => Some((1, -1))
-        case GLFW_KEY_B => Some((-1, 1))
-        case GLFW_KEY_N => Some((1, 1))
-        case _ => None
-      }
-
+    key match {
+      case GLFW_KEY_LEFT | GLFW_KEY_H => Some((-1, 0))
+      case GLFW_KEY_DOWN | GLFW_KEY_J => Some((0, 1))
+      case GLFW_KEY_UP | GLFW_KEY_K => Some((0, -1))
+      case GLFW_KEY_RIGHT | GLFW_KEY_L => Some((1, 0))
+      case GLFW_KEY_Y => Some((-1, -1))
+      case GLFW_KEY_U => Some((1, -1))
+      case GLFW_KEY_B => Some((-1, 1))
+      case GLFW_KEY_N => Some((1, 1))
+      case _ => None
+    }
 }
 
 class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Screen {
@@ -88,7 +87,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   private def doDiagnose(item: Item): Unit = {
-
+    state.receive(Action.Diagnose(item))
   }
 
   private def doRemove(parent: Item, item: Item): Unit = {
@@ -156,9 +155,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     openStack.zipWithIndex.foreach { case (it, idx) =>
       val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
       sprintln(prefix + it.kind.name)
-      if (!state.isFunctional(it)) {
+      if (state.isKnownToBeNonFunctional(it))
         renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = darkGreen)
-      }
     }
     val is = items
     for (y <- is.indices) {
@@ -166,9 +164,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == is.size - 1) "\u00c0" else "\u00c3")
       val item = is(y)
       sprintln(prefix + item.kind.name, bg = bg)
-      if (!state.isFunctional(item)) {
+      if (state.isKnownToBeNonFunctional(item))
         renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = bg)
-      }
     }
     sprintln("")
     val item = is(selected)

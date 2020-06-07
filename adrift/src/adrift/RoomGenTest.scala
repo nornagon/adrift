@@ -68,7 +68,6 @@ object RoomGenTest {
       throw new RuntimeException(s"Couldn't generate a room")
     }
 
-    display.init()
     display.update(state)
     FileWatcher.onFileChanged(dataPath) { _ =>
       display.postAction(Action.ReloadData(Data.parse(dataPath)))

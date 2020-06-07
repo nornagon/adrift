@@ -28,7 +28,7 @@ case class UsesElectricity(perUse: Int) extends Behavior {
   ): Unit = message match {
     case t: Message.IsFunctional =>
       t.functional &&= state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok
-    case t: Message.VisibleConditions =>
+    case t: Message.Conditions =>
       if (!state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok)
         t.conditions :+= "unpowered"
     case t: Message.ToolUsed =>
@@ -54,7 +54,7 @@ case class HoldsCharge(maxCharge: Int, var currentCharge: Int = -1) extends Beha
         currentCharge -= t.amount
     case t: Message.ChargeAvailable =>
       t.ok ||= currentCharge >= t.amount
-    case t: Message.VisibleConditions =>
+    case t: Message.Conditions =>
       t.conditions :+= s"${(currentCharge * 100f / maxCharge).round}% charged"
     case _ =>
   }

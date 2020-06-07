@@ -21,4 +21,6 @@ object Action {
 
   case class Remove(parent: Item, item: Item) extends Action
 
+  case class Diagnose(item: Item) extends Action
+
 }

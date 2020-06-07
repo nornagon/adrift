@@ -1,7 +1,7 @@
 package adrift.items.behaviors
 
 import adrift.GameState
-import adrift.items.Message.{IsFunctional, VisibleConditions}
+import adrift.items.Message.{IsFunctional, Conditions}
 import adrift.items.{Behavior, Item, Message}
 
 case class Broken() extends Behavior {
@@ -13,7 +13,7 @@ case class Broken() extends Behavior {
     message match {
       case t: IsFunctional =>
         t.functional = false
-      case t: VisibleConditions =>
+      case t: Conditions =>
         t.conditions :+= "broken"
       case _ =>
     }

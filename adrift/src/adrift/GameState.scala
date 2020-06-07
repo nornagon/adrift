@@ -82,7 +82,7 @@ case class Level(
         for (_ <- 1 to random.between(2, 8)) {
           val test = randomAdj(p)
           val (x, y) = test
-          if (y >= 0 && y < height && isPermeable(x, y)) {
+          if (terrain.contains(x, y) && isPermeable(x, y)) {
             p = test
           }
         }
@@ -222,6 +222,10 @@ class GameState(var data: Data, val random: Random) {
         } else {
           putMessage(s"You don't have the tools to do that.")
         }
+
+      case Action.Diagnose(item) =>
+        // TODO: check tools, elapse time, etc
+        sendMessage(item, Message.Diagnose())
 
       case Action.Assemble(itemKind, ops) =>
         val ok = ops.forall {
@@ -383,7 +387,7 @@ class GameState(var data: Data, val random: Random) {
   }
 
   def visibleConditions(item: Item): Seq[String] =
-    sendMessage(item, Message.VisibleConditions()).conditions
+    sendMessage(item, Message.VisibleConditions(sendMessage(item, Message.Conditions()).conditions)).conditions
 
   def itemDisplayName(item: Item): String = {
     var name = item.kind.name
@@ -432,6 +436,8 @@ class GameState(var data: Data, val random: Random) {
 
   def isFunctional(p: Item): Boolean =
     sendMessage(p, IsFunctional()).functional && p.parts.forall(isFunctional)
+
+  def isKnownToBeNonFunctional(p: Item): Boolean = visibleConditions(p).nonEmpty
 
   def smash(p: Item): Unit = {
     if (p.parts.isEmpty) {
@@ -485,6 +491,7 @@ class GameState(var data: Data, val random: Random) {
 
   def refresh(): Unit = {
     recomputePermeabilityCache()
+    recalculateFOV()
   }
 
   def isPermeable(l: Location): Boolean =
@@ -493,6 +500,18 @@ class GameState(var data: Data, val random: Random) {
   def isEdible(item: Item): Boolean = sendMessage(item, Message.IsEdible()).edible
   def eat(item: Item): Unit =
     internalCalories += sendMessage(item, Message.Eat()).calories
+
+
+  // items can be _diagnosable_ with a tool type, or automatically diagnosed (i.e. no tool required to know if broken).
+  // both composite and atomic items can be diagnosable.
+  // if an item is diagnosable, that means its broken/not-broken state is not obvious.
+  // the brokenness state of non-diagnosable items is always visible.
+  // for diagnosable items, to test whether the item is functional, a diagnose action and a tool is required.
+  // -? does the diagnosis last forever? what if the item is re-broken? does it revert to 'undiagnosed'? doesn't that
+  //    just make it obvious that it's the broken part? does breaking a part of an item reset all its siblings to
+  //    undiagnosed? what about the parent?
+  // -> diagnosing will tag a _problem_ but it won't tag the _lack of a problem_.
+  //
 
   private var visible = Set.empty[(Int, Int)]
   def recalculateFOV(): Unit = {

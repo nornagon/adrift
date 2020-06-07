@@ -9,7 +9,7 @@ case class PartiallyDisassembled() extends Behavior {
     self: Item,
     message: Message
   ): Unit = message match {
-    case c: Message.VisibleConditions => c.conditions :+= "partially disassembled"
+    case c: Message.Conditions => c.conditions :+= "partially disassembled"
     case c: Message.IsFunctional => c.functional = false
     case _ =>
   }

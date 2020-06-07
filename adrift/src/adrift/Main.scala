@@ -45,6 +45,7 @@ object Main {
     val loadingScreen = new LoadingScreen(win, font)
     loadingScreen.init()
     val load = args.contains("--load")
+    val emptyWorld = args.contains("--empty-world")
 
     val dataPath = Paths.get("data")
     loadingScreen.println("Loading data...")
@@ -71,12 +72,11 @@ object Main {
         }
         implicit val random: Random = new Random(12367)
         val gen = WorldGen(data)
-        val state = gen.generateWorld(reportProgress = printProgress)
-        state.refresh()
+        val state = if (emptyWorld) gen.generateEmptyWorld() else gen.generateWorld(reportProgress = printProgress)
         state
       }
 
-    state.recalculateFOV()
+    state.refresh()
     val display: Display = new GLFWDisplay(win, font)
     display.init()
     display.update(state)
