@@ -10,9 +10,6 @@ case class Attrib(name: String, size: Int, attribType: Int, location: Int)
 
 case class ShaderProgram(program: Int, uniforms: Map[String, Int], attribs: Map[String, Attrib]) {
   def use(): Unit = glUseProgram(program)
-  def setUniformMatrix(loc: Int, transpose: Boolean, m: Array[Float]): Unit = {
-    glUniformMatrix4fv(loc, transpose, m)
-  }
 }
 object ShaderProgram {
   def compile(vsSource: String, fsSource: String, attribLocations: Seq[VertexAttrib]): ShaderProgram = {
@@ -64,6 +61,7 @@ object ShaderProgram {
     val err = glGetShaderInfoLog(shader, len)
     if (comp == GL_FALSE)
       throw new RuntimeException(s"Error compiling shader: $err")
+    if (err.nonEmpty) println(err)
     shader
   }
 }

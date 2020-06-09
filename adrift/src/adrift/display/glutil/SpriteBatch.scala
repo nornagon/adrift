@@ -15,6 +15,8 @@ object SpriteBatch {
     )
 
     val vs = """
+      #version 100
+      precision highp float;
       uniform mat4 u_projView;
       attribute vec4 Color;
       attribute vec2 Position;
@@ -29,6 +31,8 @@ object SpriteBatch {
     """
 
     val fs = """
+      #version 100
+      precision highp float;
       uniform sampler2D u_texture;
       varying vec4 vColor;
       varying vec2 vTexCoord;

@@ -7,6 +7,7 @@ import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL30._
 
 case class Font(texture: Texture, tileWidth: Int, tileHeight: Int, scaleFactor: Int = 1)
 
@@ -45,6 +46,13 @@ class GLFWWindow() {
       throw new IllegalStateException("Unable to initialize GLFW")
     }
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2)
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE)
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE)
+
+
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
 
@@ -56,6 +64,9 @@ class GLFWWindow() {
     glfwSwapInterval(1)
 
     GL.createCapabilities()
+
+    val vaid = glGenVertexArrays()
+    glBindVertexArray(vaid)
 
     spriteBatch = SpriteBatch.create
   }
@@ -113,11 +124,13 @@ class GLFWWindow() {
       spriteBatch.end()
     }
 
-
-    glfwSwapBuffers(window)
+    swap()
 
     this
   }
 
+  def swap(): Unit = glfwSwapBuffers(window)
+
   def poll(): Unit = glfwPollEvents()
+  def waitEvents(): Unit = glfwWaitEvents()
 }
