@@ -3,9 +3,11 @@ package adrift
 import adrift.display.GLFWWindow
 import adrift.display.glutil._
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL13._
 import org.lwjgl.opengl.GL20.glUniform1i
 import org.lwjgl.opengl.GL30._
 import org.lwjgl.opengl.GLDebugMessageCallback
+import org.lwjgl.system.MemoryUtil
 
 import scala.util.Random
 
@@ -22,6 +24,7 @@ class Framebuffer(val texture: Texture) {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
     glClear(GL_COLOR_BUFFER_BIT)
     glBindFramebuffer(GL_FRAMEBUFFER, previouslyBound)
+    glCheckError()
     id
   }
 
@@ -49,19 +52,19 @@ object AtmoSim {
   def diffusionPass: RenderPass = RenderPass.fragment("""
     #version 140
 
-    uniform sampler2D u_texture;
+    uniform sampler2D heat;
     in vec2 vTexCoord;
 
     out float res;
 
     void main() {
-      ivec2 texSize = textureSize(u_texture, 0);
+      ivec2 texSize = textureSize(heat, 0);
       vec3 texelSize = vec3(1.0 / texSize.x, 1.0 / texSize.y, 0.0);
-      float l = texture(u_texture, vTexCoord - texelSize.xz).r;
-      float r = texture(u_texture, vTexCoord + texelSize.xz).r;
-      float u = texture(u_texture, vTexCoord - texelSize.zy).r;
-      float d = texture(u_texture, vTexCoord + texelSize.zy).r;
-      float c = texture(u_texture, vTexCoord).r;
+      float l = texture(heat, vTexCoord - texelSize.xz).r;
+      float r = texture(heat, vTexCoord + texelSize.xz).r;
+      float u = texture(heat, vTexCoord - texelSize.zy).r;
+      float d = texture(heat, vTexCoord + texelSize.zy).r;
+      float c = texture(heat, vTexCoord).r;
       float sigma = 0.5;
       float dt = 1.0;
       res = mix(c, (l + r + u + d) / 4.0, 1.0-exp(-sigma*dt));
@@ -87,7 +90,7 @@ class AtmoSim(val width: Int, val height: Int) {
     glCheckError()
     val target = new Framebuffer(Texture.emptyFloat(width, height))
     glCheckError()
-    diffusionPass.renderToFramebuffer(source, target)
+    diffusionPass.renderToFramebuffer(Map("heat" -> source), target)
     glCheckError()
     val buf = target.texture.readFloat()
     val arr = new Array[Float](width * height)
@@ -115,15 +118,19 @@ class RenderPass(program: ShaderProgram, attribs: Seq[VertexAttrib]) {
 
     va
   }
-  def renderToFramebuffer(source: Texture, target: Framebuffer): Unit = {
+  def renderToFramebuffer(textures: Map[String, Texture], target: Framebuffer): Unit = {
     program.use()
-    glUniform1i(program.uniforms("u_texture"), 0)
-    source.bind()
+    for (((k, t), i) <- textures.zipWithIndex) {
+      glActiveTexture(GL_TEXTURE0 + i)
+      t.bind()
+      glUniform1i(program.uniforms(k), i)
+    }
     target.bind()
     glViewport(0, 0, target.width, target.height)
     quad.bind()
     quad.draw(GL_TRIANGLES, 0, 6)
     quad.unbind()
+    glActiveTexture(GL_TEXTURE0)
     glCheckError()
   }
 
@@ -176,7 +183,6 @@ object AtmoSimTest {
     """
 
   def main(args: Array[String]): Unit = {
-
     val win = new GLFWWindow()
     win.init(512, 512)
     glCheckError()
@@ -187,17 +193,11 @@ object AtmoSimTest {
       import org.lwjgl.opengl.GL43._
       glEnable(GL_DEBUG_OUTPUT)
       val cb = GLDebugMessageCallback.create((source: Int, `type`: Int, id: Int, severity: Int, length: Int, message: Long, userParam: Long) => {
-        //val msg = MemoryUtil.memUTF8(message)
-        //println(s"OpenGL error: source=$source, type=${`type`}, id=$id, sev=$severity, length=$length, message=$message")
-      }
-      )
+        val msg = MemoryUtil.memUTF8(message)
+        println(s"OpenGL error: source=$source, type=${`type`}, id=$id, sev=$severity, length=$length, message=$msg")
+      })
       glDebugMessageCallback(cb, 0)
     }
-
-    println(org.lwjgl.glfw.GLFW.glfwExtensionSupported("EXT_color_buffer_float"))
-    println(org.lwjgl.opengl.GL.getCapabilities.GL_ARB_texture_float)
-    println(org.lwjgl.opengl.GL.getCapabilities.GL_ARB_color_buffer_float)
-    println(org.lwjgl.glfw.GLFW.glfwExtensionSupported("ARB_color_buffer_float"))
 
     val toScreenPass = RenderPass.fragment("""
       #version 140
@@ -220,7 +220,7 @@ object AtmoSimTest {
     var fbs = (fb1, fb2)
 
     def step(): Unit = {
-      pass.renderToFramebuffer(fbs._1.texture, fbs._2)
+      pass.renderToFramebuffer(Map("heat" -> fbs._1.texture), fbs._2)
       fbs = fbs.swap
     }
 
@@ -250,13 +250,9 @@ object AtmoSimTest {
     val magentaShader = ShaderProgram.compile(
       passthruVertexShader,
       """
-        #version 330
-        uniform sampler2D u_texture;
-        in vec2 vTexCoord;
+        #version 140
         out vec4 color;
         void main() {
-          vec4 texColor = texture(u_texture, vTexCoord);
-          //gl_FragColor = texColor;
           color = vec4(1.0, 0.0, 1.0, 1.0);
         }
       """,
@@ -305,9 +301,9 @@ object AtmoSimTest {
     glCheckError()
 
     val fb = new Framebuffer(Texture.empty(512, 512))
-    magentaPass.renderToFramebuffer(Texture.empty(512, 512), fb)
+    magentaPass.renderToFramebuffer(Map.empty, fb)
     val fb2 = new Framebuffer(Texture.empty(512, 512))
-    addSinXPass.renderToFramebuffer(fb.texture, fb2)
+    addSinXPass.renderToFramebuffer(Map("u_texture" -> fb.texture), fb2)
     val bb = fb2.texture.read()
     println("fb2", bb.get(0), bb.get(1), bb.get(2), bb.get(3))
     addCosXPass.renderToScreen(fb2.texture, fbW, fbH)
