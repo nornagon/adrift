@@ -46,12 +46,11 @@ class GLFWWindow() {
       throw new IllegalStateException("Unable to initialize GLFW")
     }
 
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
-//    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2)
-//    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
-//    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE)
-//    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE)
-
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2)
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE)
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE)
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
@@ -64,9 +63,9 @@ class GLFWWindow() {
     glfwSwapInterval(1)
 
     GL.createCapabilities()
-//
-//    val vaid = glGenVertexArrays()
-//    glBindVertexArray(vaid)
+
+    val vaid = glGenVertexArrays()
+    glBindVertexArray(vaid)
 
     spriteBatch = SpriteBatch.create
   }

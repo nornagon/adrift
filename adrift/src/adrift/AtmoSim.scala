@@ -28,8 +28,8 @@ object AtmoSim {
   // a must be <= 0.5 for a stable solution.
   // i.e. dt <= (dx * dx) / 2
   //
-  // intuitively, we can handle anisotropic transfer rates by attenuating one of the terms!
-  // e.g.
+  // intuitively, we can handle anisotropic transfer rates by attenuating each of the terms!
+  // i.e.
   // U(x,y,t+1) = c + a * ((l-c)*hl + (r-c)*hr + (u-c)*hu + (d-c)*hd)
   // in order to be consistent, hr of U(x,y) must match hl of U(x+1,y) and so on.
 
@@ -111,6 +111,7 @@ class RenderPass(program: ShaderProgram, attribs: Seq[VertexAttrib]) {
     vertex(1f, -1f, 1f, 0f)
     vertex(1f, 1f, 1f, 1f)
     vertex(-1f, 1f, 0f, 1f)
+    va.flip()
 
     va
   }
@@ -208,7 +209,6 @@ object AtmoSimTest {
 
     val pass = AtmoSim.diffusionPass
     val (fbw, fbh) = win.framebufferSize
-    //val tex1 = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw * fbh)(i => Random.nextFloat() * 20 + 250))
     val tex1 = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw, fbh)((i, j) => if (i < fbw/2) 270f else (250f + Random.nextFloat() * 10f)).flatten)
     val fb1 = new Framebuffer(tex1)
     val tex2 = Texture.emptyFloat(fbw, fbh)
