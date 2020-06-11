@@ -181,7 +181,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     GlyphRenderer.wrap(item.kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
     sprintln("")
     val actionCS = commands(item).map(_.display)
-    val actionStr = wrapCS(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _), width - 2)
-    actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
+    if (actionCS.nonEmpty) {
+      val actionStr = wrapCS(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _), width - 2)
+      actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
+    }
   }
 }
