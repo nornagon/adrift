@@ -19,7 +19,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val level = Level(
       terrain = new Grid(width, height)(data.terrain("floor")),
       temperature = new Grid(width, height)(random.between(250d, 270d)),
-      gasComposition = new Grid(width, height)(GasComposition(4, 9, 1))
+      gasComposition = new Grid(width, height)(GasComposition.earthLike)
     )
     state.levels(levelId) = level
 
@@ -37,7 +37,7 @@ case class WorldGen(data: Data)(implicit random: Random) {
     val level = Level(
       terrain = new CylinderGrid(width, height)(data.terrain("floor")),
       temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
-      gasComposition = new CylinderGrid(width, height)(GasComposition(4, 9, 1))
+      gasComposition = new CylinderGrid(width, height)(GasComposition.earthLike)
     )
     state.levels(levelId) = level
 

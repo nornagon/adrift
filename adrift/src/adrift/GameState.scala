@@ -103,13 +103,13 @@ object Level {
     Level(
       terrain = new CylinderGrid(width, height)(data.terrain("floor")),
       temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
-      gasComposition = new CylinderGrid(width, height)(GasComposition(4, 9, 1))
+      gasComposition = new CylinderGrid(width, height)(GasComposition.earthLike)
     )
   def emptySquare(data: Data, width: Int, height: Int)(implicit random: Random): Level =
     Level(
       terrain = new Grid(width, height)(data.terrain("floor")),
       temperature = new Grid(width, height)(random.between(250d, 270d)),
-      gasComposition = new Grid(width, height)(GasComposition(4, 9, 1))
+      gasComposition = new Grid(width, height)(GasComposition.earthLike)
     )
 }
 
@@ -195,6 +195,7 @@ class GameState(var data: Data, val random: Random) {
       checkBodyTemp()
       internalCalories -= 1
       checkHunger()
+      breathe()
       currentTime += 1
     }
   }
@@ -376,6 +377,39 @@ class GameState(var data: Data, val random: Random) {
     if (internalCalories < -8000) {
       die("hunger")
       return
+    }
+  }
+
+  private def breathe(): Unit = {
+    val gas = levels(player.levelId).gasComposition(player.xy)
+    if (gas.oxygen < 1) {
+      if (random.oneIn(10)) {
+        putMessage("You black out.")
+        die("hypoxia")
+      } else if (random.oneIn(5)) {
+        putMessage(random.oneOf(
+          "Your head pounds. Is that a light?",
+          "You can hardly draw breath.",
+          "You stumble.",
+          "Wait... where are you?",
+        ))
+      }
+    } else if (gas.oxygen < 5) {
+      if (random.oneIn(30)) {
+        putMessage(random.oneOf(
+          "You feel light-headed.",
+          "Your fingers tingle.",
+          "Your toes feel numb.",
+          "You feel tired.",
+        ))
+      }
+    } else if (gas.oxygen < 10) {
+      if (random.oneIn(60)) {
+        putMessage(random.oneOf(
+          "Your head aches.",
+          "It feels like an effort to lift your limbs.",
+        ))
+      }
     }
   }
 

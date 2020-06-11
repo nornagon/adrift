@@ -52,7 +52,7 @@ case class GasHolder(var composition: GasComposition, maxPressure: Double) exten
   ): Unit = message match {
     case m@PumpGas(gas) =>
       if (((gas.totalPressure + composition.totalPressure) > maxPressure) || ((gas + composition).minPressure < 0)) {
-        m.gas = GasComposition.zero()
+        m.gas = GasComposition.zero
       } else {
         composition = composition + gas
       }
@@ -69,7 +69,7 @@ case class Diffuser() extends Behavior {
     case m@PumpGas(gas) =>
       val loc = state.getItemTile(self)
       if ((gas + state.levels(loc.levelId).gasComposition(loc.x, loc.y)).minPressure < 0) {
-        m.gas = GasComposition.zero()
+        m.gas = GasComposition.zero
       } else {
         state.levels(loc.levelId).gasComposition(loc.x, loc.y) += gas
       }
