@@ -46,4 +46,8 @@ object Message {
   case class IsEdible(var edible: Boolean = false) extends Message
 
   case class Diagnose() extends Message
+
+  case class IsDiagnosable(var diagnosable: Boolean = false) extends Message
+  case class IsDiagnosed(var diagnosed: Boolean = false) extends Message
+
 }

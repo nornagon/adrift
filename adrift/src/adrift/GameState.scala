@@ -437,7 +437,8 @@ class GameState(var data: Data, val random: Random) {
   def isFunctional(p: Item): Boolean =
     sendMessage(p, IsFunctional()).functional && p.parts.forall(isFunctional)
 
-  def isKnownToBeNonFunctional(p: Item): Boolean = visibleConditions(p).nonEmpty
+  def isKnownToBeNonFunctional(p: Item): Boolean =
+    visibleConditions(p).nonEmpty || p.parts.exists(isKnownToBeNonFunctional)
 
   def smash(p: Item): Unit = {
     if (p.parts.isEmpty) {

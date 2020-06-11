@@ -16,6 +16,12 @@ case class Diagnosable(op: String, var diagnosed: Boolean = false) extends Behav
     case _: Message.Diagnose =>
       diagnosed = true
 
+    case m: Message.IsDiagnosable =>
+      m.diagnosable = !diagnosed //true
+
+    case m: Message.IsDiagnosed =>
+      m.diagnosed = diagnosed
+
     case _ =>
   }
 }

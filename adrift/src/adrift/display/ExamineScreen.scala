@@ -1,7 +1,7 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
 import adrift.display.GlyphRenderer.ColoredString
-import adrift.items.Item
+import adrift.items.{Item, Message}
 import adrift._
 import adrift.items.Message.Provides
 import org.lwjgl.glfw.GLFW._
@@ -69,7 +69,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       when(item.parts.nonEmpty)
         (Command("{o}pen", () => doOpen(item))),
 
-      when(true)
+      when(state.sendMessage(item, Message.IsDiagnosable()).diagnosable && !state.sendMessage(item, Message.IsDiagnosed()).diagnosed)
         (Command("{d}iagnose", () => doDiagnose(item))),
 
       when(openStack.nonEmpty)
@@ -166,6 +166,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       sprintln(prefix + item.kind.name, bg = bg)
       if (state.isKnownToBeNonFunctional(item))
         renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = bg)
+      else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
+        renderer.drawChar(sx + width, sy + nextY - 1, '?', fg = disabledGreen, bg = bg)
     }
     sprintln("")
     val item = is(selected)

@@ -17,8 +17,45 @@
     - { type: microprocessor, count: 1, disassembled_with: SOLDERING }
   display: MEDIUM_BOX
   behavior:
-    - ProvidesShipPower: { circuit: "main" }
+    - ProvidesShipPower: { circuit: main }
 
+- type: item
+  name: multimeter
+  description: aoeu
+  display: SMALL_EQUIPMENT
+  behavior:
+    - Tool: { op: VOLTAGE_MEASURING }
+
+- type: item
+  name: diagtest
+  description: test item for testing diagnosis mechanics
+  display: SMALL_EQUIPMENT
+  parts:
+    - { type: diagtest_auto, count: 2, disassembled_with: SCREWING }
+    - { type: diagtest_broken, count: 2, disassembled_with: SCREWING }
+    - { type: diagtest_fine, count: 2, disassembled_with: SCREWING }
+  behavior:
+    - Diagnosable: { op: VOLTAGE_MEASURING }
+
+- type: item
+  name: diagtest_auto
+  description: this item is not diagnosable, i.e. automatically diagnosed
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: diagtest_broken
+  description: this item is diagnosable and broken.
+  display: SMALL_EQUIPMENT
+  behavior:
+    - Diagnosable: { op: VOLTAGE_MEASURING }
+    - Broken: {}
+
+- type: item
+  name: diagtest_fine
+  description: this item is diagnosable and not broken.
+  display: SMALL_EQUIPMENT
+  behavior:
+    - Diagnosable: { op: VOLTAGE_MEASURING }
 
 - { type: item, name: "M3A power supply", description: "Ptronics' smallest power supply is perfect for a phone or cat toy.", display: SMALL_BOX}
 - { type: item, name: "M5A power supply", description: "Another small supply from Ptronics with more voltage and small amps.", display: SMALL_BOX }
