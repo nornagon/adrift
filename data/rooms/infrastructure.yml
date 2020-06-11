@@ -113,24 +113,70 @@
 
 - type: item
   name: CO2 tank
-  description: a canister designed for transporting solid carbon dioxide pellets
+  description: A canister designed for transporting solid carbon dioxide pellets
   display: LARGE_ROD
 
 - type: item
   name: nitrogen tank
-  description: a double-walled vac system for moving liquid nitrogen. Built-in optional gassifier.
+  description: A double-walled vac system for moving liquid nitrogen. Built-in optional gassifier.
   display: LARGE_ROD
 
 - type: item
   name: hydrogen tank
-  description: grown from a crystal seed, this tank can sustain impossible pressures without leaking. It's transparent, so you can see the baby-blue liquid hydrogen inside.
+  description: Grown from a crystal seed, this tank can sustain impossible pressures without leaking. It's transparent, so you can see the baby-blue liquid hydrogen inside.
   display: LARGE_ROD
 
 - type: item
   name: generator
   description: A highly efficient combustion generator with automated carbon resequestration.  Feed carbon and oxygen in, get heat and compressed CO2 out.
+  parts:
+  - { type: C-size frame, count: 1, disassembled_with: SCREWING }
+  - { type: fuel hopper, count: 1, disassembled_with: SCREWING }
+  - { type: combustion chamber, count: 1, disassembled_with: SCREWING }
+  - { type: inverter, count: 1, disassembled_with: SCREWING }
+  - { type: CO2 tank, count: 1, disassembled_with: SCREWING }
+  - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
   display: MEDIUM_EQUIPMENT
 
+- type: item
+  name: fuel hopper
+  description: A port for accepting a wide variety of combustible fuels.
+  parts:
+    - { type: B-size frame, count: 1, disassembled_with: SCREWING }
+    - { type: B-size modular panel, count: 2, disassembled_with: SCREWING }
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: combustion chamber
+  description: A valved box for combusting fuel to drive a small inverter.
+  parts:
+    - { type: B-size frame, count: 2, disassembled_with: SCREWING }
+    - { type: B-size modular rod, count: 4, disassembled_with: SCREWING }
+    - { type: gas valve, count: 2, disassembled_with: SCREWING }
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: inverter
+  description: Converts motion into POWER.
+  parts:
+    - { type: A-size frame, count: 1, disassembled_with: SCREWING }
+    - { type: insulated wire, count: 1, disassembled_with: SCREWING }
+    - { type: B-size modular rod, count: 4, disassembled_with: SCREWING }
+    - { type: magnet, count: 3, disassembled_with: SCREWING }
+    # wheatstone bridge!
+    - { type: micro e-board, count: 1, disassembled_with: SCREWING }
+    - { type: flex component, count: 4, disassembled_with: SCREWING }
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: gas valve
+  description: It can open or close to either permit or prohibit gasses from moving.  Warranty void if exposed to liquids or solids.
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: water valve
+  description: Operates pretty similar to the one you have equipped for urinary regulation.
+  display: SMALL_EQUIPMENT
 
 - type: item group
   name: power equipment
@@ -140,7 +186,8 @@
 - type: item group
   name: data equipment
   choose:
-    - flex component
+    - {item: flex component, weight: 5}
+    - micro e-board
 
 - type: item
   name: water purification

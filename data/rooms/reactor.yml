@@ -1,0 +1,175 @@
+- type: roomgen
+  name: reactor
+  algorithm: WFC
+  #    The Reactor room is a few things:
+  # In-game it's
+  options:
+    parts:
+      # Flooring
+      - |
+        ***
+        *.*
+        ***
+      # Flooring
+      - |
+        *,*
+        ,,,
+        *,*
+      - |
+        *,,*
+        ,,,,
+        *,,*
+
+      # Reactor core
+      - min: 1
+        max: 1
+        part: |
+          ,,,,,,,
+          ,,,,,,,
+          ,,XXX,,
+          ,,XCX,,
+          ,,XXX,,
+          ,,,,,,,
+          ,,,,,,,
+
+      # Reactor isolation area
+      - |
+        ...
+        ...
+        ///
+        ,,,
+        ,,,
+      - |
+        ....
+        ....
+        ////
+        ,,,,
+        ,,,,
+
+      - min: 4
+        max: 4
+        part: |
+          ......
+          ./////
+          ./,,,,
+          ./,,,,
+          ./,,,,
+          ./,,,,
+
+      # Reactor isolation entrance
+      - min: 1
+        max: 1
+        part: |
+          ........
+          ///DD///
+          ,/I,,,/,
+          ,//DD//,
+          ,,,,,,,,
+
+      # Fuel storage
+      - min: 1
+        part: |
+          xxxxxx
+          hhhhp.
+          ****..
+
+      # Coolant system
+      - min: 1
+        part: |
+          xxxxxxx
+          .pTPTp.
+          .......
+
+      # Turbine Bank
+      - min: 3
+        max: 3
+        part: |
+          .....
+          .dtp.
+          .....
+
+
+      # Operating console
+      - min: 1
+        max: 1
+        part: |
+          .....
+          .....
+          .ccc.
+          ..E..
+
+      # Jeffries tube entrance
+      - min: 1
+        max: 1
+        part: |
+          ...
+          .H.
+          ...
+
+    defs:
+      .: { terrain: floor }
+      ",": { terrain: reactor floor }
+      x: { terrain: wall }
+      X: { terrain: reactor wall }
+      /: { terrain: transparent polycarbonate window }
+#      +: { items: { group: automatic door } }
+      D: { items: { each: [reactor door] } }
+      E: { items: { each: [electronics rack] } }
+      I: { items: { each: [isolation panel] } }
+      C: { items: { each: [reactor core] } }
+      c: { items: { each: [reactor console] } }
+      P: { items: { each: [liquid pump] } }
+      p: { items: { each: [floor pipe] } }
+      t: { items: { each: [steam turbine] } }
+      T: { items: { each: [liquid tank] } }
+      d: { items: { each: [condenser] } }
+      H: { items: { each: [jeffries hatch] } }
+      h: { items: { each: [hydrogen tank] } }
+
+- type: item
+  name: reactor door
+  description: An airtight and radiation proof door specially designed with interlocks to prevent it from opening, pretty much ever.
+  parts:
+    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
+    - {type: flex component, count: 4, disassembled_with: SOLDERING}
+    - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
+    - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
+    - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
+  display: DOOR_CLOSED
+
+- type: item
+  name: isolation panel
+  description: a panel of displays that show you why whatever you're trying to do in there is a bad idea
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: reactor core
+  description: A diamond ceramic system contains a slice of the sun.
+  display: REACTOR_CORE
+
+- type: item
+  name: reactor console
+  description: controls and displays that indicate the state of the reactor, and may show what if anything is wrong with it.
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: liquid pump
+  description: A basic piston pump with accumulators to smooth out the flow of whatever liquid it's pumping
+  display: MEDIUM_EQUIPMENT
+
+- type: item
+  name: floor pipe
+  description: a pipe fitting emerges from the floor here - could hold anything! Liquid nitrogen or helium plasma or worse.  Best be careful with this.
+  display: MEDIUM_BOX
+
+- type: item
+  name: steam turbine
+  description: A high speed turbine converts hot steam into electrical power.  If this isn't making a gentle humming noise, something is wrong.
+  display: LARGE_EQUIPMENT
+
+- type: item
+  name: condenser
+  description: a set of cooling copper coils turns hot steam back into water.
+  display: LARGE_EQUIPMENT

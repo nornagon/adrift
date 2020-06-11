@@ -30,15 +30,28 @@
       fg: brown
       layer: 50
     FLOOR:
-      char: "\u00b0"
+      char: "\u00b0" # ░
       fg: true black
       bg: black
       layer: -50
+    REACTOR_FLOOR:
+      char: "\u00b0" # ░
+      fg: yellow
+      bg: black
+      layer: -50
+    REACTOR_CORE:
+      char: "\u00e8" # Φ
+      fg: white
+      bg: true black
     ELEVATOR_WALL:
       char: "\u00C5" # ┼
       fg: light_gray
     WALL:
       char: "\u00C5" # ┼
+    REACTOR_WALL:
+      char: "\u00CE" # ╬
+      fg: red
+      bg: gray
     DOOR_CLOSED:
       char: "\u002B" # +
       layer: 10

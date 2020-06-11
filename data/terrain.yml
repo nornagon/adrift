@@ -13,6 +13,14 @@
   heatCapacity: 0.1
 
 - type: terrain
+  name: reactor floor
+  opaque: false
+  walkable: true
+  display: REACTOR_FLOOR
+  heatCapacity: 0.1
+
+
+- type: terrain
   name: wall
   opaque: true
   walkable: false
@@ -21,6 +29,16 @@
   display: WALL
   heatCapacity: 10
   heatTransfer: 0.1
+
+- type: terrain
+  name: reactor wall
+  opaque: true
+  walkable: false
+  permeable: false
+  connects: true
+  display: REACTOR_WALL
+  heatCapacity: 100
+  heatTransfer: 1
 
 - type: terrain
   name: elevator wall

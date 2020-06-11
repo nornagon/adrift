@@ -19,6 +19,14 @@
   display: RAW_THIN
 
 - type: item
+  name: insulated wire
+  description: A few meters of ship-standard wire.
+  parts:
+    - { type: copper wire, count: 1, disassembled_with: CUTTING }
+    - { type: electric insulator, count: 1, disassembled_with: CUTTING }
+  display: RAW_THIN
+
+- type: item
   name: wooden rod
   description: A foot-long cylinder of dead tree. The tree was probably grown on Earth... it's nice to hold a piece of home in your hands.
   display: RAW_ROD
@@ -30,7 +38,7 @@
 
 - type: item
   name: magnet
-  description: A permanent ferrite magnet. It'd stick to your refrigerator.
+  description: A permanent ferrite magnet. It'd stick to your refrigerator... but how does it work?
   display: RAW_BLOCK
 
 - type: item
