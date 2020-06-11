@@ -49,13 +49,41 @@ class Framebuffer(val texture: Texture) {
 }
 
 object AtmoSim {
+  // from: https://people.eecs.berkeley.edu/~demmel/cs267/lecture17/lecture17.html#link_1.4
+  // the "explicit Euler algorithm"
+  //
+  // let a = dt/(dx*dx)
+  // let c = U(x,y,t), l = U(x-1,y,t), r = U(x+1,y,t), u = U(x,y-1,t), d = U(x,y+1,t)
+  //
+  // then the update is:
+  // U(x,y,t+1) = (1-4*a) * c + a*(l + r + u + d)
+  //            = c - 4*a*c + a*(l + r + u + d)
+  //            = c + a*(l + r + u + d - 4 * c)
+  //            = c + a * ((l-c) + (r-c) + (u-c) + (d-c))
+  // i.e. heat at t+1 is increased by an amount proportional to the sum of the
+  // differences between the cell and its neighbors.
+  // a must be <= 0.5 for a stable solution.
+  // i.e. dt <= (dx * dx) / 2
+  //
+  // intuitively, we can handle anisotropic transfer rates by attenuating one of the terms!
+  // e.g.
+  // U(x,y,t+1) = c + a * ((l-c)*hl + (r-c)*hr + (u-c)*hu + (d-c)*hd)
+  // in order to be consistent, hr of U(x,y) must match hl of U(x+1,y) and so on.
+
   def diffusionPass: RenderPass = RenderPass.fragment("""
     #version 140
 
     uniform sampler2D heat;
+    uniform sampler2D heatTransfer;
     in vec2 vTexCoord;
 
     out float res;
+
+    // dt <= 0.5 * dx * dx or the system will be unstable
+    // [later]: apparently 0.25 is the highest value that works here when dx=1? idk why that is.
+    float dt = 0.25;
+    float dx = 1.0;
+    float a = dt / (dx * dx);
 
     void main() {
       ivec2 texSize = textureSize(heat, 0);
@@ -65,9 +93,14 @@ object AtmoSim {
       float u = texture(heat, vTexCoord - texelSize.zy).r;
       float d = texture(heat, vTexCoord + texelSize.zy).r;
       float c = texture(heat, vTexCoord).r;
-      float sigma = 0.5;
-      float dt = 1.0;
-      res = mix(c, (l + r + u + d) / 4.0, 1.0-exp(-sigma*dt));
+
+      float hc = texture(heatTransfer, vTexCoord).r;
+      float hl = texture(heatTransfer, vTexCoord - texelSize.xz).r * hc;
+      float hr = texture(heatTransfer, vTexCoord + texelSize.xz).r * hc;
+      float hu = texture(heatTransfer, vTexCoord - texelSize.zy).r * hc;
+      float hd = texture(heatTransfer, vTexCoord + texelSize.zy).r * hc;
+
+      res = c + a * ( (l - c) * hl + (r - c) * hr + (u - c) * hu + (d - c) * hd );
     }
   """)
 }
@@ -212,15 +245,18 @@ object AtmoSimTest {
 
     val pass = AtmoSim.diffusionPass
     val (fbw, fbh) = win.framebufferSize
-    val tex1 = Texture.fromFloatArray(fbw, fbh, Array.fill(fbw * fbh)(Random.nextFloat() * 20 + 250))
+    //val tex1 = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw * fbh)(i => Random.nextFloat() * 20 + 250))
+    val tex1 = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw, fbh)((i, j) => if (i < fbw/2) 270f else (250f + Random.nextFloat() * 10f)).flatten)
     val fb1 = new Framebuffer(tex1)
     val tex2 = Texture.emptyFloat(fbw, fbh)
     val fb2 = new Framebuffer(tex2)
 
     var fbs = (fb1, fb2)
 
+    val ht = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw, fbh)((i, j) => if (i == fbw/2 && j > fbh/4 && j < fbh*3/4) 0.1f else 1f).flatten)
+
     def step(): Unit = {
-      pass.renderToFramebuffer(Map("heat" -> fbs._1.texture), fbs._2)
+      pass.renderToFramebuffer(Map("heat" -> fbs._1.texture, "heatTransfer" -> ht), fbs._2)
       fbs = fbs.swap
     }
 
