@@ -65,12 +65,14 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
   private def commands(item: Item): Seq[Command] = {
     import Option.when
+    val Message.IsDiagnosable(diagnosable, diagnoseOp) = state.sendMessage(item, Message.IsDiagnosable())
+    val opAvailable = diagnosable && state.toolsProviding(diagnoseOp.get).nonEmpty
     Seq(
       when(item.parts.nonEmpty)
         (Command("{o}pen", () => doOpen(item))),
 
-      when(state.sendMessage(item, Message.IsDiagnosable()).diagnosable && !state.sendMessage(item, Message.IsDiagnosed()).diagnosed)
-        (Command("{d}iagnose", () => doDiagnose(item))),
+      when(diagnosable)
+        (Command("{d}iagnose", () => doDiagnose(item), available = opAvailable)),
 
       when(openStack.nonEmpty)
         (Command("{r}emove", () => doRemove(openStack.last, item), available = {

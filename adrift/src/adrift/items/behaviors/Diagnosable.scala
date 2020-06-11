@@ -1,7 +1,7 @@
 package adrift.items.behaviors
 
 import adrift.GameState
-import adrift.items.{Behavior, Item, Message}
+import adrift.items.{Behavior, Item, ItemOperation, Message}
 
 case class Diagnosable(op: String, var diagnosed: Boolean = false) extends Behavior {
   override def receive(
@@ -18,6 +18,7 @@ case class Diagnosable(op: String, var diagnosed: Boolean = false) extends Behav
 
     case m: Message.IsDiagnosable =>
       m.diagnosable = !diagnosed //true
+      m.opRequired = Some(ItemOperation(op))
 
     case m: Message.IsDiagnosed =>
       m.diagnosed = diagnosed

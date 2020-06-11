@@ -220,12 +220,24 @@ class GameState(var data: Data, val random: Random) {
           elapse(10)
           putMessage(s"You remove the ${itemDisplayName(item)} from the ${itemDisplayName(parent)}.")
         } else {
-          putMessage(s"You don't have the tools to do that.")
+          putMessage(s"You need a ${disassembleOp.id} tool to do that.")
         }
 
       case Action.Diagnose(item) =>
         // TODO: check tools, elapse time, etc
-        sendMessage(item, Message.Diagnose())
+        val m = sendMessage(item, Message.IsDiagnosable())
+        if (m.diagnosable) {
+          val diagnoseOp = m.opRequired.get
+          if (diagnoseOp.id == "HANDLING" ||
+            nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(diagnoseOp)).ok }) {
+            sendMessage(item, Message.Diagnose())
+            elapse(10)
+          } else {
+            putMessage(s"You need a ${diagnoseOp.id} tool to do that.")
+          }
+        } else {
+          putMessage("That can't be diagnosed.")
+        }
 
       case Action.Assemble(itemKind, ops) =>
         val ok = ops.forall {
@@ -385,6 +397,8 @@ class GameState(var data: Data, val random: Random) {
     item.parts.foreach(sendMessage(_, message))
     message
   }
+
+  def toolsProviding(op: ItemOperation): Seq[Item] = nearbyItems.filter(i => sendMessage(i, Message.Provides(op)).provides)
 
   def visibleConditions(item: Item): Seq[String] =
     sendMessage(item, Message.VisibleConditions(sendMessage(item, Message.Conditions()).conditions)).conditions

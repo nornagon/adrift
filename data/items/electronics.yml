@@ -35,7 +35,7 @@
     - { type: diagtest_broken, count: 2, disassembled_with: SCREWING }
     - { type: diagtest_fine, count: 2, disassembled_with: SCREWING }
   behavior:
-    - Diagnosable: { op: VOLTAGE_MEASURING }
+    #- Diagnosable: { op: VOLTAGE_MEASURING }
 
 - type: item
   name: diagtest_auto

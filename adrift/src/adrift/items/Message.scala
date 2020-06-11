@@ -47,7 +47,7 @@ object Message {
 
   case class Diagnose() extends Message
 
-  case class IsDiagnosable(var diagnosable: Boolean = false) extends Message
+  case class IsDiagnosable(var diagnosable: Boolean = false, var opRequired: Option[ItemOperation] = None) extends Message
   case class IsDiagnosed(var diagnosed: Boolean = false) extends Message
 
 }
