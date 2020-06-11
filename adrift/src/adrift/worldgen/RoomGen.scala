@@ -208,10 +208,10 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     }
   }
 
-//  allTiles.foreach(t => assert(t.left == Edge || t.left == EdgeDoor || allTiles.exists(k => matchesHorizontal(k, t)), s"No tile matches $t on the left"))
-//  allTiles.foreach(t => assert(t.right == Edge || t.left == EdgeDoor || allTiles.exists(k => matchesHorizontal(t, k)), s"No tile matches $t on the right"))
-//  allTiles.foreach(t => assert(t.up == Edge || t.left == EdgeDoor || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
-//  allTiles.foreach(t => assert(t.down == Edge || t.left == EdgeDoor || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
+  allTiles.foreach(t => assert(t.left == Edge || t.left == EdgeDoor || allTiles.exists(k => matchesHorizontal(k, t)), s"No tile matches $t on the left"))
+  allTiles.foreach(t => assert(t.right == Edge || t.right == EdgeDoor || allTiles.exists(k => matchesHorizontal(t, k)), s"No tile matches $t on the right"))
+  allTiles.foreach(t => assert(t.up == Edge || t.up == EdgeDoor || allTiles.exists(k => matchesVertical(k, t)), s"No tile matches $t on the up"))
+  allTiles.foreach(t => assert(t.down == Edge || t.down == EdgeDoor || allTiles.exists(k => matchesVertical(t, k)), s"No tile matches $t on the down"))
 
   private def gts(isDoorEdge: (Int, Int) => Boolean): GraphTileSet = new GraphTileSet {
     override def size: Int = allTiles.size
