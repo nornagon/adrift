@@ -9,7 +9,7 @@ import org.lwjgl.opengl.GL15._
 
 case class VertexArray(buffer: FloatBuffer, attributes: Seq[VertexAttrib]) {
   val stride: Int = attributes.map(_.numComponents).sum * 4
-  val bufferId: Int = glGenBuffers()
+  lazy val bufferId: Int = glGenBuffers()
   def put(f: Float): VertexArray = { buffer.put(f); this }
   def put(fs: Array[Float], offset: Int, length: Int): VertexArray = { buffer.put(fs, offset, length); this }
   def flip(): VertexArray = { buffer.flip(); this }

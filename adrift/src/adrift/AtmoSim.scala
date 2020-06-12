@@ -40,7 +40,7 @@ object AtmoSim {
     uniform sampler2D heatTransfer;
     in vec2 vTexCoord;
 
-    out float res;
+    out vec4 res;
 
     // dt <= 0.5 * dx * dx or the system will be unstable
     // [later]: apparently 0.25 is the highest value that works here when dx=1? idk why that is.
@@ -51,17 +51,17 @@ object AtmoSim {
     void main() {
       ivec2 texSize = textureSize(heat, 0);
       vec3 texelSize = vec3(1.0 / texSize.x, 1.0 / texSize.y, 0.0);
-      float l = texture(heat, vTexCoord - texelSize.xz).r;
-      float r = texture(heat, vTexCoord + texelSize.xz).r;
-      float u = texture(heat, vTexCoord - texelSize.zy).r;
-      float d = texture(heat, vTexCoord + texelSize.zy).r;
-      float c = texture(heat, vTexCoord).r;
+      vec4 l = texture(heat, vTexCoord - texelSize.xz);
+      vec4 r = texture(heat, vTexCoord + texelSize.xz);
+      vec4 u = texture(heat, vTexCoord - texelSize.zy);
+      vec4 d = texture(heat, vTexCoord + texelSize.zy);
+      vec4 c = texture(heat, vTexCoord);
 
-      float hc = texture(heatTransfer, vTexCoord).r;
-      float hl = texture(heatTransfer, vTexCoord - texelSize.xz).r * hc;
-      float hr = texture(heatTransfer, vTexCoord + texelSize.xz).r * hc;
-      float hu = texture(heatTransfer, vTexCoord - texelSize.zy).r * hc;
-      float hd = texture(heatTransfer, vTexCoord + texelSize.zy).r * hc;
+      vec4 hc = texture(heatTransfer, vTexCoord);
+      vec4 hl = texture(heatTransfer, vTexCoord - texelSize.xz) * hc;
+      vec4 hr = texture(heatTransfer, vTexCoord + texelSize.xz) * hc;
+      vec4 hu = texture(heatTransfer, vTexCoord - texelSize.zy) * hc;
+      vec4 hd = texture(heatTransfer, vTexCoord + texelSize.zy) * hc;
 
       res = c + a * ( (l - c) * hl + (r - c) * hr + (u - c) * hu + (d - c) * hd );
     }
@@ -230,7 +230,7 @@ object AtmoSimTest {
     win.show()
 
     while (!win.shouldClose) {
-      step()
+      for (_ <- 1 to 4) step()
       draw()
       win.swap()
       win.poll()
