@@ -183,7 +183,6 @@ object AtmoSimTest {
     val win = new GLFWWindow()
     win.init(512, 512)
     glCheckError()
-    println(for (i <- 0 until glGetInteger(GL_NUM_EXTENSIONS)) yield glGetStringi(GL_EXTENSIONS, i))
 
     if (org.lwjgl.glfw.GLFW.glfwExtensionSupported("GL_ARB_debug_output")) {
       println("Debug output supported")

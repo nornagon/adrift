@@ -7,6 +7,7 @@ import org.lwjgl.glfw.GLFW._
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11._
+import org.lwjgl.opengl.GL20._
 import org.lwjgl.opengl.GL30._
 
 case class Font(texture: Texture, tileWidth: Int, tileHeight: Int, scaleFactor: Int = 1)
@@ -46,11 +47,15 @@ class GLFWWindow() {
       throw new IllegalStateException("Unable to initialize GLFW")
     }
 
+    // 3.2 is the minimum version to be able to request a core profile.
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE)
     glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE)
+
+    // Allows a dual-gpu mac to use its internal gpu. This has no effect on non-mac systems.
+    glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GL_TRUE)
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE)
@@ -63,6 +68,12 @@ class GLFWWindow() {
     glfwSwapInterval(1)
 
     GL.createCapabilities()
+
+    println(s"OpenGL version: ${glGetString(GL_VERSION)}")
+    println(s"  Vendor: ${glGetString(GL_VENDOR)}")
+    println(s"  Renderer: ${glGetString(GL_RENDERER)}")
+    println(s"  GLSL Version: ${glGetString(GL_SHADING_LANGUAGE_VERSION)}")
+    println(s"  Extensions: ${(for (i <- 0 until glGetInteger(GL_NUM_EXTENSIONS)) yield glGetStringi(GL_EXTENSIONS, i)).mkString(", ")}")
 
     val vaid = glGenVertexArrays()
     glBindVertexArray(vaid)
