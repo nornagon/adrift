@@ -82,6 +82,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
 
     def matchesEdge: Boolean = false
     def matchesEdgeDoor: Boolean = false
+    def requiresEdgeDoor: Boolean = false
   }
   case class Matching(c: Char) extends AdjacencyType {
     override def matchesEdge: Boolean = false
@@ -90,7 +91,9 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     override def matchesEdge: Boolean = true
   }
   case object EdgeDoor extends AdjacencyType {
+    override def matchesEdge: Boolean = true
     override def matchesEdgeDoor: Boolean = true
+    override def requiresEdgeDoor: Boolean = true
   }
   case class Internal(s: String, r: Int = 0, f: Boolean = false) extends AdjacencyType {
     override def rotated: AdjacencyType = copy(r = (r + 1) % 4)
@@ -262,10 +265,23 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
 
     override def allowedAt(x: Int, y: Int, t: Int): Boolean = {
       val tile = allTiles(t)
-      (!isDoorEdge(x - 1, y) || tile.left.matchesEdgeDoor) &&
-        (!isDoorEdge(x + 1, y) || tile.right.matchesEdgeDoor) &&
-        (!isDoorEdge(x, y - 1) || tile.up.matchesEdgeDoor) &&
-        (!isDoorEdge(x, y + 1) || tile.down.matchesEdgeDoor)
+      (if (isDoorEdge(x - 1, y)) {
+        tile.left.matchesEdgeDoor
+      } else {
+        !tile.left.requiresEdgeDoor
+      }) && (if (isDoorEdge(x + 1, y)) {
+        tile.right.matchesEdgeDoor
+      } else {
+        !tile.right.requiresEdgeDoor
+      }) && (if (isDoorEdge(x, y - 1)) {
+        tile.up.matchesEdgeDoor
+      } else {
+        !tile.up.requiresEdgeDoor
+      }) && (if (isDoorEdge(x, y + 1)) {
+        tile.down.matchesEdgeDoor
+      } else {
+        !tile.down.requiresEdgeDoor
+      })
     }
 
     override def countConstraints: Iterable[WaveFunctionCollapse.CountConstraint] = {
