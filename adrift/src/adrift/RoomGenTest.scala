@@ -113,10 +113,10 @@ object RoomGenTest {
         val colors = "white yellow red brown green blue light_gray gray".split(" ").map(data.display.palette(_)).to(IndexedSeq)
         def isDoorEdge(x: Int, y: Int): Boolean = (1 + x, 1 + y) == door
         var n = 0
-        val tileGrid = wfc.generateChars(width - 2, height - 2, isDoorEdge, (getTile: (Int, Int) => WFC#Tile) => {
+        val tileGrid = wfc.generateChars(width - 2, height - 2, isDoorEdge, (getTile: (Int, Int) => WFC#Tile, isContradiction: Boolean) => {
           n += 1
           try {
-            if (n % 1 == 0) {
+            if (n % 1 == 0 || isContradiction) {
               window.render { g =>
                 val gr = g.glyphs(Main.font)
                 val (cx, cy) = gr.bounds.center
@@ -127,11 +127,16 @@ object RoomGenTest {
                     gr.drawChar(cx - (width - 2) / 2 + x, cy - (height - 2) / 2 + y, tile.value, fg = fg)
                   }
                 }
+                if (isContradiction) {
+                  gr.drawString(0, 0, "contradiction")
+                }
               }
             }
           } catch {
             case NonFatal(e) => e.printStackTrace()
           }
+          if (isContradiction)
+            Thread.sleep(500)
         })
         wfc.fill(state, levelId, 1, 1, tileGrid)
       case algo =>

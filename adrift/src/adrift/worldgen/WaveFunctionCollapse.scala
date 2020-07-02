@@ -6,7 +6,7 @@ import org.chocosolver.solver._
 import org.chocosolver.solver.constraints.extension.Tuples
 import org.chocosolver.solver.search.SearchState
 import org.chocosolver.solver.search.limits.FailCounter
-import org.chocosolver.solver.search.loop.monitors.{IMonitorDownBranch, IMonitorOpenNode, ISearchMonitor}
+import org.chocosolver.solver.search.loop.monitors.{IMonitorContradiction, IMonitorDownBranch, IMonitorOpenNode, ISearchMonitor}
 import org.chocosolver.solver.search.strategy.Search
 import org.chocosolver.solver.search.strategy.selectors.values.{IntDomainRandom, IntValueSelector}
 import org.chocosolver.solver.search.strategy.selectors.variables.{FirstFail, VariableEvaluator, VariableSelector}
@@ -75,7 +75,7 @@ object WaveFunctionCollapse {
     random: Random,
     mustConnect: ((Int, Int), (Int, Int)) => Boolean = (_, _) => false,
     noisy: Boolean = false,
-    decisionCallback: ((Int, Int) => Int) => Unit = null,
+    decisionCallback: (((Int, Int) => Int), Boolean) => Unit = null,
   ): Option[Seq[Seq[Int]]] = {
     val model = new GraphModel()
     // lb is the lower bound of the graph, i.e. everything in |lb| must be in the final graph
@@ -253,7 +253,18 @@ object WaveFunctionCollapse {
               intVar.getValue
             else
               -1
-          })
+          }, false)
+        }
+      })
+      solver.plugMonitor(new ISearchMonitor with IMonitorContradiction {
+        override def onContradiction(cex: ContradictionException): Unit = {
+          decisionCallback((x: Int, y: Int) => {
+            val intVar = tiles(y * width + x)
+            if (intVar.getDomainSize == 1)
+              intVar.getValue
+            else
+              -1
+          }, true)
         }
       })
     }

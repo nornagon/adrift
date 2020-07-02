@@ -254,13 +254,13 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     }
   }
 
-  def generateChars(width: Int, height: Int, isDoorEdge: (Int, Int) => Boolean, watcher: ((Int, Int) => Tile) => Unit = null)(implicit r: Random): Grid[Tile] = {
+  def generateChars(width: Int, height: Int, isDoorEdge: (Int, Int) => Boolean, watcher: ((Int, Int) => Tile, Boolean) => Unit = null)(implicit r: Random): Grid[Tile] = {
     val decisionCb = if (watcher != null) {
-      (value: (Int, Int) => Int) => {
+      (value: (Int, Int) => Int, isContradiction: Boolean) => {
         val valueAsTile = (x: Int, y: Int) => {
           val v = value(x, y); if (v >= 0) allTiles(v) else null
         }
-        watcher(valueAsTile)
+        watcher(valueAsTile, isContradiction)
       }
     } else null
     WaveFunctionCollapse.graphSolve(gts(isDoorEdge), width, height, r, decisionCallback = decisionCb) match {
