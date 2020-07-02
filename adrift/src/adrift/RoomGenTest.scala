@@ -135,8 +135,6 @@ object RoomGenTest {
           } catch {
             case NonFatal(e) => e.printStackTrace()
           }
-          if (isContradiction)
-            Thread.sleep(500)
         })
         wfc.fill(state, levelId, 1, 1, tileGrid)
       case algo =>

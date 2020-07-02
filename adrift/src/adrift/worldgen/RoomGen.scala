@@ -61,7 +61,13 @@ case class Furnish(items: Table[FurnishItem]) extends RoomGenAlgorithm {
 }
 
 case class PaletteDef(terrain: Option[String] = None, items: Option[Table[String]] = None)
-case class PartWithOpts(part: String, min: Option[Int] = None, max: Option[Int] = None)
+case class PartWithOpts(
+  part: String,
+  min: Option[Int] = None,
+  max: Option[Int] = None,
+  rotate: Option[Boolean] = None,
+  flip: Option[Boolean] = None
+)
 object PartWithOpts {
   import io.circe.generic.semiauto._
   private val derivedDecoder = deriveDecoder[PartWithOpts]
@@ -120,8 +126,11 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     def flippedX: Tile = copy(
       left = right.flipped,
       right = left.flipped,
-      up = up,
-      down = down,
+    )
+
+    def flippedY: Tile = copy(
+      up = down.flipped,
+      down = up.flipped,
     )
   }
 
@@ -151,8 +160,23 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
         down = if (y == height - 2) edgeCharToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
       )
     }
-    tiles ++ tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
-    tiles.map(_.flippedX) ++ tiles.map(_.flippedX.rotated) ++ tiles.map(_.flippedX.rotated.rotated) ++ tiles.map(_.flippedX.rotated.rotated.rotated)
+    if (part.rotate.contains(false))
+      println("rotate = false")
+    val rotated =
+      if (part.rotate.getOrElse(true))
+        tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
+          (if (part.flip.getOrElse(true))
+            tiles.map(_.flippedX.rotated) ++ tiles.map(_.flippedX.rotated.rotated) ++ tiles.map(_.flippedX.rotated.rotated.rotated) ++
+              tiles.map(_.flippedY.rotated) ++ tiles.map(_.flippedY.rotated.rotated) ++ tiles.map(_.flippedY.rotated.rotated.rotated)
+          else
+            Seq.empty)
+      else
+        Seq.empty
+    val flipped =
+      if (part.flip.getOrElse(true))
+        tiles.map(_.flippedX) ++ tiles.map(_.flippedY)
+      else Seq.empty
+    (tiles ++ rotated ++ flipped).distinctBy(t => (t.value, t.left, t.right, t.up, t.down))
   }
 
   private val partTiles: Seq[Tile] = for {

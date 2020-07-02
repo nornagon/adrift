@@ -4,6 +4,7 @@ import org.chocosolver.graphsolver.GraphModel
 import org.chocosolver.graphsolver.search.strategy.GraphSearch
 import org.chocosolver.solver._
 import org.chocosolver.solver.constraints.extension.Tuples
+import org.chocosolver.solver.exception.ContradictionException
 import org.chocosolver.solver.search.SearchState
 import org.chocosolver.solver.search.limits.FailCounter
 import org.chocosolver.solver.search.loop.monitors.{IMonitorContradiction, IMonitorDownBranch, IMonitorOpenNode, ISearchMonitor}
