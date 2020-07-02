@@ -1,5 +1,7 @@
 - type: roomgen
   name: reactor
+  minArea: 1
+  maxArea: 1
   algorithm: WFC
   #    The Reactor room is a few things:
   # In-game it's
@@ -10,6 +12,7 @@
         ***
         *.*
         ***
+
       # Flooring
       - |
         *,*
@@ -32,53 +35,122 @@
           ,,,,,,,
           ,,,,,,,
 
-      # Reactor isolation area
+      # Reactor isolation area walls
       - |
-        ...
         ...
         ///
         ,,,
-        ,,,
       - |
-        ....
         ....
         ////
         ,,,,
-        ,,,,
+#
+#      - min: 4
+#        max: 4
+#        part: |
+#          .......
+#          .//////
+#          ./,,,,,
+#          ./,,,,*
+#          ./,,,,*
+#          ./,,,,*
+#          ./,****
 
-      - min: 4
-        max: 4
+      - min: 1
+        max: 1
+        rotate: false
+        flip: false
         part: |
-          ......
-          ./////
-          ./,,,,
-          ./,,,,
-          ./,,,,
-          ./,,,,
+          ,,,/.
+          ,,,/.
+          ,,,/.
+          ////.
+          .....
 
-      # Reactor isolation entrance
+      - min: 1
+        max: 1
+        rotate: false
+        flip: false
+        part: |
+          ./,,,
+          ./,,,
+          ./,,,
+          .////
+          .....
+
+      - min: 1
+        max: 1
+        rotate: false
+        flip: false
+        part: |
+          .....
+          .////
+          ./,,,
+          ./,,,
+          ./,,,
+
+      - min: 1
+        max: 1
+        rotate: false
+        flip: false
+        part: |
+          .....
+          ////.
+          ,,,/.
+          ,,,/.
+          ,,,/.
+
+#       Reactor isolation entrance
       - min: 1
         max: 1
         part: |
-          ........
-          ///DD///
-          ,/I,,,/,
-          ,//DD//,
-          ,,,,,,,,
+          .......
+          ///D///
+          ,/I,,/,
+          ,//D//,
+          ,,,,,,,
+
+      #       Reactor isolation entrance
+#      - min: 1
+#        part: |
+#          .......
+#          ///D///
+#          ,,,,,,,
+
+#      # Reactor isolation front
+#      - min: 1
+#        max: 1
+#        part: |
+#          ......................
+#          .////////DD//////////.
+#          ./,,,,,,/I,,,/,,,,,,/.
+#          ./,,,,,,//DD//,,,,,,/.
+#          ./,,,,,,,,,,,,,,,,,,/.
+#
+#      # Reactor isolation back
+#      - min: 1
+#        max: 1
+#        part: |
+#          ./,,,,,,,,,,,,,,,,,,/.
+#          .////////////////////.
+#          ......................
+
 
       # Fuel storage
       - min: 1
         part: |
-          xxxxxx
-          hhhhp.
-          ****..
+          *xxxxxxx*
+          *.hhhhp.*
+          *.......*
+          *********
 
       # Coolant system
       - min: 1
         part: |
-          xxxxxxx
-          .pTPTp.
-          .......
+          *xxxxxxx*
+          *.pTPTp.*
+          *.......*
+          *********
 
       # Turbine Bank
       - min: 3
@@ -89,14 +161,16 @@
           .....
 
 
-      # Operating console
+      # Operating console - should be in front of the door, ideally
       - min: 1
         max: 1
         part: |
+          xxxxx
           .....
           .....
           .ccc.
           ..E..
+          *****
 
       # Jeffries tube entrance
       - min: 1
