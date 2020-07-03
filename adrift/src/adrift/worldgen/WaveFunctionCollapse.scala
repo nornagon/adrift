@@ -271,7 +271,7 @@ object WaveFunctionCollapse {
     }
     //solver.setGeometricalRestart(2, 1.5, new FailCounter(model, 5000), 100)
     //solver.limitTime("30s")
-    solver.setLubyRestart(500, new FailCounter(model, 0), 500)
+    solver.setLubyRestart(200, new FailCounter(model, 0), 500)
     solver.limitNode(100 * width * height)
 
     if (solver.solve()) {
