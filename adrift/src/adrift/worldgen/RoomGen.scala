@@ -179,7 +179,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       if (part.flip.getOrElse(true))
         tiles.map(_.flippedX) ++ tiles.map(_.flippedY)
       else Seq.empty
-    (tiles ++ rotated ++ flipped).distinctBy(t => (t.value, t.left, t.right, t.up, t.down))
+    (tiles ++ rotated ++ flipped)
   }
 
   private val partTiles: Seq[Tile] = for {
@@ -211,7 +211,15 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       })
     }
   }.distinctBy(t => (t.left, t.right, t.up, t.down, t.value))
-  private val allTiles: Seq[Tile] = (partTiles ++ missingTiles).to(IndexedSeq)
+
+  private val allTilesDup: Seq[Tile] = (partTiles ++ missingTiles).to(IndexedSeq)
+  private val (allTiles, tileWeights) =
+    allTilesDup
+      .groupBy(t => (t.value, t.left, t.right, t.up, t.down))
+      .view.values.map { v => (v.head, v.size) }
+      .toIndexedSeq
+      .unzip
+  println(tileWeights)
 
   def matchesHorizontal(left: Tile, right: Tile): Boolean = {
     (left.right, right.left) match {
@@ -292,6 +300,8 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
         WaveFunctionCollapse.CountConstraint(representatives, lb, ub)
       }
     }
+
+    override def weight(t: Int): Double = tileWeights(t)
   }
 
   def generateChars(width: Int, height: Int, isDoorEdge: (Int, Int) => Boolean, watcher: ((Int, Int) => Tile, Boolean) => Unit = null)(implicit r: Random): Grid[Tile] = {
