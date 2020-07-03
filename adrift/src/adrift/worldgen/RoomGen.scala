@@ -183,12 +183,11 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
         Seq.empty
     val flipped =
       if (doFlip)
-        tiles.map(_.flippedX) ++ tiles.map(_.flippedY)
+        tiles.map(_.flippedX) ++ (if (!doRotate) tiles.map(_.flippedY) else Seq.empty)
       else Seq.empty
     val rotatedAndFlipped =
       if (doRotate && doFlip)
-        tiles.map(_.flippedX.rotated) ++ tiles.map(_.flippedX.rotated.rotated) ++ tiles.map(_.flippedX.rotated.rotated.rotated) ++
-          tiles.map(_.flippedY.rotated) ++ tiles.map(_.flippedY.rotated.rotated) ++ tiles.map(_.flippedY.rotated.rotated.rotated)
+        flipped.map(_.rotated) ++ flipped.map(_.rotated.rotated) ++ flipped.map(_.rotated.rotated.rotated)
       else Seq.empty
     tiles ++ rotated ++ flipped ++ rotatedAndFlipped
   }
