@@ -163,21 +163,23 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
         down = if (y == height - 2) edgeCharToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
       )
     }
+    val doRotate = part.rotate.getOrElse(true)
+    val doFlip = part.flip.getOrElse(true)
     val rotated =
-      if (part.rotate.getOrElse(true))
-        tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
-          (if (part.flip.getOrElse(true))
-            tiles.map(_.flippedX.rotated) ++ tiles.map(_.flippedX.rotated.rotated) ++ tiles.map(_.flippedX.rotated.rotated.rotated) ++
-              tiles.map(_.flippedY.rotated) ++ tiles.map(_.flippedY.rotated.rotated) ++ tiles.map(_.flippedY.rotated.rotated.rotated)
-          else
-            Seq.empty)
+      if (doRotate)
+        tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated)
       else
         Seq.empty
     val flipped =
-      if (part.flip.getOrElse(true))
+      if (doFlip)
         tiles.map(_.flippedX) ++ tiles.map(_.flippedY)
       else Seq.empty
-    tiles ++ rotated ++ flipped
+    val rotatedAndFlipped =
+      if (doRotate && doFlip)
+        tiles.map(_.flippedX.rotated) ++ tiles.map(_.flippedX.rotated.rotated) ++ tiles.map(_.flippedX.rotated.rotated.rotated) ++
+          tiles.map(_.flippedY.rotated) ++ tiles.map(_.flippedY.rotated.rotated) ++ tiles.map(_.flippedY.rotated.rotated.rotated)
+      else Seq.empty
+    tiles ++ rotated ++ flipped ++ rotatedAndFlipped
   }
 
   private val partTiles: Seq[Tile] = for {
