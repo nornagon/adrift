@@ -163,8 +163,6 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
         down = if (y == height - 2) edgeCharToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
       )
     }
-    if (part.rotate.contains(false))
-      println("rotate = false")
     val rotated =
       if (part.rotate.getOrElse(true))
         tiles.map(_.rotated) ++ tiles.map(_.rotated.rotated) ++ tiles.map(_.rotated.rotated.rotated) ++
@@ -179,7 +177,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       if (part.flip.getOrElse(true))
         tiles.map(_.flippedX) ++ tiles.map(_.flippedY)
       else Seq.empty
-    (tiles ++ rotated ++ flipped)
+    tiles ++ rotated ++ flipped
   }
 
   private val partTiles: Seq[Tile] = for {
@@ -219,7 +217,6 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       .view.values.map { v => (v.head, v.size) }
       .toIndexedSeq
       .unzip
-  println(tileWeights)
 
   def matchesHorizontal(left: Tile, right: Tile): Boolean = {
     (left.right, right.left) match {
