@@ -104,7 +104,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     override def matchesEdgeDoor: Boolean = true
   }
 
-  parts.view.flatMap(_.part.toCharArray).to(Set).filterNot(c => c == 'x' || c == '*' || c == '+' || c == '\n') foreach { c =>
+  parts.view.flatMap(_.part.toCharArray).to(Set).filterNot(c => c == 'x' || c == '*' || c == '+' || c == '_' || c == '\n') foreach { c =>
     assert(defs.contains(c.toString), s"Expected defs to contain '$c'")
   }
 
@@ -143,26 +143,37 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     val width = lines.head.length
     val height = lines.length
     assert(lines.forall(l => l.length == width), "WFC parts must be rectangular for now")
-    val grid = new Grid(width, height)(' ')
+    val grid = new Grid(width + 2, height + 2)('_')
     for (y <- 0 until height; x <- 0 until width)
-      grid(x, y) = lines(y)(x)
+      grid(x + 1, y + 1) = lines(y)(x)
     def edgeCharToAdj(c: Char): AdjacencyType = c match {
       case '*' => Any
       case 'x' => Edge
       case '+' => EdgeDoor
       case _ => Matching(c)
     }
-    val tiles = for (y <- 1 until height - 1; x <- 1 until width - 1) yield {
-      Tile(
-        partId = i,
-        isFirst = y == 1 && x == 1,
-        value = grid(x, y),
-        left = if (x == 1) edgeCharToAdj(grid(x - 1, y)) else Internal(s"Part $i ${x - 1},$y h"),
-        right = if (x == width - 2) edgeCharToAdj(grid(x + 1, y)) else Internal(s"Part $i $x,$y h"),
-        up = if (y == 1) edgeCharToAdj(grid(x, y - 1)) else Internal(s"Part $i $x,${y - 1} v"),
-        down = if (y == height - 2) edgeCharToAdj(grid(x, y + 1)) else Internal(s"Part $i $x,$y v"),
-      )
+    def isEdge(x: Int, y: Int): Boolean = {
+      grid(x - 1, y) == '_' || grid(x + 1, y) == '_' || grid(x, y - 1) == '_' || grid(x, y + 1) == '_'
     }
+    var first = true
+    val tiles = (for (y <- 0 until height; x <- 0 until width) yield {
+      val tx = x + 1
+      val ty = y + 1
+      val value = grid(tx, ty)
+      if (!isEdge(tx, ty))
+        Some(
+          Tile(
+            partId = i,
+            isFirst = { val wasFirst = first; first = false; wasFirst },
+            value = value,
+            left = if (isEdge(tx - 1, ty)) edgeCharToAdj(grid(tx - 1, ty)) else Internal(s"Part $i ${x - 1},$y h"),
+            right = if (isEdge(tx + 1, ty)) edgeCharToAdj(grid(tx + 1, ty)) else Internal(s"Part $i $x,$y h"),
+            up = if (isEdge(tx, ty - 1)) edgeCharToAdj(grid(tx, ty - 1)) else Internal(s"Part $i $x,${y - 1} v"),
+            down = if (isEdge(tx, ty + 1)) edgeCharToAdj(grid(tx, ty + 1)) else Internal(s"Part $i $x,$y v"),
+          )
+        )
+      else None
+    }).flatten
     val doRotate = part.rotate.getOrElse(true)
     val doFlip = part.flip.getOrElse(true)
     val rotated =

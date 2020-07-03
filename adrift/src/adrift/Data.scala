@@ -177,12 +177,17 @@ object Data {
         assert(v.length == 1, s"More than one roomgen with name $k"); k -> v.head
       }
       .map { case (k, v) =>
-        val algorithm = RoomGenAlgorithm.decoders(v.algorithm)
-          .decodeJson(Json.fromJsonObject(v.options))
-          .fold(
-            ex => parseError(s"roomgen options for '$k'", Json.fromJsonObject(v.options), ex),
-            identity
-          )
+        val algorithm = try {
+          RoomGenAlgorithm.decoders(v.algorithm)
+            .decodeJson(Json.fromJsonObject(v.options))
+            .fold(
+              ex => parseError(s"roomgen options for '$k'", Json.fromJsonObject(v.options), ex),
+              identity
+            )
+        } catch {
+          case e: Throwable =>
+            throw new RuntimeException(s"Failed to parse roomgen: '$k'", e)
+        }
         k -> RoomGen(algorithm = algorithm, minArea = v.minArea, maxArea = v.maxArea)
       }
 
