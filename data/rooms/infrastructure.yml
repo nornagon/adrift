@@ -28,6 +28,7 @@
         part: |
          xxxx
          .Ehc
+         ****
     # data / comms equipment
       - max: 3
         part: |
