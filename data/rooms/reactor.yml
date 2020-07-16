@@ -1,7 +1,7 @@
 - type: roomgen
   name: reactor
-  minArea: 1
-  maxArea: 1
+  minArea: 450
+  maxArea: 1000
   algorithm: WFC
   #    The Reactor room is a few things:
   # In-game it's
