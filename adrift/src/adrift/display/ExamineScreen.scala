@@ -1,7 +1,7 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
 import adrift.display.GlyphRenderer.ColoredString
-import adrift.items.{Item, Message}
+import adrift.items.{Item, ItemKind, Message}
 import adrift._
 import adrift.items.Message.Provides
 import org.lwjgl.glfw.GLFW._
@@ -44,6 +44,29 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   var selected: Int = 0
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
+  private def missingParts = openStack.lastOption.map(getMissingParts).getOrElse(Seq.empty)
+  private def getMissingParts(item: Item): Seq[(ItemKind, Int)] = {
+    val partCountByKind = item.parts.groupBy(_.kind).view.mapValues(_.size)
+    for {
+      ip <- item.kind.parts
+      presentCount = partCountByKind.getOrElse(ip.kind, 0)
+      if presentCount < ip.count
+    } yield (ip.kind, ip.count - presentCount)
+  }
+
+  sealed trait MenuEntry {
+    def text: String
+  }
+  case class ItemEntry(item: Item) extends MenuEntry {
+    override def text: String = item.kind.name
+  }
+  case class MissingItemEntry(kind: ItemKind, count: Int) extends MenuEntry {
+    override def text: String = s"${kind.name}${if (count > 1) s" x $count" else ""}"
+  }
+
+  private def menuEntries: Seq[MenuEntry] =
+    items.map(ItemEntry) ++
+      missingParts.map { case (k, c) => MissingItemEntry(k, c) }
 
   private val lightGreen = Color.fromBytes(217, 255, 102)
   private val disabledGreen = Color.fromBytes(77, 102, 0)
@@ -63,24 +86,29 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     val key: Int = GLFW_KEY_A + char.charAt(0) - 'a'
   }
 
-  private def commands(item: Item): Seq[Command] = {
+  private def commands(menuEntry: MenuEntry): Seq[Command] = {
     import Option.when
-    val Message.IsDiagnosable(diagnosable, diagnoseOp) = state.sendMessage(item, Message.IsDiagnosable())
-    val opAvailable = diagnosable && state.toolsProviding(diagnoseOp.get).nonEmpty
-    Seq(
-      when(item.parts.nonEmpty)
-        (Command("{o}pen", () => doOpen(item))),
+    menuEntry match {
+      case ItemEntry(item) =>
+        val Message.IsDiagnosable(diagnosable, diagnoseOp) = state.sendMessage(item, Message.IsDiagnosable())
+        val opAvailable = diagnosable && state.toolsProviding(diagnoseOp.get).nonEmpty
+        Seq(
+          when(item.parts.nonEmpty)
+          (Command("{o}pen", () => doOpen(item))),
 
-      when(diagnosable)
-        (Command("{d}iagnose", () => doDiagnose(item), available = opAvailable)),
+          when(diagnosable)
+          (Command("{d}iagnose", () => doDiagnose(item), available = opAvailable)),
 
-      when(openStack.nonEmpty)
-        (Command("{r}emove", () => doRemove(openStack.last, item), available = {
-          val parent = openStack.last
-          val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
-          state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides)
-        })),
-    ).flatten
+          when(openStack.nonEmpty)
+          (Command("{r}emove", () => doRemove(openStack.last, item), available = {
+            val parent = openStack.last
+            val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
+            state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides)
+          })),
+        ).flatten
+      case MissingItemEntry(kind, count) =>
+        Seq.empty
+    }
   }
 
   private def doOpen(item: Item): Unit = {
@@ -95,6 +123,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private def doRemove(parent: Item, item: Item): Unit = {
     if (parent.parts.contains(item))
       state.receive(Action.Remove(parent, item))
+
     selected = math.min(selected, parent.parts.size - 1)
   }
 
@@ -102,10 +131,10 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
       key match {
         case DirectionKey((0, -1)) =>
-          val n = items.size
+          val n = menuEntries.size
           selected = (selected + n - 1) % n
         case DirectionKey((0, 1)) =>
-          val n = items.size
+          val n = menuEntries.size
           selected = (selected + 1) % n
         case GLFW_KEY_ESCAPE | DirectionKey(-1, 0) if openStack.nonEmpty =>
           display.preventDefault()
@@ -113,7 +142,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           openStack = openStack.init
           selected = math.max(0, items.indexOf(wasSelected))
         case k =>
-          val selectedItem = items(selected)
+          val selectedItem = menuEntries(selected)
           commands(selectedItem).find(_.key == k) foreach { _.execute() }
       }
     }
@@ -128,8 +157,15 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
     var nextY = 0
-    def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen): Unit =
-      sprintlnColored(ColoredString(s, Seq(Ann(0, s.length, fg))), bg = bg)
+    def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen, wrap: Boolean = false): Unit = {
+      if (wrap) {
+        for (line <- GlyphRenderer.wrap(s, width - 2))
+          sprintln(line, fg = fg, bg = bg, wrap = false)
+      } else {
+        sprintlnColored(ColoredString(s, Seq(Ann(0, s.length, fg))), bg = bg)
+      }
+    }
+
     def sprintlnColored(ss: ColoredString, defaultFg: Color = lightGreen, bg: Color = darkGreen): Unit = {
       val left = sx + 2
       val top = nextY + sy
@@ -160,28 +196,40 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       if (state.isKnownToBeNonFunctional(it))
         renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = darkGreen)
     }
-    val is = items
-    for (y <- is.indices) {
+    val entries = menuEntries
+    for (y <- entries.indices) {
       val bg = if (y == selected) selectedGreen else darkGreen
-      val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == is.size - 1) "\u00c0" else "\u00c3")
-      val item = is(y)
-      sprintln(prefix + item.kind.name, bg = bg)
-      if (state.isKnownToBeNonFunctional(item))
-        renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = bg)
-      else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
-        renderer.drawChar(sx + width, sy + nextY - 1, '?', fg = disabledGreen, bg = bg)
+      val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == entries.size - 1) "\u00c0" else "\u00c3")
+      val entry = entries(y)
+      sprintln(prefix + entry.text, bg = bg, fg = if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen)
+      entry match {
+        case ItemEntry(item) =>
+          if (state.isKnownToBeNonFunctional(item))
+            renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = bg)
+          else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
+            renderer.drawChar(sx + width, sy + nextY - 1, '?', fg = disabledGreen, bg = bg)
+        case _ =>
+      }
     }
     sprintln("")
-    val item = is(selected)
-    val conditions = state.visibleConditions(item)
-    for (condition <- conditions) {
-      sprintln(condition, fg = red)
+    val entry = entries(selected)
+    entry match {
+      case ItemEntry(item) =>
+        val conditions = state.visibleConditions(item)
+        for (condition <- conditions) sprintln(condition, fg = red)
+        if (conditions.nonEmpty) sprintln("")
+        sprintln(item.kind.description, fg = disabledGreen, wrap = true)
+      case MissingItemEntry(kind, count) =>
+        count match {
+          case 1 =>
+            sprintln("This part is missing.", fg = disabledGreen, wrap = true)
+          case n =>
+            sprintln(s"$n of these are missing.", fg = disabledGreen, wrap = true)
+        }
     }
-    if (conditions.nonEmpty) sprintln("")
-    GlyphRenderer.wrap(item.kind.description, width - 2).foreach(sprintln(_, fg = disabledGreen))
-    sprintln("")
-    val actionCS = commands(item).map(_.display)
+    val actionCS = commands(entry).map(_.display)
     if (actionCS.nonEmpty) {
+      sprintln("")
       val actionStr = wrapCS(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _), width - 2)
       actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
     }
