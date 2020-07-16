@@ -95,6 +95,15 @@ case class Item(
   override def equals(obj: Any): Boolean = obj.isInstanceOf[Item] && obj.asInstanceOf[Item].id == id
 
   override def toString: String = s"Item(id=${id.id}, kind=${kind.name})"
+
+  def missingParts: Seq[(ItemKind, Int)] = {
+    val partCountByKind = parts.groupBy(_.kind).view.mapValues(_.size)
+    for {
+      ip <- kind.parts
+      presentCount = partCountByKind.getOrElse(ip.kind, 0)
+      if presentCount < ip.count
+    } yield (ip.kind, ip.count - presentCount)
+  }
 }
 
 /** Some action that you can do with an item, e.g. PRYING or WELDING */

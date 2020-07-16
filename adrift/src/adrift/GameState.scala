@@ -5,6 +5,7 @@ import adrift.RandomImplicits._
 import adrift.display.Appearance
 import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
 import adrift.items._
+import adrift.items.behaviors.{MissingParts, PartInstalled}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -211,6 +212,8 @@ class GameState(var data: Data, val random: Random) {
     val lastParent = parents.last
     assert(lastParent.parts.contains(part))
     lastParent.parts = lastParent.parts.filter(_ ne part)
+    if (!lastParent.behaviors.exists(_.isInstanceOf[MissingParts]))
+      lastParent.behaviors += MissingParts()
     if (lastParent.parts.isEmpty) {
       if (parents.init.nonEmpty)
         removePart(parents.init, lastParent)
@@ -246,9 +249,13 @@ class GameState(var data: Data, val random: Random) {
         val op = parent.kind.parts.find(_.kind == part.kind).get.operation
         if (op.id == "HANDLING" ||
           nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(op)).ok }) {
-
           items.delete(part)
           parent.parts = parent.parts :+ part
+          sendMessage(parent, PartInstalled())
+          elapse(10)
+          putMessage(s"You install the ${itemDisplayName(part)} into the ${itemDisplayName(parent)}")
+        } else {
+          putMessage(s"You need a ${op.id} tool to do that.")
         }
 
       case Action.Diagnose(item) =>
