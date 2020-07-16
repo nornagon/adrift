@@ -134,6 +134,9 @@
     CABLE:
       char: "-"
       fg: red
+    FOOD:
+      char: "\u0004" # ♦
+      fg: brown
     BED:
       char: "\u00A4" # ñ
       fg: light_gray

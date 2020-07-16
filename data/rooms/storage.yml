@@ -1,0 +1,110 @@
+- type: roomgen
+  name: large storage
+  minArea: 100
+  maxArea: 900
+  algorithm: WFC
+  options:
+    parts:
+      #     Floor
+      - |
+        ***
+        *.*
+        ***
+
+#           Storage Rack
+      - |
+        ****
+        ....
+        *RR*
+        ....
+        ****
+      #
+      - |
+        ****
+        ....
+        *RR*
+        *RR*
+        ....
+        ****
+      #
+
+      - |
+        ***
+        ...
+        *R.
+        ...
+        ***
+
+      #     Door
+      - min: 1
+        max: 1
+        part: |
+          x+x
+          ...
+          ...
+
+    defs:
+      .: { terrain: floor }
+      ",": { terrain: reactor floor }
+      x: { terrain: wall }
+      R: { items: { each: [large storage shelf, group: foodstuff] } }
+
+- type: item
+  name: large storage shelf
+  description: A metal rack for holding... pretty much anything.  Large, strong, easily movable shelves mean your options are endless.  Only 39.95 for a limited time only.
+  display: MEDIUM_EQUIPMENT
+  parts:
+    - { type: "D-size frame", count: 2, disassembled_with: SCREWING }
+
+- type: item group
+  name: foodstuff
+  choose:
+    - repeat: { group: dry food }
+      count: 1-10
+    - repeat: { group: canned food }
+      count: 1-20
+
+- type: item group
+  name: dry food
+  choose:
+    - cereal
+    - cookies
+    - crackers
+    - biscuits
+
+- type: item
+  name: cereal
+  description: a box of nutritious granola
+  display: FOOD
+- type: item
+  name: cookies
+  description: a box of fattening cookies
+  display: FOOD
+- type: item
+  name: crackers
+  description: a box of boring stale crackers
+  display: FOOD
+- type: item
+  name: biscuits
+  description: a box of nutritious biscuits.  You could live on these forever if you wanted to.
+  display: FOOD
+
+- type: item group
+  name: canned food
+  choose:
+    - beans
+    - tuna
+    - mandarin oranges
+
+- type: item
+  name: beans
+  description: a can of beans
+  display: FOOD
+- type: item
+  name: tuna
+  description: a can of tuna.  Gotta get that protein hit.
+  display: FOOD
+- type: item
+  name: mandarin oranges
+  description: a can of mandarin oranges in light syrup. a treat!
+  display: FOOD
