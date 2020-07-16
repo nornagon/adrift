@@ -49,18 +49,24 @@
   display: SMALL_TOOL
   parts:
     - { type: rechargeable battery, disassembled_with: HANDLING }
-    - { type: empty soldering iron, disassembled_with: HANDLING }
+    - { type: B-size frame, disassembled_with: HANDLING }
   behavior:
     - UsesElectricity: { perUse: 300 }
     - Tool: { op: SOLDERING, level: 3 }
-
-- type: item
-  name: empty soldering iron
-  description: A soldering iron without a battery.
-  display: SMALL_TOOL
 
 - type: item
   name: hull welder
   description: a massive system for adding and removing hull plates
   provides: [ WELDING, CUTTING ]
   display: LARGE_EQUIPMENT
+
+- type: item group
+  name: tool list
+  choose:
+    - soldering iron
+    - box cutter
+    - multi-wrench
+    - crowbar
+    - hand-held hammer
+    - screwdriver
+    - hull welder

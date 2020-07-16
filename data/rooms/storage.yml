@@ -1,5 +1,5 @@
 - type: roomgen
-  name: large storage
+  name: large food storage
   minArea: 100
   maxArea: 900
   algorithm: WFC
@@ -49,6 +49,109 @@
       x: { terrain: wall }
       R: { items: { each: [large storage shelf, group: foodstuff] } }
 
+- type: roomgen
+  name: large medical storage
+  minArea: 100
+  maxArea: 400
+  algorithm: WFC
+  options:
+    parts:
+      #     Floor
+      - |
+        ***
+        *.*
+        ***
+
+      #           Storage Rack
+      - |
+        ****
+        ....
+        *RR*
+        ....
+        ****
+      #
+      - |
+        ****
+        ....
+        *RR*
+        *RR*
+        ....
+        ****
+      #
+
+      - |
+        ***
+        ...
+        *R.
+        ...
+        ***
+
+      #     Door
+      - min: 1
+        max: 1
+        part: |
+          x+x
+          ...
+          ...
+
+    defs:
+      .: { terrain: floor }
+      ",": { terrain: reactor floor }
+      x: { terrain: wall }
+      R: { items: { each: [large storage shelf, group: medicalstuff] } }
+
+- type: roomgen
+  name: large equipment storage
+  minArea: 100
+  maxArea: 400
+  algorithm: WFC
+  options:
+    parts:
+      #     Floor
+      - |
+        ***
+        *.*
+        ***
+
+      #           Storage Rack
+      - |
+        ****
+        ....
+        *RR*
+        ....
+        ****
+      #
+      - |
+        ****
+        ....
+        *RR*
+        *RR*
+        ....
+        ****
+      #
+
+      - |
+        ***
+        ...
+        *R.
+        ...
+        ***
+
+      #     Door
+      - min: 1
+        max: 1
+        part: |
+          x+x
+          ...
+          ...
+
+    defs:
+      .: { terrain: floor }
+      ",": { terrain: reactor floor }
+      x: { terrain: wall }
+      R: { items: { each: [large storage shelf, group: equipmentstuff] } }
+
+
 - type: item
   name: large storage shelf
   description: A metal rack for holding... pretty much anything.  Large, strong, easily movable shelves mean your options are endless.  Only 39.95 for a limited time only.
@@ -57,12 +160,30 @@
     - { type: "D-size frame", count: 2, disassembled_with: SCREWING }
 
 - type: item group
+  name: equipmentstuff
+  choose:
+    - repeat: { group: tool list }
+      count: 0-3
+    - repeat: { group: frame parts }
+      count: 5-20
+    - repeat: { group: raw materials }
+      count: 0-3
+
+
+- type: item group
+  name: medicalstuff
+  choose:
+    - repeat: { group: medical supplies }
+      count: 0-20
+
+
+- type: item group
   name: foodstuff
   choose:
     - repeat: { group: dry food }
-      count: 1-10
+      count: 0-10
     - repeat: { group: canned food }
-      count: 1-20
+      count: 0-20
 
 - type: item group
   name: dry food

@@ -14,6 +14,20 @@
 - { type: item, display: MEDIUM_ROD, name: "D-size modular rod", description: "A variable-length modular rod used in constructing large structural frames" }
 - { type: item, display: LARGE_ROD, name: "E-size modular rod", description: "A variable-length modular rod used in constructing colossal structural frames" }
 
+- type: item group
+  name: frame parts
+  choose:
+    - "A-size modular panel"
+    - "B-size modular panel"
+    - "C-size modular panel"
+    - "D-size modular panel"
+    - "E-size modular panel"
+    - "A-size modular rod"
+    - "B-size modular rod"
+    - "C-size modular rod"
+    - "D-size modular rod"
+    - "E-size modular rod"
+
 - type: item
   name: A-size frame
   description: A micro-scale structural frame for holding mechanical and electrical components.
