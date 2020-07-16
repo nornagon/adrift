@@ -272,6 +272,10 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
             case GLFW_KEY_U => pushAction(Action.PlayerMove(1, -1))
             case GLFW_KEY_B => pushAction(Action.PlayerMove(-1, 1))
             case GLFW_KEY_N => pushAction(Action.PlayerMove(1, 1))
+            case GLFW_KEY_D =>
+              lastState.items.lookup(InHands()).headOption foreach { item =>
+                pushAction(Action.PutDown(item))
+              }
             case GLFW_KEY_PERIOD => pushAction(Action.Wait(1))
             case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
             case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))

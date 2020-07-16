@@ -93,6 +93,9 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         val Message.IsDiagnosable(diagnosable, diagnoseOp) = state.sendMessage(item, Message.IsDiagnosable())
         val opAvailable = diagnosable && state.toolsProviding(diagnoseOp.get).nonEmpty
         Seq(
+          when(openStack.isEmpty)
+          (Command("{g}et", () => doGet(item))),
+
           when(item.parts.nonEmpty)
           (Command("{o}pen", () => doOpen(item))),
 
@@ -112,6 +115,12 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           Some(Command("{i}nstall", () => doInstall(openStack.last, partAvailable.get), available = partAvailable.nonEmpty))
         ).flatten
     }
+  }
+
+  private def doGet(item: Item): Unit = {
+    state.receive(Action.PickUp(item))
+    if (menuEntries.isEmpty) display.popScreen()
+    selected = math.min(selected, menuEntries.size - 1)
   }
 
   private def doOpen(item: Item): Unit = {
