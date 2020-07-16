@@ -200,6 +200,25 @@ class GameState(var data: Data, val random: Random) {
     }
   }
 
+  /**
+    * Remove |part| from its parent, potentially also removing the parent from its parent, and so on, recursively.
+    *
+    * @param parents The stack of parents. |part| must be a part of the last element of |parents|.
+    *                |parents(i)| must be a part of |parents(i-1)|. |parent(0)| must not be a part of any other item.
+    * @param part The part to be removed.
+    */
+  def removePart(parents: Seq[Item], part: Item): Unit = {
+    val lastParent = parents.last
+    assert(lastParent.parts.contains(part))
+    lastParent.parts = lastParent.parts.filter(_ ne part)
+    if (lastParent.parts.isEmpty) {
+      if (parents.init.nonEmpty)
+        removePart(parents.init, lastParent)
+      else
+        items.delete(lastParent)
+    }
+  }
+
   def receive(action: Action): Unit = {
     action match {
       case Action.PlayerMove(dx, dy) =>
@@ -211,15 +230,14 @@ class GameState(var data: Data, val random: Random) {
         }
         elapse(1)
 
-      case Action.Remove(parent, item) =>
-        val disassembleOp = parent.kind.parts.find(_.kind == item.kind).get.operation
+      case Action.Remove(parents, item) =>
+        val disassembleOp = parents.last.kind.parts.find(_.kind == item.kind).get.operation
         if (disassembleOp.id == "HANDLING" ||
           nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }) {
           items.put(item, OnFloor(player))
-          parent.parts = parent.parts.filterNot(_ eq item)
-          if (parent.parts.isEmpty) items.delete(parent)
+          removePart(parents, item)
           elapse(10)
-          putMessage(s"You remove the ${itemDisplayName(item)} from the ${itemDisplayName(parent)}.")
+          putMessage(s"You remove the ${itemDisplayName(item)} from the ${itemDisplayName(parents.last)}.")
         } else {
           putMessage(s"You need a ${disassembleOp.id} tool to do that.")
         }

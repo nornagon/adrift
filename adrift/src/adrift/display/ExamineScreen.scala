@@ -100,7 +100,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           (Command("{d}iagnose", () => doDiagnose(item), available = opAvailable)),
 
           when(openStack.nonEmpty)
-          (Command("{r}emove", () => doRemove(openStack.last, item), available = {
+          (Command("{r}emove", () => doRemove(openStack, item), available = {
             val parent = openStack.last
             val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
             state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides)
@@ -120,11 +120,16 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     state.receive(Action.Diagnose(item))
   }
 
-  private def doRemove(parent: Item, item: Item): Unit = {
-    if (parent.parts.contains(item))
-      state.receive(Action.Remove(parent, item))
+  private def doRemove(parents: Seq[Item], item: Item): Unit = {
+    assert(parents.last.parts.contains(item))
+    state.receive(Action.Remove(parents, item))
 
-    selected = math.min(selected, parent.parts.size - 1)
+    var ps = parents
+    do {
+      selected = math.min(selected, ps.last.parts.size - 1)
+      ps = ps.init
+    } while (selected < 0 && ps.nonEmpty)
+    if (selected < 0) display.popScreen()
   }
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {

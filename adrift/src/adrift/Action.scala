@@ -19,7 +19,7 @@ object Action {
 
   case object Regenerate extends Action
 
-  case class Remove(parent: Item, item: Item) extends Action
+  case class Remove(parents: Seq[Item], item: Item) extends Action
 
   case class Diagnose(item: Item) extends Action
 
