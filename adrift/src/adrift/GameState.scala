@@ -242,6 +242,15 @@ class GameState(var data: Data, val random: Random) {
           putMessage(s"You need a ${disassembleOp.id} tool to do that.")
         }
 
+      case Action.Install(parent, part) =>
+        val op = parent.kind.parts.find(_.kind == part.kind).get.operation
+        if (op.id == "HANDLING" ||
+          nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(op)).ok }) {
+
+          items.delete(part)
+          parent.parts = parent.parts :+ part
+        }
+
       case Action.Diagnose(item) =>
         // TODO: check tools, elapse time, etc
         val m = sendMessage(item, Message.IsDiagnosable())

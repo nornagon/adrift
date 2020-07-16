@@ -107,7 +107,10 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           })),
         ).flatten
       case MissingItemEntry(kind, count) =>
-        Seq.empty
+        val partAvailable = state.nearbyItems.find(_.kind == kind)
+        Seq(
+          Some(Command("{i}nstall", () => doInstall(openStack.last, partAvailable.get), available = partAvailable.nonEmpty))
+        ).flatten
     }
   }
 
@@ -132,6 +135,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     if (selected < 0) display.popScreen()
   }
 
+  private def doInstall(parent: Item, part: Item): Unit = {
+    state.receive(Action.Install(parent, part))
+    selected = math.min(selected + 1, menuEntries.size - 1)
+  }
+
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
       key match {
@@ -148,7 +156,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           selected = math.max(0, items.indexOf(wasSelected))
         case k =>
           val selectedItem = menuEntries(selected)
-          commands(selectedItem).find(_.key == k) foreach { _.execute() }
+          commands(selectedItem).find(c => c.available && c.key == k) foreach { _.execute() }
       }
     }
   }

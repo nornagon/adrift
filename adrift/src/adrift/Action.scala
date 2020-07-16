@@ -23,4 +23,6 @@ object Action {
 
   case class Diagnose(item: Item) extends Action
 
+  case class Install(parent: Item, part: Item) extends Action
+
 }
