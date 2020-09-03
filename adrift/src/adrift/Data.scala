@@ -236,7 +236,7 @@ object Data {
     def itemForId(id: String): ItemKind = {
       lazyMap.getOrElseUpdate(
         id, {
-          val i = itemsById(id)
+          val i = itemsById.getOrElse(id, throw new NoSuchElementException(s"Item $id not found"))
           val behaviorGenerators = i.behavior.map { obj =>
             val behaviorType = obj.keys.head
             if (!Behavior.decoders.contains(behaviorType))
@@ -249,6 +249,9 @@ object Data {
             i.description,
             i.parts.map { p =>
               val operation = operations.getOrElse(p.disassembled_with, throw new RuntimeException(s"item '${i.name}' specified an operation '${p.disassembled_with}' which doesn't seem to exist"))
+              if (!itemsById.contains(p.`type`)) {
+                throw new NoSuchElementException(s"Item '${i.name}' referenced part '${p.`type`}', but that item doesn't exist")
+              }
               ItemPart(itemForId(p.`type`), p.count, operation)
             },
             display = i.display,

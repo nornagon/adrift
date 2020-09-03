@@ -13,7 +13,6 @@
     - { type: micro e-board, count: 2, disassembled_with: SCREWING }
     - { type: flex component, count: 10, disassembled_with: SCREWING }
     - { type: M5C power supply, count: 1, disassembled_with: SCREWING }
-    - { type: type IC screw, count: 12, disassembled_with: SCREWING }
   display: MEDIUM_EQUIPMENT
 
 - type: item
@@ -24,8 +23,6 @@
     - { type: laser pump, count: 2, disassembled_with: SCREWING }
     - { type: B-size frame, count: 2, disassembled_with: SCREWING }
     - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
-    - { type: type IIB screw, count: 12, disassembled_with: SCREWING }
-    - { type: type IB screw, count: 18, disassembled_with: SCREWING }
   display: LARGE_EQUIPMENT
 
 - type: item
@@ -36,8 +33,6 @@
     - { type: laser pump, count: 1, disassembled_with: SCREWING }
     - { type: A-size frame, count: 2, disassembled_with: SCREWING }
     - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
-    - { type: type IIB screw, count: 6, disassembled_with: SCREWING }
-    - { type: type IB screw, count: 12, disassembled_with: SCREWING }
   display: LARGE_EQUIPMENT
 
 
@@ -48,11 +43,10 @@
     - { type: refrigerator, count: 1, disassembled_with: SCREWING }
     - { type: D-size frame, count: 4, disassembled_with: SCREWING }
     - { type: cryo-door, count: 1, disassembled_with: SCREWING }
-    - { type: type IC screw, count: 6, disassembled_with: SCREWING }
-    - { type: type IB screw, count: 10, disassembled_with: SCREWING }
   display: CRYOCASKET
   behavior:
     - Block: {}
+    - Affixed: {}
 
 - type: item
   name: cryo-door
@@ -61,7 +55,6 @@
    - {type: Y5 lens, count: 2, disassembled_with: SCREWING}
    - {type: D-size modular rod, count: 3, disassembled_with: SCREWING}
    - {type: C-size modular panel, count: 1, disassembled_with: SCREWING}
-   - {type: type IIB screw, count: 10, disassembled_with: SCREWING}
   display: LARGE_EQUIPMENT
 
 - type: item

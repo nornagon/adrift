@@ -100,7 +100,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         val Message.IsDiagnosable(diagnosable, diagnoseOp) = state.sendMessage(item, Message.IsDiagnosable())
         val opAvailable = diagnosable && state.toolsProviding(diagnoseOp.get).nonEmpty
         Seq(
-          when(openStack.isEmpty)
+          when(openStack.isEmpty && state.sendMessage(item, Message.CanPickUp()).ok)
           (Command("{g}et", () => doGet(item))),
 
           when(item.parts.nonEmpty)
