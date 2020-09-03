@@ -340,9 +340,15 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
-      val Seq(top, mid, bot) = sidebarRect.cutVertical(Seq(0, 4, 20, windowHeightChars)).toSeq
+      val Seq(top, mid, bot) = sidebarRect.cutVertical(Seq(0, 10, 22, windowHeightChars)).toSeq
       glyphRenderer.drawBox(top)
-      glyphRenderer.drawString(top.l + 1, top.t + 1, f"BT: ${state.bodyTemp - 273}%.1f C")
+
+      state.symptoms.take(5).zipWithIndex.foreach {
+        case(symptom,i) => {
+          glyphRenderer.drawString(top.l + 1, top.t + i + 1, symptom.description)
+        }
+      }
+//      glyphRenderer.drawString(top.l + 1, top.t + 1, f"BT: ${state.bodyTemp - 273}%.1f C")
 
       glyphRenderer.drawBox(mid);
       {

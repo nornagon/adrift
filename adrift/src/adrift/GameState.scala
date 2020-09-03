@@ -119,6 +119,8 @@ class GameState(var data: Data, val random: Random) {
   var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
   var bodyTemp: Double = 310
+  var thermalBodyState: ThermalBodyState = Comfortable
+  var breathingBodyState: BreathingBodyState = Normal
   var internalCalories: Int = 8000
   var currentTime = 0
   // TODO: save the _logical_ display here rather than the physical display
@@ -131,7 +133,8 @@ class GameState(var data: Data, val random: Random) {
       c
     }
   }
-
+  def bodyStates: Set[BodyState] = Set(thermalBodyState, breathingBodyState)
+  def symptoms: Seq[Symptom] = (thermalBodyState.symptoms++breathingBodyState.symptoms).toSeq.sortBy(_.priority)
   def remembered(loc: Location): Option[(Char, Color, Color)] =
     mapMemory.get(loc.levelId).flatMap(_.getOrElse(loc.xy, None))
 
@@ -177,6 +180,113 @@ class GameState(var data: Data, val random: Random) {
     putMessage("You die.")
     deathReason = Some(reason)
   }
+
+  trait BodyState {
+    val symptoms: Set[Symptom]
+  }
+
+  trait ThermalBodyState extends BodyState {}
+
+  case object SevereHeatstroke extends ThermalBodyState {
+    val symptoms = Set(Exhaustion, Nauseous, Dizzy, Heart_Pounding, Convulsions)
+  }
+  case object HeatStroke extends ThermalBodyState {
+    val symptoms = Set(Sweating, Flushed, Dizzy, Exhaustion)
+  }
+  case object Hot extends ThermalBodyState {
+    val symptoms = Set(Sweating, Flushed)
+  }
+  case object Warm extends ThermalBodyState {
+    val symptoms = Set(Sweating)
+  }
+  case object Comfortable extends ThermalBodyState {
+    val symptoms: Set[Symptom] = Set.empty
+  }
+  case object Chilly extends ThermalBodyState {
+    val symptoms = Set(Shivering)
+  }
+  case object Cold extends ThermalBodyState {
+    val symptoms = Set(Shivering, Chattering)
+  }
+  case object Hypothermic extends ThermalBodyState {
+    val symptoms = Set(Tingling, Numb, Exhaustion)
+  }
+  case object SevereHypothermic extends ThermalBodyState {
+    val symptoms = Set(Numb, Sweating, Exhaustion, ColdHot)
+  }
+
+  trait BreathingBodyState extends BodyState {}
+  case object HyperOxygenated extends BreathingBodyState {
+    val symptoms: Set[Symptom] = Set.empty
+  }
+  case object Normal extends BreathingBodyState {
+    val symptoms: Set[Symptom] = Set.empty
+  }
+  case object Hypoxic extends BreathingBodyState {
+    val symptoms = Set(Dizzy, Disoriented, Nauseous)
+  }
+
+  trait Symptom {
+    val description: String
+    val priority: Int
+  }
+  case object Disoriented extends Symptom {
+    val description: String = "Disoriented"
+    val priority = 10
+  }
+  case object Comatose extends Symptom {
+    val description: String = "Comatose"
+    val priority = 11
+  }
+  case object Convulsions extends Symptom {
+    val description: String = "Convulsions"
+    val priority = 10
+  }
+  case object Nauseous extends Symptom {
+    val description: String = "Nauseous"
+    val priority = 9
+  }
+  case object Sweating extends Symptom {
+    val description: String = "Sweating"
+    val priority = 2
+  }
+  case object Flushed extends Symptom {
+    val description: String = "Flushed"
+    val priority = 4
+  }
+  case object Exhaustion extends Symptom {
+    val description: String = "Exhausted"
+    val priority = 7
+  }
+  case object Dizzy extends Symptom {
+    val description: String = "Nauseous"
+    val priority = 7
+  }
+  case object Heart_Pounding extends Symptom {
+    val description: String = "High Heart Rate"
+    val priority = 8
+  }
+  case object Shivering extends Symptom {
+    val description: String = "Shivering"
+    val priority = 2
+  }
+  case object Chattering extends Symptom {
+    val description: String = "Chattering"
+    val priority = 5
+  }
+  case object Tingling extends Symptom {
+    val description: String = "Tingling"
+    val priority = 8
+  }
+  case object Numb extends Symptom {
+    val description: String = "Numb"
+    val priority = 9
+  }
+  case object ColdHot extends Symptom {
+    val description: String = "Hot?"
+    val priority = 10
+  }
+
 
   var walkThroughWalls = false
   var seeThroughWalls = false
@@ -362,23 +472,59 @@ class GameState(var data: Data, val random: Random) {
   private def checkBodyTemp(): Unit = {
     // https://en.wikipedia.org/wiki/Human_body_temperature#Temperature_variation
     val K = 273
+    if (bodyTemp > 41 + K && bodyTemp <= 42 + K) {
+      if (random.oneIn(10)) {
+        thermalBodyState = SevereHeatstroke
+      }
+      if (random.oneIn(60)) {
+        die(reason="heatstroke")
+      }
+    }
+
+    if (bodyTemp > 40 + K && bodyTemp <= 41 + K) {
+      if (random.oneIn(10)) {
+        thermalBodyState = HeatStroke
+      }
+    }
+
+    if (bodyTemp > 39 + K && bodyTemp <= 40 + K) {
+      if (random.oneIn(10)) {
+        thermalBodyState = Hot
+      }
+    }
+
+    if (bodyTemp > 38 + K && bodyTemp <= 39 + K) {
+      if (random.oneIn(10)) {
+        thermalBodyState = Warm
+      }
+    }
+
+    if (bodyTemp > 36 + K && bodyTemp <= 38 + K) {
+      if (random.oneIn(10)) {
+        thermalBodyState = Comfortable
+      }
+    }
     if (bodyTemp > 35 + K && bodyTemp <= 36 + K) {
       if (random.oneIn(60)) {
         putMessage("You shiver.")
+        thermalBodyState = Chilly
       }
     } else if (bodyTemp > 34 + K && bodyTemp <= 35 + K) {
       if (random.oneIn(30)) {
         putMessage("Your teeth chatter. It's freezing cold.")
+        thermalBodyState = Cold
       }
     } else if (bodyTemp > 33 + K && bodyTemp <= 34 + K) {
       if (random.oneIn(10)) {
         putMessage("You're so cold you can't even shiver.")
+        thermalBodyState = Hypothermic
       }
     } else if (bodyTemp <= 33 + K) {
       if (random.oneIn(10)) {
         putMessage("Is it hot in here? No, that can't be right...")
+        thermalBodyState = SevereHypothermic
       }
-      if (random.oneIn(30)) {
+      if (random.oneIn(60)) {
         die("hypothermia")
       }
     }
