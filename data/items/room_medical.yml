@@ -4,6 +4,8 @@
   parts:
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: DESK
+  behavior:
+    - Affixed: {}
 
 - type: item
   name: hypospray
