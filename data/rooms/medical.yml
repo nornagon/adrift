@@ -16,10 +16,11 @@
           .C.
           *.*
 #     Gurney
-      - |
-        ...
-        .G.
-        ...
+      - weight: 0.15
+        part: |
+          ...
+          .G.
+          ...
     defs:
       .: { terrain: floor }
       C: { items: {each: [ medical cabinet, { group: medical tool }, { group: medical supplies } ] } }

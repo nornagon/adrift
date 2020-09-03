@@ -65,6 +65,7 @@ case class PartWithOpts(
   part: String,
   min: Option[Int] = None,
   max: Option[Int] = None,
+  weight: Option[Double] = None,
   rotate: Option[Boolean] = None,
   flip: Option[Boolean] = None
 )
@@ -115,8 +116,10 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
     up: AdjacencyType,
     down: AdjacencyType,
     partId: Int = -1,
+    weight: Double = 1,
     isFirst: Boolean = false,
   ) {
+
     override def toString: String = {
       s"T[$value, l=$left, r=$right, u=$up, d=$down p=$partId]"
     }
@@ -165,6 +168,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
           Tile(
             partId = i,
             isFirst = { val wasFirst = first; first = false; wasFirst },
+            weight = part.weight.getOrElse(1),
             value = value,
             left = if (isEdge(tx - 1, ty)) edgeCharToAdj(grid(tx - 1, ty)) else Internal(s"Part $i ${x - 1},$y h"),
             right = if (isEdge(tx + 1, ty)) edgeCharToAdj(grid(tx + 1, ty)) else Internal(s"Part $i $x,$y h"),
@@ -226,7 +230,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   private val (allTiles, tileWeights) =
     allTilesDup
       .groupBy(t => (t.value, t.left, t.right, t.up, t.down))
-      .view.values.map { v => (v.head, v.size) }
+      .view.values.map { v => (v.head, v.size * v.head.weight) }
       .toIndexedSeq
       .unzip
 
