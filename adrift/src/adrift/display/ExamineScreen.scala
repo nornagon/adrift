@@ -1,7 +1,7 @@
 package adrift.display
 import adrift.display.CP437.BoxDrawing
 import adrift.display.GlyphRenderer.ColoredString
-import adrift.items.{Item, ItemKind, Message}
+import adrift.items.{Item, ItemKind, ItemOperation, Message}
 import adrift._
 import adrift.items.Message.Provides
 import org.lwjgl.glfw.GLFW._
@@ -86,6 +86,13 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     val key: Int = GLFW_KEY_A + char.charAt(0) - 'a'
   }
 
+  def missingRemoveOp(parent: Item, item: Item): Option[ItemOperation] = {
+    val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
+    if (state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides))
+      None
+    else Some(disassemblyOp)
+  }
+
   private def commands(menuEntry: MenuEntry): Seq[Command] = {
     import Option.when
     menuEntry match {
@@ -103,11 +110,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           (Command("{d}iagnose", () => doDiagnose(item), available = opAvailable)),
 
           when(openStack.nonEmpty)
-          (Command("{r}emove", () => doRemove(openStack, item), available = {
-            val parent = openStack.last
-            val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
-            state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides)
-          })),
+          (Command("{r}emove", () => doRemove(openStack, item), available = missingRemoveOp(openStack.last, item).isEmpty)),
         ).flatten
       case MissingItemEntry(kind, count) =>
         val partAvailable = state.nearbyItems.find(_.kind == kind)
@@ -241,6 +244,10 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         for (condition <- conditions) sprintln(condition, fg = red)
         if (conditions.nonEmpty) sprintln("")
         sprintln(item.kind.description, fg = disabledGreen, wrap = true)
+        for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) {
+          sprintln("")
+          sprintln(s"Requires ${missingOp.id} to remove.", fg = red, wrap = true)
+        }
       case MissingItemEntry(kind, count) =>
         count match {
           case 1 =>
