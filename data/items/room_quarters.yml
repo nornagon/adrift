@@ -7,7 +7,6 @@
     - { type: A-size frame, disassembled_with: SCREWING }
     - { type: microprocessor, disassembled_with: SOLDERING }
     - { type: MRAM chip, disassembled_with: SOLDERING }
-    - { type: type IA screw, count: 6, disassembled_with: SCREWING }
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -25,7 +24,6 @@
   parts:
     - { type: cooling unit, count: 1, disassembled_with: SCREWING}
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
-    - { type: type IIA screw, count: 8, disassembled_with: SCREWING}
   display: MEDIUM_EQUIPMENT
 
 - type: item
@@ -34,7 +32,6 @@
   parts:
     - { type: synthetic fabric rag, count: 4, disassembled_with: CUTTING }
     - { type: nylon thread, count: 2, disassembled_with: CUTTING }
-    - { type: fastener, count: 2, disassembled_with: CUTTING }
   display: CLOTHING
 
 - type: item

@@ -2,7 +2,6 @@
   name: medical cabinet
   description: A cabinet with a bright red cross painted on the front. Probably contains medical supplies
   parts:
-    - { type: type IIB screw, count: 4, disassembled_with: SCREWING}
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: DESK
 
@@ -22,7 +21,6 @@
   name: scissors
   description: Dual space-grade blades provide a safe way to cut a wide variety of materials. Running disabled while these are in your hands.
   parts:
-   - { type: type IIA screw, count: 1, disassembled_with: SCREWING}
    - { type: scis, count: 2, disassembled_with: SCREWING}
   display: SMALL_TOOL
   provides: [ CUTTING ]

@@ -26,7 +26,6 @@
     - { type: ship power adapter, disassembled_with: SOLDERING }
     - { type: micro e-board, disassembled_with: SCREWING }
     - { type: A-size frame, disassembled_with: SCREWING }
-    - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
   behavior:
     - Affixed: {}
     - MotionSensor: { radius: 1 }
@@ -38,7 +37,6 @@
   parts:
     - { type: micro e-board, disassembled_with: SCREWING }
     - { type: A-size frame, disassembled_with: SCREWING }
-    - { type: type IIA screw, count: 4, disassembled_with: SCREWING }
   behavior:
     - Affixed: {}
     - BumpActivated: {}
