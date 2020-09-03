@@ -46,6 +46,7 @@
   display: CRYOCASKET
   behavior:
     - Block: {}
+    - Affixed: {}
 
 - type: item
   name: cryo-door

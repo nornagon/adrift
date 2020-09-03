@@ -13,6 +13,7 @@ object Message {
   case class IsOpaque(var opaque: Boolean = false) extends Message
   case class IsWalkable(var walkable: Boolean = true) extends Message
   case class IsPermeable(var permeable: Boolean = true) extends Message
+  case class CanPickUp(var ok: Boolean = true) extends Message
   case class PickUp(var ok: Boolean = true) extends Message
   case class Display(var display: String) extends Message
   case class DisplayConnectedTo(terrain: Terrain, var connected: Boolean = false) extends Message

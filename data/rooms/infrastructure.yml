@@ -209,3 +209,5 @@
   name: jeffries hatch
   description: A sturily built hatch in the floor.  Access to the maintenance tunnels, probably.
   display: HATCH
+  behavior:
+    - Affixed: {}
