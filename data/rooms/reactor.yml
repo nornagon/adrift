@@ -220,6 +220,8 @@
     - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
     - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
   display: DOOR_CLOSED
+  behavior:
+    - Block: {}
 
 - type: item
   name: isolation panel

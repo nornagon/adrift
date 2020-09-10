@@ -43,16 +43,20 @@
   name: bed
   description: A sturdy metal frame with a lightweight foam mattress. Mil-spec comfort.
   display: BED
+  behavior:
+    - Affixed: {}
 
 - type: item
   name: couch
-  description: a lump of soft thing.
+  description: A lump of soft thing.
   display: BED
 
 - type: item
   name: closet
-  description: closet
+  description: A floor-to-ceiling aluminium-frame closet. Hopefully the clothes inside are more beautiful than the closet itself.
   display: HUMAN_EQUIPMENT
+  behavior:
+    - Affixed: {}
 
 - type: item
   name: side table
@@ -64,7 +68,7 @@
 
 - type: item
   name: desk
-  description: A modular alum-composite structural desk.  Designed for maximum productivity. Under normal conditions.
+  description: A modular alum-composite structural desk. Designed for maximum productivity. Under normal conditions.
   parts:
   - {type: D-size frame, count: 1, disassembled_with: SCREWING}
   - {type: C-size modular panel, count: 3, disassembled_with: SCREWING}

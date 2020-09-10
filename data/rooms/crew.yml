@@ -70,11 +70,15 @@
   name: sink
   description: A metal sink bolted to the wall.
   display: SINK
+  behavior:
+    - Affixed: {}
 
 - type: item
   name: toilet
   description: A metal bowl for, well, you know.
   display: CHAIR_LIGHT
+  behavior:
+    - Affixed: {}
 
 - type: item
   name: rug
