@@ -335,7 +335,7 @@ class GameState(var data: Data, val random: Random) {
   def receive(action: Action): Unit = {
     action match {
       case Action.PlayerMove(dx, dy) =>
-        if (canWalk(player + (dx, dy)) || walkThroughWalls) {
+        if (inLevel(player + (dx, dy)) && (canWalk(player + (dx, dy)) || walkThroughWalls)) {
           movePlayer(player + (dx, dy))
         } else {
           val loc = player + (dx, dy)
@@ -692,6 +692,7 @@ class GameState(var data: Data, val random: Random) {
 
   def terrain(l: Location): Option[Terrain] = levels(l.levelId).terrain.get(l.x, l.y)
 
+  def inLevel(l: Location): Boolean = terrain(l).nonEmpty
   def canWalk(l: Location): Boolean =
     terrain(l).exists(_.walkable) && items.lookup(OnFloor(l)).forall(itemIsWalkable)
 
