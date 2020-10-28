@@ -40,7 +40,20 @@ class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Scr
   }
 }
 
+object UI {
+  object Color {
+    import adrift.Color.fromBytes
+    val lightGreen: Color = fromBytes(217, 255, 102)
+    val disabledGreen: Color = fromBytes(77, 102, 0)
+    val selectedGreen: Color = fromBytes(0, 140, 0)
+    val darkGreen: Color = fromBytes(32, 64, 0)
+    val red: Color = fromBytes(255, 51, 51)
+    val disabledRed: Color = fromBytes(102, 0, 0)
+  }
+}
+
 class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) extends Screen {
+  import UI.Color._
   var selected: Int = 0
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
@@ -67,13 +80,6 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private def menuEntries: Seq[MenuEntry] =
     items.map(ItemEntry) ++
       missingParts.map { case (k, c) => MissingItemEntry(k, c) }
-
-  private val lightGreen = Color.fromBytes(217, 255, 102)
-  private val disabledGreen = Color.fromBytes(77, 102, 0)
-  private val selectedGreen = Color.fromBytes(0, 140, 0)
-  private val darkGreen = Color.fromBytes(32, 64, 0)
-  private val red = Color.fromBytes(255, 51, 51)
-  private val disabledRed = Color.fromBytes(102, 0, 0)
 
   case class Command(name: String, execute: () => Unit, available: Boolean = true) {
     private val pat = raw"(.*)\{(.)\}(.*)".r

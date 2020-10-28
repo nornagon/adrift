@@ -279,6 +279,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
             case GLFW_KEY_PERIOD => pushAction(Action.Wait(1))
             case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
             case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))
+            case GLFW_KEY_I => pushScreen(new ContainerScreen(this, lastState, OnFloor(lastState.player)))
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
             case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
             case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))
@@ -348,7 +349,6 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
           glyphRenderer.drawString(top.l + 1, top.t + i + 1, symptom.description)
         }
       }
-//      glyphRenderer.drawString(top.l + 1, top.t + 1, f"BT: ${state.bodyTemp - 273}%.1f C")
 
       glyphRenderer.drawBox(mid);
       {

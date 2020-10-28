@@ -31,6 +31,7 @@ class GlyphRenderer(
     bg: Color = Color.Black
   ): Unit = {
     if (bg.a != 0) {
+      // 0xdb is the full white square ◻️
       val cx = 0xdb % tilesPerRow
       val cy = 0xdb / tilesPerRow
       spriteBatch.drawRegion(
@@ -73,6 +74,11 @@ class GlyphRenderer(
       drawChar(x, y + iy, BoxDrawing._U_D, fg, bg)
       drawChar(x + w - 1, y + iy, BoxDrawing._U_D, fg, bg)
     }
+  }
+
+  def fillRect(bounds: Rect, c: Char, bg: Color, fg: Color): Unit = {
+    for (y <- bounds.t until bounds.b; x <- bounds.l until bounds.r)
+      drawChar(x, y, c, bg = bg, fg = fg)
   }
 
   def drawString(

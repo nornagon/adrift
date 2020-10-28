@@ -8,6 +8,7 @@ object Action {
   case class Assemble(item: ItemKind, operations: Seq[AssemblyAction]) extends Action
   case class PickUp(item: Item) extends Action
   case class PutDown(item: Item) extends Action
+  case class MoveItem(item: Item, toLocation: ItemLocation) extends Action
   case class Plug(item: Item, into: Item) extends Action
   case class Wear(item: Item) extends Action
   case class TakeOff(item: Item) extends Action

@@ -423,6 +423,9 @@ class GameState(var data: Data, val random: Random) {
             putMessage("You can't put that down.")
         }
 
+      case Action.MoveItem(item, toLocation) =>
+        items.move(item, toLocation)
+
       case Action.Plug(item, into) =>
         items.lookup(item) match {
           case InHands() =>
