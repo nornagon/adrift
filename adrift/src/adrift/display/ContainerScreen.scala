@@ -53,7 +53,10 @@ class ContainerScreen(display: GLFWDisplay, state: GameState, location: ItemLoca
               enterItem(i)
             }
           case GLFW_KEY_ESCAPE =>
-            if (cursorStack.size > 1) exitItem()
+            if (cursorStack.size > 1) {
+              exitItem()
+              display.preventDefault()
+            }
           case _ =>
         }
       }
