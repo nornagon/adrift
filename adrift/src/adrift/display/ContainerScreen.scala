@@ -10,7 +10,7 @@ class ContainerScreen(display: GLFWDisplay, state: GameState, location: ItemLoca
   class Pane(rootSections: Seq[ItemLocation]) {
     var cursorStack = Seq(0)
     def cursor: Int = cursorStack.head
-    def cursor_=(c: Int): Seq[Int] = c +: cursorStack.tail
+    def cursor_=(c: Int): Unit = cursorStack = c +: cursorStack.tail
 
     var sectionStack: Seq[Seq[ItemLocation]] = Seq(rootSections)
     def sections: Seq[ItemLocation] = sectionStack.head
