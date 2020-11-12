@@ -52,6 +52,8 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               state.showTempDebug = !state.showTempDebug
             case "showgas" =>
               state.showGasDebug = !state.showGasDebug
+            case "showcable" =>
+              state.showCableDebug = !state.showCableDebug
             case setGas("oxygen", pp) =>
               state.levels(state.player.levelId).gasComposition(state.player.x, state.player.y) = state.levels(state.player.levelId).gasComposition(state.player.x, state.player.y).copy(oxygen = pp.toFloat)
             case setTemp(t) =>

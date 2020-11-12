@@ -152,7 +152,7 @@ object Data {
 
     def checkValid(referrer: String, name: String, table: Table[String]): Unit = {
       table match {
-        case Population.TableItem(item) =>
+        case Population.TableElement(item) =>
           if (!items.contains(item))
             println(s"Warning: $referrer '$name' referred to item '$item', which was not defined.")
         case Population.TableGroup(group) =>
@@ -196,7 +196,7 @@ object Data {
         case WFC(parts, defs) =>
           defs.values.foreach { pd =>
             pd.items.foreach { items =>
-              checkValid("WFC roomgen", name, items)
+              //checkValid("WFC roomgen", name, items)
             }
           }
         case _ =>

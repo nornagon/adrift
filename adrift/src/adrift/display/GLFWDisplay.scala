@@ -447,6 +447,12 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
           Color(0, 0, (1 - math.exp((temp - 273)/30)).toFloat, 0.3f)
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
+
+      if (state.showCableDebug && level.powerCables.contains(x, y)) {
+        val layers = level.powerCables(x, y)
+        if (layers != 0)
+          renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, Color(1, 0, 0, 1))
+      }
     }
   }
 

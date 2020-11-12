@@ -25,6 +25,9 @@ object Location {
 
 case class Level(
   var terrain: Grid[Terrain],
+  var powerCables: Grid[Int],
+  var dataCables: Grid[Int],
+  var fluidCables: Grid[Int],
   var temperature: Grid[Double],
   var gasComposition: Grid[GasComposition],
 ) {
@@ -103,18 +106,25 @@ object Level {
   def emptyCylinder(data: Data, width: Int, height: Int)(implicit random: Random): Level =
     Level(
       terrain = new CylinderGrid(width, height)(data.terrain("floor")),
+      powerCables = new CylinderGrid(width, height)(0),
+      dataCables = new CylinderGrid(width, height)(0),
+      fluidCables = new CylinderGrid(width, height)(0),
       temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
       gasComposition = new CylinderGrid(width, height)(GasComposition.earthLike)
     )
   def emptySquare(data: Data, width: Int, height: Int)(implicit random: Random): Level =
     Level(
       terrain = new Grid(width, height)(data.terrain("floor")),
+      powerCables = new Grid(width, height)(0),
+      dataCables = new Grid(width, height)(0),
+      fluidCables = new Grid(width, height)(0),
       temperature = new Grid(width, height)(random.between(250d, 270d)),
       gasComposition = new Grid(width, height)(GasComposition.earthLike)
     )
 }
 
 class GameState(var data: Data, val random: Random) {
+
   var levels = mutable.Map.empty[LevelId, Level]
   var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
@@ -292,7 +302,7 @@ class GameState(var data: Data, val random: Random) {
   var seeThroughWalls = false
   var showTempDebug = false
   var showGasDebug = false
-
+  var showCableDebug = false
 
   var messages: Seq[(String, Int)] = Seq.empty
   def putMessage(message: String): Unit = messages :+= ((message, currentTime))
@@ -633,6 +643,20 @@ class GameState(var data: Data, val random: Random) {
       case OnFloor(l) => l
       case InHands() | Worn() => player
       case Inside(other) => getItemTile(other)
+    }
+  }
+
+  def sampleItem2[T](table: Population.Table[T], f: String => T, getMeTheActualNameOfTheItem: T => String): Seq[(Item, T)] = {
+    for {
+      t <- table.sample()(random, data.itemGroups.view.mapValues(_.choose).mapValues(_.map(f)))
+    } yield {
+      val itemKindName = getMeTheActualNameOfTheItem(t)
+      data.items.get(itemKindName) match {
+        case Some(itemKind) =>
+          (itemKind.generateItem(), t)
+        case None =>
+          throw new RuntimeException(s"""No item with name "$itemKindName"""")
+      }
     }
   }
 

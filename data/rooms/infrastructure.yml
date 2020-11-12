@@ -66,7 +66,7 @@
             - { item: thermostat, connect: [ { port: Command, layer: 0x1 } ] }
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
-      O: { items: { each: [ oxygen tank ] } }
+      O: { items: { each: [ {item: oxygen tank} ] } }
       C: { items: { group: gas canister } }
       h: {
         items: { each: [ { item: air heater, connect: [ { port: Enabled, layer: 0x2 }, { port: Power, layer: 0x1 }, { port: Air Out, layer: 0x1 } ] } ] }
@@ -81,10 +81,10 @@
       w: { items: { each: [ liquid tank ] } }
       "%": { items: rug }
 
-    connections:
-      - type: power
-        layer: 0x1
-        connect: [G, P]
+#    connections:
+#      - type: power
+#        layer: 0x1
+#        connect: [G, P]
 
 - type: item
   name: atmospheric temperature control system
@@ -150,11 +150,23 @@
   name: air heater
   description: a bulky unit for dumping large amounts of heat into some air
   display: LARGE_EQUIPMENT
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: power-in, name: Power }
+          - { type: data-in, name: Enabled }
+          - { type: fluid-out, name: Air Out }
 
 - type: item
   name: air cooler
   description: a bulky unit which extracts heat from air and stores it for later use in making tea.
   display: LARGE_EQUIPMENT
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: power-in, name: Power }
+          - { type: data-in, name: Enabled }
+          - { type: fluid-out, name: Air Out }
 
 - type: item
   name: oxygen tank

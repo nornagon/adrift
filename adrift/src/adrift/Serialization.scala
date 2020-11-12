@@ -201,16 +201,22 @@ object Serialization {
   implicit def encodeLevel: Encoder[Level] = (a: Level) =>
     Json.obj(
       "terrain" -> a.terrain.asJson,
+      "powerCables" -> a.powerCables.asJson,
+      "dataCables" -> a.dataCables.asJson,
+      "fluidCables" -> a.fluidCables.asJson,
       "temperature" -> a.temperature.asJson,
       "gasComposition" -> a.gasComposition.asJson,
     )
   implicit def decodeLevel(implicit d: Data): Decoder[Level] = (c: HCursor) =>
     for {
       terrain <- c.get[CylinderGrid[Terrain]]("terrain")
+      powerCables <- c.get[CylinderGrid[Int]]("powerCables")
+      dataCables <- c.get[CylinderGrid[Int]]("dataCables")
+      fluidCables <- c.get[CylinderGrid[Int]]("fluidCables")
       temperature <- c.get[CylinderGrid[Double]]("temperature")
       gasComposition <- c.get[CylinderGrid[GasComposition]]("gasComposition")
     } yield
-      Level(terrain, temperature, gasComposition)
+      Level(terrain, powerCables, dataCables, fluidCables, temperature, gasComposition)
 
   implicit val encodeGameState: Encoder[GameState] =
     deriveConfiguredEncoder[GameStateSerialized].contramap(GameStateSerialized.fromGameState)
