@@ -17,4 +17,10 @@
   display: SMALL_PART
   behavior:
     - Affixed: {}
-    - Thermostat: {targetTemp: 294, hysteresis: 4}
+    - Thermostat: { targetTemp: 294, hysteresis: 4 }
+    - HasPorts:
+        ports:
+          - type: data-out
+            name: Command
+          - type: data-in
+            name: Target

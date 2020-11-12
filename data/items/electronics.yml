@@ -175,3 +175,19 @@
   behavior:
     - GeneratesShipPower: { circuit: main, amountPerTick: 50 }
     - Affixed: {}
+
+- type: item
+  name: capacitor bank
+  description: a large power storage device
+  display: LARGE_EQUIPMENT
+  behavior:
+    - HasPorts:
+        ports:
+          - type: power-in
+            name: Charge
+          - type: power-out
+            name: Discharge
+          - type: data-in
+            name: Enabled
+          - type: data-out
+            name: Charge Level

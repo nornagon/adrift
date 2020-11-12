@@ -26,9 +26,9 @@
     # Air Temperature Control
       - max: 1
         part: |
-         xxxx
-         .Ehc
-         ****
+         xxxxx
+         .hEc.
+         *****
     # data / comms equipment
       - max: 3
         part: |
@@ -59,14 +59,20 @@
     defs:
       .: { terrain: floor }
       x: { terrain: wall }
-      E: { items: { each: [ electronics rack ] } }
+      E:
+        items:
+          each:
+            - { item: atmospheric temperature control system, connect: [ { port: Thermostat Command, layer: 0x1 }, { port: Heater Enabled, layer: 0x2 }, { port: Cooler Enabled, layer: 0x4 }, { port: Power, layer: 0x1 } ] }
+            - { item: thermostat, connect: [ { port: Command, layer: 0x1 } ] }
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
       O: { items: { each: [ oxygen tank ] } }
       C: { items: { group: gas canister } }
-      h: { items: { each: [ air heater ] } }
+      h: {
+        items: { each: [ { item: air heater, connect: [ { port: Enabled, layer: 0x2 }, { port: Power, layer: 0x1 }, { port: Air Out, layer: 0x1 } ] } ] }
+      }
       H: { items: { each: [ jeffries hatch] } }
-      c: { items: { each: [ air cooler ] } }
+      c: { items: { each: [ { item: air cooler, connect: [ { port: Enabled, layer: 0x4 }, { port: Power, layer: 0x1 }, { port: Air Out, layer: 0x1 } ] } ] } }
       d: { items: { group: data equipment } }
       P: { items: { group: power equipment } }
       G: { items: { each: [ combustion generator ] } }
@@ -75,10 +81,53 @@
       w: { items: { each: [ liquid tank ] } }
       "%": { items: rug }
 
+    connections:
+      - type: power
+        layer: 0x1
+        connect: [G, P]
+
+- type: item
+  name: atmospheric temperature control system
+  description: A bank of specialized electronic boards for controlling atmospheric temperature. Always wrong somehow.
+  display: MEDIUM_EQUIPMENT
+  behavior:
+#    - ATCS: {}
+    - HasPorts:
+        ports:
+          - type: data-in
+            name: Thermostat Command
+          - type: data-out
+            name: Heater Enabled
+          - type: data-out
+            name: Cooler Enabled
+          - type: power-in
+            name: Power
+
 - type: item
   name: electronics rack
   description: A bank of electronic boards - definitely used to control something important.
   display: MEDIUM_EQUIPMENT
+  behavior:
+    - HasPorts:
+        ports:
+          - type: data-in
+            name: Input 1 # thermostat command
+          - type: data-in
+            name: Input 2
+          - type: data-in
+            name: Input 3
+          - type: data-in
+            name: Input 4
+          - type: data-out
+            name: Output 1 # heater enabled
+          - type: data-out
+            name: Output 2 # cooler enabled
+          - type: data-out
+            name: Output 3
+          - type: data-out
+            name: Output 4
+          - type: power-in
+            name: Power
 
 - type: item
   name: air mix system

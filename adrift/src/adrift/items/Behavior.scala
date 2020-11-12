@@ -46,6 +46,7 @@ object Behavior {
     "DisplaysConnectedTo" -> Decoder[DisplaysConnectedTo].widen,
     "BumpActivated" -> Decoder[BumpActivated].widen,
     "Diagnosable" -> Decoder[Diagnosable].widen,
+    "HasPorts" -> Decoder[HasPorts].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveConfiguredEncoder
@@ -76,6 +77,7 @@ object Behavior {
     case b: DisplaysConnectedTo => Encoder[DisplaysConnectedTo].apply(b)
     case b: BumpActivated => Encoder[BumpActivated].apply(b)
     case b: Diagnosable => Encoder[Diagnosable].apply(b)
+    case b: HasPorts => Encoder[HasPorts].apply(b)
   }))
 }
 
