@@ -88,7 +88,12 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
     }
   }
 
+  var receivedACharEvent = false
   override def char(char: Int): Unit = {
+    if (!receivedACharEvent) {
+      receivedACharEvent = true
+      return
+    }
     input += char.toChar
   }
 
