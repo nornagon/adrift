@@ -71,7 +71,7 @@ object Appearance {
     (char, fg, bg)
   }
 
-  def charForWall(center: Terrain, connectLeft: Boolean, connectUp: Boolean, connectRight: Boolean, connectDown: Boolean, viewingFrom: Dir): Char = {
+  def charForWall(connectLeft: Boolean, connectUp: Boolean, connectRight: Boolean, connectDown: Boolean, viewingFrom: Dir): Char = {
     import CP437.BoxDrawing._
     import Dir._
     ((connectLeft, connectUp, connectRight, connectDown) match {
@@ -117,6 +117,29 @@ object Appearance {
           case NW | W => LU__
           case SW | S => L__D
         }
+    }).toChar
+  }
+
+  def charForConnection(connectLeft: Boolean, connectUp: Boolean, connectRight: Boolean, connectDown: Boolean): Char = {
+    import CP437.BoxDrawing._
+    ((connectLeft, connectUp, connectRight, connectDown) match {
+      //    Left   Up     Right  Down
+      case (false, false, false, false) => 254
+      case (false, false, false, true ) => _U_D
+      case (false, false, true,  false) => L_R_
+      case (false, false, true,  true ) => __RD
+      case (false, true , false, false) => _U_D
+      case (false, true , false, true ) => _U_D
+      case (false, true , true,  false) => _UR_
+      case (false, true , true,  true ) => _URD
+      case (true , false, false, false) => L_R_
+      case (true , false, false, true ) => L__D
+      case (true , false, true,  false) => L_R_
+      case (true , false, true,  true ) => L_RD
+      case (true , true , false, false) => LU__
+      case (true , true , false, true ) => LU_D
+      case (true , true , true,  false) => LUR_
+      case (true , true , true,  true ) => LURD
     }).toChar
   }
 
@@ -187,7 +210,7 @@ object Appearance {
           val down = apparent(x, y + 1)
           val viewedFrom = Dir.from((state.player.x, state.player.y), (x, y))
           val (_, fg, bg, _) = state.data.display.getDisplay(terrain.display)
-          (charForWall(terrain,
+          (charForWall(
             terrain == left.orNull,
             terrain == up.orNull,
             terrain == right.orNull,
@@ -450,8 +473,13 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
       if (state.showCableDebug && level.powerCables.contains(x, y)) {
         val layers = level.powerCables(x, y)
-        if (layers != 0)
-          renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, Color(1, 0, 0, 1))
+        if (layers != 0) {
+          val connectLeft = level.powerCables.contains(x - 1, y) && ((level.powerCables(x - 1, y) & layers) != 0)
+          val connectUp = level.powerCables.contains(x, y - 1) && ((level.powerCables(x, y - 1) & layers) != 0)
+          val connectRight = level.powerCables.contains(x + 1, y) && ((level.powerCables(x + 1, y) & layers) != 0)
+          val connectDown = level.powerCables.contains(x, y + 1) && ((level.powerCables(x, y + 1) & layers) != 0)
+          renderer.drawChar(screenLeft + x - left, screenTop + y - top, Appearance.charForConnection(connectLeft, connectUp, connectRight, connectDown), Color(1, 0, 0, 1))
+        }
       }
     }
   }
