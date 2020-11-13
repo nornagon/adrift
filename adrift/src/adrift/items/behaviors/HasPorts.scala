@@ -14,6 +14,12 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, Int] = Ma
     self: Item,
     message: Message
   ): Unit = message match {
+    case m @ Message.IsConnected(cableType, layers, _) =>
+      m.connected ||= connections.exists {
+        case (portName, connectedLayers) =>
+          (connectedLayers & layers) != 0 &&
+            ports.find(_.name == portName).exists(_.`type` == cableType)
+      }
     case _ =>
   }
 }
