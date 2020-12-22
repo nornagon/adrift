@@ -9,6 +9,8 @@ object layout {
   case object Vertical extends Direction
   case object Horizontal extends Direction
 
+  type RenderFn = (GlyphRenderer, Rect) => Unit
+
   case class Box(
     direction: Direction,
     bounds: Option[Rect],
@@ -17,7 +19,8 @@ object layout {
     foreground: Option[Color],
     fill: Option[Char],
     children: Seq[Box],
-    text: Option[String]
+    text: Option[String],
+    render: Option[RenderFn]
   )
 
   def hbox(
@@ -25,6 +28,7 @@ object layout {
     background: Color = null,
     foreground: Color = null,
     fill: Char = ' ',
+    render: RenderFn = null,
     size: Int = 0,
     children: Seq[Box] = Seq.empty
   ): Box = Box(
@@ -33,6 +37,7 @@ object layout {
     background = Option(background),
     foreground = Option(foreground),
     fill = Option(fill),
+    render = Option(render),
     size = size,
     children = children,
     text = None,
@@ -43,6 +48,7 @@ object layout {
     background: Color = null,
     foreground: Color = null,
     fill: Char = ' ',
+    render: RenderFn = null,
     size: Int = 0,
     children: Seq[Box] = Seq.empty
   ): Box = Box(
@@ -51,6 +57,7 @@ object layout {
     background = Option(background),
     foreground = Option(foreground),
     fill = Option(fill),
+    render = Option(render),
     size = size,
     children = children,
     text = None,
@@ -69,6 +76,23 @@ object layout {
     size = 1,
     children = Seq.empty,
     text = Some(text),
+    render = None,
+  )
+
+  def custom(
+    render: RenderFn,
+    size: Int = 0,
+    children: Seq[Box] = Seq.empty
+  ): Box = Box(
+    direction = Horizontal,
+    bounds = None,
+    background = None,
+    foreground = None,
+    fill = None,
+    size = size,
+    children = children,
+    text = None,
+    render = Some(render)
   )
 
   def draw(renderer: GlyphRenderer, box: Box): Unit = {
@@ -81,10 +105,13 @@ object layout {
       if (box.background.nonEmpty || box.fill.exists(_ != ' '))
         renderer.fillRect(bounds, box.fill.getOrElse(' '), bg = box.background.getOrElse(currentBg), fg = box.foreground.getOrElse(currentFg))
       // 2. draw content
-      // 2a. if there's text, draw it
+      // 2a. if there's a render function, call it
+      for (render <- box.render)
+        render(renderer, bounds)
+      // 2b. if there's text, draw it
       for (text <- box.text)
         renderer.drawString(bounds.l, bounds.t, text, maxWidth = bounds.width, fg = currentFg, bg = currentBg)
-      // 2b. if there are children, lay them out and draw them
+      // 2c. if there are children, lay them out and draw them
       if (box.children.nonEmpty) {
         val availableSize = box.direction match {
           case Horizontal => bounds.width

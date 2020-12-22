@@ -20,27 +20,6 @@ case class Tool(op: String) extends Behavior {
   }
 }
 
-case class UsesElectricity(perUse: Int) extends Behavior {
-  override def receive(
-    state: GameState,
-    self: Item,
-    message: Message
-  ): Unit = message match {
-    case t: Message.IsFunctional =>
-      t.functional &&= state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok
-    case t: Message.Conditions =>
-      if (!state.sendMessage(self, Message.ChargeAvailable(amount = perUse)).ok)
-        t.conditions :+= "unpowered"
-    case t: Message.ToolUsed =>
-      state.sendMessage(self, Message.DrawCharge(amount = perUse))
-    case t: Message.ChargeAvailable =>
-      state.broadcastToParts(self, t)
-    case t: Message.DrawCharge =>
-      state.broadcastToParts(self, t)
-    case _ =>
-  }
-}
-
 case class HoldsCharge(maxCharge: Int, var currentCharge: Int = -1) extends Behavior {
   if (currentCharge == -1) currentCharge = maxCharge
   override def receive(

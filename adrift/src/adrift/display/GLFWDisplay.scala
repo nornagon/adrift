@@ -288,25 +288,36 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       } else {
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
           key match {
-            case GLFW_KEY_LEFT | GLFW_KEY_H => pushAction(Action.PlayerMove(-1, 0))
-            case GLFW_KEY_DOWN | GLFW_KEY_J => pushAction(Action.PlayerMove(0, 1))
-            case GLFW_KEY_UP | GLFW_KEY_K => pushAction(Action.PlayerMove(0, -1))
-            case GLFW_KEY_RIGHT | GLFW_KEY_L => pushAction(Action.PlayerMove(1, 0))
-            case GLFW_KEY_Y => pushAction(Action.PlayerMove(-1, -1))
-            case GLFW_KEY_U => pushAction(Action.PlayerMove(1, -1))
-            case GLFW_KEY_B => pushAction(Action.PlayerMove(-1, 1))
-            case GLFW_KEY_N => pushAction(Action.PlayerMove(1, 1))
+            case DirectionKey(dx, dy) => pushAction(Action.PlayerMove(dx, dy))
+
+              // Drop
             case GLFW_KEY_D =>
               lastState.items.lookup(InHands()).headOption foreach { item =>
                 pushAction(Action.PutDown(item))
               }
+
+              // Wait
             case GLFW_KEY_PERIOD => pushAction(Action.Wait(1))
             case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
+
+              // Examine
             case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))
+
+              // Inventory
             case GLFW_KEY_I => pushScreen(new ContainerScreen(this, lastState, OnFloor(lastState.player)))
+
+              // Assemble
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
+
+              // Wish
             case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
+
+              // Look
             case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))
+
+            case GLFW_KEY_C => pushScreen(new CableScreen(this, lastState))
+
+              // Regenerate (in RoomTest mode)
             case _ if lastState.isRoomTest =>
               key match {
                 case GLFW_KEY_R if (mods & GLFW_MOD_SUPER) != 0 =>
@@ -332,6 +343,12 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       Some((offX, offY))
     else
       None
+  }
+
+  def screenToWorld(state: GameState)(screenCoords: (Int, Int)): (Int, Int) = {
+    val (sx, sy) = screenCoords
+    val wr = worldRect(state)
+    (sx + wr.l, sy + wr.t)
   }
 
   val sidebarWidth = 20
