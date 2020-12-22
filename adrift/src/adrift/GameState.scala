@@ -749,6 +749,18 @@ class GameState(var data: Data, val random: Random) {
   def refresh(): Unit = {
     recomputePermeabilityCache()
     recalculateFOV()
+    println("method 1")
+    for (i <- 1 to 10) {
+      val begin = System.nanoTime()
+      recalculateConnections()
+      println(f"  recalculating connections took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
+    }
+    println("method 2")
+    for (i <- 1 to 10) {
+      val begin = System.nanoTime()
+      recalculateConnections2()
+      println(f"  recalculating connections took ${(System.nanoTime() - begin) / 1e6}%.2f ms")
+    }
   }
 
   def isPermeable(l: Location): Boolean =
@@ -785,6 +797,76 @@ class GameState(var data: Data, val random: Random) {
     })
     visible = newVisible.toSet
     updateMemory()
+  }
+
+  var powerLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
+  def recalculateConnections(): Unit = {
+    val newPowerLayerConnections = mutable.Map.empty[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]]
+    for ((levelId, level) <- levels) {
+      newPowerLayerConnections(levelId) = new Array(8)
+      val hasPowerCableOnLayer = Array.fill(8)(mutable.Set.empty[(Int, Int)])
+      // Find all the locations with cables.
+      for (xy <- level.powerCables.indices) {
+        val layers = level.powerCables(xy)
+        if (layers != 0) {
+          for (i <- 0 until 8) {
+            val mask = 1 << i
+            if (layers != 0) {
+              if ((layers & mask) != 0) {
+                hasPowerCableOnLayer(i).add(xy)
+              }
+            }
+          }
+        }
+      }
+
+      def adj4(xy: (Int, Int)): Seq[(Int, Int)] = Seq(
+        (xy._1 - 1, xy._2),
+        (xy._1, xy._2 - 1),
+        (xy._1 + 1, xy._2),
+        (xy._1, xy._2 + 1),
+      )
+
+      for (i <- 0 until 8) {
+        // Identify all the connected components.
+        val components = mutable.Set.empty[Set[(Int, Int)]]
+        val cellToComponent = mutable.Map.empty[(Int, Int), Set[(Int, Int)]]
+        while (hasPowerCableOnLayer(i).nonEmpty) {
+          val first = hasPowerCableOnLayer(i).head
+          val reachable = BFS.reachableFrom[(Int, Int)](first, xy => adj4(xy).filter(hasPowerCableOnLayer(i)))
+          hasPowerCableOnLayer(i) --= reachable
+          for (cell <- reachable)
+            cellToComponent(cell) = reachable
+          components += reachable
+        }
+        newPowerLayerConnections(levelId)(i) = cellToComponent.toMap
+      }
+    }
+    powerLayerConnections = newPowerLayerConnections.toMap
+  }
+
+  def recalculateConnections2(): Unit = {
+    val newPowerLayerConnections = mutable.Map.empty[LevelId, Array[DisjointSet[(Int, Int)]]]
+    for ((levelId, level) <- levels) {
+      val djs = Array.fill(8)(new DisjointSet[(Int, Int)])
+      newPowerLayerConnections(levelId) = djs
+      for (xy <- level.powerCables.indices) {
+        val layers = level.powerCables(xy)
+        if (layers != 0) {
+          for (i <- 0 until 8) {
+            val s = djs(i)
+            val mask = 1 << i
+            // Find all the locations with cables.
+            if ((layers & mask) != 0) {
+              s.makeSet(xy)
+              s.union(xy, (xy._1 - 1, xy._2))
+              s.union(xy, (xy._1, xy._2 - 1))
+            }
+          }
+        }
+      }
+    }
+    //powerLayerConnections = newPowerLayerConnections.toMap
   }
 
   def isVisible(location: Location): Boolean =

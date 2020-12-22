@@ -1,5 +1,6 @@
 package adrift.items
 
+import adrift.items.behaviors.LayerSet
 import adrift.{Location, Terrain}
 
 trait Message
@@ -51,5 +52,5 @@ object Message {
   case class IsDiagnosable(var diagnosable: Boolean = false, var opRequired: Option[ItemOperation] = None) extends Message
   case class IsDiagnosed(var diagnosed: Boolean = false) extends Message
 
-  case class IsConnected(cableType: String, layers: Int, var connected: Boolean = false) extends Message
+  case class IsConnected(cableType: String, layers: LayerSet, var connected: Boolean = false) extends Message
 }

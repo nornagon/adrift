@@ -4,7 +4,7 @@ import adrift.Population.Table
 import adrift.RandomImplicits._
 import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 import adrift._
-import adrift.items.behaviors.HasPorts
+import adrift.items.behaviors.{HasPorts, LayerSet}
 import io.circe.{Decoder, HCursor, Json, JsonObject}
 
 import scala.util.Random
@@ -381,11 +381,11 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
                         case "fluid-in" | "fluid-out" =>
                           state.levels(levelId).fluidCables
                       })(tx, ty) = spec.layer
-                      bhvr.connections += (spec.port -> spec.layer)
+                      bhvr.connections += (spec.port -> new LayerSet(spec.layer))
                     case None =>
                       println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
                   }
-                case None =>
+                case _ =>
                   println(s"Warning: ${item.kind.name} does not have ports")
               }
             }

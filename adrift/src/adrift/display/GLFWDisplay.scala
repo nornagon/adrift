@@ -2,6 +2,7 @@ package adrift.display
 
 import adrift._
 import adrift.display.CP437.BoxDrawing
+import adrift.items.behaviors.LayerSet
 import adrift.items.{Item, Message, behaviors}
 import org.lwjgl.glfw.GLFW._
 
@@ -474,7 +475,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       if (state.showCableDebug && level.powerCables.contains(x, y)) {
         val layers = level.powerCables(x, y)
         // if there's something with ports here...
-        if (state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected("power-in", 0xff)).connected) {
+        if (state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected("power-in", LayerSet.all)).connected) {
           // Is it connected to a cable?
           val color = if (layers != 0) Color(1, 0, 0, 1) else Color.White
           renderer.drawChar(screenLeft + x - left, screenTop + y - top, 8, fg = color)
