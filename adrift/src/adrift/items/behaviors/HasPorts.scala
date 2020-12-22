@@ -1,9 +1,7 @@
 package adrift.items.behaviors
 
-import adrift.{GameState, Location, OnFloor}
 import adrift.items.{Behavior, Item, Message}
-
-import scala.collection.AbstractIterator
+import adrift.{GameState, Location, OnFloor}
 
 case class PortSpec(
   `type`: String,

@@ -34,27 +34,23 @@ object Population {
   // TODO: poisson?
 
   implicit val decodeCountSpec: Decoder[CountSpec] = (c: HCursor) => {
-    for {
-      _ <- c.as[Int].map(CountSpecExact).left
-      err <- c.as[String].flatMap {
+    c.as[Int].map(CountSpecExact)
+      .orElse(c.as[String].flatMap {
         case diceRegex(numDice, numSides) => Right(CountSpecDice(numDice.toInt, numSides.toInt))
         case rangeRegex(low, high) => Right(CountSpecRange(low.toInt, high.toInt))
         case intRegex(num) => Right(CountSpecExact(num.toInt))
         case other => Left(DecodingFailure(s"Unparseable count spec: '$other'", c.history))
-      }.left
-    } yield err
+      })
   }
 
   final case class Chance(chance: Double)
 
   implicit val decodeChance: Decoder[Chance] = (c: HCursor) => {
-    for {
-      _ <- c.as[Double].map(Chance).left
-      err <- c.as[String].flatMap {
+    c.as[Double].map(Chance)
+      .orElse(c.as[String].flatMap {
         case percentageRegex(percentage) => Right(Chance(percentage.toDouble / 100))
         case other => Left(DecodingFailure(s"Unparseable chance: '$other'", c.history))
-      }.left
-    } yield err
+      })
   }
 
   /**
@@ -166,10 +162,9 @@ object Population {
   import io.circe.generic.semiauto._
   def derivedTableItemDecoder[T](implicit d: Decoder[T]): Decoder[TableElement[T]] = deriveDecoder
   implicit def decodeTableElement[T](implicit d: Decoder[T]): Decoder[TableElement[T]] = (c: HCursor) => {
-    for {
-      _ <- c.as[T].map(TableElement(_)).left
-      _ <- derivedTableItemDecoder[T].apply(c).left
-    } yield DecodingFailure(s"Failed to decode table item: ${c.focus}", c.history)
+    c.as[T].map(TableElement(_))
+      .orElse(derivedTableItemDecoder[T].apply(c))
+      .orElse(Left(DecodingFailure(s"Failed to decode table item: ${c.focus}", c.history)))
   }
   implicit def decodeTableGroup[T](implicit d: Decoder[T]): Decoder[TableGroup[T]] = deriveDecoder
   implicit def decodeTableEach[T](implicit d: Decoder[T]): Decoder[TableEach[T]] = deriveDecoder
@@ -183,16 +178,15 @@ object Population {
   }
   implicit def decodeTableChoose[T](implicit d: Decoder[T]): Decoder[TableChoose[T]] = deriveDecoder
   implicit def decodeTable[T](implicit d: Decoder[T]): Decoder[Table[T]] = (c: HCursor) => {
-    for {
-      _ <- c.as[T].map(TableElement(_)).left
-      _ <- c.as[Seq[TableChooseEntry[T]]].map(TableChoose(_)).left
-      _ <- c.downField("group").up.as[TableGroup[T]].left
-      _ <- c.downField("item").up.as[TableElement[T]].left
-      _ <- c.downField("each").up.as[TableEach[T]].left
-      _ <- c.downField("choose").up.as[TableChoose[T]].left
-      _ <- c.downField("repeat").up.as[TableRepeat[T]].left
-      _ <- c.downField("optional").up.as[TableOptional[T]].left
-    } yield DecodingFailure(s"Unknown table type: ${c.focus}", c.history)
+    c.as[T].map(TableElement(_))
+      .orElse(c.as[Seq[TableChooseEntry[T]]].map(TableChoose(_)))
+      .orElse(c.downField("group").up.as[TableGroup[T]])
+      .orElse(c.downField("item").up.as[TableElement[T]])
+      .orElse(c.downField("each").up.as[TableEach[T]])
+      .orElse(c.downField("choose").up.as[TableChoose[T]])
+      .orElse(c.downField("repeat").up.as[TableRepeat[T]])
+      .orElse(c.downField("optional").up.as[TableOptional[T]])
+      .orElse(Left(DecodingFailure(s"Unknown table type: ${c.focus}", c.history)))
   }
 
   object serialization {
