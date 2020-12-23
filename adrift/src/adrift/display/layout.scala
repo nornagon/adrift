@@ -66,17 +66,36 @@ object layout {
   def text(
     text: String,
     background: Color = null,
-    foreground: Color = null
+    foreground: Color = null,
+    size: Int = 1
   ): Box = Box(
     direction = Horizontal,
     bounds = None,
     background = Option(background),
     foreground = Option(foreground),
     fill = None,
-    size = 1,
+    size = size,
     children = Seq.empty,
     text = Some(text),
     render = None,
+  )
+
+  def frame(contents: Box, size: Int = 0): Box = vbox(
+    size = size,
+    children = Seq(vbox(
+      children = Seq(
+        vbox(size = 1),
+        hbox(children = Seq(
+          vbox(size = 1),
+          contents,
+          vbox(size = 1)
+        )),
+        vbox(size = 1)
+      )
+    )),
+    render = (renderer, bounds) => {
+      renderer.drawBox(bounds)
+    }
   )
 
   def custom(
