@@ -9,8 +9,11 @@ case class PortSpec(
 )
 
 class LayerSet(val bits: Int) extends AnyVal { self =>
+  def nonEmpty: Boolean = bits != 0
+
   def intersects(other: LayerSet): Boolean = (bits & other.bits) != 0
   def union(other: LayerSet): LayerSet = new LayerSet(bits | other.bits)
+  def toggle(layer: Int): LayerSet = new LayerSet(bits ^ (1 << layer))
   def apply(layer: Int): Boolean = (bits & (1 << layer)) != 0
 
   def iterator: Iterator[Int] = (0 until 8).view.filter(self(_)).iterator

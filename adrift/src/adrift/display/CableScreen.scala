@@ -6,6 +6,14 @@ import adrift.{Color, GameState, Location, OnFloor, Rect}
 import org.lwjgl.glfw.GLFW._
 import layout._
 
+object NumericKey {
+  def unapply(key: Int): Option[Int] =
+    key match {
+      case n if n >= GLFW_KEY_0 && n <= GLFW_KEY_9 => Some(n - GLFW_KEY_0)
+      case _ => None
+    }
+}
+
 class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   private var displayedPowerLayers = LayerSet.all
 
@@ -23,6 +31,8 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
           if (cables.contains(cursor)) {
             cables(cursor) ^= displayedPowerLayers.bits
           }
+        case NumericKey(n) if n >= 1 && n <= 8 =>
+          displayedPowerLayers = displayedPowerLayers.toggle(n - 1)
         case _ =>
       }
     }
@@ -68,20 +78,19 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val level = state.levels(levelId)
 
     for (sy <- bounds.l until bounds.r; sx <- bounds.t until bounds.b; (x, y) = display.screenToWorld(state)((sx, sy)); if level.terrain.contains(x, y)) {
-      val layers = level.powerCables(x, y)
+      val layers = new LayerSet(level.powerCables(x, y))
       // if there's something with ports here...
       if (state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected("power-in", LayerSet.all)).connected) {
         // Is it connected to a cable?
-        val color = if (layers != 0) powerColor else Color.White
+        val color = if (layers.intersects(displayedPowerLayers)) powerColor else Color.White
         renderer.drawChar(bounds.l + sx, bounds.t + sy, 8, fg = color)
-      } else {
-        if (layers != 0) {
-          val connectLeft = level.powerCables.contains(x - 1, y) && ((level.powerCables(x - 1, y) & layers) != 0)
-          val connectUp = level.powerCables.contains(x, y - 1) && ((level.powerCables(x, y - 1) & layers) != 0)
-          val connectRight = level.powerCables.contains(x + 1, y) && ((level.powerCables(x + 1, y) & layers) != 0)
-          val connectDown = level.powerCables.contains(x, y + 1) && ((level.powerCables(x, y + 1) & layers) != 0)
-          renderer.drawChar(bounds.l + sx, bounds.t + sy, Appearance.charForConnection(connectLeft, connectUp, connectRight, connectDown), powerColor)
-        }
+      } else if (layers.nonEmpty) {
+        val connectLeft = level.powerCables.contains(x - 1, y) && ((level.powerCables(x - 1, y) & layers.bits) != 0)
+        val connectUp = level.powerCables.contains(x, y - 1) && ((level.powerCables(x, y - 1) & layers.bits) != 0)
+        val connectRight = level.powerCables.contains(x + 1, y) && ((level.powerCables(x + 1, y) & layers.bits) != 0)
+        val connectDown = level.powerCables.contains(x, y + 1) && ((level.powerCables(x, y + 1) & layers.bits) != 0)
+        val color = if (layers.intersects(displayedPowerLayers)) powerColor else Color(0.5f, 0.5f, 0.5f, 1.0f)
+        renderer.drawChar(bounds.l + sx, bounds.t + sy, Appearance.charForConnection(connectLeft, connectUp, connectRight, connectDown), color)
       }
     }
 
