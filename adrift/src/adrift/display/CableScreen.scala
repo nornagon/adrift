@@ -32,7 +32,10 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
             cables(cursor) ^= displayedPowerLayers.bits
           }
         case NumericKey(n) if n >= 1 && n <= 8 =>
-          displayedPowerLayers = displayedPowerLayers.toggle(n - 1)
+          if ((mods & GLFW_MOD_SHIFT) != 0)
+            displayedPowerLayers = displayedPowerLayers.toggle(n - 1)
+          else
+            displayedPowerLayers = new LayerSet(1 << (n - 1))
         case _ =>
       }
     }
