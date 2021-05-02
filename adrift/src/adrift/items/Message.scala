@@ -53,4 +53,8 @@ object Message {
   case class IsDiagnosed(var diagnosed: Boolean = false) extends Message
 
   case class IsConnected(cableType: String, layers: LayerSet, var connected: Boolean = false) extends Message
+
+  case class SendDataPacket(outPort: String, value: Byte) extends Message
+  case class DataPacket(layers: LayerSet, value: Byte) extends Message
+  case class ReceivedDataPacket(inPort: String, value: Byte) extends Message
 }

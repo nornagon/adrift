@@ -47,6 +47,9 @@ object Behavior {
     "BumpActivated" -> Decoder[BumpActivated].widen,
     "Diagnosable" -> Decoder[Diagnosable].widen,
     "HasPorts" -> Decoder[HasPorts].widen,
+    "AdvancedThermostat" -> Decoder[AdvancedThermostat].widen,
+    "ActivatedByDataPort" -> Decoder[ActivatedByDataPort].widen,
+    "DebugPrintMessages" -> Decoder[DebugPrintMessages].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveConfiguredEncoder
@@ -78,6 +81,9 @@ object Behavior {
     case b: BumpActivated => Encoder[BumpActivated].apply(b)
     case b: Diagnosable => Encoder[Diagnosable].apply(b)
     case b: HasPorts => Encoder[HasPorts].apply(b)
+    case b: AdvancedThermostat => Encoder[AdvancedThermostat].apply(b)
+    case b: ActivatedByDataPort => Encoder[ActivatedByDataPort].apply(b)
+    case b: DebugPrintMessages => Encoder[DebugPrintMessages].apply(b)
   }))
 }
 

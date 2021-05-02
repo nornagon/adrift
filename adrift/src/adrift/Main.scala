@@ -46,6 +46,7 @@ object Main {
     loadingScreen.init()
     val load = args.contains("--load")
     val emptyWorld = args.contains("--empty-world")
+    val singleRoomWorld = args.find(s => s.startsWith("--single-room=")).map(s => s.split("=").last)
 
     val dataPath = Paths.get("data")
     loadingScreen.println("Loading data...")
@@ -70,9 +71,16 @@ object Main {
           val numEqs = (t * width).round.toInt
           loadingScreen.updateLastLine(f"  [${"=" * numEqs}>${" " * (width - numEqs)}] ${t * 100}%.0f%%")
         }
-        implicit val random: Random = new Random(12367)
+        implicit val random: Random = new Random(12368)
         val gen = WorldGen(data)
-        val state = if (emptyWorld) gen.generateEmptyWorld() else gen.generateWorld(reportProgress = printProgress)
+        val state = {
+          if (singleRoomWorld.nonEmpty)
+            gen.generateSingleRoomWorld(singleRoomWorld.get)
+          else if (emptyWorld)
+            gen.generateEmptyWorld()
+          else
+            gen.generateWorld(reportProgress = printProgress)
+        }
         state
       }
 

@@ -23,6 +23,27 @@ case class WorldGen(data: Data)(implicit random: Random) {
     state
   }
 
+  def generateSingleRoomWorld(roomType: String): GameState = {
+    val state = new GameState(data, new Random(random.nextLong()))
+    val roomGen = data.roomgens(roomType)
+    val approxArea = state.random.between(math.max(roomGen.minArea, 10), math.min(roomGen.maxArea, 800))
+    println(approxArea)
+    val width = state.random.between(4, approxArea / 4)
+    val height = approxArea / width
+    println(width, height)
+
+    val levelId = LevelId("main")
+    val level = Level.emptySquare(data, width, height)
+    state.levels(levelId) = level
+
+    state.player = Location(levelId, width / 2, height / 2)
+
+    val cells: Seq[(Int, Int)] = for (x <- 0 until width; y <- 0 until height) yield (x, y)
+    data.roomgens(roomType).algorithm.generate(state, levelId, cells)
+
+    state
+  }
+
   def clamp01(d: Double) = math.max(0, math.min(1, d))
   def generateWorld(reportProgress: Double => Unit = (d: Double) => {}): GameState = {
     val layout = BSPArchitect.generate(360, 270)

@@ -36,6 +36,10 @@ class GLFWWindow() {
       window,
       (window: Long, key: Int, scancode: Int, action: Int, mods: Int) => cb(key, scancode, action, mods)
     )
+  def onMouseButton(cb: (Int, Int, Int) => Unit): Unit =
+    glfwSetMouseButtonCallback(window, (window: Long, button: Int, action: Int, mods: Int) => cb(button, action, mods))
+  def onMouseMove(cb: (Double, Double) => Unit): Unit =
+    glfwSetCursorPosCallback(window, (window: Long, xpos: Double, ypos: Double) => cb(xpos, ypos))
   def onClose(cb: () => Unit): Unit =
     glfwSetWindowCloseCallback(window, (window: Long) => cb())
 

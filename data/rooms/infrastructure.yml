@@ -62,15 +62,25 @@
       E:
         items:
           each:
-            - { item: atmospheric temperature control system, connect: [ { port: Thermostat Command, layer: 0x1 }, { port: Heater Enabled, layer: 0x2 }, { port: Cooler Enabled, layer: 0x4 }, { port: Power, layer: 0x1 } ] }
-            - { item: thermostat, connect: [ { port: Command, layer: 0x1 } ] }
+            - item: atmospheric temperature control system
+              connect:
+                - { port: Thermostat Command, layer: 0x1 }
+                - { port: Heater Enabled, layer: 0x2 }
+                - { port: Cooler Enabled, layer: 0x4 }
+                - { port: Power, layer: 0x1 }
+            #- { item: thermostat, connect: [ { port: Command, layer: 0x1 } ] }
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
       O: { items: { each: [ {item: oxygen tank} ] } }
       C: { items: { group: gas canister } }
-      h: {
-        items: { each: [ { item: air heater, connect: [ { port: Enabled, layer: 0x2 }, { port: Power, layer: 0x1 }, { port: Air Out, layer: 0x1 } ] } ] }
-      }
+      h:
+        items:
+          each:
+            - item: air heater
+              connect:
+                - { port: Enabled, layer: 0x2 }
+                - { port: Power, layer: 0x1 }
+                - { port: Air Out, layer: 0x1 }
       H: { items: { each: [ jeffries hatch] } }
       c: { items: { each: [ { item: air cooler, connect: [ { port: Enabled, layer: 0x4 }, { port: Power, layer: 0x1 }, { port: Air Out, layer: 0x1 } ] } ] } }
       d: { items: { group: data equipment } }
@@ -91,7 +101,12 @@
   description: A bank of specialized electronic boards for controlling atmospheric temperature. Always wrong somehow.
   display: MEDIUM_EQUIPMENT
   behavior:
-#    - ATCS: {}
+    - DebugPrintMessages: { filter: "Tick|Data|(Ac|Deac)tivate" }
+    - AdvancedThermostat:
+        heaterPort: Heater Enabled
+        coolerPort: Cooler Enabled
+        setPoint: 275
+        hysteresis: 2
     - HasPorts:
         ports:
           - type: data-in
@@ -151,6 +166,9 @@
   description: a bulky unit for dumping large amounts of heat into some air
   display: LARGE_EQUIPMENT
   behavior:
+    - DebugPrintMessages: { filter: "Data|ctiv" }
+    - Heater: {}
+    - ActivatedByDataPort: { portName: Enabled }
     - HasPorts:
         ports:
           - { type: power-in, name: Power }
@@ -162,6 +180,8 @@
   description: a bulky unit which extracts heat from air and stores it for later use in making tea.
   display: LARGE_EQUIPMENT
   behavior:
+    - Heater: { dq: -0.5 }
+    - ActivatedByDataPort: { portName: Enabled }
     - HasPorts:
         ports:
           - { type: power-in, name: Power }

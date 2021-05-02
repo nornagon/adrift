@@ -172,6 +172,15 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           val wasSelected = openStack.last
           openStack = openStack.init
           selected = math.max(0, items.indexOf(wasSelected))
+        case GLFW_KEY_GRAVE_ACCENT =>
+          val selectedItem = menuEntries(selected)
+          selectedItem match {
+            case ItemEntry(item) =>
+              val json = Serialization.encodeItem(item)
+              println(io.circe.yaml.printer.print(json))
+            case MissingItemEntry(kind, count) =>
+              println(s"Missing ${kind} ${count}")
+          }
         case k =>
           val selectedItem = menuEntries(selected)
           commands(selectedItem).find(c => c.available && c.key == k) foreach { _.execute() }

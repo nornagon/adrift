@@ -380,7 +380,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
                           state.levels(levelId).dataCables
                         case "fluid-in" | "fluid-out" =>
                           state.levels(levelId).fluidCables
-                      })(tx, ty) = spec.layer
+                      })(tx, ty) |= spec.layer
                       bhvr.connections += (spec.port -> new LayerSet(spec.layer))
                     case None =>
                       println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
