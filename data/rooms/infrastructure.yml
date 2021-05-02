@@ -101,7 +101,6 @@
   description: A bank of specialized electronic boards for controlling atmospheric temperature. Always wrong somehow.
   display: MEDIUM_EQUIPMENT
   behavior:
-    - DebugPrintMessages: { filter: "Tick|Data|(Ac|Deac)tivate" }
     - AdvancedThermostat:
         heaterPort: Heater Enabled
         coolerPort: Cooler Enabled
@@ -166,7 +165,6 @@
   description: a bulky unit for dumping large amounts of heat into some air
   display: LARGE_EQUIPMENT
   behavior:
-    - DebugPrintMessages: { filter: "Data|ctiv" }
     - Heater: {}
     - ActivatedByDataPort: { portName: Enabled }
     - HasPorts:
