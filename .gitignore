@@ -1,5 +1,6 @@
 .idea/
 .idea_modules/
+.bsp/
 .DS_Store
 target/
 out/
