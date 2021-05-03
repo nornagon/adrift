@@ -27,7 +27,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       when(
         (location match { case Inside(_) | Worn() | OnFloor(_) => true ; case _ => false }) &&
         state.sendMessage(item, Message.CanPickUp()).ok)
-      (Command("{g}et", () => doGet(item))),
+      (Command("{h}old", () => doGet(item))),
 
       when(location match { case Inside(_) | InHands() | Worn() => true ; case _ => false })
       (Command("{d}rop", () => doDrop(item))),
