@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-# This is a wrapper script, that automatically download millw from GitHub release pages
-# You can give the required millw version with --millw-version parameter
+# This is a wrapper script, that automatically download mill from GitHub release pages
+# You can give the required mill version with --mill-version parameter
 # If no version is given, it falls back to the value of DEFAULT_MILL_VERSION
 #
 # Project page: https://github.com/lefou/millw
@@ -34,10 +34,10 @@ fi
 # Please note, that if a MILL_VERSION is already set in the environment,
 # We reuse it's value and skip searching for a value.
 
-# If not already set, read .millw-version file
+# If not already set, read .mill-version file
 if [ "x${MILL_VERSION}" = "x" ] ; then
   if [ -f ".mill-version" ] ; then
-    MILL_VERSION="$(head -n 1 .millw-version 2> /dev/null)"
+    MILL_VERSION="$(head -n 1 .mill-version 2> /dev/null)"
   fi
 fi
 
@@ -63,7 +63,7 @@ if [ "x${MILL_VERSION}" = "x" ] ; then
   if [ "x${MILL_VERSION}" = "x" ] ; then
     # we don't know a current latest version
     echo "Retrieving latest mill version ..."
-    LANG=C curl -s -i -f -I ${MILL_REPO_URL}/releases/latest 2> /dev/null  | grep --ignore-case Location: | sed s'/^.*tag\///' | tr -d '\r\n' > "${MILL_DOWNLOAD_PATH}/.latest"
+    LANG=C curl -s -i -f -I ${MILL_REPO_URL}/releases/latest 2> /dev/null  | grep --ignore-case Location: | sed s'/^.*tag\///' | tr -d '\r\n' > "${MILL_DOWNLOAD_PATH}/.latest" 
     MILL_VERSION="$(head -n 1 ${MILL_DOWNLOAD_PATH}/.latest 2> /dev/null)"
   fi
 
@@ -80,7 +80,7 @@ MILL="${MILL_DOWNLOAD_PATH}/${MILL_VERSION}"
 
 # If not already downloaded, download it
 if [ ! -s "${MILL}" ] ; then
-
+  
   # support old non-XDG download dir
   MILL_OLD_DOWNLOAD_PATH="${HOME}/.mill/download"
   OLD_MILL="${MILL_OLD_DOWNLOAD_PATH}/${MILL_VERSION}"
@@ -98,7 +98,7 @@ if [ ! -s "${MILL}" ] ; then
     esac
     unset VERSION_PREFIX
 
-    DOWNLOAD_FILE=$(mktemp millw.XXXX)
+    DOWNLOAD_FILE=$(mktemp mill.XXXX)
     # TODO: handle command not found
     echo "Downloading mill ${MILL_VERSION} from ${MILL_REPO_URL}/releases ..."
     curl -L -o "${DOWNLOAD_FILE}" "${MILL_REPO_URL}/releases/download/${MILL_VERSION%%-*}/${MILL_VERSION}${DOWNLOAD_SUFFIX}"
