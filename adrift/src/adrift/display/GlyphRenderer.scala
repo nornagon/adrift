@@ -186,12 +186,15 @@ class GlyphRenderer(
     }
   }
 
-  def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, lines: Seq[String]): Unit = {
+  def frame(left: Int = 0, top: Int = 0, width: Int = 0, title: String = null, halfWidth: Boolean = false, lines: Seq[String]): Unit = {
     drawBox(left, top, width, lines.size + 2)
     if (title != null)
       drawString(left + 1, top, s"[$title]", maxWidth = width-2)
     for ((l, i) <- lines.zipWithIndex) {
-      drawString(left + 1, top + 1 + i, l, width - 2)
+      if (halfWidth)
+        drawHalfString((left + 1) * 2, top + 1 + i, l, (width - 2) * 2)
+      else
+        drawString(left + 1, top + 1 + i, l, width - 2)
     }
   }
 }

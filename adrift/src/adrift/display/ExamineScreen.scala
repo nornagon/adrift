@@ -36,7 +36,7 @@ class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Scr
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    renderer.frame(renderer.bounds.center._1 - 8, 0, 16, null, Seq("Examine where?"))
+    renderer.frame(renderer.bounds.center._1 - 8, 0, 16, null, halfWidth = false, Seq("Examine where?"))
   }
 }
 

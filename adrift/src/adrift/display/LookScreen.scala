@@ -34,8 +34,9 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
           renderer.frame(
             left = anchor._1, top = anchor._2,
             width = width,
+            halfWidth = true,
             lines = Seq(terrain.name) ++
-              items.take(9).map(_.kind.name) ++
+              items.take(9).map(state.itemDisplayName) ++
               (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
           )
         case None =>
