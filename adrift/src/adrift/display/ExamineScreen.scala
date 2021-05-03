@@ -197,11 +197,12 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
     renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
+
     var nextY = 0
     def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen, wrap: Boolean = false): Unit = {
       if (wrap) {
         //noinspection RedundantDefaultArgument
-        for (line <- GlyphRenderer.wrap(s, width - 2))
+        for (line <- GlyphRenderer.wrap(s, (width - 2) * 2))
           sprintln(line, fg = fg, bg = bg, wrap = false)
       } else {
         sprintlnColored(ColoredString(s, Seq(Ann(0, s.length, fg))), bg = bg)
@@ -213,22 +214,22 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       val top = nextY + sy
       var x = 0
       val y = 0
-      renderer.drawChar(left + x, top + y, 0xdd, fg = lightGreen, bg = bg)
-      x += 1
+      renderer.drawChar(left, top + y, 0xdd, fg = lightGreen, bg = bg)
+      x += 2
 
       for ((s, anns) <- ss.parts) {
         val fg = anns.lastOption.map(_.fg).getOrElse(defaultFg)
-        val maxWidth = width - 1 - x
-        renderer.drawString(left + x, top + y, s, fg = fg, bg = bg, maxWidth = maxWidth)
+        val maxWidth = (width - 1) * 2 - x
+        renderer.drawHalfString(left * 2 + x, top + y, s, fg = fg, bg = bg, maxWidth = maxWidth)
         x += math.min(maxWidth, s.length)
       }
 
-      while (x < width - 1) {
-        renderer.drawChar(left + x, top + y, ' ', bg = bg)
+      while (x < (width - 1) * 2) {
+        renderer.drawHalfChar(left * 2 + x, top + y, ' ', bg = bg)
         x += 1
       }
 
-      renderer.drawChar(left + x, top + y, 0xde, fg = lightGreen, bg = bg)
+      renderer.drawChar(left + width - 1, top + y, 0xde, fg = lightGreen, bg = bg)
 
       nextY += 1
     }
