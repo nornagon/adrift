@@ -16,7 +16,10 @@ case class Heater(var active: Boolean = true, dq: Double = 0.5) extends Behavior
     case Message.Tick if active =>
       state.items lookup self match {
         case OnFloor(loc) =>
-          state.levels(loc.levelId).temperature(loc.xy) += dq / state.levels(loc.levelId).terrain(loc.xy).heatCapacity
+          if (state.isFunctional(self)) {
+            state.sendMessage(self, Message.ToolUsed(null))
+            state.levels(loc.levelId).temperature(loc.xy) += dq / state.levels(loc.levelId).terrain(loc.xy).heatCapacity
+          }
         case _ =>
       }
     case _ =>

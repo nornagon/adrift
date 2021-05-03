@@ -39,10 +39,9 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
       }
     case m: Message.ChargeAvailable =>
       // TODO: this will infinite-loop if a device's power-in and power-out are connected to the same network.
-      if (state.isFunctional(self))
-        for (item <- connectedItems(state, self, portLayers("power-in"), "power-out"))
-          state.sendMessage(item, m)
-        // TODO: stop early if the charge is found?
+      for (item <- connectedItems(state, self, portLayers("power-in"), "power-out"))
+        state.sendMessage(item, m)
+      // TODO: stop early if the charge is found?
     case m: Message.DrawCharge =>
       if (state.isFunctional(self))
         for (item <- connectedItems(state, self, portLayers("power-in"), "power-out"))
