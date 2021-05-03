@@ -28,6 +28,7 @@
         part: |
          xxxxx
          .hEc.
+         *.S.*
          *****
     # data / comms equipment
       - max: 3
@@ -64,11 +65,10 @@
           each:
             - item: atmospheric temperature control system
               connect:
-                - { port: Thermostat Command, layer: 0x1 }
+                - { port: Thermostat Command, layer: 0x1 } # TODO (unused currently)
                 - { port: Heater Enabled, layer: 0x2 }
                 - { port: Cooler Enabled, layer: 0x4 }
                 - { port: Power, layer: 0x1 }
-            #- { item: thermostat, connect: [ { port: Command, layer: 0x1 } ] }
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
       O: { items: { each: [ {item: oxygen tank} ] } }
@@ -82,7 +82,20 @@
                 - { port: Power, layer: 0x1 }
                 - { port: Air Out, layer: 0x1 }
       H: { items: { each: [ jeffries hatch] } }
-      c: { items: { each: [ { item: air cooler, connect: [ { port: Enabled, layer: 0x4 }, { port: Power, layer: 0x1 }, { port: Air Out, layer: 0x1 } ] } ] } }
+      c:
+        items:
+          each:
+            - item: air cooler
+              connect:
+                - { port: Enabled, layer: 0x4 }
+                - { port: Power, layer: 0x1 }
+                - { port: Air Out, layer: 0x1 }
+      S:
+        items:
+          each:
+            - item: debug power source
+              connect:
+                - { port: Power, layer: 0x1 }
       d: { items: { group: data equipment } }
       P: { items: { group: power equipment } }
       G: { items: { each: [ combustion generator ] } }
@@ -116,6 +129,7 @@
             name: Cooler Enabled
           - type: power-in
             name: Power
+    - UsesElectricity: { perUse: 1 }
 
 - type: item
   name: electronics rack
@@ -172,6 +186,17 @@
           - { type: power-in, name: Power }
           - { type: data-in, name: Enabled }
           - { type: fluid-out, name: Air Out }
+    - UsesElectricity: { perUse: 300 }
+
+- type: item
+  name: debug power source
+  display: SMALL_EQUIPMENT
+  description: A hyperdense antidiamond fuel rod provides limitless power.
+  behavior:
+    - ProvidesInfinitePower: {}
+    - HasPorts:
+        ports:
+          - { type: power-out, name: Power }
 
 - type: item
   name: air cooler

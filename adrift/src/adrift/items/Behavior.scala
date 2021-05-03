@@ -51,6 +51,7 @@ object Behavior {
     "ActivatedByDataPort" -> Decoder[ActivatedByDataPort].widen,
     "DebugPrintMessages" -> Decoder[DebugPrintMessages].widen,
     "Container" -> Decoder[Container].widen,
+    "ProvidesInfinitePower" -> Decoder[ProvidesInfinitePower].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveConfiguredEncoder
@@ -86,6 +87,7 @@ object Behavior {
     case b: ActivatedByDataPort => Encoder[ActivatedByDataPort].apply(b)
     case b: DebugPrintMessages => Encoder[DebugPrintMessages].apply(b)
     case b: Container => Encoder[Container].apply(b)
+    case b: ProvidesInfinitePower => Encoder[ProvidesInfinitePower].apply(b)
   }))
 }
 

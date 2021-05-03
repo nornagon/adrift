@@ -34,6 +34,18 @@ case class GeneratesShipPower(circuit: String, amountPerTick: Int) extends Behav
   }
 }
 
+case class ProvidesInfinitePower() extends Behavior {
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case m: Message.ChargeAvailable => m.ok = true
+    case m: Message.DrawCharge =>
+    case _ =>
+  }
+}
+
 case class UsesElectricity(perUse: Int) extends Behavior {
   override def receive(
     state: GameState,
