@@ -383,62 +383,41 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
-      val Seq(top, mid, bot) = sidebarRect.cutVertical(Seq(0, 10, 22, windowHeightChars)).toSeq
-      glyphRenderer.drawBox(top)
+      import layout._
 
-      state.symptoms.take(5).zipWithIndex.foreach {
-        case (symptom, i) =>
-          glyphRenderer.drawString(top.l + 1, top.t + i + 1, symptom.description)
-      }
+      val sidebar = vbox(
+        bounds = sidebarRect,
+        children = Seq(
+          frame(contents = vbox(
+            children = state.symptoms.take(5).map(t => htext(t.description))
+          ), size = 10),
+          frame(contents = vbox(
+            children = Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
+              htext(title) +:
+                state.items.lookup(loc).map(item => htext(" " + state.itemDisplayName(item)))
+            }
+          ), size = 22),
+          frame(contents = custom { (r: GlyphRenderer, bounds: Rect) =>
+            val maxMessageAge = 300
+            val oldestMessageTime = state.currentTime - maxMessageAge
+            val wrappedLines = state.messages.filter(_._2 >= oldestMessageTime)
+              .flatMap(m => GlyphRenderer.wrapString(bounds.width * 2, Integer.MAX_VALUE, m._1).map((_, m._2)))
+            val lines = wrappedLines.slice(wrappedLines.size - bounds.height, wrappedLines.size)
+            val top = bounds.b - lines.size
+            lines.zipWithIndex.foreach {
+              case ((line, time), y) =>
+                val lineAge = state.currentTime - time
+                val color =
+                  if (lineAge < 30) Color.White
+                  else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
+                  else Color(0.2f, 0.2f, 0.2f, 1.0f)
+                r.drawHalfString(bounds.l * 2, top + y, line, fg = color)
+            }
+          })
+        )
+      )
 
-      glyphRenderer.drawBox(mid);
-      {
-        val held = state.items.lookup(InHands())
-        var y = 0
-        glyphRenderer.drawString(mid.l + 1, mid.t + 1 + y, "Held")
-        y += 1
-        held.zipWithIndex.foreach {
-          case (item, i) =>
-            glyphRenderer.drawString(
-              mid.l + 2,
-              mid.t + 1 + y + i,
-              state.itemDisplayName(item),
-              maxWidth = mid.width - 4
-            )
-        }
-        y += held.size
-        glyphRenderer.drawString(mid.l + 1, mid.t + 1 + y, "Worn")
-        y += 1
-        val worn = state.items.lookup(Worn())
-        worn.zipWithIndex.foreach {
-          case (item, i) =>
-            glyphRenderer.drawString(
-              mid.l + 2,
-              mid.t + 1 + y + i,
-              state.itemDisplayName(item),
-              maxWidth = mid.width - 4
-            )
-        }
-      }
-
-      glyphRenderer.drawBox(bot);
-      {
-        val maxMessageAge = 300
-        val oldestMessageTime = state.currentTime - maxMessageAge
-        val wrappedLines = state.messages.filter(_._2 >= oldestMessageTime)
-          .flatMap(m => GlyphRenderer.wrapString((bot.width - 2) * 2, Integer.MAX_VALUE, m._1).map((_, m._2)))
-        val lines = wrappedLines.slice(wrappedLines.size - (bot.height - 2), wrappedLines.size)
-        val top = bot.b - 1 - lines.size
-        lines.zipWithIndex.foreach {
-          case ((line, time), y) =>
-            val lineAge = state.currentTime - time
-            val color =
-              if (lineAge < 30) Color.White
-              else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
-              else Color(0.2f, 0.2f, 0.2f, 1.0f)
-            glyphRenderer.drawHalfString((bot.l + 1) * 2, top + y, line, fg = color)
-        }
-      }
+      layout.draw(glyphRenderer, sidebar)
 
       for (screen <- screens) {
         screen.render(glyphRenderer)
