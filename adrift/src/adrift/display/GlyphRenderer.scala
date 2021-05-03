@@ -1,5 +1,6 @@
 package adrift.display
 
+import adrift.display.GlyphRenderer.ColoredString
 import adrift.{Color, Rect}
 import adrift.display.glutil.{SpriteBatch, Texture}
 
@@ -92,6 +93,28 @@ class GlyphRenderer(
     for ((c, i) <- s.view.zipWithIndex) {
       if (maxWidth != 0 && i >= maxWidth) return
       drawChar(x + i, y, c, fg, bg)
+    }
+  }
+
+  def drawColoredString(
+    x: Int,
+    y: Int,
+    cs: ColoredString,
+    maxWidth: Int = 0,
+    fg: Color = Color.White,
+    bg: Color = Color.Black,
+  ): Unit = {
+    var widthRemaining = maxWidth
+    var tx = x
+    for ((s, anns) <- cs.parts) {
+      val color = anns.lastOption.map(_.fg).getOrElse(fg)
+      drawString(tx, y, s, fg = color, bg = bg, maxWidth = widthRemaining)
+      tx += s.length
+      if (maxWidth != 0) {
+        widthRemaining -= s.length
+        if (widthRemaining <= 0)
+          return
+      }
     }
   }
 
@@ -207,6 +230,7 @@ object GlyphRenderer {
     wrappedLine
   }
 
+  /** Text-wrap a colored string so it fits in |wrapLength|. */
   def wrapCS(str: ColoredString, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[ColoredString] = {
     import java.util.regex.Pattern
     import scala.util.control.Breaks._

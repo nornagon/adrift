@@ -1,8 +1,10 @@
 package adrift.display
 
+import adrift.display.GlyphRenderer.ColoredString
 import adrift.{Color, Rect}
 
 import scala.collection.mutable
+import scala.language.implicitConversions
 
 object layout {
   trait Direction
@@ -10,6 +12,8 @@ object layout {
   case object Horizontal extends Direction
 
   type RenderFn = (GlyphRenderer, Rect) => Unit
+
+  implicit def convertStringToColoredString(string: String): ColoredString = ColoredString(string)
 
   case class Box(
     direction: Direction,
@@ -19,7 +23,7 @@ object layout {
     foreground: Option[Color],
     fill: Option[Char],
     children: Seq[Box],
-    text: Option[String],
+    text: Option[ColoredString],
     render: Option[RenderFn]
   )
 
@@ -64,7 +68,7 @@ object layout {
   )
 
   def text(
-    text: String,
+    text: ColoredString,
     background: Color = null,
     foreground: Color = null,
     size: Int = 1
@@ -129,7 +133,7 @@ object layout {
         render(renderer, bounds)
       // 2b. if there's text, draw it
       for (text <- box.text)
-        renderer.drawString(bounds.l, bounds.t, text, maxWidth = bounds.width, fg = currentFg, bg = currentBg)
+        renderer.drawColoredString(bounds.l, bounds.t, text, maxWidth = bounds.width, fg = currentFg, bg = currentBg)
       // 2c. if there are children, lay them out and draw them
       if (box.children.nonEmpty) {
         val availableSize = box.direction match {
