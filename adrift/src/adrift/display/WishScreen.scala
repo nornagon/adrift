@@ -101,7 +101,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   override def render(renderer: GlyphRenderer): Unit = {
     renderer.frame(2, 2, 40, "Wish", Seq(""))
-    renderer.drawString(3, 3, input, maxWidth = 38)
-    renderer.drawString(3 + input.length, 3, "\u00db")
+    renderer.drawHalfString(3 * 2, 3, input, maxWidth = 38 * 2)
+    renderer.drawHalfString(3 * 2 + input.length, 3, "\u00db")
   }
 }
