@@ -34,7 +34,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
       Some(Command("{m}ark", () => doToggleMark(item))),
 
-      when(marked.nonEmpty)
+      when(marked.nonEmpty && state.sendMessage(item, Message.CanContainItems()).ok)
       (Command("{i}nsert", () => doInsert(item), available = !marked(item))),
 
       when(state.sendMessage(item, CanWear()).ok)

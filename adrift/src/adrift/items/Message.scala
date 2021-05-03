@@ -22,39 +22,47 @@ object Message {
   case class Conditions(var conditions: Seq[String] = Seq.empty) extends Message
   case class VisibleConditions(var conditions: Seq[String]) extends Message
 
+  case class IsFunctional(var functional: Boolean = true) extends Message
+
+  // Tools
   case class UseTool(op: ItemOperation, var ok: Boolean = false) extends Message
   case class ToolUsed(op: ItemOperation) extends Message
   case class Provides(op: ItemOperation, var provides: Boolean = false) extends Message
 
-  case class IsFunctional(var functional: Boolean = true) extends Message
-
+  // Power
   case class DrawCharge(amount: Int, var ok: Boolean = true) extends Message
   case class ChargeAvailable(amount: Int, var ok: Boolean = false) extends Message
 
+  // Plugs
   case class PlugInto(item: Item) extends Message
   case class Unplugged() extends Message
   case class CanReceivePlug(plugShape: String, var ok: Boolean = false) extends Message
   case class CanPlugInto(item: Item, var ok: Boolean = false) extends Message
 
+  // Moving items
   case class Hauled(from: Location, to: Location) extends Message
-
   case class PickedUp(var item: Item) extends Message
   case class Dropped() extends Message
 
+  // Clothing
   case class CanWear(var ok: Boolean = false) extends Message
   case class LoseHeat(var dq: Double) extends Message
 
+  // Food
   case class Eat(var calories: Int = 0) extends Message
   case class IsEdible(var edible: Boolean = false) extends Message
 
+  // Diagnosis
   case class Diagnose() extends Message
-
   case class IsDiagnosable(var diagnosable: Boolean = false, var opRequired: Option[ItemOperation] = None) extends Message
   case class IsDiagnosed(var diagnosed: Boolean = false) extends Message
 
+  // Cables
   case class IsConnected(cableType: String, layers: LayerSet, var connected: Boolean = false) extends Message
-
   case class SendDataPacket(outPort: String, value: Byte) extends Message
   case class DataPacket(layers: LayerSet, value: Byte) extends Message
   case class ReceivedDataPacket(inPort: String, value: Byte) extends Message
+
+  // Containers
+  case class CanContainItems(var ok: Boolean = false) extends Message
 }

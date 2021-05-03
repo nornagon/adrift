@@ -33,6 +33,8 @@
     - { type: synthetic fabric rag, count: 4, disassembled_with: CUTTING }
     - { type: nylon thread, count: 2, disassembled_with: CUTTING }
   display: CLOTHING
+  behavior:
+    - Container: {}
 
 - type: item
   name: flat mirror
