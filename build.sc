@@ -66,6 +66,7 @@ object adrift extends ScalaModule {
         ivy"org.lwjgl:$s:$lwjglVersion",
         ivy"org.lwjgl:$s:$lwjglVersion;classifier=natives-linux",
         ivy"org.lwjgl:$s:$lwjglVersion;classifier=natives-macos",
+        ivy"org.lwjgl:$s:$lwjglVersion;classifier=natives-windows",
       )
     }
   )
