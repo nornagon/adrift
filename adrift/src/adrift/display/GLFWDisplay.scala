@@ -426,7 +426,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
         val maxMessageAge = 300
         val oldestMessageTime = state.currentTime - maxMessageAge
         val wrappedLines = state.messages.filter(_._2 >= oldestMessageTime)
-          .flatMap(m => GlyphRenderer.wrapString(bot.width - 2, Integer.MAX_VALUE, m._1).map((_, m._2)))
+          .flatMap(m => GlyphRenderer.wrapString((bot.width - 2) * 2, Integer.MAX_VALUE, m._1).map((_, m._2)))
         val lines = wrappedLines.slice(wrappedLines.size - (bot.height - 2), wrappedLines.size)
         val top = bot.b - 1 - lines.size
         lines.zipWithIndex.foreach {
@@ -436,7 +436,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
               if (lineAge < 30) Color.White
               else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
               else Color(0.2f, 0.2f, 0.2f, 1.0f)
-            glyphRenderer.drawString(bot.l + 1, top + y, line, fg = color)
+            glyphRenderer.drawHalfString((bot.l + 1) * 2, top + y, line, fg = color)
         }
       }
 

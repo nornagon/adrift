@@ -24,6 +24,7 @@ object layout {
     fill: Option[Char],
     children: Seq[Box],
     text: Option[ColoredString],
+    halfWidth: Boolean = false,
     render: Option[RenderFn]
   )
 
@@ -84,6 +85,24 @@ object layout {
     render = None,
   )
 
+  def htext(
+    text: ColoredString,
+    background: Color = null,
+    foreground: Color = null,
+    size: Int = 1
+  ): Box = Box(
+    direction = Horizontal,
+    bounds = None,
+    background = Option(background),
+    foreground = Option(foreground),
+    fill = None,
+    size = size,
+    children = Seq.empty,
+    text = Some(text),
+    halfWidth = true,
+    render = None,
+  )
+
   def frame(contents: Box, size: Int = 0): Box = vbox(
     size = size,
     children = Seq(vbox(
@@ -132,8 +151,13 @@ object layout {
       for (render <- box.render)
         render(renderer, bounds)
       // 2b. if there's text, draw it
-      for (text <- box.text)
-        renderer.drawColoredString(bounds.l, bounds.t, text, maxWidth = bounds.width, fg = currentFg, bg = currentBg)
+      for (text <- box.text) {
+        if (box.halfWidth) {
+          renderer.drawHalfColoredString(bounds.l * 2, bounds.t, text, maxWidth = bounds.width * 2, fg = currentFg, bg = currentBg)
+        } else {
+          renderer.drawColoredString(bounds.l, bounds.t, text, maxWidth = bounds.width, fg = currentFg, bg = currentBg)
+        }
+      }
       // 2c. if there are children, lay them out and draw them
       if (box.children.nonEmpty) {
         val availableSize = box.direction match {

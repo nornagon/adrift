@@ -56,6 +56,38 @@ class GlyphRenderer(
     )
   }
 
+  def drawHalfChar(
+    halfX: Int,
+    y: Int,
+    c: Int,
+    fg: Color = Color.White,
+    bg: Color = Color.Black
+  ): Unit = {
+    if (bg.a != 0) {
+      // 0xdb is the full white square ◻️
+      val cx = 0xdb % tilesPerRow
+      val cy = 0xdb / tilesPerRow
+      spriteBatch.drawRegion(
+        font,
+        cx * tileWidth, cy * tileHeight,
+        tileWidth, tileHeight,
+        halfX * screenTileWidth / 2, y * screenTileHeight,
+        screenTileWidth / 2, screenTileHeight,
+        bg
+      )
+    }
+    val cx = c % tilesPerRow
+    val cy = c / tilesPerRow
+    spriteBatch.drawRegion(
+      font,
+      cx * tileWidth, cy * tileHeight,
+      tileWidth, tileHeight,
+      halfX * screenTileWidth / 2, y * screenTileHeight,
+      screenTileWidth / 2, screenTileHeight,
+      fg
+    )
+  }
+
   def drawBox(rect: Rect, fg: Color = Color.White, bg: Color = Color.Black): Unit =
     drawBox(rect.l, rect.t, rect.width, rect.height, fg, bg)
   def drawBox(x: Int, y: Int, w: Int, h: Int): Unit = drawBox(x, y, w, h, Color.White, Color.Black)
@@ -96,6 +128,20 @@ class GlyphRenderer(
     }
   }
 
+  def drawHalfString(
+    halfX: Int,
+    y: Int,
+    s: String,
+    maxWidth: Int = 0,
+    fg: Color = Color.White,
+    bg: Color = Color.Black
+  ): Unit = {
+    for ((c, i) <- s.view.zipWithIndex) {
+      if (maxWidth != 0 && i >= maxWidth) return
+      drawHalfChar(halfX + i, y, c, fg, bg)
+    }
+  }
+
   def drawColoredString(
     x: Int,
     y: Int,
@@ -109,6 +155,28 @@ class GlyphRenderer(
     for ((s, anns) <- cs.parts) {
       val color = anns.lastOption.map(_.fg).getOrElse(fg)
       drawString(tx, y, s, fg = color, bg = bg, maxWidth = widthRemaining)
+      tx += s.length
+      if (maxWidth != 0) {
+        widthRemaining -= s.length
+        if (widthRemaining <= 0)
+          return
+      }
+    }
+  }
+
+  def drawHalfColoredString(
+    halfX: Int,
+    y: Int,
+    cs: ColoredString,
+    maxWidth: Int = 0,
+    fg: Color = Color.White,
+    bg: Color = Color.Black,
+  ): Unit = {
+    var widthRemaining = maxWidth
+    var tx = halfX
+    for ((s, anns) <- cs.parts) {
+      val color = anns.lastOption.map(_.fg).getOrElse(fg)
+      drawHalfString(tx, y, s, fg = color, bg = bg, maxWidth = widthRemaining)
       tx += s.length
       if (maxWidth != 0) {
         widthRemaining -= s.length

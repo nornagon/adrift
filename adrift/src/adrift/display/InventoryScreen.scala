@@ -27,7 +27,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       when(
         (location match { case Inside(_) | Worn() | OnFloor(_) => true ; case _ => false }) &&
         state.sendMessage(item, Message.CanPickUp()).ok)
-      (Command("{h}old", () => doGet(item))),
+      (Command("{g}et", () => doGet(item))),
 
       when(location match { case Inside(_) | InHands() | Worn() => true ; case _ => false })
       (Command("{d}rop", () => doDrop(item))),
@@ -100,13 +100,16 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
     val bounds = Rect.centeredAt(renderer.bounds.center, 40, 40)
     val actions = selectedItem map { commands }
-    val actionGuide = vbox(children = actions.map { actions =>
-      val actionStrLines = wrapCS(
-        actions.map(_.display).reduce(_ + ColoredString(" ", Seq.empty) + _),
-        bounds.width - 2
-      )
-      actionStrLines.map(text(_, foreground = disabledGreen))
-    }.getOrElse(Seq.empty))
+    val actionGuide = actions match {
+      case Some(actions) =>
+        val actionStrLines = wrapCS(
+          actions.map(_.display).reduce(_ + ColoredString(" ", Seq.empty) + _),
+          bounds.width - 2
+        )
+        vbox(children = actionStrLines.map(htext(_, foreground = disabledGreen)), size = actionStrLines.size)
+      case None =>
+        vbox()
+    }
 
     layout.draw(renderer, hbox(
       bounds = bounds,
@@ -117,7 +120,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
         vbox(
           children = sections.zip(items).flatMap {
             case ((title, location), items) =>
-              Seq(text(title, foreground = disabledGreen)) ++ items.flatMap { item =>
+              Seq(htext(title, foreground = disabledGreen)) ++ items.flatMap { item =>
                 val indentation = countContainers(item)
                 val fg =
                   if (selectedItem.contains(item))
@@ -126,9 +129,9 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
                     markedBlue
                   else
                     lightGreen
-                Seq(text(" " * indentation + state.itemDisplayName(item), foreground = fg))
+                Seq(htext(" " * indentation + state.itemDisplayName(item), foreground = fg))
               }
-          } :+ actionGuide
+          } :+ vbox(size = 0) :+ actionGuide
         ),
         vbox(size = 1, fill = '\u00de'),
       ))
