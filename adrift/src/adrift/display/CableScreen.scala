@@ -134,9 +134,6 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case Data => level.dataCables
       }
       val layers = new LayerSet(cables(x, y))
-      if (y == 0) {
-        println(cables(x, y))
-      }
       val queryTypes = displaying match {
         case Power => Seq("power-in", "power-out")
         case Data => Seq("data-in", "data-out")
