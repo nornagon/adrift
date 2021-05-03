@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW._
 
 import scala.collection.mutable
 
+//noinspection TypeAnnotation
 object CP437 {
   object BoxDrawing {
     // The CP437 box drawing characters are arranged in this ridiculous way because on the original IBM PC MDA adapter,
@@ -304,7 +305,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
             case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))
 
               // Inventory
-            case GLFW_KEY_I => pushScreen(new ContainerScreen(this, lastState, OnFloor(lastState.player)))
+            case GLFW_KEY_I => pushScreen(new InventoryScreen(this, lastState))
 
               // Assemble
             case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
@@ -352,7 +353,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
   }
 
   val sidebarWidth = 20
-  val screenRect = Rect(0, 0, windowWidthChars, windowHeightChars)
+  val screenRect: Rect = Rect(0, 0, windowWidthChars, windowHeightChars)
   val Seq(worldViewRect, sidebarRect) = screenRect.cutHorizontal(Seq(0, screenRect.width - sidebarWidth, screenRect.width)).to(Seq)
 
   def worldRect(state: GameState): Rect = {
@@ -386,9 +387,8 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       glyphRenderer.drawBox(top)
 
       state.symptoms.take(5).zipWithIndex.foreach {
-        case(symptom,i) => {
+        case (symptom, i) =>
           glyphRenderer.drawString(top.l + 1, top.t + i + 1, symptom.description)
-        }
       }
 
       glyphRenderer.drawBox(mid);

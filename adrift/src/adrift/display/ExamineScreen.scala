@@ -49,6 +49,7 @@ object UI {
     val darkGreen: Color = fromBytes(32, 64, 0)
     val red: Color = fromBytes(255, 51, 51)
     val disabledRed: Color = fromBytes(102, 0, 0)
+    val markedBlue: Color = fromBytes(51, 153, 255)
   }
 }
 
@@ -82,7 +83,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
       missingParts.map { case (k, c) => MissingItemEntry(k, c) }
 
   case class Command(name: String, execute: () => Unit, available: Boolean = true) {
-    private val pat = raw"(.*)\{(.)\}(.*)".r
+    private val pat = raw"(.*)\{(.)}(.*)".r
     private def color = if (available) disabledGreen else disabledRed
     private def highlightColor = if (available) lightGreen else red
     val (char, display) = name match {
@@ -179,7 +180,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
               val json = Serialization.encodeItem(item)
               println(io.circe.yaml.printer.print(json))
             case MissingItemEntry(kind, count) =>
-              println(s"Missing ${kind} ${count}")
+              println(s"Missing $kind $count")
           }
         case k =>
           val selectedItem = menuEntries(selected)
@@ -199,6 +200,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     var nextY = 0
     def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen, wrap: Boolean = false): Unit = {
       if (wrap) {
+        //noinspection RedundantDefaultArgument
         for (line <- GlyphRenderer.wrap(s, width - 2))
           sprintln(line, fg = fg, bg = bg, wrap = false)
       } else {

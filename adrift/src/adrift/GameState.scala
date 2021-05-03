@@ -7,6 +7,7 @@ import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
 import adrift.items._
 import adrift.items.behaviors.{MissingParts, PartInstalled}
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.Random
 
@@ -432,9 +433,28 @@ class GameState(var data: Data, val random: Random) {
           case _ =>
             putMessage("You can't put that down.")
         }
-
       case Action.MoveItem(item, toLocation) =>
-        items.move(item, toLocation)
+        toLocation match {
+          case Inside(container) =>
+            @tailrec
+            def containedWithin(a: Item, b: Item): Boolean = {
+              items.lookup(a) match {
+                case Inside(other) =>
+                  other == b || containedWithin(other, b)
+                case _ => false
+              }
+            }
+            if (item == container || containedWithin(container, item)) {
+              putMessage(s"You can't put ${itemDisplayName(item)} inside itself.")
+            } else {
+              putMessage(s"You put the ${itemDisplayName(item)} into the ${itemDisplayName(container)}.")
+              items.move(item, toLocation)
+            }
+            // TODO: handle other cases better
+          case _ =>
+            items.move(item, toLocation)
+        }
+        elapse(5)
 
       case Action.Plug(item, into) =>
         items.lookup(item) match {
@@ -447,9 +467,13 @@ class GameState(var data: Data, val random: Random) {
         }
 
       case Action.Wear(item) =>
-        items.move(item, Worn())
-        elapse(5)
-        putMessage(s"You put on the ${itemDisplayName(item)}.")
+        if (!sendMessage(item, Message.CanWear()).ok)
+          putMessage(s"You can't wear that.")
+        else {
+          items.move(item, Worn())
+          elapse(5)
+          putMessage(s"You put on the ${itemDisplayName(item)}.")
+        }
 
       case Action.TakeOff(item) =>
         items.move(item, OnFloor(player))
