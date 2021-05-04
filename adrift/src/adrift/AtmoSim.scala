@@ -23,7 +23,7 @@ object AtmoSim {
   //            = c - 4*a*c + a*(l + r + u + d)
   //            = c + a*(l + r + u + d - 4 * c)
   //            = c + a * ((l-c) + (r-c) + (u-c) + (d-c))
-  // i.e. heat at t+1 is increased by an amount proportional to the sum of the
+  // i.e. temperature at t+1 is increased by an amount proportional to the sum of the
   // differences between the cell and its neighbors.
   // a must be <= 0.5 for a stable solution.
   // i.e. dt <= (dx * dx) / 2
@@ -36,8 +36,9 @@ object AtmoSim {
   def diffusionPass: RenderPass = RenderPass.fragment("""
     #version 140
 
-    uniform sampler2D heat;
+    uniform sampler2D temperature;
     uniform sampler2D heatTransfer;
+    uniform sampler2D heatCapacity;
     in vec2 vTexCoord;
 
     out vec4 res;
@@ -49,13 +50,13 @@ object AtmoSim {
     float a = dt / (dx * dx);
 
     void main() {
-      ivec2 texSize = textureSize(heat, 0);
+      ivec2 texSize = textureSize(temperature, 0);
       vec3 texelSize = vec3(1.0 / texSize.x, 1.0 / texSize.y, 0.0);
-      vec4 l = texture(heat, vTexCoord - texelSize.xz);
-      vec4 r = texture(heat, vTexCoord + texelSize.xz);
-      vec4 u = texture(heat, vTexCoord - texelSize.zy);
-      vec4 d = texture(heat, vTexCoord + texelSize.zy);
-      vec4 c = texture(heat, vTexCoord);
+      vec4 l = texture(temperature, vTexCoord - texelSize.xz);
+      vec4 r = texture(temperature, vTexCoord + texelSize.xz);
+      vec4 u = texture(temperature, vTexCoord - texelSize.zy);
+      vec4 d = texture(temperature, vTexCoord + texelSize.zy);
+      vec4 c = texture(temperature, vTexCoord);
 
       vec4 hc = texture(heatTransfer, vTexCoord);
       vec4 hl = texture(heatTransfer, vTexCoord - texelSize.xz) * hc;
@@ -63,36 +64,52 @@ object AtmoSim {
       vec4 hu = texture(heatTransfer, vTexCoord - texelSize.zy) * hc;
       vec4 hd = texture(heatTransfer, vTexCoord + texelSize.zy) * hc;
 
-      res = c + a * ( (l - c) * hl + (r - c) * hr + (u - c) * hu + (d - c) * hd );
+      vec4 capacity = texture(heatCapacity, vTexCoord);
+
+      res = c + a * ( (l - c) * hl + (r - c) * hr + (u - c) * hu + (d - c) * hd ) / capacity;
     }
   """)
 }
 
 class AtmoSim(val width: Int, val height: Int) {
   lazy private val diffusionPass = AtmoSim.diffusionPass
+  private val transferTexture = Texture.emptyFloat(width, height)
+  private val heatCapacityTexture = Texture.emptyFloat(width, height)
 
-  //val heat = new Grid[Float](width, height)(250f)
+  def updateTransferTexture(grid: Grid[Float]): Unit = {
+    assert(grid.width == width && grid.height == height)
+    transferTexture.uploadFloat(grid.cells.toArray)
+  }
 
-  def step(heat: Grid[Float]): Unit = {
+  def updateHeatCapacityTexture(grid: Grid[Float]): Unit = {
+    assert(grid.width == width && grid.height == height)
+    heatCapacityTexture.uploadFloat(grid.cells.toArray)
+  }
+
+  def step(temperature: Grid[Float]): Unit = {
     // 1. copy from output to input
     //    (also: update map if necessary)
     // 2. run sim
     // 3. read
 
-    val width = heat.width
-    val height = heat.height
+    val width = temperature.width
+    val height = temperature.height
 
-    val source = Texture.fromFloatArray(width, height, heat.cells.toArray)
+    val source = Texture.fromFloatArray(width, height, temperature.cells.toArray)
     glCheckError()
     val target = new Framebuffer(Texture.emptyFloat(width, height))
     glCheckError()
-    diffusionPass.renderToFramebuffer(Map("heat" -> source), target)
+    diffusionPass.renderToFramebuffer(
+      Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
+      target
+    )
     glCheckError()
     val buf = target.texture.readFloat()
     val arr = new Array[Float](width * height)
     buf.get(arr)
-    println(arr.toSeq.slice(0, 32))
-    for (i <- heat.cells.indices) heat.cells(i) = arr(i)
+    //println(temperature.cells.slice(0, 32))
+    //println(arr.toSeq.slice(0, 32))
+    for (i <- temperature.cells.indices) temperature.cells(i) = arr(i)
     source.dispose()
     target.dispose()
     glCheckError()
@@ -216,9 +233,10 @@ object AtmoSimTest {
     var fbs = (fb1, fb2)
 
     val ht = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw, fbh)((i, j) => if (i == fbw/2 && j > fbh/4 && j < fbh*3/4) 0.1f else 1f).flatten)
+    val hc = Texture.fromFloatArray(fbw, fbh, Array.tabulate(fbw, fbh)((i, j) => if (j < fbw/4) 1f else 10f).flatten)
 
     def step(): Unit = {
-      pass.renderToFramebuffer(Map("heat" -> fbs._1.texture, "heatTransfer" -> ht), fbs._2)
+      pass.renderToFramebuffer(Map("temperature" -> fbs._1.texture, "heatTransfer" -> ht, "heatCapacity" -> hc), fbs._2)
       fbs = fbs.swap
     }
 

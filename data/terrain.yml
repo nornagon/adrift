@@ -10,14 +10,14 @@
   opaque: false
   walkable: true
   display: FLOOR
-  heatCapacity: 0.1
+  heatCapacity: 1
 
 - type: terrain
   name: reactor floor
   opaque: false
   walkable: true
   display: REACTOR_FLOOR
-  heatCapacity: 0.1
+  heatCapacity: 1
 
 
 - type: terrain

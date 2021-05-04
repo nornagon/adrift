@@ -25,7 +25,7 @@ object Serialization {
     player: Location,
     currentTime: Int,
     messages: Seq[(String, Int)],
-    bodyTemp: Double
+    bodyTemp: Float
   ) {
     def toGameState(data: Data): GameState = {
       val state = new GameState(data, random)
@@ -213,7 +213,7 @@ object Serialization {
       powerCables <- c.get[CylinderGrid[Int]]("powerCables")
       dataCables <- c.get[CylinderGrid[Int]]("dataCables")
       fluidCables <- c.get[CylinderGrid[Int]]("fluidCables")
-      temperature <- c.get[CylinderGrid[Double]]("temperature")
+      temperature <- c.get[CylinderGrid[Float]]("temperature")
       gasComposition <- c.get[CylinderGrid[GasComposition]]("gasComposition")
     } yield
       Level(terrain, powerCables, dataCables, fluidCables, temperature, gasComposition)

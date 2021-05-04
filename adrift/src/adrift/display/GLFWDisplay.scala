@@ -389,7 +389,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
         bounds = sidebarRect,
         children = Seq(
           frame(contents = vbox(
-            children = state.symptoms.take(5).map(t => htext(t.description))
+            children = state.symptoms.take(5).map(t => htext(t.description)) ++ (if (state.showTempDebug) Seq(htext(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty)
           ), size = 10),
           frame(contents = vbox(
             children = Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
@@ -462,9 +462,9 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       if (state.showTempDebug && level.temperature.contains(x, y)) {
         val temp = level.temperature(x, y)
         val color = if (temp > 273)
-          Color((1 - math.exp(-(temp - 273)/30)).toFloat, 0, 0, 0.3f)
+          Color((1 - math.exp(-(temp - 273)/10)).toFloat, 0, 0, 0.8f)
         else
-          Color(0, 0, (1 - math.exp((temp - 273)/30)).toFloat, 0.3f)
+          Color(0, 0, (1 - math.exp((temp - 273)/10)).toFloat, 0.8f)
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
 

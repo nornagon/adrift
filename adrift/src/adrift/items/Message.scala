@@ -46,7 +46,7 @@ object Message {
 
   // Clothing
   case class CanWear(var ok: Boolean = false) extends Message
-  case class LoseHeat(var dq: Double) extends Message
+  case class LoseHeat(var dq: Float) extends Message
 
   // Food
   case class Eat(var calories: Int = 0) extends Message

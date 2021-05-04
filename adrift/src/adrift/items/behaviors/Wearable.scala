@@ -3,7 +3,7 @@ package adrift.items.behaviors
 import adrift.GameState
 import adrift.items.{Behavior, Item, Message}
 
-case class Wearable(location: Seq[String], warmth: Double) extends Behavior {
+case class Wearable(location: Seq[String], warmth: Float) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,

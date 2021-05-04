@@ -108,6 +108,18 @@ class Texture(textureSource: TextureSource) {
   }
 
   def dispose(): Unit = glDeleteTextures(id)
+
+  def uploadFloat(fb: Array[Float]): Unit = {
+    bind()
+    new FloatTextureSource(width, height, fb).upload()
+    glCheckError()
+  }
+
+  def uploadFloat4(fb: Array[Float]): Unit = {
+    bind()
+    new Float4TextureSource(width, height, fb).upload()
+    glCheckError()
+  }
 }
 
 object Texture {

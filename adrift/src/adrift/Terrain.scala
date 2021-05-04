@@ -7,8 +7,8 @@ case class Terrain(
   permeable: Boolean = true,
   connects: Boolean = false,
   display: String,
-  heatCapacity: Double = 1d,
-  heatTransfer: Double = 1d,
+  heatCapacity: Float = 1f,
+  heatTransfer: Float = 1f,
 ) {
   require(0 <= heatTransfer && heatTransfer <= 1, s"heatTransfer must be between 0 and 1")
 }

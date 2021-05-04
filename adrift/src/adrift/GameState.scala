@@ -29,7 +29,7 @@ case class Level(
   var powerCables: Grid[Int],
   var dataCables: Grid[Int],
   var fluidCables: Grid[Int],
-  var temperature: Grid[Double],
+  var temperature: Grid[Float],
   var gasComposition: Grid[GasComposition],
 ) {
   val width: Int = terrain.width
@@ -39,6 +39,24 @@ case class Level(
   assert(height == temperature.height)
   assert(height == gasComposition.height)
 
+  private val atmoSim = new AtmoSim(width, height)
+
+  def updateAtmoSimStatics(isPermeable: (Int, Int) => Boolean): Unit = {
+    val grid = new Grid[Float](width, height)(0)
+    for ((x, y) <- grid.indices) {
+      grid(x, y) = terrain(x, y).heatTransfer.toFloat
+    }
+    atmoSim.updateTransferTexture(grid)
+    for ((x, y) <- grid.indices) {
+      grid(x, y) = terrain(x, y).heatCapacity.toFloat
+    }
+    atmoSim.updateHeatCapacityTexture(grid)
+  }
+  def updateHeat(dt: Double = 1, isPermeable: (Int, Int) => Boolean)(implicit random: Random): Unit = {
+    atmoSim.step(temperature)
+  }
+
+  /*
   def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
     val terA = terrain(a)
     val terB = terrain(b)
@@ -50,6 +68,7 @@ case class Level(
     if (temperature.contains(a)) temperature(a) -= dq / terA.heatCapacity
     if (temperature.contains(b)) temperature(b) += dq / terB.heatCapacity
   }
+   */
 
   def moveGas(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
     val gca = gasComposition(a)
@@ -60,6 +79,7 @@ case class Level(
     gasComposition(b) += dpp
   }
 
+  /*
   def updateHeat(dt: Double = 1, isPermeable: (Int, Int) => Boolean)(implicit random: Random): Unit = {
     def randomAdj(p: (Int, Int)): (Int, Int) = {
       val (x, y) = p
@@ -102,6 +122,7 @@ case class Level(
       }
     }
   }
+   */
 }
 object Level {
   def emptyCylinder(data: Data, width: Int, height: Int)(implicit random: Random): Level =
@@ -110,7 +131,7 @@ object Level {
       powerCables = new CylinderGrid(width, height)(0),
       dataCables = new CylinderGrid(width, height)(0),
       fluidCables = new CylinderGrid(width, height)(0),
-      temperature = new CylinderGrid(width, height)(random.between(250d, 270d)),
+      temperature = new CylinderGrid(width, height)(random.between(250f, 270f)),
       gasComposition = new CylinderGrid(width, height)(GasComposition.earthLike)
     )
   def emptySquare(data: Data, width: Int, height: Int)(implicit random: Random): Level =
@@ -119,7 +140,7 @@ object Level {
       powerCables = new Grid(width, height)(0),
       dataCables = new Grid(width, height)(0),
       fluidCables = new Grid(width, height)(0),
-      temperature = new Grid(width, height)(random.between(250d, 270d)),
+      temperature = new Grid(width, height)(random.between(250f, 270f)),
       gasComposition = new Grid(width, height)(GasComposition.earthLike)
     )
 }
@@ -129,7 +150,7 @@ class GameState(var data: Data, val random: Random) {
   var levels = mutable.Map.empty[LevelId, Level]
   var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
-  var bodyTemp: Double = 310
+  var bodyTemp: Float = 310
   var thermalBodyState: ThermalBodyState = Comfortable
   var breathingBodyState: BreathingBodyState = Normal
   var internalCalories: Int = 8000
@@ -313,7 +334,7 @@ class GameState(var data: Data, val random: Random) {
       items.all.foreach(sendMessage(_, Message.Tick))
       val start = System.nanoTime()
       updateHeat(player.levelId)
-      println(f"heat+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
+      println(f"temperature+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
       checkBodyTemp()
       internalCalories -= 1
       checkHunger()
@@ -773,6 +794,10 @@ class GameState(var data: Data, val random: Random) {
   def refresh(): Unit = {
     recomputePermeabilityCache()
     recalculateFOV()
+    for ((levelId, level) <- levels) {
+      val permeability = isPermeableCache(levelId)
+      level.updateAtmoSimStatics((x: Int, y: Int) => permeability(x, y))
+    }
     println("method 1")
     for (i <- 1 to 10) {
       val begin = System.nanoTime()
@@ -954,7 +979,7 @@ class GameState(var data: Data, val random: Random) {
     x
   }
 
-  def updateHeat(levelId: LevelId, dt: Double = 1): Unit = {
+  def updateHeat(levelId: LevelId, dt: Float = 1): Unit = {
     val level = levels(levelId)
     processPermeabilityUpdateQueue()
     val permeability = isPermeableCache(levelId)
@@ -964,7 +989,7 @@ class GameState(var data: Data, val random: Random) {
     val playerHeatCapacity = 4 // ~water
 
     val playerTileTemp = level.temperature(player.x, player.y)
-    val k = 0.01
+    val k = 0.01f
     val w = (bodyTemp - playerTileTemp) * k
 
     val dq = broadcastToLocation(Worn(), Message.LoseHeat(dq = w * dt / 20)).dq
@@ -984,8 +1009,8 @@ class GameState(var data: Data, val random: Random) {
     //
     // TODO: metabolising to produce heat should take calories from stored
     // energy once food is implemented
-    val maxMetabolismDq = 0.01
-    val metabolismDq = math.max(0, math.min((310 - bodyTemp) * 0.9, maxMetabolismDq))
+    val maxMetabolismDq = 0.01f
+    val metabolismDq = math.max(0, math.min((310 - bodyTemp) * 0.9f, maxMetabolismDq))
     bodyTemp += metabolismDq / playerHeatCapacity
   }
 }

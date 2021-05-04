@@ -3,7 +3,7 @@ package adrift.items.behaviors
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, OnFloor}
 
-case class Heater(var active: Boolean = true, dq: Double = 0.5) extends Behavior {
+case class Heater(var active: Boolean = true, dq: Float = 5f) extends Behavior {
   override def receive(
     state: GameState,
     self: Item,
