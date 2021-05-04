@@ -103,7 +103,8 @@ class AtmoSim(val width: Int, val height: Int) {
     heatCapacityTexture.uploadFloat4(combined)
   }
 
-  def step(temperature: Grid[Float], gasComposition: Grid[GasComposition]): Unit = {
+  def step(atmosphere: Array[Float]): Unit = {
+    assert(atmosphere.length == this.width * this.height * 4)
     // 1. copy from output to input
     //    (also: update map if necessary)
     // 2. run sim
@@ -114,19 +115,12 @@ class AtmoSim(val width: Int, val height: Int) {
     val wasBlendingEnabled = glIsEnabled(GL_BLEND)
     glDisable(GL_BLEND)
 
-    val width = temperature.width
-    val height = temperature.height
-
-    val combined = new Array[Float](width * height * 4)
-    for (y <- 0 until temperature.height; x <- 0 until temperature.width) {
-      val i = (y * width + x) * 4
-      combined(i + 0) = temperature(x, y)
-      combined(i + 1) = gasComposition(x, y).oxygen
-      combined(i + 2) = gasComposition(x, y).carbonDioxide
-      combined(i + 3) = gasComposition(x, y).nitrogen
-    }
-    val source = Texture.fromFloat4Array(width, height, combined)
+    glFinish()
+    val start = System.nanoTime()
+    val source = Texture.fromFloat4Array(width, height, atmosphere)
     glCheckError()
+    glFinish()
+    println(f"  uploading took ${(System.nanoTime() - start) / 1e6}%.2f ms")
     val target = new Framebuffer(Texture.emptyFloat4(width, height))
     glCheckError()
     diffusionPass.renderToFramebuffer(
@@ -134,14 +128,15 @@ class AtmoSim(val width: Int, val height: Int) {
       target
     )
     glCheckError()
+    val start2 = System.nanoTime()
+    glFinish()
+    println(f"  glFinish took ${(System.nanoTime() - start2) / 1e6}%.2f ms")
+    val start3 = System.nanoTime()
     val buf = target.texture.readFloat4()
-    val arr = new Array[Float](width * height * 4)
-    buf.get(arr)
-    for ((x, y) <- temperature.indices) {
-      val i = (y * width + x) * 4
-      temperature(x, y) = arr(i)
-      gasComposition(x, y) = GasComposition(arr(i + 1), arr(i + 2), arr(i + 3))
-    }
+    println(f"  copy back took ${(System.nanoTime() - start3) / 1e6}%.2f ms")
+    val start5 = System.nanoTime()
+    buf.get(atmosphere)
+    println(f"  copy took ${(System.nanoTime() - start5) / 1e6}%.2f ms")
     source.dispose()
     target.dispose()
     glCheckError()

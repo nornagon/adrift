@@ -68,10 +68,12 @@ case class Diffuser() extends Behavior {
   ): Unit = message match {
     case m@PumpGas(gas) =>
       val loc = state.getItemTile(self)
-      if ((gas + state.levels(loc.levelId).gasComposition(loc.x, loc.y)).minPressure < 0) {
+      val level = state.levels(loc.levelId)
+      if ((gas + level.gasComposition(loc.x, loc.y)).minPressure < 0) {
         m.gas = GasComposition.zero
       } else {
-        state.levels(loc.levelId).gasComposition(loc.x, loc.y) += gas
+        val gc = level.gasComposition(loc.x, loc.y)
+        level.setGasComposition(loc.x, loc.y, gc + gas)
       }
     case _ =>
   }

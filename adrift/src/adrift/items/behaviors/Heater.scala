@@ -18,7 +18,8 @@ case class Heater(var active: Boolean = true, dq: Float = 5f) extends Behavior {
         case OnFloor(loc) =>
           if (state.isFunctional(self)) {
             state.sendMessage(self, Message.ToolUsed(null))
-            state.levels(loc.levelId).temperature(loc.xy) += dq / state.levels(loc.levelId).terrain(loc.xy).heatCapacity
+            val level = state.levels(loc.levelId)
+            level.setTemperature(loc.x, loc.y, level.temperature(loc.xy) + dq / level.terrain(loc.xy).heatCapacity)
           }
         case _ =>
       }

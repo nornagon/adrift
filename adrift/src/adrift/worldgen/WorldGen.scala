@@ -12,8 +12,8 @@ import scala.util.Random
 case class WorldGen(data: Data)(implicit random: Random) {
   def generateEmptyWorld(): GameState = {
     val state = new GameState(data, new Random(random.nextLong()))
-    val width = 50
-    val height = 50
+    val width = 360
+    val height = 270
 
     val levelId = LevelId("main")
     val level = Level.emptySquare(data, width, height)

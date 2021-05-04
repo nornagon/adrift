@@ -55,9 +55,13 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
             case "showcable" =>
               state.showCableDebug = !state.showCableDebug
             case setGas("oxygen", pp) =>
-              state.levels(state.player.levelId).gasComposition(state.player.x, state.player.y) = state.levels(state.player.levelId).gasComposition(state.player.x, state.player.y).copy(oxygen = pp.toFloat)
+              val level = state.levels(state.player.levelId)
+              level.setGasComposition(
+                state.player.x, state.player.y,
+                level.gasComposition(state.player.x, state.player.y).copy(oxygen = pp.toFloat))
             case setTemp(t) =>
-              state.levels(state.player.levelId).temperature(state.player.x, state.player.y) = t.toFloat
+              val level = state.levels(state.player.levelId)
+              level.setTemperature(state.player.x, state.player.y, t.toFloat)
             case item(name) =>
               if (state.data.itemGroups.contains(name)) {
                 state.sampleItem(state.data.itemGroups(name).choose).foreach(item => {

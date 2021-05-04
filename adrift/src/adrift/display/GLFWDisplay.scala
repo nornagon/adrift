@@ -457,7 +457,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
       val level = state.levels(levelId)
 
-      if (state.showGasDebug && level.gasComposition.contains(x, y)) {
+      if (state.showGasDebug && level.terrain.contains(x, y)) {
         val gc = level.gasComposition(x, y)
         val (min, max) = (20, 25)
         val gradient = Gradient(
@@ -468,7 +468,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, fg = color, bg = Color(0f, 0f, 0f, 0f))
       }
 
-      if (state.showTempDebug && level.temperature.contains(x, y)) {
+      if (state.showTempDebug && level.terrain.contains(x, y)) {
         val temp = level.temperature(x, y)
         val color = if (temp > 273)
           Color((1 - math.exp(-(temp - 273)/10)).toFloat, 0, 0, 0.8f)
