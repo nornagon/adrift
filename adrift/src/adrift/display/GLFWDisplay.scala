@@ -389,7 +389,11 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
         bounds = sidebarRect,
         children = Seq(
           frame(contents = vbox(
-            children = state.symptoms.take(5).map(t => htext(t.description)) ++ (if (state.showTempDebug) Seq(htext(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty)
+            children = state.symptoms.take(5).map(t => htext(t.description)) ++
+              (if (state.showTempDebug)
+                Seq(htext(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
+              (if (state.showGasDebug)
+                Seq(htext(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
           ), size = 10),
           frame(contents = vbox(
             children = Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
@@ -455,8 +459,13 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
       if (state.showGasDebug && level.gasComposition.contains(x, y)) {
         val gc = level.gasComposition(x, y)
-        val color = Color(0, 0, gc.oxygen.toFloat / 15, 0.3f)
-        renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
+        val (min, max) = (20, 25)
+        val gradient = Gradient(
+          Seq(Color.fromHex("#fee8c8"), Color.fromHex("#fdbb84"), Color.fromHex("#e34a33")).map(_.get)
+        )
+        val t = (gc.oxygen - min) / (max - min)
+        val color = gradient.sample(t).copy(a = 0.8f)
+        renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, fg = color, bg = Color(0f, 0f, 0f, 0f))
       }
 
       if (state.showTempDebug && level.temperature.contains(x, y)) {

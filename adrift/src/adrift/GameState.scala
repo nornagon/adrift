@@ -44,85 +44,18 @@ case class Level(
   def updateAtmoSimStatics(isPermeable: (Int, Int) => Boolean): Unit = {
     val grid = new Grid[Float](width, height)(0)
     for ((x, y) <- grid.indices) {
-      grid(x, y) = terrain(x, y).heatTransfer.toFloat
+      grid(x, y) = terrain(x, y).heatTransfer
     }
-    atmoSim.updateTransferTexture(grid)
+    atmoSim.updateTransferTexture(grid, (x, y) => if (isPermeable(x, y)) 1 else 0)
     for ((x, y) <- grid.indices) {
-      grid(x, y) = terrain(x, y).heatCapacity.toFloat
+      grid(x, y) = terrain(x, y).heatCapacity
     }
     atmoSim.updateHeatCapacityTexture(grid)
   }
-  def updateHeat(dt: Double = 1, isPermeable: (Int, Int) => Boolean)(implicit random: Random): Unit = {
-    atmoSim.step(temperature)
-  }
 
-  /*
-  def moveHeat(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
-    val terA = terrain(a)
-    val terB = terrain(b)
-    val ta = temperature(a)
-    val tb = temperature(b)
-    val k = terA.heatTransfer * terB.heatTransfer
-    val w = (ta - tb) * k
-    val dq = w * dt
-    if (temperature.contains(a)) temperature(a) -= dq / terA.heatCapacity
-    if (temperature.contains(b)) temperature(b) += dq / terB.heatCapacity
+  def updateHeat(dt: Double = 1)(implicit random: Random): Unit = {
+    atmoSim.step(temperature, gasComposition)
   }
-   */
-
-  def moveGas(dt: Double, a: (Int, Int), b: (Int, Int)): Unit = {
-    val gca = gasComposition(a)
-    val gcb = gasComposition(b)
-    val w = (gca - gcb) * 0.5
-    val dpp = w * dt
-    gasComposition(a) -= dpp
-    gasComposition(b) += dpp
-  }
-
-  /*
-  def updateHeat(dt: Double = 1, isPermeable: (Int, Int) => Boolean)(implicit random: Random): Unit = {
-    def randomAdj(p: (Int, Int)): (Int, Int) = {
-      val (x, y) = p
-      random.between(0, 4) match {
-        case 0 => (x - 1, y)
-        case 1 => (x + 1, y)
-        case 2 => (x, y - 1)
-        case 3 => (x, y + 1)
-      }
-    }
-    for (_ <- 0 until (width * height * 0.4).round.toInt) {
-      // diffusion
-      val a = (random.between(0, width), random.between(0, height))
-      val b = randomAdj(a)
-      if (temperature.contains(a) && temperature.contains(b)) {
-        moveHeat(dt / 20, a, b)
-        if (isPermeable(a._1, a._2) && isPermeable(b._1, b._2)) {
-          moveGas(dt, a, b)
-        }
-      }
-
-      // convection
-      if (terrain(a).name == "floor" && random.oneIn(2)) {
-        var p = a
-        for (_ <- 1 to random.between(2, 8)) {
-          val test = randomAdj(p)
-          val (x, y) = test
-          if (terrain.contains(x, y) && isPermeable(x, y)) {
-            p = test
-          }
-        }
-        if (p != a) {
-          val tmp = temperature(p)
-          temperature(p) = temperature(a)
-          temperature(a) = tmp
-          val tmp2 = gasComposition(p)
-          gasComposition(p) = gasComposition(a)
-          gasComposition(a) = tmp2
-        }
-      }
-    }
-  }
-   */
 }
 object Level {
   def emptyCylinder(data: Data, width: Int, height: Int)(implicit random: Random): Level =
@@ -785,9 +718,15 @@ class GameState(var data: Data, val random: Random) {
   }
   def markPermeabilityDirty(location: Location): Unit = dirtyPermeabilityTiles.enqueue(location)
   def processPermeabilityUpdateQueue(): Unit = {
+    var needsUpdate = Set.empty[LevelId]
     while (dirtyPermeabilityTiles.nonEmpty) {
       val l = dirtyPermeabilityTiles.dequeue()
       isPermeableCache(l.levelId)(l.x, l.y) = isPermeable(l)
+      needsUpdate += l.levelId
+    }
+    for (levelId <- needsUpdate) {
+      val permeability = isPermeableCache(levelId)
+      levels(levelId).updateAtmoSimStatics((x: Int, y: Int) => permeability(x, y))
     }
   }
 
@@ -982,8 +921,7 @@ class GameState(var data: Data, val random: Random) {
   def updateHeat(levelId: LevelId, dt: Float = 1): Unit = {
     val level = levels(levelId)
     processPermeabilityUpdateQueue()
-    val permeability = isPermeableCache(levelId)
-    level.updateHeat(dt, (x: Int, y: Int) => permeability(x, y))(random)
+    level.updateHeat(dt)(random)
 
     // transfer heat between player & environment
     val playerHeatCapacity = 4 // ~water

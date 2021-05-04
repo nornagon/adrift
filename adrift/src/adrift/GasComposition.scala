@@ -9,18 +9,18 @@ object GasComposition {
 }
 
 // partial pressure of each gas
-case class GasComposition(oxygen: Double, carbonDioxide: Double, nitrogen: Double) {
-  def totalPressure(): Double = oxygen + carbonDioxide + nitrogen
+case class GasComposition(oxygen: Float, carbonDioxide: Float, nitrogen: Float) {
+  def totalPressure(): Float = oxygen + carbonDioxide + nitrogen
 
   def -(gc: GasComposition): GasComposition =
     GasComposition(oxygen - gc.oxygen, carbonDioxide - gc.carbonDioxide, nitrogen - gc.nitrogen)
   def +(gc: GasComposition): GasComposition =
     GasComposition(oxygen + gc.oxygen, carbonDioxide + gc.carbonDioxide, nitrogen + gc.nitrogen)
 
-  def *(s: Double): GasComposition =
+  def *(s: Float): GasComposition =
     GasComposition(oxygen*s, carbonDioxide*s, nitrogen*s)
 
-  def minPressure(): Double =
+  def minPressure(): Float =
     math.min(math.min(oxygen, carbonDioxide), nitrogen)
 
   override def toString: String = s"GC(O2 = $oxygen, CO2 = $carbonDioxide, N2 = $nitrogen"

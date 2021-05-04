@@ -55,30 +55,59 @@ case class Data(
 
 case class Color(r: Float, g: Float, b: Float, a: Float) {
   def darken(pct: Float): Color = Color(r*pct, g*pct, b*pct, a)
+  // TODO: LCH?
+  def lerp(other: Color, t: Float): Color = Color(
+    r * (1 - t) + other.r * t,
+    g * (1 - t) + other.g * t,
+    b * (1 - t) + other.b * t,
+    a * (1 - t) + other.a * t,
+  )
 }
 object Color {
   val hexColor: Regex = raw"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?".r
   implicit val decoder: Decoder[Color] = { (h: HCursor) =>
-    h.as[String].flatMap {
-      case hexColor(r, g, b, null) =>
-        Right(Color.fromBytes(
-          Integer.parseUnsignedInt(r, 16),
-          Integer.parseUnsignedInt(g, 16),
-          Integer.parseUnsignedInt(b, 16),
-        ))
-      case hexColor(r, g, b, a) =>
-        Right(Color.fromBytes(
-          Integer.parseUnsignedInt(r, 16),
-          Integer.parseUnsignedInt(g, 16),
-          Integer.parseUnsignedInt(b, 16),
-          Integer.parseUnsignedInt(a, 16)
-        ))
-      case other => Left(DecodingFailure(s"Failed to parse color: '$other'", h.history))
+    h.as[String].flatMap { s =>
+      fromHex(s) match {
+        case Some(c) => Right(c)
+        case None => Left(DecodingFailure(s"Failed to parse color: '$s'", h.history))
+      }
     }
   }
   def fromBytes(r: Int, g: Int, b: Int, a: Int = 255): Color = Color(r / 255f, g / 255f, b / 255f, a / 255f)
+  def fromHex(hexString: String): Option[Color] = hexString match {
+    case hexColor(r, g, b, null) =>
+      Some(Color.fromBytes(
+        Integer.parseUnsignedInt(r, 16),
+        Integer.parseUnsignedInt(g, 16),
+        Integer.parseUnsignedInt(b, 16),
+      ))
+    case hexColor(r, g, b, a) =>
+      Some(Color.fromBytes(
+        Integer.parseUnsignedInt(r, 16),
+        Integer.parseUnsignedInt(g, 16),
+        Integer.parseUnsignedInt(b, 16),
+        Integer.parseUnsignedInt(a, 16)
+      ))
+    case _ => None
+  }
   val White: Color = Color(1f, 1f, 1f, 1f)
   val Black: Color = Color(0f, 0f, 0f, 1f)
+}
+
+case class Gradient(colors: Seq[Color]) {
+  require(colors.nonEmpty)
+  def sample(t: Float): Color = {
+    if (colors.size <= 1) return colors.head
+    if (t >= 1f) return colors.last
+    if (t <= 0f) return colors.head
+    val tScaled = t * (colors.size - 1)
+    val tClamped = math.max(0, math.min(colors.size - 1, tScaled))
+    val aIndex = math.min(colors.size - 2, tClamped.floor.toInt)
+    val bIndex = aIndex + 1
+    val a = colors(aIndex)
+    val b = colors(bIndex)
+    a.lerp(b, tClamped % 1f)
+  }
 }
 
 case class DisplayProps(
@@ -143,6 +172,7 @@ object Data {
       .groupBy(_.id).map { case (k, v) => assert(v.length == 1); k -> v.head }
 
     val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
+    println(s"${items.size} items")
 
     val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item group")
       .map(parse[YamlObject.ItemGroup])

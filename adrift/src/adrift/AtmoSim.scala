@@ -73,46 +73,80 @@ object AtmoSim {
 
 class AtmoSim(val width: Int, val height: Int) {
   lazy private val diffusionPass = AtmoSim.diffusionPass
-  private val transferTexture = Texture.emptyFloat(width, height)
-  private val heatCapacityTexture = Texture.emptyFloat(width, height)
+  private val transferTexture = Texture.emptyFloat4(width, height)
+  private val heatCapacityTexture = Texture.emptyFloat4(width, height)
 
-  def updateTransferTexture(grid: Grid[Float]): Unit = {
-    assert(grid.width == width && grid.height == height)
-    transferTexture.uploadFloat(grid.cells.toArray)
+  def updateTransferTexture(heatTransfer: Grid[Float], permeability: (Int, Int) => Float): Unit = {
+    assert(heatTransfer.width == width && heatTransfer.height == height)
+    val combined = new Array[Float](width * height * 4)
+    for ((x, y) <- heatTransfer.indices) {
+      val i = (y * width + x) * 4
+      combined(i + 0) = heatTransfer(x, y)
+      val p = permeability(x, y)
+      combined(i + 1) = p
+      combined(i + 2) = p
+      combined(i + 3) = p
+    }
+    transferTexture.uploadFloat4(combined)
   }
 
   def updateHeatCapacityTexture(grid: Grid[Float]): Unit = {
     assert(grid.width == width && grid.height == height)
-    heatCapacityTexture.uploadFloat(grid.cells.toArray)
+    val combined = new Array[Float](width * height * 4)
+    for ((x, y) <- grid.indices) {
+      val i = (y * width + x) * 4
+      combined(i + 0) = grid(x, y)
+      combined(i + 1) = 1
+      combined(i + 2) = 1
+      combined(i + 3) = 1
+    }
+    heatCapacityTexture.uploadFloat4(combined)
   }
 
-  def step(temperature: Grid[Float]): Unit = {
+  def step(temperature: Grid[Float], gasComposition: Grid[GasComposition]): Unit = {
     // 1. copy from output to input
     //    (also: update map if necessary)
     // 2. run sim
     // 3. read
 
+    // We have to disable blending otherwise the output values are scaled by their alpha values,
+    // but the 4th channel has no special meaning for us here.
+    val wasBlendingEnabled = glIsEnabled(GL_BLEND)
+    glDisable(GL_BLEND)
+
     val width = temperature.width
     val height = temperature.height
 
-    val source = Texture.fromFloatArray(width, height, temperature.cells.toArray)
+    val combined = new Array[Float](width * height * 4)
+    for (y <- 0 until temperature.height; x <- 0 until temperature.width) {
+      val i = (y * width + x) * 4
+      combined(i + 0) = temperature(x, y)
+      combined(i + 1) = gasComposition(x, y).oxygen
+      combined(i + 2) = gasComposition(x, y).carbonDioxide
+      combined(i + 3) = gasComposition(x, y).nitrogen
+    }
+    val source = Texture.fromFloat4Array(width, height, combined)
     glCheckError()
-    val target = new Framebuffer(Texture.emptyFloat(width, height))
+    val target = new Framebuffer(Texture.emptyFloat4(width, height))
     glCheckError()
     diffusionPass.renderToFramebuffer(
       Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
       target
     )
     glCheckError()
-    val buf = target.texture.readFloat()
-    val arr = new Array[Float](width * height)
+    val buf = target.texture.readFloat4()
+    val arr = new Array[Float](width * height * 4)
     buf.get(arr)
-    //println(temperature.cells.slice(0, 32))
-    //println(arr.toSeq.slice(0, 32))
-    for (i <- temperature.cells.indices) temperature.cells(i) = arr(i)
+    for ((x, y) <- temperature.indices) {
+      val i = (y * width + x) * 4
+      temperature(x, y) = arr(i)
+      gasComposition(x, y) = GasComposition(arr(i + 1), arr(i + 2), arr(i + 3))
+    }
     source.dispose()
     target.dispose()
     glCheckError()
+    if (wasBlendingEnabled)
+      glEnable(GL_BLEND)
   }
 }
 

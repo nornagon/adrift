@@ -12,8 +12,8 @@ case class Pollinate() extends Message
 case class Leaf(
   chanceToDie: Double,
   becomes: Population.Table[String],
-  carbonAbsorptionChance: Double,
-  carbonAbsorptionChunk: Double,
+  carbonAbsorptionChance: Float,
+  carbonAbsorptionChunk: Float,
 ) extends Behavior {
   override def receive(
     state: GameState,
