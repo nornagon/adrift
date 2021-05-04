@@ -67,7 +67,7 @@ case class Level(
   }
 
   def updateHeat(dt: Double = 1)(implicit random: Random): Unit = {
-    atmoSim.step(atmosphere)
+    atmoSim.step(atmosphere, cylindrical = terrain.isInstanceOf[CylinderGrid[_]])
   }
 }
 object Level {

@@ -103,7 +103,7 @@ class AtmoSim(val width: Int, val height: Int) {
     heatCapacityTexture.uploadFloat4(combined)
   }
 
-  def step(atmosphere: Array[Float]): Unit = {
+  def step(atmosphere: Array[Float], cylindrical: Boolean): Unit = {
     assert(atmosphere.length == this.width * this.height * 4)
     // 1. copy from output to input
     //    (also: update map if necessary)
@@ -118,6 +118,7 @@ class AtmoSim(val width: Int, val height: Int) {
     glFinish()
     val start = System.nanoTime()
     val source = Texture.fromFloat4Array(width, height, atmosphere)
+    source.wrapS = if (cylindrical) Texture.Repeat else Texture.ClampToEdge
     glCheckError()
     glFinish()
     println(f"  uploading took ${(System.nanoTime() - start) / 1e6}%.2f ms")

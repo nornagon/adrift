@@ -82,6 +82,22 @@ class Texture(textureSource: TextureSource) {
     id
   }
 
+  def wrapS: Texture.WrapParameter = {
+    bind()
+    Texture.WrapParameter.fromGl(glGetTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S))
+  }
+  def wrapS_=(wp: Texture.WrapParameter): Unit = {
+    bind()
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wp.toGl)
+    glCheckError()
+  }
+
+  def wrapT_=(wp: Texture.WrapParameter): Unit = {
+    bind()
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wp.toGl)
+    glCheckError()
+  }
+
   def bind(): Unit = glBindTexture(GL_TEXTURE_2D, id)
 
   def read(): ByteBuffer = {
@@ -123,6 +139,19 @@ class Texture(textureSource: TextureSource) {
 }
 
 object Texture {
+  sealed case class WrapParameter(toGl: Int)
+  val ClampToEdge: WrapParameter = WrapParameter(GL_CLAMP_TO_EDGE)
+  //case object ClampToBorder extends WrapParameter(GL_CLAMP_TO_BORDER)
+  //case object MirroredRepeat extends WrapParameter(GL_MIRRORED_REPEAT)
+  val Repeat: WrapParameter = WrapParameter(GL_REPEAT)
+  //case object MirrorClampToEdge extends WrapParameter(GL_MIRROR_CLAMP_TO_EDGE)
+  object WrapParameter {
+    def fromGl(x: Int): WrapParameter = x match {
+      case GL_CLAMP_TO_EDGE => ClampToEdge
+      case GL_REPEAT => Repeat
+    }
+  }
+
   def fromFloatArray(width: Int, height: Int, buf: Array[Float]) =
     new Texture(new FloatTextureSource(width, height, buf))
   def emptyFloat(width: Int, height: Int) = new Texture(new EmptyFloatTextureSource(width, height))
