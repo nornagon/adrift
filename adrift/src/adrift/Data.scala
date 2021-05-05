@@ -130,9 +130,11 @@ case class DisplayData(
   }
 }
 
-case class Volume(milliliters: Int) extends AnyVal {
+case class Volume(milliliters: Int) extends AnyVal with Ordered[Volume] {
   def +(other: Volume): Volume = Volume(milliliters + other.milliliters)
   def -(other: Volume): Volume = Volume(milliliters - other.milliliters)
+
+  override def compare(that: Volume): Int = implicitly[Ordered[Int]](milliliters).compare(that.milliliters)
 }
 object Volume {
   private val milliliters = """(?i)\s*(\d+)\s*ml""".r

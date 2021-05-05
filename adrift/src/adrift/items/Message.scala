@@ -65,5 +65,6 @@ object Message {
 
   // Containers
   case class CanContainItems(var ok: Boolean = false) extends Message
+  case class CanContain(item: Item, var ok: Boolean = true, var reason: Option[String] = None) extends Message
   case class ExtraVolume(var volume: Volume = Volume(0)) extends Message
 }

@@ -69,7 +69,7 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
   /** @return set of layers which match pred */
   def portLayers(pred: PortSpec => Boolean): LayerSet =
     ports.filter(pred).map {
-      case PortSpec(_, name) => connections(name)
+      case PortSpec(_, name) => connections.getOrElse(name, LayerSet.empty)
     }.foldLeft(LayerSet.empty)(_ union _)
 
   def portLayers(connType: String): LayerSet = portLayers(_.`type` == connType)

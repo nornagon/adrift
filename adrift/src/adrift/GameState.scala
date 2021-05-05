@@ -3,7 +3,7 @@ package adrift
 import adrift.Action.AssemblyAction
 import adrift.RandomImplicits._
 import adrift.display.Appearance
-import adrift.items.Message.{IsFunctional, PlayerBump, Provides}
+import adrift.items.Message.{CanContain, IsFunctional, PlayerBump, Provides}
 import adrift.items._
 import adrift.items.behaviors.{MissingParts, PartInstalled}
 
@@ -431,8 +431,13 @@ class GameState(var data: Data, val random: Random) {
             if (item == container || containedWithin(container, item)) {
               putMessage(s"You can't put ${itemDisplayName(item)} inside itself.")
             } else {
-              putMessage(s"You put the ${itemDisplayName(item)} into the ${itemDisplayName(container)}.")
-              items.move(item, toLocation)
+              val canContain = sendMessage(container, CanContain(item))
+              if (!canContain.ok) {
+                putMessage(s"You can't put ${itemDisplayName(item)} into the ${itemDisplayName(container)}${canContain.reason.map(r => s" ($r)").getOrElse("")}.")
+              } else {
+                putMessage(s"You put the ${itemDisplayName(item)} into the ${itemDisplayName(container)}.")
+                items.move(item, toLocation)
+              }
             }
             // TODO: handle other cases better
           case _ =>
