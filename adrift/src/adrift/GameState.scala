@@ -110,7 +110,6 @@ object Level {
 }
 
 class GameState(var data: Data, val random: Random) {
-
   var levels = mutable.Map.empty[LevelId, Level]
   var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
@@ -725,6 +724,9 @@ class GameState(var data: Data, val random: Random) {
 
   def itemIsPermeable(item: Item): Boolean =
     sendMessage(item, Message.IsPermeable()).permeable
+
+  def volume(item: Item): Volume =
+    item.kind.volume + sendMessage(item, Message.ExtraVolume()).volume
 
   def terrain(l: Location): Option[Terrain] = levels(l.levelId).terrain.get(l.x, l.y)
 

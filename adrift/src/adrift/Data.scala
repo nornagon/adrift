@@ -130,7 +130,10 @@ case class DisplayData(
   }
 }
 
-case class Volume(milliliters: Int)
+case class Volume(milliliters: Int) extends AnyVal {
+  def +(other: Volume): Volume = Volume(milliliters + other.milliliters)
+  def -(other: Volume): Volume = Volume(milliliters - other.milliliters)
+}
 object Volume {
   private val milliliters = """(?i)\s*(\d+)\s*ml""".r
   private val liters = """(?i)\s*(\d+)\s*l""".r

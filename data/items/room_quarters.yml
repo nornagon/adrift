@@ -34,7 +34,7 @@
     - { type: nylon thread, count: 2, disassembled_with: CUTTING }
   display: CLOTHING
   behavior:
-    - Container: {}
+    - Container: { maxVolume: 25 L }
 
 - type: item
   name: flat mirror

@@ -1,7 +1,7 @@
 package adrift.items
 
 import adrift.items.behaviors.LayerSet
-import adrift.{Location, Terrain}
+import adrift.{Location, Terrain, Volume}
 
 trait Message
 
@@ -65,4 +65,5 @@ object Message {
 
   // Containers
   case class CanContainItems(var ok: Boolean = false) extends Message
+  case class ExtraVolume(var volume: Volume = Volume(0)) extends Message
 }
