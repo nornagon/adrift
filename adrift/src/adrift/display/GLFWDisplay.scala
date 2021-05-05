@@ -476,24 +476,6 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
           Color(0, 0, (1 - math.exp((temp - 273)/10)).toFloat, 0.8f)
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
-
-      if (state.showCableDebug && level.powerCables.contains(x, y)) {
-        val layers = level.powerCables(x, y)
-        // if there's something with ports here...
-        if (state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected("power-in", LayerSet.all)).connected) {
-          // Is it connected to a cable?
-          val color = if (layers != 0) Color(1, 0, 0, 1) else Color.White
-          renderer.drawChar(screenLeft + x - left, screenTop + y - top, 8, fg = color)
-        } else {
-          if (layers != 0) {
-            val connectLeft = level.powerCables.contains(x - 1, y) && ((level.powerCables(x - 1, y) & layers) != 0)
-            val connectUp = level.powerCables.contains(x, y - 1) && ((level.powerCables(x, y - 1) & layers) != 0)
-            val connectRight = level.powerCables.contains(x + 1, y) && ((level.powerCables(x + 1, y) & layers) != 0)
-            val connectDown = level.powerCables.contains(x, y + 1) && ((level.powerCables(x, y + 1) & layers) != 0)
-            renderer.drawChar(screenLeft + x - left, screenTop + y - top, Appearance.charForConnection(connectLeft, connectUp, connectRight, connectDown), Color(1, 0, 0, 1))
-          }
-        }
-      }
     }
   }
 

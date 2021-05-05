@@ -7,7 +7,7 @@ import scala.collection.mutable
 import scala.language.implicitConversions
 
 object layout {
-  trait Direction
+  sealed trait Direction
   case object Vertical extends Direction
   case object Horizontal extends Direction
 
@@ -26,7 +26,15 @@ object layout {
     text: Option[ColoredString],
     halfWidth: Boolean = false,
     render: Option[RenderFn]
-  )
+  ) {
+    def textAdjustedSize(parentDirection: Direction): Int = {
+      if (size >= 0) size
+      else parentDirection match {
+        case Horizontal => (text.get.length + (-size / 2)) / -size
+        case Vertical => 1
+      }
+    }
+  }
 
   def hbox(
     bounds: Rect = null,
@@ -72,7 +80,7 @@ object layout {
     text: ColoredString,
     background: Color = null,
     foreground: Color = null,
-    size: Int = 1
+    size: Int = -1
   ): Box = Box(
     direction = Horizontal,
     bounds = None,
@@ -89,7 +97,7 @@ object layout {
     text: ColoredString,
     background: Color = null,
     foreground: Color = null,
-    size: Int = 1
+    size: Int = -2
   ): Box = Box(
     direction = Horizontal,
     bounds = None,
@@ -164,7 +172,7 @@ object layout {
           case Horizontal => bounds.width
           case Vertical => bounds.height
         }
-        val specifiedSize = box.children.view.map(_.size).sum
+        val specifiedSize = box.children.view.map(_.textAdjustedSize(box.direction)).sum
         val remainingAfterSpecified = availableSize - specifiedSize
         val numUnspecifiedChildren = box.children.count(_.size == 0)
         val minimumSizePerUnspecifiedChild = if (numUnspecifiedChildren != 0) remainingAfterSpecified / numUnspecifiedChildren else 0
@@ -172,7 +180,7 @@ object layout {
         val childSizes = mutable.Seq.fill[Int](box.children.size)(0)
         var remainingExtraCells = extraCells
         for ((child, i) <- box.children.zipWithIndex) {
-          child.size match {
+          child.textAdjustedSize(box.direction) match {
             case 0 =>
               childSizes(i) = minimumSizePerUnspecifiedChild + (if (remainingExtraCells > 0) {
                 remainingExtraCells -= 1

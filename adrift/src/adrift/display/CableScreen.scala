@@ -1,7 +1,7 @@
 package adrift.display
 
 import adrift.items.Message
-import adrift.items.behaviors.LayerSet
+import adrift.items.behaviors.{HasPorts, LayerSet}
 import adrift.{Color, GameState, Location, OnFloor, Rect}
 import org.lwjgl.glfw.GLFW._
 import layout._
@@ -28,6 +28,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   val powerColor = Color(1, 0, 0, 1)
   val dataColor = Color(0, 1, 0, 1)
+  val fluidColor = Color(0, 0, 1, 1)
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     (action, key) match {
@@ -85,32 +86,65 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         children = Seq(
           hbox(
             children = Seq(
-              text(" "),
               text(
                 (0 until 8).map(i => if (displayedPowerLayers(i)) "\u00fe" else "\u00ff").mkString(""),
                 size = 8,
                 foreground = powerColor
               ),
               text(" "),
-              text("Power", size = 0)
+              htext("Power", size = 0)
             )
           ),
           hbox(
             children = Seq(
-              text(" "),
               text(
                 (0 until 8).map(i => if (displayedDataLayers(i)) "\u00fe" else "\u00ff").mkString(""),
                 size = 8,
                 foreground = dataColor
               ),
               text(" "),
-              text("Data", size = 0)
+              htext("Data", size = 0)
+            )
+          ),
+          hbox(
+            children = Seq(
+              text(
+                (0 until 8).map(i => if (displayedDataLayers(i)) "\u00fe" else "\u00ff").mkString(""),
+                size = 8,
+                foreground = fluidColor
+              ),
+              text(" "),
+              htext("Fluid", size = 0)
             )
           )
         )
       )),
       frame(contents = vbox(
-        children = Seq(text("ports"))
+        children = {
+          val items = state.items.lookup(OnFloor(Location(state.player.levelId, cursor)))
+          var c = Seq.empty[Box]
+          for (item <- items) {
+            val hp = item.behaviors.find(_.isInstanceOf[HasPorts]).map(_.asInstanceOf[HasPorts])
+            hp match {
+              case Some(hp) =>
+                c :+= htext(state.itemDisplayName(item))
+                for (p <- hp.ports) {
+                  val cs = hp.connections.getOrElse(p.name, LayerSet.empty)
+                  c :+= hbox(children = Seq(text(" " +
+                    (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString(""),
+                    foreground = p.`type` match {
+                      case "data-in" | "data-out" => dataColor
+                      case "power-in" | "power-out" => powerColor
+                      case "fluid-in" | "fluid-out" => fluidColor
+                    }
+                  ), htext(s" ${p.name}")), size = 1)
+                  //c :+= hbox(children = Seq(htext(p.name)), size = 1)
+                }
+              case None =>
+            }
+          }
+          c
+        }
       ))
     )
   )
@@ -128,7 +162,13 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val levelId = state.player.levelId
     val level = state.levels(levelId)
 
-    for (sy <- bounds.l until bounds.r; sx <- bounds.t until bounds.b; (x, y) = display.screenToWorld(state)((sx, sy)); if level.terrain.contains(x, y)) {
+    for {
+      sy <- bounds.l until bounds.r
+      sx <- bounds.t until bounds.b
+      (x, y) = display.screenToWorld(state)((sx, sy))
+      if level.terrain.contains(x, y)
+      if state.isVisible(Location(levelId, x, y))
+    } {
       val cables = displaying match {
         case Power => level.powerCables
         case Data => level.dataCables
