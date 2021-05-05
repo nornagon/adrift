@@ -138,7 +138,6 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
                       case "fluid-in" | "fluid-out" => fluidColor
                     }
                   ), htext(s" ${p.name}")), size = 1)
-                  //c :+= hbox(children = Seq(htext(p.name)), size = 1)
                 }
               case None =>
             }

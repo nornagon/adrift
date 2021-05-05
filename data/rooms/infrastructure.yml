@@ -111,6 +111,7 @@
 
 - type: item
   name: atmospheric temperature control system
+  volume: 10 L
   description: A bank of specialized electronic boards for controlling atmospheric temperature. Always wrong somehow.
   display: MEDIUM_EQUIPMENT
   behavior:

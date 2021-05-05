@@ -22,6 +22,7 @@ object YamlObject {
     parts: Seq[ItemPart],
     provides: Seq[String] = Seq.empty,
     display: String,
+    volume: Volume = Volume(Int.MaxValue),
     behavior: Seq[JsonObject] = Seq.empty,
   )
 
@@ -129,6 +130,19 @@ case class DisplayData(
   }
 }
 
+case class Volume(milliliters: Int)
+object Volume {
+  private val milliliters = """(?i)\s*(\d+)\s*ml""".r
+  private val liters = """(?i)\s*(\d+)\s*l""".r
+  implicit val decoder: Decoder[Volume] = { (h: HCursor) =>
+    h.as[String].flatMap {
+      case milliliters(c) => Right(Volume(c.toInt))
+      case liters(c) => Right(Volume(c.toInt * 1000))
+      case other => Left(DecodingFailure(s"Failed to parse volume: '$other'", h.history))
+    }
+  }
+}
+
 object Data {
   implicit private val configuration: Configuration = Configuration.default.withDefaults
   private val matcher = FileSystems.getDefault.getPathMatcher("glob:**.{yml,yaml}")
@@ -173,6 +187,11 @@ object Data {
 
     val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
     println(s"${items.size} items")
+    for (item <- items.values) {
+      if (item.volume.milliliters == Int.MaxValue) {
+        println(s"WARNING: ${item.name} has undefined volume")
+      }
+    }
 
     val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item group")
       .map(parse[YamlObject.ItemGroup])
@@ -284,6 +303,7 @@ object Data {
               }
               ItemPart(itemForId(p.`type`), p.count, operation)
             },
+            volume = i.volume,
             display = i.display,
             behaviors = behaviorGenerators
           )

@@ -1,5 +1,7 @@
 package adrift.items
 
+import adrift.Volume
+
 import scala.collection.mutable
 
 /*
@@ -60,6 +62,7 @@ case class ItemKind(
   description: String,
   parts: Seq[ItemPart],
   display: String,
+  volume: Volume,
   behaviors: Seq[() => Behavior]
 ) {
   def generateItem(): Item = {
