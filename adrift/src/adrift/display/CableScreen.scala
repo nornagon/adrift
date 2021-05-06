@@ -1,7 +1,7 @@
 package adrift.display
 
-import adrift.items.Message
-import adrift.items.behaviors.{HasPorts, LayerSet}
+import adrift.items.{Item, Message}
+import adrift.items.behaviors.{HasPorts, LayerSet, PortSpec}
 import adrift.{Color, GameState, Location, OnFloor, Rect}
 import org.lwjgl.glfw.GLFW._
 import layout._
@@ -44,8 +44,61 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   val dataColor = Color(0, 1, 0, 1)
   val fluidColor = Color(0, 0, 1, 1)
 
-  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+  var connecting = false
+  var connectingCursor = 0
+
+  def portsHere = {
+    val items = state.items.lookup(OnFloor(Location(state.player.levelId, cursor)))
+    for {
+      item <- items
+      hp <- item.behaviors.find(_.isInstanceOf[HasPorts]).map(_.asInstanceOf[HasPorts])
+      displayedPorts = hp.ports.filter(p => queryTypes.contains(p.`type`))
+      if displayedPorts.nonEmpty
+    } yield item -> (displayedPorts, hp.connections)
+  }
+
+  def editingPort: Option[(Item, String)] = {
+    var prev = 0
+    for ((item, (ports, connections)) <- portsHere) {
+      if (connectingCursor - prev < ports.size)
+        return Some((item, ports(connectingCursor - prev).name))
+      prev += ports.size
+    }
+    None
+  }
+
+  private def connectingKey(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     (action, key) match {
+      case (GLFW_PRESS, GLFW_KEY_ESCAPE) =>
+        display.preventDefault()
+        connecting = false
+      case (GLFW_PRESS | GLFW_REPEAT, DirectionKey(0, dy)) =>
+        connectingCursor = math.max(0, math.min(portsHere.map(_._2._1.size).sum - 1, connectingCursor + dy))
+      case (GLFW_PRESS, NumericKey(n)) if n >= 1 && n <= 8 =>
+        val Some((item, port)) = editingPort
+        val Some(hp) = item.behaviors.find(_.isInstanceOf[HasPorts]).map(_.asInstanceOf[HasPorts])
+        val existingLayers = hp.connections.getOrElse(port, LayerSet.empty)
+        val newLayers =
+          if ((mods & GLFW_MOD_SHIFT) != 0) {
+            existingLayers.toggle(n - 1)
+          } else {
+            new LayerSet(1 << (n - 1))
+          }
+        hp.connections += port -> newLayers
+        state.recalculateConnections()
+      case _ =>
+    }
+  }
+
+  override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
+    if (connecting) {
+      connectingKey(key, scancode, action, mods)
+      return
+    }
+    (action, key) match {
+      case (GLFW_PRESS, GLFW_KEY_C) if portsHere.exists(_._2._1.nonEmpty) =>
+        connectingCursor = 0
+        connecting = true
       case (GLFW_PRESS | GLFW_REPEAT, DirectionKey(dx, dy)) =>
         cursor = (cursor._1 + dx, cursor._2 + dy)
       case (GLFW_PRESS, GLFW_KEY_SPACE) =>
@@ -62,6 +115,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         }
         if (cables.contains(cursor)) {
           cables(cursor) ^= displayedLayers.bits
+          state.recalculateConnections()
         }
       case (GLFW_PRESS, NumericKey(n)) if n >= 1 && n <= 8 =>
         if ((mods & GLFW_MOD_SHIFT) != 0) {
@@ -139,37 +193,37 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
       )),
       frame(contents = vbox(
         children = {
-          val items = state.items.lookup(OnFloor(Location(state.player.levelId, cursor)))
           var c = Seq.empty[Box]
-          for (item <- items) {
-            val hp = item.behaviors.find(_.isInstanceOf[HasPorts]).map(_.asInstanceOf[HasPorts])
-            hp match {
-              case Some(hp) =>
-                val displayedPorts = hp.ports.filter(p => queryTypes.contains(p.`type`))
-                if (displayedPorts.nonEmpty) {
-                  c :+= htext(state.itemDisplayName(item))
-                  for (p <- displayedPorts) {
-                    val cs = hp.connections.getOrElse(p.name, LayerSet.empty)
-                    val intersectsWithCurrentView = cs intersects displayingLayers
-                    c :+= hbox(
-                      children = Seq(
-                        text(
-                          " " +
-                            (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString(""),
-                          foreground = (p.`type` match {
-                            case "data-in" | "data-out" => dataColor
-                            case "power-in" | "power-out" => powerColor
-                            case "fluid-in" | "fluid-out" => fluidColor
-                          }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
-                        ), htext(s" ${p.name}", foreground = Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f))
-                      ), size = 1
-                    )
-                  }
-                }
-              case None =>
+          var prev = 0
+          for ((item, (ports, connections)) <- portsHere) {
+            val displayedPorts = ports.filter(p => queryTypes.contains(p.`type`))
+            if (displayedPorts.nonEmpty) {
+              c :+= htext(state.itemDisplayName(item))
+              for ((p, i) <- displayedPorts.zipWithIndex) {
+                val ix = prev + i
+                val cs = connections.getOrElse(p.name, LayerSet.empty)
+                val intersectsWithCurrentView = cs intersects displayingLayers
+                c :+= hbox(
+                  children = Seq(
+                    text(
+                      (if (connecting && ix == connectingCursor) "\u0010" else " ") +
+                        (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString(""),
+                      foreground = (p.`type` match {
+                        case "data-in" | "data-out" => dataColor
+                        case "power-in" | "power-out" => powerColor
+                        case "fluid-in" | "fluid-out" => fluidColor
+                      }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
+                    ), htext(s" ${p.name}", foreground = Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f))
+                  ), size = 1
+                )
+              }
+              prev += displayedPorts.size
             }
           }
-          c
+          if (portsHere.exists(_._2._1.nonEmpty))
+            c :+ vbox() :+ htext("(c)onnect")
+          else
+            c
         }
       ))
     )
