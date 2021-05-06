@@ -367,8 +367,9 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
   def render(state: GameState): Unit = {
     val (fbWidth, fbHeight) = window.framebufferSize
-    if (fbWidth != windowWidthChars * (font.tileWidth * font.scaleFactor) ||
-      fbHeight != windowHeightChars * (font.tileHeight * font.scaleFactor)) {
+    val (wWidth, wHeight) = window.size
+    if (wWidth != windowWidthChars * (font.tileWidth * font.scaleFactor) ||
+      wHeight != windowHeightChars * (font.tileHeight * font.scaleFactor)) {
       window.setSize(
         windowWidthChars * (font.tileWidth * font.scaleFactor),
         windowHeightChars * (font.tileHeight * font.scaleFactor)
