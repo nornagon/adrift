@@ -2,6 +2,7 @@
 
 - type: item
   name: automatic door
+  volume: 100 L
   description: A standard sturdy door. It opens and closes almost silently.
   parts:
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
@@ -19,6 +20,7 @@
 
 - type: item
   name: mounted presence sensor
+  volume: 0.4 L
   description: A small dark panel hides a device that can sense the presence of humans.
   display: OPTICAL
   parts:
@@ -32,6 +34,7 @@
 
 - type: item
   name: mounted button
+  volume: 0.1 L
   description: A manually operated momentary switch, mounted to the wall. You could press it.
   display: MEDIUM_COMPONENT
   parts:
@@ -43,6 +46,7 @@
 
 - type: item
   name: manual door
+  volume: 100 L
   description: A standard sturdy, manually operated door.
   parts:
     - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
@@ -51,6 +55,7 @@
 
 - type: item
   name: bulkhead door
+  volume: 400 L
   description: A heavy-duty, externally actuated door for containing reactor breaches or the cold void.
   parts:
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
@@ -66,6 +71,7 @@
 
 - type: item
   name: local motion sensor
+  volume: 0.2 L
   description: A device capable of sensing motion in a small area.
   parts:
     - {type: laser diode, count: 2, disassembled_with: SCREWING}
@@ -80,31 +86,37 @@
 
 - type: item
   name: medium wheel
+  volume: .4 L
   description: A standard passive caster-style equipment wheel. Like on a shopping cart.
   display: LARGE_COMPONENT
 
 - type: item
   name: dust bunny
+  volume: .2 L
   description: a clump of hair, dirt and who knows what else - given time, it might start hopping of its own accord.
   display: TRASH
 
 - type: item
   name: empty bottle
+  volume: 1 L
   description: It was once full but now empty - like your visions for the future.
   display: TRASH
 
 - type: item
   name: empty can
+  volume: .5 L
   description: Maybe there were beans in here? or tuna? Some form of sustenance.  No more.
   display: TRASH
 
 - type: item
   name: crumpled paper
+  volume: .1 L
   description: Somebody thought this was important enough to kill a tree for.  Now it's garbage.
   display: TRASH
 
 - type: item
   name: plastic scraps
+  volume: .1 L
   description: degraded bits of plastic - maybe it was once a bottle? or a comb?
   display: TRASH
 

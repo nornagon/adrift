@@ -1,5 +1,6 @@
 - type: item
   name: pollinator microflyer
+  volume: 1 mL
   description: A small flying robot to pollinate plants.
   parts: []
   display: SMALL_FLYER

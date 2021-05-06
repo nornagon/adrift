@@ -4,6 +4,7 @@
 
 - type: item
   name: screwdriver
+  volume: .2 L
   description: A standard K35 screwdriver, like you'd find in a koligan.
   display: SMALL_TOOL
   behavior:
@@ -11,6 +12,7 @@
 
 - type: item
   name: gas leak
+  volume: .2 L
   description: A rift in the universe through which gas is pouring.
   display: SMALL_TOOL
   behavior:
@@ -18,6 +20,7 @@
 
 - type: item
   name: hand-held hammer
+  volume: .5 L
   description: A largely obsolete device, the hand-held hammer consists of a rigid handle and weighted head.
   parts:
     - { type: wooden rod, disassembled_with: HAMMERING }
@@ -27,24 +30,28 @@
 
 - type: item
   name: crowbar
+  volume: .5 L
   description: Used during the invasion by many as a last-ditch weapon. The weight is comforting, and it's a practical tool too.
   provides: [ PRYING ]
   display: TOOL
 
 - type: item
   name: multi-wrench
+  volume: .2 L
   description: Twisting the knob adjusts the grip size.  This is pretty much only useful for adding or removing bolts.
   provides: [ BOLT_TURNING ]
   display: TOOL
 
 - type: item
   name: box cutter
+  volume: .1 L
   description: A sharp, virtually unbreakable tungsteel blade makes this a great tool or, in a pinch, a weapon.
   provides: [ CUTTING ]
   display: SMALL_TOOL
 
 - type: item
   name: soldering iron
+  volume: .2 L
   description: An RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components.
   display: SMALL_TOOL
   parts:
@@ -56,6 +63,7 @@
 
 - type: item
   name: hull welder
+  volume: 3 L
   description: a massive system for adding and removing hull plates
   provides: [ WELDING, CUTTING ]
   display: LARGE_EQUIPMENT

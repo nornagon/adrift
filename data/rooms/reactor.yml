@@ -210,6 +210,7 @@
 
 - type: item
   name: reactor door
+  volume: 1000 L
   description: An airtight and radiation proof door specially designed with interlocks to prevent it from opening, pretty much ever.
   parts:
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
@@ -225,35 +226,42 @@
 
 - type: item
   name: isolation panel
+  volume: 1000 L
   description: a panel of displays that show you why whatever you're trying to do in there is a bad idea
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: reactor core
+  volume: 2000 L
   description: A diamond ceramic system contains a slice of the sun.
   display: REACTOR_CORE
 
 - type: item
   name: reactor console
+  volume: 1000 L
   description: controls and displays that indicate the state of the reactor, and may show what if anything is wrong with it.
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: liquid pump
+  volume: 500 L
   description: A basic piston pump with accumulators to smooth out the flow of whatever liquid it's pumping
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: floor pipe
+  volume: 100 L
   description: a pipe fitting emerges from the floor here - could hold anything! Liquid nitrogen or helium plasma or worse.  Best be careful with this.
   display: MEDIUM_BOX
 
 - type: item
   name: steam turbine
+  volume: 1000 L
   description: A high speed turbine converts hot steam into electrical power.  If this isn't making a gentle humming noise, something is wrong.
   display: LARGE_EQUIPMENT
 
 - type: item
   name: condenser
+  volume: 800 L
   description: a set of cooling copper coils turns hot steam back into water.
   display: LARGE_EQUIPMENT

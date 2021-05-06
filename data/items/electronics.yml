@@ -5,11 +5,13 @@
 
 - type: item
   name: power cable
+  volume: 1 L
   description: The ubiquitous 8-conductor thumb-thick black cable that snakes throughout the ship.
   display: RAW_THIN
 
 - type: item
   name: ship power adapter
+  volume: 20 mL
   description: A box of electronics to adapt from ship power to any other kind of power supply.
   parts:
     - { type: micro e-board, count: 1, disassembled_with: SCREWING }
@@ -21,13 +23,15 @@
 
 - type: item
   name: multimeter
-  description: aoeu
+  volume: .5 L
+  description: Measure resistance, capacitance, voltage, diodes, even has some primitive signal analysis tools
   display: SMALL_EQUIPMENT
   behavior:
     - Tool: { op: VOLTAGE_MEASURING }
 
 - type: item
   name: diagtest
+  volume: .5 L
   description: test item for testing diagnosis mechanics
   display: SMALL_EQUIPMENT
   parts:
@@ -39,11 +43,13 @@
 
 - type: item
   name: diagtest_auto
+  volume: 1 L
   description: this item is not diagnosable, i.e. automatically diagnosed
   display: SMALL_EQUIPMENT
 
 - type: item
   name: diagtest_broken
+  volume: 1 L
   description: this item is diagnosable and broken.
   display: SMALL_EQUIPMENT
   behavior:
@@ -52,46 +58,55 @@
 
 - type: item
   name: diagtest_fine
+  volume: 1 L
   description: this item is diagnosable and not broken.
   display: SMALL_EQUIPMENT
   behavior:
     - Diagnosable: { op: VOLTAGE_MEASURING }
 
-- { type: item, name: "M3A power supply", description: "Ptronics' smallest power supply is perfect for a phone or cat toy.", display: SMALL_BOX}
-- { type: item, name: "M5A power supply", description: "Another small supply from Ptronics with more voltage and small amps.", display: SMALL_BOX }
-- { type: item, name: "M7A power supply", description: "A small high voltage power supply.", display: SMALL_BOX }
-- { type: item, name: "M3C power supply", description: "MegaMicro made this supply to fill a gap in Ptronics' line of power supplies.", display: MEDIUM_BOX }
-- { type: item, name: "M5C power supply", description: "Ptronics' most popular power supply. Used as bricks in some countries.", display: MEDIUM_BOX }
-- { type: item, name: "M7C power supply", description: "If you touch this power supply wrong, you'll probably die.", display: MEDIUM_BOX }
-- { type: item, name: "M3E power supply", description: "A beefy low voltage, high amperage supply from your friends at Ptronics.", display: LARGE_BOX }
-- { type: item, name: "M5E power supply", description: "An off-brand copy of the popular Ptronics M5E unit... someone was trying to save money here.", display: LARGE_BOX }
-- { type: item, name: "M7E power supply", description: "This beast of a power supply compensates for inefficiency with even more power.", display: LARGE_BOX }
+- { type: item, name: "M3A power supply", volume: .1 L, description: "Ptronics' smallest power supply is perfect for a phone or cat toy.", display: SMALL_BOX}
+- { type: item, name: "M5A power supply", volume: .2 L, description: "Another small supply from Ptronics with more voltage and small amps.", display: SMALL_BOX }
+- { type: item, name: "M7A power supply", volume: .5 L, description: "A small high voltage power supply.", display: SMALL_BOX }
+- { type: item, name: "M3C power supply", volume: 1 L, description: "MegaMicro made this supply to fill a gap in Ptronics' line of power supplies.", display: MEDIUM_BOX }
+- { type: item, name: "M5C power supply", volume: 2 L, description: "Ptronics' most popular power supply. Used as bricks in some countries.", display: MEDIUM_BOX }
+- { type: item, name: "M7C power supply", volume: 5 L, description: "If you touch this power supply wrong, you'll probably die.", display: MEDIUM_BOX }
+- { type: item, name: "M3E power supply", volume: 10 L, description: "A beefy low voltage, high amperage supply from your friends at Ptronics.", display: LARGE_BOX }
+- { type: item, name: "M5E power supply", volume: 20 L, description: "An off-brand copy of the popular Ptronics M5E unit... someone was trying to save money here.", display: LARGE_BOX }
+- { type: item, name: "M7E power supply", volume: 50 L, description: "This beast of a power supply compensates for inefficiency with even more power.", display: LARGE_BOX }
 
 - type: item
   name: flat display
+  volume: 5 L
   description: flexible modular electronic display medium. Opto-electronic connector cable transmits power, data and illumination.
   display: SMALL_PLATE
 
 - type: item
   name: micro e-board
+  volume: 30 mL
   description: A small modular electronics substrate.
   display: SMALL_PLATE
+
 - type: item
   name: standard e-board
+  volume: 75 ml
   description: A normal modular electronics substrate.
   display: MEDIUM_PLATE
+
 - type: item
   name: mega e-board
+  volume: 250 ml
   description: A huge modular electronics substrate.
   display: LARGE_PLATE
 
 - type: item
   name: flex component
+  volume: 1 ml
   description: A single part that can serve as any of a huge number of possible electronic components depending on how it's configured.
   display: SMALL_COMPONENT
 
 - type: item
   name: tiny DC motor
+  volume: 10 ml
   description: A small DC motor. Could be from a remote-controlled toy or something.
   parts:
     - { type: copper wire, count: 2, disassembled_with: CUTTING }
@@ -100,39 +115,47 @@
 
 - type: item
   name: B-size stepper motor
+  volume: 200 ml
   description: A capable motor used in factory equipment and home products alike.
   display: MEDIUM_COMPONENT
 - type: item
   name: C-size stepper motor
+  volume: 500 ml
   description: A motor this size puts out more force than a human can.
   display: MEDIUM_COMPONENT
 - type: item
   name: D-size stepper motor
+  volume: 1 L
   description: A heavy-duty motor for massive precision applications.
   display: LARGE_COMPONENT
 
 - type: item
   name: MRAM chip
+  volume: 2 ml
   description: A magnetic memory chip. You'd need to attach it to a computer to read or write its contents.
   display: SMALL_COMPONENT
 
 - type: item
   name: microprocessor
+  volume: 10 ml
   description: "The part number is written on the chip: BCM2837RIFBG."
   display: SMALL_COMPONENT
 
 - type: item
   name: microcontroller
+  volume: 10 ml
   description: a simple real-time board for simple logic
   display: SMALL_COMPONENT
 
 - type: item
   name: laser diode
+  volume: 3 ml
   description: A weak laser diode. Probably still shouldn't look directly into it, though.
   display: SMALL_COMPONENT
 
 - type: item
   name: rechargeable battery
+  volume: 4 ml
   description: A rechargeable copper foam substrate battery. Popular in RC toys. Safe and long-lasting.
   display: SMALL_COMPONENT
   behavior:
@@ -141,6 +164,7 @@
 
 - type: item
   name: ship power outlet
+  volume: 200 ml
   description: A standard 3-prong plug. You'd think it'd be something fancy and space-age, but you know? If it ain't broke, don't fix it.
   display: OUTLET
   behavior:
@@ -148,6 +172,7 @@
 
 - type: item
   name: thick power cable
+  volume: 4 L
   description: AWG 3, good for up to 1kA before it fuses.
   display: CABLE
   parts:
@@ -157,11 +182,13 @@
 
 - type: item
   name: thick power cable section
+  volume: 350 ml
   description: A meter or so of thick power cable.
   display: CABLE
 
 - type: item
   name: secondary ship power generator
+  volume: 400 L
   description: temporary test item for testing ship power components
   display: LARGE_EQUIPMENT
   behavior:
@@ -170,6 +197,7 @@
 
 - type: item
   name: main ship power generator
+  volume: 400 L
   description: temporary test item for testing ship power components
   display: LARGE_EQUIPMENT
   behavior:
@@ -178,6 +206,7 @@
 
 - type: item
   name: capacitor bank
+  volume: 600 L
   description: a large power storage device
   display: LARGE_EQUIPMENT
   behavior:

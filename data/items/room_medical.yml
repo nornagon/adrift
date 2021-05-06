@@ -1,5 +1,6 @@
 - type: item
   name: medical cabinet
+  volume: 500 L
   description: A cabinet with a bright red cross painted on the front. Probably contains medical supplies
   parts:
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
@@ -9,18 +10,21 @@
 
 - type: item
   name: hypospray
+  volume: .3 L
   description: Through the small glass you can see a swirling foggy substance. There's a dispense button on the back.
   display: SMALL_TOOL
   provides: [ BIO-HEAL ]
 
 - type: item
   name: dermal regenerator
+  volume: .3 L
   description: Remember when you had an owie as a kid and mom used that massive buzzing D.R. to fix it? This is like that, but smaller.
   display: TOOL
   provides: [ BIO-BOND ]
 
 - type: item
   name: scissors
+  volume: .3 L
   description: Dual space-grade blades provide a safe way to cut a wide variety of materials. Running disabled while these are in your hands.
   parts:
    - { type: scis, count: 2, disassembled_with: SCREWING}
@@ -29,18 +33,21 @@
 
 - type: item
   name: scis
+  volume: .15 L
   description: Half a scissors. Usually considered more useful when joined with another scis.
   display: SMALL_TOOL
   provides: [ CUTTING ]
 
 - type: item
   name: scalpel
+  volume: .1 L
   description: A medical grade tungsteel blade good at getting into tight corners.
   provides: [ CUTTING ]
   display: SMALL_TOOL
 
 - type: item
   name: gurney
+  volume: 800 L
   description: Four wheels support an adjustable-height alum-composite bed.  Great for hauling people or large equipment around.
   parts:
    - {type: medium wheel, count: 4, disassembled_with: SCREWING}
@@ -52,51 +59,61 @@
 
 - type: item
   name: stasis heart
+  volume: 1 L
   description: A heart in a stasis container. Might still be good?
   display: MEDIUM_COMPONENT
 
 - type: item
   name: stasis lung
+  volume: 5 L
   description: A lung in a stasis container. If you get pneumonia this might come in handy?
   display: MEDIUM_COMPONENT
 
 - type: item
   name: stasis liver
+  volume: 3 L
   description: A liver in a stasis container. Now you can drink till your liver dies and just replace it.
   display: MEDIUM_COMPONENT
 
 - type: item
   name: stasis kidney
+  volume: 2 L
   description: A kidney in a stasis container. It could be full of kidney stones, though.  These stasis organs are risky.
   display: MEDIUM_COMPONENT
 
 - type: item
   name: gauze
+  volume: 1 L
   description: sterile gauze in a disposable package
   display: SMALL_COMPONENT
 
 - type: item
   name: splint
+  volume: 1 L
   description: a flexible splint to conform to the area needed, then rigidify it by triggering the catalyst.
   display: MEDIUM_COMPONENT
 
 - type: item
   name: pain killers
+  volume: .1 L
   description: a bottle of pills that will numb you to the pain of the world.
   display: SMALL_COMPONENT
 
 - type: item
   name: medications
+  volume: .1 L
   description: a placeholder item that will get replaced with a variety of medications at some future date (ping the devs!)
   display: SMALL_COMPONENT
 
 - type: item
   name: sterilization swab
+  volume: .01 L
   description: a gauze pad saturated in a substance anaethma to microscopic life.
   display: SMALL_COMPONENT
 
 - type: item
   name: bloody rag
+  volume: .1 L
   description: It looks like someone changed their dressing but didn't bother to clean up. And it must have been quite the wound, too.
   display: CLOTHING
 

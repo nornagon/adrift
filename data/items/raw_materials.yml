@@ -5,21 +5,25 @@
 #
 - type: item
   name: nutrient paste
+  volume: 1 L
   description: Like dog food, but for people.
   display: LIQUID
 
 - type: item
   name: copper wire
+  volume: 1 L
   description: A few meters of thin copper wire.
   display: RAW_THIN
 
 - type: item
   name: electric insulator
+  volume: 1 L
   description: A few meters of ship-standard insulator material.
   display: RAW_THIN
 
 - type: item
   name: insulated wire
+  volume: 2 L
   description: A few meters of ship-standard wire.
   parts:
     - { type: copper wire, count: 1, disassembled_with: CUTTING }
@@ -28,41 +32,49 @@
 
 - type: item
   name: wooden rod
+  volume: 1 L
   description: A foot-long cylinder of dead tree. The tree was probably grown on Earth... it's nice to hold a piece of home in your hands.
   display: RAW_ROD
 
 - type: item
   name: chunk of steel
+  volume: 1 L
   description: It feels cold and heavy in your hand.
   display: RAW_BLOCK
 
 - type: item
   name: magnet
+  volume: .1 L
   description: A permanent ferrite magnet. It'd stick to your refrigerator... but how does it work?
   display: RAW_BLOCK
 
 - type: item
   name: glass plate
+  volume: .1 L
   description: A small glass plate. Maybe for a small window, display screen or mirror.
   display: RAW_PLATE
 
 - type: item
   name: aluminum foil
+  volume: .1 L
   description: A small sheet of aluminum foil. Wrap a burrito or make something shiny.
   display: RAW_PLATE
 
 - type: item
   name: sheet metal
+  volume: .1 L
   description: A small sheet of some steel alloy. Make a box or plate from it.
   display: RAW_PLATE
 
 - type: item
   name: nylon thread
+  volume: .1 L
   description: A few meters of nylon thread.
   display: RAW_THIN
 
 - type: item
   name: synthetic fabric rag
+  volume: .1 L
   description: A small section of synthetic fabric. It's extremely light and strong.
   parts:
     - { type: nylon thread, count: 8, disassembled_with: CUTTING }
@@ -70,5 +82,6 @@
 
 - type: item
   name: flanged hose
+  volume: 1 L
   description: a flexible length of rubberized hose with standard screw-together couplings on the end
   display: RAW_THIN

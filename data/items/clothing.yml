@@ -38,6 +38,7 @@
 
 - type: item
   name: t-shirt
+  volume: 1 L
   description: A standard-issue IAC cotton tee. "One size fits all", my ass.
   display: CLOTHING
   parts: []
@@ -46,6 +47,7 @@
 
 - type: item
   name: dress shirt
+  volume: 2 L
   description: A light blue button-down collared shirt. It's unclear what occasion the mission planners were envisioning we'd be "dressing" for.
   display: CLOTHING
   parts: []
@@ -54,6 +56,7 @@
 
 - type: item
   name: long-sleeve uniform shirt
+  volume: 2 L
   description: It has an IAC logo emblazoned on the breast.
   display: CLOTHING
   parts: []
@@ -62,6 +65,7 @@
 
 - type: item
   name: jeans
+  volume: 2 L
   description: Blue denim jeans, the American dream.
   display: CLOTHING
   parts: []
@@ -70,6 +74,7 @@
 
 - type: item
   name: long skirt
+  volume: 1.5 L
   description: A calf-length pleated skirt.
   display: CLOTHING
   parts: []
@@ -78,6 +83,7 @@
 
 - type: item
   name: pair of overalls
+  volume: 4 L
   description: Only slightly grease-stained.
   display: CLOTHING
   parts: []
@@ -86,6 +92,7 @@
 
 - type: item
   name: briefs
+  volume: .3 L
   description: They're not yours. Or maybe everything on the ship is yours?
   display: CLOTHING
   parts: []

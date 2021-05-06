@@ -1,5 +1,6 @@
 - type: item
   name: heating vent
+  volume: 2 L
   description: A metal grate with adjustable louvres. Out of the grate blows a steady breeze of slightly warm air.
   parts:
     - {type: B-size modular panel, count: 2, disassembled_with: SCREWING}
@@ -11,6 +12,7 @@
 
 - type: item
   name: thermostat
+  volume: .2L
   description: A small metal panel with a sensor and a temperature readout. Somehow always seems to be at the wrong setting.
   parts:
     - {type: B-size modular panel, count: 1, disassembled_with: SCREWING}

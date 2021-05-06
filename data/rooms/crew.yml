@@ -68,6 +68,7 @@
 
 - type: item
   name: sink
+  volume: 20 L
   description: A metal sink bolted to the wall.
   display: SINK
   behavior:
@@ -75,6 +76,7 @@
 
 - type: item
   name: toilet
+  volume: 100 L
   description: A metal bowl for, well, you know.
   display: CHAIR_LIGHT
   behavior:
@@ -82,5 +84,6 @@
 
 - type: item
   name: rug
+  volume: 50 L
   description: A touch of homeliness.
   display: RUG

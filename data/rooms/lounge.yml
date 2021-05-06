@@ -66,6 +66,7 @@
 
 - type: item
   name: deck of cards
+  volume: 300 ml
   description: Aces high.
   display: SMALL_BOX
 
@@ -76,6 +77,7 @@
 
 - type: item
   name: counter
+  volume: 10 L
   description: A flat surface, affixed to the wall or floor. I've never seen it count.
   display: DESK
   behavior:
@@ -83,10 +85,12 @@
 
 - type: item
   name: stool
+  volume: 100 L
   description: For sitting. You could sit on it. If you wanted.
   display: CHAIR
 
 - type: item
   name: nutrient paste dispenser
+  volume: 1200 L
   description: converts a variety of biomass into barely palletable sludge that will fill your stomach and is unlikely to do you harm.
   display: LARGE_EQUIPMENT

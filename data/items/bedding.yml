@@ -7,6 +7,7 @@
 
 - type: item
   name: bed sheet
+  volume: 3 L
   display: RAW_CLOTH
   description: >-
     A flat sheet of synthetic fiber cloth.
@@ -14,6 +15,7 @@
 
 - type: item
   name: duvet
+  volume: 30 L
   display: RAW_CLOTH
   description: >-
     Small comfort against the vast, uncaring coldness of space.
@@ -21,6 +23,7 @@
 
 - type: item
   name: pillow
+  volume: 20 L
   description: >-
     A regulation pillow. You'd think these would be more comfortable, given how important it is for the crew to be
     well-rested on this sort of mission. Whatever this sort of mission is.

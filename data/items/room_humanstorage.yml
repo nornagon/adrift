@@ -1,5 +1,6 @@
 - type: item
   name: laser pump
+  volume: 5 L
   description: A device that uses laser power to pressurize or depressurize a volume.
   parts:
     - { type: A-size frame, count: 1, disassembled_with: SCREWING }
@@ -17,6 +18,7 @@
 
 - type: item
   name: refrigerator
+  volume: 1000 L
   description: This industrial cooler can suck a lot of heat out of an attached volume.
   parts:
     - { type: C-size frame, count: 1, disassembled_with: SCREWING }
@@ -27,6 +29,7 @@
 
 - type: item
   name: cooling unit
+  volume: 5 L
   description: This small cooling unit is pretty good at pushing heat around for its size.
   parts:
     - { type: B-size frame, count: 1, disassembled_with: SCREWING }
@@ -38,6 +41,7 @@
 
 - type: item
   name: cryocasket
+  volume: 1800 L
   description: A top-of-the-line system for maintaining a human alive at low temperature and minimum metabolic rate.
   parts:
     - { type: refrigerator, count: 1, disassembled_with: SCREWING }
@@ -50,6 +54,7 @@
 
 - type: item
   name: cryo-door
+  volume: 100 L
   description: The transparent door is designed to protect the inhabitant from the warmth outside. Or is it to protect the ship from the inhabitant?
   parts:
    - {type: Y5 lens, count: 2, disassembled_with: SCREWING}
@@ -59,6 +64,7 @@
 
 - type: item
   name: cryo-display
+  volume: 50 L
   description: A status indicator for the inhabitant scrolls vital information and diagnostic codes
   parts:
    - {type: micro e-board, count: 2, disassembled_with: SCREWING}

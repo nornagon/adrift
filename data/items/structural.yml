@@ -2,17 +2,17 @@
 # Modular structural item pieces
 #
 
-- { type: item, display: SMALL_PLATE, name: "A-size modular panel", description: "A variable-size modular panel used in constructing micro-scale structural frames." }
-- { type: item, display: MEDIUM_PLATE, name: "B-size modular panel", description: "A variable-size modular panel used in constructing small structural frames." }
-- { type: item, display: MEDIUM_PLATE, name: "C-size modular panel", description: "A variable-size modular panel used in constructing breadbox-sized structural frames." }
-- { type: item, display: MEDIUM_PLATE, name: "D-size modular panel", description: "A variable-size modular panel used in constructing large structural frames." }
-- { type: item, display: LARGE_PLATE, name: "E-size modular panel", description: "A variable-size modular panel used in constructing colossal structural frames." }
+- { type: item, display: SMALL_PLATE, volume: .05 mL, name: "A-size modular panel", description: "A variable-size modular panel used in constructing micro-scale structural frames." }
+- { type: item, display: MEDIUM_PLATE, volume: 1 mL, name: "B-size modular panel", description: "A variable-size modular panel used in constructing small structural frames." }
+- { type: item, display: MEDIUM_PLATE, volume: 5 mL, name: "C-size modular panel", description: "A variable-size modular panel used in constructing breadbox-sized structural frames." }
+- { type: item, display: MEDIUM_PLATE, volume: 50 mL, name: "D-size modular panel", description: "A variable-size modular panel used in constructing large structural frames." }
+- { type: item, display: LARGE_PLATE, volume: 1000 mL, name: "E-size modular panel", description: "A variable-size modular panel used in constructing colossal structural frames." }
 
-- { type: item, display: SMALL_ROD, name: "A-size modular rod", description: "A variable-length modular rod used in constructing micro-scale structural frames" }
-- { type: item, display: MEDIUM_ROD, name: "B-size modular rod", description: "A variable-length modular rod used in constructing small structural frames" }
-- { type: item, display: MEDIUM_ROD, name: "C-size modular rod", description: "A variable-length modular rod used in constructing breadbox-sized structural frames" }
-- { type: item, display: MEDIUM_ROD, name: "D-size modular rod", description: "A variable-length modular rod used in constructing large structural frames" }
-- { type: item, display: LARGE_ROD, name: "E-size modular rod", description: "A variable-length modular rod used in constructing colossal structural frames" }
+- { type: item, display: SMALL_ROD, volume: .05 mL, name:  "A-size modular rod", description: "A variable-length modular rod used in constructing micro-scale structural frames" }
+- { type: item, display: MEDIUM_ROD, volume: .1 mL, name:  "B-size modular rod", description: "A variable-length modular rod used in constructing small structural frames" }
+- { type: item, display: MEDIUM_ROD, volume: .5 mL, name:  "C-size modular rod", description: "A variable-length modular rod used in constructing breadbox-sized structural frames" }
+- { type: item, display: MEDIUM_ROD, volume: 5 mL, name:  "D-size modular rod", description: "A variable-length modular rod used in constructing large structural frames" }
+- { type: item, display: LARGE_ROD, volume: 100 mL, name:  "E-size modular rod", description: "A variable-length modular rod used in constructing colossal structural frames" }
 
 - type: item group
   name: frame parts
@@ -30,6 +30,7 @@
 
 - type: item
   name: A-size frame
+  volume: 5 mL
   description: A micro-scale structural frame for holding mechanical and electrical components.
   parts:
     - { type: "A-size modular rod", count: 12, disassembled_with: SCREWING }
@@ -38,6 +39,7 @@
 
 - type: item
   name: B-size frame
+  volume: 125 mL
   description: A small structural frame for holding mechanical and electrical components.
   parts:
     - { type: "B-size modular rod", count: 12, disassembled_with: SCREWING }
@@ -46,6 +48,7 @@
 
 - type: item
   name: C-size frame
+  volume: 2.5 L
   description: A structural frame for holding mechanical and electrical components.
   parts:
     - { type: "C-size modular rod", count: 12, disassembled_with: SCREWING }
@@ -54,6 +57,7 @@
 
 - type: item
   name: D-size frame
+  volume: 50 L
   description: A large structural frame for holding mechanical and electrical components.
   parts:
     - { type: "D-size modular rod", count: 12, disassembled_with: SCREWING }
@@ -62,6 +66,7 @@
 
 - type: item
   name: E-size frame
+  volume: 1000 L
   description: A massive structural frame for holding mechanical and electrical components.
   parts:
     - { type: "E-size modular rod", count: 12, disassembled_with: SCREWING }

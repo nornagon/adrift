@@ -40,6 +40,7 @@
 
 - type: item
   name: grow pod
+  volume: 1000 L
   display: LARGE_EQUIPMENT
   description: Basically a tub of water.
   behavior:
@@ -47,5 +48,6 @@
 
 - type: item
   name: compost bin
+  volume: 800 L
   display: LARGE_EQUIPMENT
   description: A large cylindrical hopper with a motor that slowly rotates the drum.

@@ -45,10 +45,10 @@ object adrift extends ScalaModule {
     ivy"org.scalanlp::breeze-natives:1.0",
     ivy"org.scalanlp::breeze-viz:1.0",
 
-    ivy"io.circe::circe-core:0.13.0",
-    ivy"io.circe::circe-generic:0.13.0",
+    ivy"io.circe::circe-core:0.14.0-M6",
+    ivy"io.circe::circe-generic:0.14.0-M6",
     ivy"io.circe::circe-generic-extras:0.13.0",
-    ivy"io.circe::circe-parser:0.13.0",
+    ivy"io.circe::circe-parser:0.14.0-M6",
     ivy"io.circe::circe-optics:0.13.0",
     ivy"io.circe::circe-yaml:0.13.0",
 

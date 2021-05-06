@@ -1,15 +1,18 @@
 - type: item
   name: attitude control panel
+  volume: 500 L
   description: control panel for viewing and adjusting the attitude control systems on the ship
   display: SMALL_EQUIPMENT
 
 - type: item
   name: gyro-system
+  volume: 1000 L
   description: a massive modular high-speed gyroscope with a series of vacuum bearings used to help rotate the ship
   display: LARGE_EQUIPMENT
 
 - type: item
   name: attitude thruster
+  volume: 1000 L
   description: dozens of these thruster packs are scattered about the hull of the ship and are used to help maintain spin and orientation
   parts:
     - {type: small combustion chamber, count: 4, disassembled_with: BOLT_TURNING}
@@ -22,6 +25,7 @@
 
 - type: item
   name: thruster controller
+  volume: 200 L
   description: the electronics to run and control the attitude thrusters
   parts:
     - {type: A-size frame, count: 1, disassembled_with: SOLDERING}
@@ -33,27 +37,32 @@
 
 - type: item
   name: pressure sensor
+  volume: .1 L
   description: a silver button, threaded on the side with a lock ring. comms over hull-bus.
   display: SMALL_COMPONENT
 
 - type: item
   name: temperature sensor
+  volume: .5 ml
   description: capable of surviving and reporting temperatures of near absolute zero to several thousand C, and could be mistaken for a grain of rice.
   display: SMALL_COMPONENT
 
 
 - type: item
   name: small bell nozzle
+  volume: .5 L
   description: It would make a great art-deco coffee cup if it didn't have that hole in the bottom to connect to the combustion chamber
   display: LARGE_COMPONENT
 
 - type: item
   name: small combustion chamber
+  volume: .3 L
   description: The metal has a rosy glow to it and it rings when tapped with a fingernail.
   display: LARGE_COMPONENT
 
 - type: item
   name: turbopump
+  volume: 2 L
   description: ceramic vanes and a magnetic-vacuum bearing indicate this was designed for operation only in space, not atmosphere
   parts:
     - {type: pump vane, count: 12, disassembled_with: BOLT_TURNING}
@@ -62,10 +71,12 @@
 
 - type: item
   name: pump vane
+  volume: .1 L
   description: pure white and perfectly smooth.  Looks like an alien ear or ritual knife. One edge is surprisingly sharp.
   display: SMALL_PART
 
 - type: item
   name: mag-vac bearing
+  volume: .6 L
   description: a chrome donut.  You know there's a seam somewhere because the inside spins separately from the outside, but you can't find it.
   display: LARGE_COMPONENT

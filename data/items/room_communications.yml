@@ -1,24 +1,29 @@
 - type: item
   name: communication control panel
+  volume: 500 L
   description: A classic Buck-Yee comms controller; an all-time easy-to-repair and modify classic
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: laser transmitter
+  volume: 500 L
   description: communications are unfortunately, traditionally limited by the speed of light.
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: radio transmitter
+  volume: 500 L
   description: mostly used for talking to the ship maintenance drones or external service personnel.
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: radio signal amplifier
+  volume: 200 L
   description: takes in a signal and some power and spits out a much brighter signal
   display: MEDIUM_EQUIPMENT
 
 - type: item
   name: antenna gimbal
+  volume: 500 L
   description: lasers and narrow-beam radio transmitters like to point at their targets. precision motors and bearings are required.
   display: MEDIUM_EQUIPMENT

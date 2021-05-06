@@ -1,5 +1,6 @@
 - type: item
   name: debug heater
+  volume: 50 L
   description: To make a space warm
   behavior:
     - Heater: { dq: 5 }

@@ -111,7 +111,7 @@
 
 - type: item
   name: atmospheric temperature control system
-  volume: 10 L
+  volume: 1 L
   description: A bank of specialized electronic boards for controlling atmospheric temperature. Always wrong somehow.
   display: MEDIUM_EQUIPMENT
   behavior:
@@ -134,6 +134,7 @@
 
 - type: item
   name: electronics rack
+  volume: 1000 L
   description: A bank of electronic boards - definitely used to control something important.
   display: MEDIUM_EQUIPMENT
   behavior:
@@ -160,10 +161,12 @@
 
 - type: item
   name: air mix system
+  volume: 200 L
   description: keeps the ratios of O2, N2 and CO2 suitable for human and plant life
   display: LARGE_EQUIPMENT
 
 - type: item
+  volume: 100 L
   name: air purification
   description: a system for removing a variety of toxins and neutralizing infectious agents from the air
   display: LARGE_EQUIPMENT
@@ -177,6 +180,7 @@
 
 - type: item
   name: air heater
+  volume: 200 L
   description: a bulky unit for dumping large amounts of heat into some air
   display: LARGE_EQUIPMENT
   behavior:
@@ -191,6 +195,7 @@
 
 - type: item
   name: debug power source
+  volume: 3 L
   display: SMALL_EQUIPMENT
   description: A hyperdense antidiamond fuel rod provides limitless power.
   behavior:
@@ -201,7 +206,8 @@
 
 - type: item
   name: air cooler
-  description: a bulky unit which extracts heat from air and stores it for later use in making tea.
+  volume: 200 L
+  description: A bulky unit which extracts heat from air and stores it for later use in making tea.
   display: LARGE_EQUIPMENT
   behavior:
     - Heater: { dq: -0.5 }
@@ -214,26 +220,31 @@
 
 - type: item
   name: oxygen tank
+  volume: 300 L
   description: a big canister for storing and transporting life-giving oxygen.
   display: LARGE_ROD
 
 - type: item
   name: CO2 tank
+  volume: 300 L
   description: A canister designed for transporting solid carbon dioxide pellets
   display: LARGE_ROD
 
 - type: item
   name: nitrogen tank
+  volume: 300 L
   description: A double-walled vac system for moving liquid nitrogen. Built-in optional gassifier.
   display: LARGE_ROD
 
 - type: item
   name: hydrogen tank
+  volume: 300 L
   description: Grown from a crystal seed, this tank can sustain impossible pressures without leaking. It's transparent, so you can see the baby-blue liquid hydrogen inside.
   display: LARGE_ROD
 
 - type: item
   name: combustion generator
+  volume: 500 L
   description: A highly efficient combustion generator with automated carbon resequestration.  Feed carbon and oxygen in, get heat and compressed CO2 out.
   parts:
   - { type: C-size frame, count: 1, disassembled_with: SCREWING }
@@ -248,6 +259,7 @@
 
 - type: item
   name: fuel hopper
+  volume: 50 L
   description: A port for accepting a wide variety of combustible fuels.
   parts:
     - { type: B-size frame, count: 1, disassembled_with: SCREWING }
@@ -256,6 +268,7 @@
 
 - type: item
   name: combustion chamber
+  volume: 300 L
   description: A valved box for combusting fuel to drive a small inverter.
   parts:
     - { type: B-size frame, count: 2, disassembled_with: SCREWING }
@@ -265,6 +278,7 @@
 
 - type: item
   name: inverter
+  volume: 2 L
   description: Converts motion into POWER.
   parts:
     - { type: A-size frame, count: 1, disassembled_with: SCREWING }
@@ -278,11 +292,13 @@
 
 - type: item
   name: gas valve
+  volume: 0.1 L
   description: It can open or close to either permit or prohibit gasses from moving.  Warranty void if exposed to liquids or solids.
   display: SMALL_EQUIPMENT
 
 - type: item
   name: water valve
+  volume: 0.1 L
   description: Operates pretty similar to the one you have equipped for urinary regulation.
   display: SMALL_EQUIPMENT
 
@@ -299,21 +315,25 @@
 
 - type: item
   name: water purification
+  volume: 500 L
   description: the best way to make sure water is just water is to decompose and recompose it.  Then add in some salts an minerals
   display: LARGE_EQUIPMENT
 
 - type: item
   name: sewage decomposition
+  volume: 500 L
   description: laser-catylized reactions break sewage waste down into constituent materials and store it in tanks for reuse
   display: LARGE_EQUIPMENT
 
 - type: item
   name: liquid tank
+  volume: 300 L
   description: A large storage tank for some sort of liquid... Could be water? Or maybe it's acid.  Or worse.
   display: LARGE_EQUIPMENT
 
 - type: item
   name: jeffries hatch
+  volume: 100 L
   description: A sturily built hatch in the floor.  Access to the maintenance tunnels, probably.
   display: HATCH
   behavior:

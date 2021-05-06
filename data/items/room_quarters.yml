@@ -1,5 +1,6 @@
 - type: item
   name: holonote
+  volume: .5 L
   description: A small cube that projects a 3D holographic message. A novelty, really, it's much easier to just write an e-mail.
   parts:
     - { type: rechargeable battery, disassembled_with: SCREWING }
@@ -11,6 +12,7 @@
 
 - type: item
   name: holographic projector
+  volume: .2 L
   description: A laser array and an assortment of spinning mirrors, capable of producing an ethereal full-color 3-dimensional image.
   parts:
     - { type: laser diode, count: 3, disassembled_with: SOLDERING }
@@ -20,6 +22,7 @@
 
 - type: item
   name: minifridge
+  volume: 300 L
   description: A small food-grade refrigerator for keeping your lunch in
   parts:
     - { type: cooling unit, count: 1, disassembled_with: SCREWING}
@@ -28,6 +31,7 @@
 
 - type: item
   name: backpack
+  volume: 5 L
   description: A light textile bag that straps close to the body. It has a lot of pockets.
   parts:
     - { type: synthetic fabric rag, count: 4, disassembled_with: CUTTING }
@@ -38,11 +42,13 @@
 
 - type: item
   name: flat mirror
+  volume: .1 L
   description: A small mirror. Your face looks strange, as if it belongs to someone else.
   display: OPTICAL
 
 - type: item
   name: bed
+  volume: 500 L
   description: A sturdy metal frame with a lightweight foam mattress. Mil-spec comfort.
   display: BED
   behavior:
@@ -50,11 +56,13 @@
 
 - type: item
   name: couch
+  volume: 500 L
   description: A lump of soft thing.
   display: BED
 
 - type: item
   name: closet
+  volume: 1000 L
   description: A floor-to-ceiling aluminium-frame closet. Hopefully the clothes inside are more beautiful than the closet itself.
   display: HUMAN_EQUIPMENT
   behavior:
@@ -62,6 +70,7 @@
 
 - type: item
   name: side table
+  volume: 100 L
   description: side table
   parts:
   - {type: drawer, count: 3, disassembled_with: SCREWING}
@@ -70,6 +79,7 @@
 
 - type: item
   name: desk
+  volume: 800 L
   description: A modular alum-composite structural desk. Designed for maximum productivity. Under normal conditions.
   parts:
   - {type: D-size frame, count: 1, disassembled_with: SCREWING}
@@ -80,6 +90,7 @@
 
 - type: item
   name: drawer
+  volume: 20 L
   description: Is it a drawer once you've pulled it out of the furniture?  Is it just a weird box?
   parts:
   - {type: B-size frame, count: 1, disassembled_with: SCREWING}
@@ -87,10 +98,12 @@
 
 - type: item
   name: chair
+  volume: 100 L
   description: A sleek alum-composite adjustable chair. Great for when you need to take a break.
   display: CHAIR
 
 - type: item
   name: table
+  volume: 600 L
   description: For some reason this table has a wood-veneer surface, as if the architects thought you needed to be reminded of home.
   display: DESK

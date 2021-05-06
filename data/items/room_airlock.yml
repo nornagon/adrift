@@ -1,5 +1,6 @@
 - type: item
   name: airlock door
+  volume: 400 L
   description: An airtight door specially designed with interlocks to prevent it from opening if its linked door is open.
   parts:
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
@@ -14,6 +15,7 @@
 
 - type: item
   name: spacesuit dock
+  volume: 1000 L
   description: a rack that supports the spacesuit and keeps its batteries charged
   parts:
     - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
@@ -28,6 +30,7 @@
 
 - type: item
   name: spacesuit
+  volume: 1200 L
   description: a snug, armored, human casing with integrated atmosphere and waste processing systems designed for hand assembly
   parts:
     - { type: suit atmosphere processor, disassembled_with: HANDLING }
@@ -41,6 +44,7 @@
 
 - type: item
   name: suit atmosphere processor
+  volume: 10 L
   description: a miniaturized atmosphere recycling system. There's some sort of goop in the packs
   parts:
     - { type: mouthpiece, count: 1, disassembled_with: HANDLING}
@@ -54,21 +58,25 @@
 
 - type: item
   name: mouthpiece
+  volume: .1 L
   description: a soft conforming cup that fits over your mouth and nose
   display: SMALL_PART
 
 - type: item
   name: CO2 cartridge
+  volume: 1 L
   description: as the gel absorbs CO2, it turns from bright green to sky blue, so you can qualitatively tell how much time you have left
   display: SMALL_ROD
 
 - type: item
   name: small oxygen tank
+  volume: 1 L
   description: looks like steel. you can feel something sloshing around inside
   display: SMALL_ROD
 
 - type: item
   name: gas controller
+  volume: 1 L
   description: a small tube connects to the air intake. electrical terminals for valves and power decorate the other side.
   parts:
    - { type: A-size frame, disassembled_with: SCREWING}
@@ -79,16 +87,19 @@
 
 - type: item
   name: gas sensor
+  volume: .1 L
   description: a micro spectrographic unit provides the composition of a gas sample
   display: MEDIUM_COMPONENT
 
 - type: item
   name: small valve
+  volume: 2 mL
   description: about the size of the last knuckle on your pinky, this variable control valve has an option for electrical actuation
   display: SMALL_PART
 
 - type: item
   name: suit waste processor
+  volume: 10 L
   description: pee and poop in, clean water and stored waste out.
   parts:
    - { type: groin adapter, disassembled_with: HANDLING }
@@ -98,40 +109,48 @@
 
 - type: item
   name: groin adapter
+  volume: .5 L
   description: rubber underwear with suction ports and disconnect fittings
   display: SMALL_PART
 
 - type: item
   name: liquid filter unit
+  volume: 1 L
   description: turns pee and sweat into warm gatorade
   display: SMALL_EQUIPMENT
 
 - type: item
   name: solid waste unit
+  volume: 3 L
   description: provides suction to remove solid waste, then dehydrates and stores it for reuse at the farms.
   display: SMALL_EQUIPMENT
 
 - type: item
   name: battery pack
+  volume: 2 L
   description: a bunch of batteries held together with some space-rated glue
   display: SMALL_EQUIPMENT
 
 - type: item
   name: inner body sleeve
+  volume: 2 L
   description: a synthread sock for your body
   display: CLOTHING
 
 - type: item
   name: mag boots
+  volume: 3 L
   description: magnets let you walk on any ferrous material in zero g, like the hull of the ship.
   display: SMALL_EQUIPMENT
 
 - type: item
   name: helmet
+  volume: 10 L
   description: when you go outside, don't forget your hat.
   display: SMALL_EQUIPMENT
 
 - type: item
   name: armor plating
+  volume: 20 L
   description: layers of tungsteel foil provide some protection from micrometeoroids 
   display: SMALL_EQUIPMENT

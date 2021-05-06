@@ -154,6 +154,7 @@
 
 - type: item
   name: large storage shelf
+  volume: 1000 L
   description: A metal rack for holding... pretty much anything.  Large, strong, easily movable shelves mean your options are endless.  Only 39.95 for a limited time only.
   display: MEDIUM_EQUIPMENT
   parts:
@@ -195,18 +196,22 @@
 
 - type: item
   name: cereal
+  volume: 2 L
   description: a box of nutritious granola
   display: FOOD
 - type: item
   name: cookies
+  volume: 1 L
   description: a box of fattening cookies
   display: FOOD
 - type: item
   name: crackers
+  volume: 0.3 L
   description: a box of boring stale crackers
   display: FOOD
 - type: item
   name: biscuits
+  volume: 0.3 L
   description: a box of nutritious biscuits.  You could live on these forever if you wanted to.
   display: FOOD
 
@@ -219,13 +224,16 @@
 
 - type: item
   name: beans
+  volume: 0.5 L
   description: a can of beans
   display: FOOD
 - type: item
   name: tuna
+  volume: 0.5 L
   description: a can of tuna.  Gotta get that protein hit.
   display: FOOD
 - type: item
   name: mandarin oranges
+  volume: 0.5 L
   description: a can of mandarin oranges in light syrup. a treat!
   display: FOOD
