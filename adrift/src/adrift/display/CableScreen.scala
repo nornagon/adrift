@@ -27,6 +27,16 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   private var displayedDataLayers = LayerSet.all
   private var displayedFluidLayers = LayerSet.all
   private var displaying: DisplayingType = Power
+  def queryTypes: Seq[String] = displaying match {
+    case Power => Seq("power-in", "power-out")
+    case Data => Seq("data-in", "data-out")
+    case Fluid => Seq("fluid-in", "fluid-out")
+  }
+  def displayingLayers: LayerSet = displaying match {
+    case Power => displayedPowerLayers
+    case Data => displayedDataLayers
+    case Fluid => displayedFluidLayers
+  }
 
   private var cursor = state.player.xy
 
@@ -92,13 +102,13 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   def renderSidebar(): Box = vbox(
     size = 20,
     children = Seq(
-      frame(size = 5, contents = vbox(
+      frame(size = 6, contents = vbox(
         children = Seq(
+          text(" 12345678"),
           hbox(
             children = Seq(
               text(
-                (0 until 8).map(i => if (displayedPowerLayers(i)) "\u00fe" else "\u00ff").mkString(""),
-                size = 8,
+                " " + (0 until 8).map(i => if (displayedPowerLayers(i)) "\u00fe" else "\u00ff").mkString(""),
                 foreground = powerColor
               ),
               text(" "),
@@ -108,8 +118,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
           hbox(
             children = Seq(
               text(
-                (0 until 8).map(i => if (displayedDataLayers(i)) "\u00fe" else "\u00ff").mkString(""),
-                size = 8,
+                " " + (0 until 8).map(i => if (displayedDataLayers(i)) "\u00fe" else "\u00ff").mkString(""),
                 foreground = dataColor
               ),
               text(" "),
@@ -119,8 +128,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
           hbox(
             children = Seq(
               text(
-                (0 until 8).map(i => if (displayedFluidLayers(i)) "\u00fe" else "\u00ff").mkString(""),
-                size = 8,
+                " " + (0 until 8).map(i => if (displayedFluidLayers(i)) "\u00fe" else "\u00ff").mkString(""),
                 foreground = fluidColor
               ),
               text(" "),
@@ -137,17 +145,26 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
             val hp = item.behaviors.find(_.isInstanceOf[HasPorts]).map(_.asInstanceOf[HasPorts])
             hp match {
               case Some(hp) =>
-                c :+= htext(state.itemDisplayName(item))
-                for (p <- hp.ports) {
-                  val cs = hp.connections.getOrElse(p.name, LayerSet.empty)
-                  c :+= hbox(children = Seq(text(" " +
-                    (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString(""),
-                    foreground = p.`type` match {
-                      case "data-in" | "data-out" => dataColor
-                      case "power-in" | "power-out" => powerColor
-                      case "fluid-in" | "fluid-out" => fluidColor
-                    }
-                  ), htext(s" ${p.name}")), size = 1)
+                val displayedPorts = hp.ports.filter(p => queryTypes.contains(p.`type`))
+                if (displayedPorts.nonEmpty) {
+                  c :+= htext(state.itemDisplayName(item))
+                  for (p <- displayedPorts) {
+                    val cs = hp.connections.getOrElse(p.name, LayerSet.empty)
+                    val intersectsWithCurrentView = cs intersects displayingLayers
+                    c :+= hbox(
+                      children = Seq(
+                        text(
+                          " " +
+                            (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString(""),
+                          foreground = (p.`type` match {
+                            case "data-in" | "data-out" => dataColor
+                            case "power-in" | "power-out" => powerColor
+                            case "fluid-in" | "fluid-out" => fluidColor
+                          }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
+                        ), htext(s" ${p.name}", foreground = Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f))
+                      ), size = 1
+                    )
+                  }
                 }
               case None =>
             }
@@ -159,11 +176,6 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   )
 
   def renderCableOverlay(renderer: GlyphRenderer, bounds: Rect): Unit = {
-    val displayingLayers = displaying match {
-      case Power => displayedPowerLayers
-      case Data => displayedDataLayers
-      case Fluid => displayedFluidLayers
-    }
     val displayingCableColor = displaying match {
       case Power => powerColor
       case Data => dataColor
@@ -186,11 +198,6 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case Fluid => level.fluidCables
       }
       val layers = new LayerSet(cables(x, y))
-      val queryTypes = displaying match {
-        case Power => Seq("power-in", "power-out")
-        case Data => Seq("data-in", "data-out")
-        case Fluid => Seq("fluid-in", "fluid-out")
-      }
       // if there's something with ports here...
       val connected = queryTypes.exists(queryType =>
         state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected(queryType, LayerSet.all)).connected)
