@@ -15,13 +15,17 @@ object NumericKey {
 }
 
 class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
+  import UI.Color._
+
   private sealed trait DisplayingType {
     def next: DisplayingType
   }
-  private case object Power extends DisplayingType { def next = Data }
-  private case object Data extends DisplayingType { def next = Power }
+  private case object Power extends DisplayingType { def next: DisplayingType = Data }
+  private case object Data extends DisplayingType { def next: DisplayingType = Fluid }
+  private case object Fluid extends DisplayingType { def next: DisplayingType = Power }
   private var displayedPowerLayers = LayerSet.all
   private var displayedDataLayers = LayerSet.all
+  private var displayedFluidLayers = LayerSet.all
   private var displaying: DisplayingType = Power
 
   private var cursor = state.player.xy
@@ -39,10 +43,12 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         val cables = displaying match {
           case Power => level.powerCables
           case Data => level.dataCables
+          case Fluid => level.fluidCables
         }
         val displayedLayers = displaying match {
           case Power => displayedPowerLayers
           case Data => displayedDataLayers
+          case Fluid => displayedFluidLayers
         }
         if (cables.contains(cursor)) {
           cables(cursor) ^= displayedLayers.bits
@@ -54,6 +60,8 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
               displayedPowerLayers = displayedPowerLayers.toggle(n - 1)
             case Data =>
               displayedDataLayers = displayedDataLayers.toggle(n - 1)
+            case Fluid =>
+              displayedFluidLayers = displayedFluidLayers.toggle(n - 1)
           }
         } else {
           displaying match {
@@ -61,6 +69,8 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
               displayedPowerLayers = new LayerSet(1 << (n - 1))
             case Data =>
               displayedDataLayers = new LayerSet(1 << (n - 1))
+            case Fluid =>
+              displayedFluidLayers = new LayerSet(1 << (n - 1))
           }
         }
       case (GLFW_PRESS, GLFW_KEY_TAB) =>
@@ -92,7 +102,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
                 foreground = powerColor
               ),
               text(" "),
-              htext("Power", size = 0)
+              htext("Power", size = 0, foreground = if (displaying == Power) lightGreen else null)
             )
           ),
           hbox(
@@ -103,18 +113,18 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
                 foreground = dataColor
               ),
               text(" "),
-              htext("Data", size = 0)
+              htext("Data", size = 0, foreground = if (displaying == Data) lightGreen else null)
             )
           ),
           hbox(
             children = Seq(
               text(
-                (0 until 8).map(i => if (displayedDataLayers(i)) "\u00fe" else "\u00ff").mkString(""),
+                (0 until 8).map(i => if (displayedFluidLayers(i)) "\u00fe" else "\u00ff").mkString(""),
                 size = 8,
                 foreground = fluidColor
               ),
               text(" "),
-              htext("Fluid", size = 0)
+              htext("Fluid", size = 0, foreground = if (displaying == Fluid) lightGreen else null)
             )
           )
         )
@@ -152,10 +162,12 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val displayingLayers = displaying match {
       case Power => displayedPowerLayers
       case Data => displayedDataLayers
+      case Fluid => displayedFluidLayers
     }
     val displayingCableColor = displaying match {
       case Power => powerColor
       case Data => dataColor
+      case Fluid => fluidColor
     }
 
     val levelId = state.player.levelId
@@ -171,11 +183,13 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
       val cables = displaying match {
         case Power => level.powerCables
         case Data => level.dataCables
+        case Fluid => level.fluidCables
       }
       val layers = new LayerSet(cables(x, y))
       val queryTypes = displaying match {
         case Power => Seq("power-in", "power-out")
         case Data => Seq("data-in", "data-out")
+        case Fluid => Seq("fluid-in", "fluid-out")
       }
       // if there's something with ports here...
       val connected = queryTypes.exists(queryType =>
