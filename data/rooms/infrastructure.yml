@@ -255,7 +255,12 @@
   - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
   display: MEDIUM_EQUIPMENT
   behavior:
-    - GeneratesShipPower: { circuit: main, amountPerTick: 10 }
+    - Container: { maxVolume: 100 L }
+    - CombustsContents: { rate: 100 }
+    - HoldsCharge: { maxCharge: 1000, currentCharge: 0 }
+    - HasPorts:
+        ports:
+          - { type: power-out, name: Power }
 
 - type: item
   name: fuel hopper

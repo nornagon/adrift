@@ -30,8 +30,11 @@ object Message {
   case class Provides(op: ItemOperation, var provides: Boolean = false) extends Message
 
   // Power
+  case class AddCharge(var amount: Int) extends Message
   case class DrawCharge(amount: Int, var ok: Boolean = true) extends Message
   case class ChargeAvailable(amount: Int, var ok: Boolean = false) extends Message
+  case class IsCombustible(var ok: Boolean = false) extends Message
+  case class CombustionEnergy(var joules: Int = 0) extends Message
 
   // Plugs
   case class PlugInto(item: Item) extends Message

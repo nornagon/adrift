@@ -137,12 +137,12 @@ case class Volume(milliliters: Int) extends AnyVal with Ordered[Volume] {
   override def compare(that: Volume): Int = implicitly[Ordered[Int]](milliliters).compare(that.milliliters)
 }
 object Volume {
-  private val milliliters = """(?i)\s*(\d+)\s*ml""".r
-  private val liters = """(?i)\s*(\d+)\s*l""".r
+  private val milliliters = """(?i)\s*(\d*\.?\d+)\s*ml""".r
+  private val liters = """(?i)\s*(\d*\.?\d+)\s*l""".r
   implicit val decoder: Decoder[Volume] = { (h: HCursor) =>
     h.as[String].flatMap {
-      case milliliters(c) => Right(Volume(c.toInt))
-      case liters(c) => Right(Volume(c.toInt * 1000))
+      case milliliters(c) => Right(Volume(c.toFloat.round))
+      case liters(c) => Right(Volume((c.toFloat * 1000).round))
       case other => Left(DecodingFailure(s"Failed to parse volume: '$other'", h.history))
     }
   }

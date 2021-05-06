@@ -119,6 +119,8 @@
   volume: .1 L
   description: degraded bits of plastic - maybe it was once a bottle? or a comb?
   display: TRASH
+  behavior:
+    - Combustible: { joules: 1000 }
 
 - type: item group
   name: trash

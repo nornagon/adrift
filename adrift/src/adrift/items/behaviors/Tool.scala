@@ -27,6 +27,11 @@ case class HoldsCharge(maxCharge: Int, var currentCharge: Int = -1) extends Beha
     self: Item,
     message: Message
   ): Unit = message match {
+    case t: Message.AddCharge =>
+      val spaceAvailable = maxCharge - currentCharge
+      val d = math.min(t.amount, spaceAvailable)
+      t.amount -= d
+      currentCharge += d
     case t: Message.DrawCharge =>
       t.ok = currentCharge >= t.amount
       if (t.ok)
