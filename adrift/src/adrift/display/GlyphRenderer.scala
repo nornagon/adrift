@@ -306,6 +306,7 @@ object GlyphRenderer {
     import java.util.regex.Pattern
     import scala.util.control.Breaks._
     if (str == null) return Seq.empty
+    if (wrapLength >= str.length) return Seq(str)
     val patternToWrapOn = Pattern.compile(wrapOn)
     val inputLineLength = str.length
     var offset = 0

@@ -93,6 +93,7 @@ object Color {
   }
   val White: Color = Color(1f, 1f, 1f, 1f)
   val Black: Color = Color(0f, 0f, 0f, 1f)
+  val Transparent: Color = Color(0f, 0f, 0f, 0f)
 }
 
 case class Gradient(colors: Seq[Color]) {

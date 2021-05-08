@@ -95,46 +95,49 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout._
     moveCursor(0) // if the item list has changed, this pushes the cursor back in range
-
     val bounds = Rect.centeredAt(renderer.bounds.center, 40, 40)
+
+    import layout3._
+
     val actions = selectedItem map { commands }
     val actionGuide = actions match {
       case Some(actions) =>
-        val actionStrLines = wrapCS(
-          actions.map(_.display).reduce(_ + ColoredString(" ", Seq.empty) + _),
-          bounds.width - 2
+        Seq(
+          new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
+          new RenderText(actions.map(_.display).reduce(_ + " " + _))
         )
-        vbox(children = actionStrLines.map(htext(_, foreground = disabledGreen)), size = actionStrLines.size)
       case None =>
-        vbox()
+        Seq.empty
     }
 
-    layout.draw(renderer, hbox(
-      bounds = bounds,
-      background = darkGreen,
-      foreground = lightGreen,
-      children = Seq(
-        vbox(size = 1, fill = '\u00dd'),
-        vbox(
+    val r = new RenderLRBorder(
+      fg = lightGreen, bg = darkGreen,
+      content = new RenderBackground(bg = darkGreen, content = new RenderConstrainedBox(
+        additionalConstraints = BoxConstraints(minWidth = Int.MaxValue),
+        content = new RenderFlex(direction = Axis.Vertical,
           children = sections.zip(items).flatMap {
             case ((title, location), items) =>
-              Seq(htext(title, foreground = disabledGreen)) ++ items.flatMap { item =>
+              Seq(new RenderText(title.withFg(disabledGreen))) ++ items.map { item =>
                 val indentation = countContainers(item)
                 val fg =
-                  if (selectedItem.contains(item))
-                    selectedGreen
-                  else if (marked(item))
-                    markedBlue
-                  else
-                    lightGreen
-                Seq(htext(" " * indentation + state.itemDisplayName(item), foreground = fg))
+                  if (selectedItem.contains(item)) selectedGreen
+                  else if (marked(item)) markedBlue
+                  else lightGreen
+                new RenderText((" " * indentation + state.itemDisplayName(item)).withFg(fg))
               }
-          } :+ vbox(size = 0) :+ actionGuide
-        ),
-        vbox(size = 1, fill = '\u00de'),
+          } ++ (selectedItem match {
+            case Some(sel) =>
+              Seq(
+                new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
+                new RenderText(sel.kind.description.withFg(disabledGreen))
+              )
+            case None => Seq.empty
+          }) ++ actionGuide
+        )
       ))
     )
+    r.layout(BoxConstraints(maxWidth = bounds.width, maxHeight = bounds.height))
+    r.paint(renderer, Offset(bounds.l, bounds.t))
   }
 }
