@@ -190,7 +190,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import GlyphRenderer.{Ann, ColoredString, wrapCS}
+    import layout3._
+
     val width = 24
     val Some((sx, sy)) = display.worldToScreen(state)(location.xy)
     val (char, fg, bg) = Appearance.charAtPosition(state, location)
@@ -198,87 +199,103 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
 
-    var nextY = 0
-    def sprintln(s: String, fg: Color = lightGreen, bg: Color = darkGreen, wrap: Boolean = false): Unit = {
-      if (wrap) {
-        //noinspection RedundantDefaultArgument
-        for (line <- GlyphRenderer.wrap(s, (width - 2) * 2))
-          sprintln(line, fg = fg, bg = bg, wrap = false)
-      } else {
-        sprintlnColored(ColoredString(s, Seq(Ann(0, s.length, fg))), bg = bg)
-      }
-    }
-
-    def sprintlnColored(ss: ColoredString, defaultFg: Color = lightGreen, bg: Color = darkGreen): Unit = {
-      val left = sx + 2
-      val top = nextY + sy
-      var x = 0
-      val y = 0
-      renderer.drawChar(left, top + y, 0xdd, fg = lightGreen, bg = bg)
-      x += 2
-
-      for ((s, anns) <- ss.parts) {
-        val fg = anns.lastOption.map(_.fg).getOrElse(defaultFg)
-        val maxWidth = (width - 1) * 2 - x
-        renderer.drawHalfString(left * 2 + x, top + y, s, fg = fg, bg = bg, maxWidth = maxWidth)
-        x += math.min(maxWidth, s.length)
-      }
-
-      while (x < (width - 1) * 2) {
-        renderer.drawHalfChar(left * 2 + x, top + y, ' ', bg = bg)
-        x += 1
-      }
-
-      renderer.drawChar(left + width - 1, top + y, 0xde, fg = lightGreen, bg = bg)
-
-      nextY += 1
-    }
-    openStack.zipWithIndex.foreach { case (it, idx) =>
-      val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
-      sprintln(prefix + it.kind.name)
-      if (state.isKnownToBeNonFunctional(it))
-        renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = darkGreen)
-    }
-    val entries = menuEntries
-    for (y <- entries.indices) {
-      val bg = if (y == selected) selectedGreen else darkGreen
-      val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == entries.size - 1) "\u00c0" else "\u00c3")
-      val entry = entries(y)
-      sprintln(prefix + entry.text, bg = bg, fg = if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen)
-      entry match {
-        case ItemEntry(item) =>
-          if (state.isKnownToBeNonFunctional(item))
-            renderer.drawChar(sx + width, sy + nextY - 1, '!', fg = red, bg = bg)
-          else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
-            renderer.drawChar(sx + width, sy + nextY - 1, '?', fg = disabledGreen, bg = bg)
-        case _ =>
-      }
-    }
-    sprintln("")
-    val entry = entries(selected)
-    entry match {
-      case ItemEntry(item) =>
-        val conditions = state.visibleConditions(item)
-        for (condition <- conditions) sprintln(condition, fg = red)
-        if (conditions.nonEmpty) sprintln("")
-        sprintln(item.kind.description, fg = disabledGreen, wrap = true)
-        for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) {
-          sprintln("")
-          sprintln(s"Requires ${missingOp.id} to remove.", fg = red, wrap = true)
-        }
-      case MissingItemEntry(kind, count) =>
-        count match {
-          case 1 =>
-            sprintln("This part is missing.", fg = disabledGreen, wrap = true)
-          case n =>
-            sprintln(s"$n of these are missing.", fg = disabledGreen, wrap = true)
-        }
-    }
-    val actionCS = commands(entry).map(_.display)
-    if (actionCS.nonEmpty) {
-      sprintln("")
-      val actionStr = wrapCS(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _), width - 2)
-      actionStr.foreach(sprintlnColored(_, defaultFg = disabledGreen))
-    }
+    val r = new RenderLRBorder(
+      fg = lightGreen, bg = darkGreen,
+      content = new RenderConstrainedBox(
+        BoxConstraints(minWidth = Int.MaxValue),
+        new RenderBackground(bg = darkGreen, content = new RenderFlex(
+          direction = Axis.Vertical,
+          children = {
+            openStack.zipWithIndex.map { case (it, idx) =>
+              val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
+              new RenderFlex(
+                direction = Axis.Horizontal,
+                children = Seq(
+                  new RenderFlexible(flex = 1, content =
+                    new RenderFlex(direction = Axis.Horizontal, children = Seq(
+                      new RenderText(prefix, halfWidth = false),
+                      new RenderFlexible(flex = 1, content = new RenderText(it.kind.name))
+                    ))
+                  ),
+                  new RenderText(if (state.isKnownToBeNonFunctional(it)) "!".withFg(red) else "", halfWidth = false)
+                )
+              )
+            } ++ {
+              val entries = menuEntries
+              val entry = entries(selected)
+              (for (y <- entries.indices) yield {
+                val bg = if (y == selected) selectedGreen else darkGreen
+                val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == entries.size - 1) "\u00c0" else "\u00c3")
+                val entry = entries(y)
+                new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), new RenderBackground(bg = bg, content = new RenderFlex(
+                  direction = Axis.Horizontal,
+                  children = Seq(
+                    new RenderFlexible(
+                      flex = 1,
+                      content =
+                        new RenderFlex(direction = Axis.Horizontal, children = Seq(
+                          new RenderText(prefix, halfWidth = false),
+                          new RenderFlexible(flex = 1, content = new RenderText(entry.text.withFg(
+                            if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen
+                          )))
+                        ))
+                    ),
+                    new RenderText(entry match {
+                      case ItemEntry(item) =>
+                        if (state.isKnownToBeNonFunctional(item))
+                          "!".withFg(red)
+                        else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
+                          "?".withFg(disabledGreen)
+                        else
+                          ""
+                      case _ => ""
+                    }, halfWidth = false)
+                  )
+                )))
+              }) ++ {
+                entry match {
+                  case ItemEntry(item) =>
+                    (state.visibleConditions(item) match {
+                      case Seq() => Seq.empty
+                      case conditions =>
+                        new RenderText("") +: conditions.map(c => new RenderText(c.withFg(red)))
+                    }) ++ Seq(
+                      new RenderText(""),
+                      new RenderText(item.kind.description.withFg(disabledGreen))
+                    ) ++ (
+                      for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) yield {
+                        Seq(
+                          new RenderText(""),
+                          new RenderText(s"Requires ${missingOp.id} to remove.".withFg(red))
+                        )
+                      }
+                    ).getOrElse(Seq.empty)
+                  case MissingItemEntry(kind, count) =>
+                    Seq(
+                      new RenderText(""),
+                      count match {
+                        case 1 =>
+                          new RenderText("This part is missing.".withFg(disabledGreen))
+                        case n =>
+                          new RenderText(s"$n of these are missing.".withFg(disabledGreen))
+                      }
+                    )
+                }
+              } ++ {
+                val actionCS = commands(entry).map(_.display)
+                if (actionCS.nonEmpty) {
+                  Seq(
+                    new RenderText(""),
+                    new RenderText(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
+                  )
+                } else Seq.empty
+              }
+            }
+          }
+        ))
+      )
+    )
+    r.layout(BoxConstraints(minWidth = width, maxWidth = width))
+    r.paint(renderer, Offset(sx + 2, sy))
   }
 }

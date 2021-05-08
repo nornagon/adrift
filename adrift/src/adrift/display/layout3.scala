@@ -37,34 +37,62 @@ object layout3 {
   trait Constraints
   trait ParentData
   abstract class RenderObject {
-    type PD <: ParentData
     type C <: Constraints
-    var parentData: PD = _
+    var parentData: ParentData = _
     def layout(constraints: C): Unit
     def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit
+    def applyParentData(): Unit = {}
+  }
+
+  case class Pint(i: Int) extends AnyVal with Ordered[Pint] {
+    def clamp(lo: Pint, hi: Pint): Pint =
+      if (i < lo.i) lo.i
+      else if (i > hi.i) hi.i
+      else i
+
+    def *(other: Pint): Pint =
+      if (i == Int.MaxValue || other.i == Int.MaxValue) Int.MaxValue
+      else i * other.i
+
+    def -(other: Pint): Pint =
+      if (i == Int.MaxValue) Int.MaxValue
+      else if (other.i == Int.MaxValue) 0
+      else i - other.i
+
+    def +(other: Pint): Pint =
+      if (i == Int.MaxValue) Int.MaxValue
+      else i + other.i
+
+    def /(other: Pint): Pint =
+      if (i == Int.MaxValue) Int.MaxValue
+      else i / other.i
+
+    override def compare(that: Pint): Int = i.compare(that.i)
+  }
+  implicit def intToPint(i: Int): Pint = Pint(i)
+
+  object pmath {
+    def max(a: Pint, b: Pint): Pint = if (a > b) a else b
   }
 
   case class BoxConstraints(
-    minWidth: Int = 0,
-    maxWidth: Int = Int.MaxValue,
-    minHeight: Int = 0,
-    maxHeight: Int = Int.MaxValue
+    minWidth: Pint = 0,
+    maxWidth: Pint = Int.MaxValue,
+    minHeight: Pint = 0,
+    maxHeight: Pint = Int.MaxValue
   ) extends Constraints {
     def enforce(other: BoxConstraints): BoxConstraints = new BoxConstraints(
-      minWidth = math.max(other.minWidth, math.min(other.maxWidth, minWidth)),
-      maxWidth = math.max(other.minWidth, math.min(other.maxWidth, maxWidth)),
-      minHeight = math.max(other.minHeight, math.min(other.maxHeight, minHeight)),
-      maxHeight = math.max(other.minHeight, math.min(other.maxHeight, maxHeight)),
+      minWidth = minWidth.clamp(other.minWidth, other.maxWidth),
+      maxWidth = maxWidth.clamp(other.minWidth, other.maxWidth),
+      minHeight = minHeight.clamp(other.minHeight, other.maxHeight),
+      maxHeight = maxHeight.clamp(other.minHeight, other.maxHeight),
     )
 
     def constrain(size: Size): Size =
-      Size(constrainWidth(size.width), constrainHeight(size.height));
+      Size(constrainWidth(size.width).i, constrainHeight(size.height).i)
 
-    def constrainWidth(width: Int = Int.MaxValue): Int =
-      math.max(minWidth, math.min(maxWidth, width))
-
-    def constrainHeight(height: Int = Int.MaxValue): Int =
-      math.max(minHeight, math.min(maxHeight, height))
+    def constrainWidth(width: Int = Int.MaxValue): Pint = width.clamp(minWidth, maxWidth)
+    def constrainHeight(height: Int = Int.MaxValue): Pint = height.clamp(minHeight, maxHeight)
   }
   object BoxConstraints {
     def tight(size: Size): BoxConstraints = new BoxConstraints(size.width, size.width, size.height, size.height)
@@ -114,9 +142,9 @@ object layout3 {
   class RenderText(text: ColoredString, halfWidth: Boolean = true) extends RenderBox {
     private var _lines: Seq[ColoredString] = Seq.empty
     override def layout(constraints: BoxConstraints): Unit = {
-      _lines = GlyphRenderer.wrapCS(text, constraints.maxWidth * (if (halfWidth) 2 else 1))
+      _lines = GlyphRenderer.wrapCS(text, (constraints.maxWidth * (if (halfWidth) 2 else 1)).i)
       val textSize = Size(
-        width = _lines.view.map(_.length).max / (if (halfWidth) 2 else 1),
+        width = (_lines.view.map(_.length).max + (if (halfWidth) 1 else 0)) / (if (halfWidth) 2 else 1),
         height = _lines.size
       )
       size = constraints.constrain(textSize)
@@ -126,9 +154,9 @@ object layout3 {
       var y = 0
       for (line <- _lines) {
         if (halfWidth)
-          glyphRenderer.drawHalfColoredString(offset.x * 2, offset.y + y, line, bg = Color.Transparent)
+          glyphRenderer.drawHalfColoredString(offset.x * 2, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width * 2)
         else
-          glyphRenderer.drawColoredString(offset.x, offset.y + y, line, bg = Color.Transparent)
+          glyphRenderer.drawColoredString(offset.x, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width)
         y += 1
       }
     }
@@ -140,8 +168,23 @@ object layout3 {
     case object Horizontal extends Axis
   }
 
+  class FlexParentData extends BoxParentData {
+    var flex: Int = 0
+  }
+
+  class RenderFlexible(content: RenderBox, flex: Int) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      content.layout(constraints)
+      size = content.size
+    }
+
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = content.paint(glyphRenderer, offset)
+
+    override def applyParentData(): Unit = this.parentData.asInstanceOf[FlexParentData].flex = flex
+  }
+
   class RenderFlex(children: Seq[RenderBox], direction: Axis) extends RenderBox {
-    children.foreach { c => c.parentData = new BoxParentData() }
+    children.foreach { c => c.parentData = new FlexParentData(); c.applyParentData() }
 
     private def _getMainSize(size: Size): Int = direction match {
       case Axis.Vertical => size.height
@@ -156,19 +199,65 @@ object layout3 {
     override def layout(constraints: BoxConstraints): Unit = {
       var allocatedSize: Int = 0
       var crossSize: Int = 0
-      for (child <- children) {
-        val innerConstraints: BoxConstraints = direction match {
-          case Axis.Vertical => BoxConstraints(maxWidth = constraints.maxWidth)
-          case Axis.Horizontal => BoxConstraints(maxHeight = constraints.maxHeight)
-        }
-        child.layout(innerConstraints)
-        child.parentData.offset = direction match {
-          case Axis.Vertical => Offset(0, allocatedSize)
-          case Axis.Horizontal => Offset(allocatedSize, 0)
-        }
-        allocatedSize += _getMainSize(child.size)
-        crossSize = math.max(crossSize, _getCrossSize(child.size))
+      var totalFlex: Int = 0
+      val maxMainSize = direction match {
+        case Axis.Vertical => constraints.maxHeight
+        case Axis.Horizontal => constraints.maxWidth
       }
+      val canFlex = maxMainSize < Int.MaxValue
+      var lastFlexChild: RenderBox = null
+      for (child <- children) {
+        val flex = child.parentData.asInstanceOf[FlexParentData].flex
+        if (flex > 0) {
+          totalFlex += flex
+          lastFlexChild = child
+        } else {
+          val innerConstraints: BoxConstraints = direction match {
+            case Axis.Vertical => BoxConstraints(maxWidth = constraints.maxWidth)
+            case Axis.Horizontal => BoxConstraints(maxHeight = constraints.maxHeight)
+          }
+          child.layout(innerConstraints)
+          allocatedSize += _getMainSize(child.size)
+          crossSize = math.max(crossSize, _getCrossSize(child.size))
+        }
+      }
+
+      val freeSpace = pmath.max(0, (if (canFlex) maxMainSize else Pint(0)) - allocatedSize)
+      var allocatedFlexSpace: Pint = 0
+
+      if (totalFlex > 0) {
+        val spacePerFlex: Pint = if (canFlex) freeSpace / totalFlex else -1
+        for (child <- children) {
+          val flex = child.parentData.asInstanceOf[FlexParentData].flex
+          if (flex > 0) {
+            val maxChildExtent: Pint = if (canFlex) {
+              if (child == lastFlexChild) freeSpace - allocatedFlexSpace else spacePerFlex * flex
+            } else Int.MaxValue
+            val minChildExtent: Pint = maxChildExtent // TODO: fit
+            val innerConstraints = direction match {
+              case Axis.Vertical =>
+                BoxConstraints(maxWidth = constraints.maxWidth, minHeight = minChildExtent, maxHeight = maxChildExtent)
+              case Axis.Horizontal =>
+                BoxConstraints(maxHeight = constraints.maxHeight, minWidth = minChildExtent, maxWidth = maxChildExtent)
+            }
+            child.layout(innerConstraints)
+            val childMainSize = _getMainSize(child.size)
+            allocatedSize += childMainSize
+            allocatedFlexSpace += maxChildExtent
+            crossSize = math.max(crossSize, _getCrossSize(child.size));
+          }
+        }
+      }
+
+      var soFar = 0
+      for (child <- children) {
+        child.parentData.asInstanceOf[BoxParentData].offset = direction match {
+          case Axis.Vertical => Offset(0, soFar)
+          case Axis.Horizontal => Offset(soFar, 0)
+        }
+        soFar += _getMainSize(child.size)
+      }
+
       size = constraints.constrain(direction match {
         case Axis.Vertical => Size(crossSize, allocatedSize)
         case Axis.Horizontal => Size(allocatedSize, crossSize)
@@ -177,7 +266,7 @@ object layout3 {
 
     override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
       for (child <- children)
-        child.paint(glyphRenderer, child.parentData.offset + offset)
+        child.paint(glyphRenderer, child.parentData.asInstanceOf[BoxParentData].offset + offset)
     }
   }
 
