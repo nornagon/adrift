@@ -40,12 +40,14 @@ object layout3 {
     direction: Axis,
     children: Seq[Widget],
     mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
     verticalDirection: VerticalDirection = VerticalDirection.Down,
     clipBehavior: ClipBehavior = ClipBehavior.None,
   ) extends Widget {
     override def inflate: RenderObject = new RenderFlex(
       direction = direction,
       mainAxisAlignment = mainAxisAlignment,
+      crossAxisAlignment = crossAxisAlignment,
       verticalDirection = verticalDirection,
       clipBehavior = clipBehavior,
       children = children.map(_.inflate.asInstanceOf[RenderBox])
@@ -54,12 +56,14 @@ object layout3 {
   case class Row(
     children: Seq[Widget],
     mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
     verticalDirection: VerticalDirection = VerticalDirection.Down,
     clipBehavior: ClipBehavior = ClipBehavior.None,
   ) extends Widget {
     override def inflate: RenderObject = new RenderFlex(
       direction = Axis.Horizontal,
       mainAxisAlignment = mainAxisAlignment,
+      crossAxisAlignment = crossAxisAlignment,
       verticalDirection = verticalDirection,
       clipBehavior = clipBehavior,
       children = children.map(_.inflate.asInstanceOf[RenderBox])
@@ -68,12 +72,14 @@ object layout3 {
   case class Column(
     children: Seq[Widget],
     mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
     verticalDirection: VerticalDirection = VerticalDirection.Down,
     clipBehavior: ClipBehavior = ClipBehavior.None,
   ) extends Widget {
     override def inflate: RenderObject = new RenderFlex(
       direction = Axis.Vertical,
       mainAxisAlignment = mainAxisAlignment,
+      crossAxisAlignment = crossAxisAlignment,
       verticalDirection = verticalDirection,
       clipBehavior = clipBehavior,
       children = children.map(_.inflate.asInstanceOf[RenderBox])
@@ -170,6 +176,8 @@ object layout3 {
       else i / other.i
 
     override def compare(that: Pint): Int = i.compare(that.i)
+
+    override def toString: String = if (i == Int.MaxValue) "∞" else i.toString
   }
   implicit def intToPint(i: Int): Pint = Pint(i)
 
@@ -195,6 +203,8 @@ object layout3 {
 
     def constrainWidth(width: Int = Int.MaxValue): Pint = width.clamp(minWidth, maxWidth)
     def constrainHeight(height: Int = Int.MaxValue): Pint = height.clamp(minHeight, maxHeight)
+
+    override def toString: String = s"BoxConstraints(width ∈ [$minWidth,$maxWidth], height ∈ [$minHeight,$maxHeight])"
   }
   object BoxConstraints {
     def tight(size: Size): BoxConstraints = new BoxConstraints(size.width, size.width, size.height, size.height)
@@ -276,6 +286,8 @@ object layout3 {
         y += 1
       }
     }
+
+    override def toString: String = s"RenderText(${text.plain})"
   }
 
   sealed trait Axis
@@ -288,6 +300,13 @@ object layout3 {
   object MainAxisAlignment {
     case object Start extends MainAxisAlignment
     case object End extends MainAxisAlignment
+  }
+
+  sealed trait CrossAxisAlignment
+  object CrossAxisAlignment {
+    case object Start extends CrossAxisAlignment
+    case object End extends CrossAxisAlignment
+    case object Stretch extends CrossAxisAlignment
   }
 
   sealed trait VerticalDirection
@@ -310,6 +329,7 @@ object layout3 {
     children: Seq[RenderBox],
     direction: Axis,
     mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
     verticalDirection: VerticalDirection = VerticalDirection.Down,
     clipBehavior: ClipBehavior = ClipBehavior.None,
   ) extends RenderBox {
@@ -367,12 +387,23 @@ object layout3 {
               if (child == lastFlexChild) freeSpace - allocatedFlexSpace else spacePerFlex * flex
             } else Int.MaxValue
             val minChildExtent: Pint = maxChildExtent // TODO: fit
-            val innerConstraints = direction match {
-              case Axis.Vertical =>
-                BoxConstraints(maxWidth = constraints.maxWidth, minHeight = minChildExtent, maxHeight = maxChildExtent)
-              case Axis.Horizontal =>
-                BoxConstraints(maxHeight = constraints.maxHeight, minWidth = minChildExtent, maxWidth = maxChildExtent)
+            val innerConstraints = crossAxisAlignment match {
+              case CrossAxisAlignment.Stretch =>
+                direction match {
+                  case Axis.Vertical =>
+                    BoxConstraints(minWidth = constraints.maxWidth, maxWidth = constraints.maxWidth)
+                  case Axis.Horizontal =>
+                    BoxConstraints(minHeight = constraints.maxHeight, maxHeight = constraints.maxHeight)
+                }
+              case _ =>
+                direction match {
+                  case Axis.Vertical =>
+                    BoxConstraints(maxWidth = constraints.maxWidth, minHeight = minChildExtent, maxHeight = maxChildExtent)
+                  case Axis.Horizontal =>
+                    BoxConstraints(maxHeight = constraints.maxHeight, minWidth = minChildExtent, maxWidth = maxChildExtent)
+                }
             }
+
             child.layout(innerConstraints)
             val childMainSize = _getMainSize(child.size)
             allocatedSize += childMainSize
@@ -405,6 +436,11 @@ object layout3 {
         }
       }
 
+      def flipAxis(axis: Axis): Axis = axis match {
+        case Axis.Vertical => Axis.Horizontal
+        case Axis.Horizontal => Axis.Vertical
+      }
+
       val flipMainAxis = !_startIsTopLeft(direction, verticalDirection)
       val leadingSpace = mainAxisAlignment match {
         case MainAxisAlignment.Start => 0
@@ -413,10 +449,18 @@ object layout3 {
 
       var childMainPosition = if (flipMainAxis) actualSize - leadingSpace else leadingSpace
       for (child <- children) {
+        val childCrossPosition = crossAxisAlignment match {
+          case CrossAxisAlignment.Start | CrossAxisAlignment.End =>
+            if (_startIsTopLeft(flipAxis(direction), verticalDirection) == (crossAxisAlignment == CrossAxisAlignment.Start))
+              0
+            else
+              crossSize - _getCrossSize(child.size)
+          case CrossAxisAlignment.Stretch => 0
+        }
         if (flipMainAxis) childMainPosition -= _getMainSize(child.size)
         child.parentData.asInstanceOf[BoxParentData].offset = direction match {
-          case Axis.Vertical => Offset(0, childMainPosition)
-          case Axis.Horizontal => Offset(childMainPosition, 0)
+          case Axis.Vertical => Offset(childCrossPosition, childMainPosition)
+          case Axis.Horizontal => Offset(childMainPosition, childCrossPosition)
         }
         if (flipMainAxis) {
           // TODO: childMainPosition -= betweenSpace

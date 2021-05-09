@@ -152,27 +152,32 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   def renderSidebar(): Widget = Column(Seq(
-    Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Column(
-      Seq(
-        Text(" 12345678", halfWidth = false),
-      ) ++ Seq(
-        ("Power", displayedPowerLayers, powerColor, Power),
-        ("Data", displayedDataLayers, dataColor, Data),
-        ("Fluid", displayedFluidLayers, fluidColor, Fluid),
-      ).map {
-        case (title, displayedLayers, color, ty) =>
-          Row(
-            children = Seq(
-              Text(
-                (" " + (0 until 8).map(i => if (displayedLayers(i)) "\u00fe" else "\u00ff").mkString("")).withFg(color),
-                halfWidth = false
-              ),
-              ConstrainedBox(BoxConstraints(minWidth = 1)),
-              Text(title.withFg(if (displaying == ty) lightGreen else Color.White))
-            )
-          )
-      }
-    ))),
+    Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue),
+      Row(crossAxisAlignment = CrossAxisAlignment.End, children = Seq(
+        Flexible(Column(
+          Seq(
+            Text(" 12345678".withFg(lightGreen), halfWidth = false),
+          ) ++ Seq(
+            ("Power", displayedPowerLayers, powerColor, Power),
+            ("Data", displayedDataLayers, dataColor, Data),
+            ("Fluid", displayedFluidLayers, fluidColor, Fluid),
+          ).map {
+            case (title, displayedLayers, color, ty) =>
+              Row(
+                children = Seq(
+                  Text(
+                    (" " + (0 until 8).map(i => if (displayedLayers(i)) "\u00fe" else "\u00ff").mkString("")).withFg(color),
+                    halfWidth = false
+                  ),
+                  ConstrainedBox(BoxConstraints(minWidth = 1)),
+                  Text(title.withFg(if (displaying == ty) lightGreen else Color.White))
+                )
+              )
+          }
+        )),
+        Text("\u001d".withFg(lightGreen) + "Tab".withFg(disabledGreen))
+      ))
+    )),
     Flexible(Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Column({
       var c = Seq.empty[Widget]
       var prev = 0
