@@ -101,13 +101,21 @@ object layout3 {
   }
 
   case class Flexible(
-    content: Widget = null,
+    content: Widget,
     flex: Int = 1,
   ) extends Widget {
-    override def inflate: RenderObject = new RenderFlexible(
-      flex,
-      Option(content).map(_.inflate.asInstanceOf[RenderBox]).orNull
-    )
+    override def inflate: RenderObject = {
+      val child = content.inflate.asInstanceOf[RenderBox]
+      val pd = new FlexParentData()
+      pd.flex = flex
+      child.parentData = pd
+      child
+    }
+  }
+
+  case class Spacer(flex: Int = 1) extends Widget {
+    override def inflate: RenderObject =
+      Flexible(ConstrainedBox(BoxConstraints.tight(Size(0, 0)))).inflate
   }
 
   case class ConstrainedBox(
@@ -298,22 +306,6 @@ object layout3 {
     var flex: Int = 0
   }
 
-  class RenderFlexible(flex: Int, content: RenderBox = null) extends RenderBox {
-    override def layout(constraints: BoxConstraints): Unit = {
-      if (content != null) {
-        content.layout(constraints)
-        size = content.size
-      } else {
-        size = constraints.constrain(Size(0, 0))
-      }
-    }
-
-    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit =
-      if (content != null) content.paint(glyphRenderer, offset)
-
-    override def applyParentData(): Unit = this.parentData.asInstanceOf[FlexParentData].flex = flex
-  }
-
   class RenderFlex(
     children: Seq[RenderBox],
     direction: Axis,
@@ -321,7 +313,11 @@ object layout3 {
     verticalDirection: VerticalDirection = VerticalDirection.Down,
     clipBehavior: ClipBehavior = ClipBehavior.None,
   ) extends RenderBox {
-    children.foreach { c => c.parentData = new FlexParentData(); c.applyParentData() }
+    children.foreach { c =>
+      if (!c.parentData.isInstanceOf[FlexParentData])
+        c.parentData = new FlexParentData()
+      c.applyParentData()
+    }
 
     private def _getMainSize(size: Size): Int = direction match {
       case Axis.Vertical => size.height

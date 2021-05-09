@@ -1,8 +1,8 @@
 package adrift
 
 case class Rect(l: Int, t: Int, r: Int, b: Int) {
-  require(r > l, s"Rect must have r > l, but was $this")
-  require(b > t, s"Rect must have b > t, but was $this")
+  require(r >= l, s"Rect must have r >= l, but was $this")
+  require(b >= t, s"Rect must have b >= t, but was $this")
 
   def area: Int = width * height
   def width: Int = r - l

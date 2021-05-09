@@ -209,7 +209,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         }
       }
       if (portsHere.exists(_._2._1.nonEmpty) && !connecting)
-        c :+ Flexible() :+ Text("c".withFg(lightGreen) + "onnect".withFg(disabledGreen))
+        c :+ Spacer() :+ Text("c".withFg(lightGreen) + "onnect".withFg(disabledGreen))
       else
         c
     }))))
