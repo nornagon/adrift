@@ -31,13 +31,17 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
           val terrain = state.levels(levelId).terrain(x, y)
           val items = state.items.lookup(OnFloor(Location(levelId, x, y)))
 
-          renderer.frame(
-            left = anchor._1, top = anchor._2,
-            width = width,
-            halfWidth = true,
-            lines = Seq(terrain.name) ++
-              items.take(9).map(state.itemDisplayName) ++
-              (if (items.size > 9) Seq(s"${items.size - 9} more...") else Seq.empty)
+          import layout3._
+          val w = Border(Column(
+            Seq(Text(terrain.name.withFg(UI.Color.lightGreen))) ++
+              items.take(9).map(i => Text(state.itemDisplayName(i))) ++
+              (if (items.size > 9) Seq(Text(s"${items.size - 9} more...")) else Seq.empty)
+          ))
+          draw(
+            renderer,
+            Offset(anchor._1, anchor._2),
+            BoxConstraints.tightFor(width = width),
+            w
           )
         case None =>
       }

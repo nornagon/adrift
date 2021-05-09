@@ -208,6 +208,12 @@ object layout3 {
   }
   object BoxConstraints {
     def tight(size: Size): BoxConstraints = new BoxConstraints(size.width, size.width, size.height, size.height)
+    def tightFor(width: Int = -1, height: Int = -1) = new BoxConstraints(
+      minWidth = if (width >= 0) width else 0,
+      maxWidth = if (width >= 0) width else Int.MaxValue,
+      minHeight = if (height >= 0) height else 0,
+      maxHeight = if (height >= 0) height else Int.MaxValue,
+    )
     def loose(size: Size): BoxConstraints = new BoxConstraints(0, size.width, 0, size.height)
   }
 
@@ -533,5 +539,11 @@ object layout3 {
       glyphRenderer.fillRect(Rect(l = offset.x, t = offset.y, r = offset.x + size.width, b = offset.y + size.height), ' ', bg = bg, fg = Color.Transparent)
       content.paint(glyphRenderer, offset)
     }
+  }
+
+  def draw(renderer: GlyphRenderer, offset: Offset, size: BoxConstraints, widget: Widget): Unit = {
+    val r = widget.inflate.asInstanceOf[RenderBox]
+    r.layout(size)
+    r.paint(renderer, offset)
   }
 }
