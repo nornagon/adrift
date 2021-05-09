@@ -32,7 +32,7 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
       key match {
-        case GLFW.GLFW_KEY_BACKSPACE if input.length > 0 =>
+        case GLFW.GLFW_KEY_BACKSPACE if input.nonEmpty =>
           input = input.init
         case GLFW.GLFW_KEY_TAB =>
           input match {

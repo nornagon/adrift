@@ -171,22 +171,6 @@
     - Affixed: {}
 
 - type: item
-  name: thick power cable
-  volume: 4 L
-  description: AWG 3, good for up to 1kA before it fuses.
-  display: CABLE
-  parts:
-    - { type: thick power cable section, count: 10, disassembled_with: CUTTING }
-  behavior:
-    - Cable: { plugShape: power }
-
-- type: item
-  name: thick power cable section
-  volume: 350 ml
-  description: A meter or so of thick power cable.
-  display: CABLE
-
-- type: item
   name: secondary ship power generator
   volume: 400 L
   description: temporary test item for testing ship power components

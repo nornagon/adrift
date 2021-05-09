@@ -36,12 +36,6 @@ object Message {
   case class IsCombustible(var ok: Boolean = false) extends Message
   case class CombustionEnergy(var joules: Int = 0) extends Message
 
-  // Plugs
-  case class PlugInto(item: Item) extends Message
-  case class Unplugged() extends Message
-  case class CanReceivePlug(plugShape: String, var ok: Boolean = false) extends Message
-  case class CanPlugInto(item: Item, var ok: Boolean = false) extends Message
-
   // Moving items
   case class Hauled(from: Location, to: Location) extends Message
   case class PickedUp(var item: Item) extends Message

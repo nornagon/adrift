@@ -145,26 +145,6 @@ object Appearance {
     }).toChar
   }
 
-  def charForCable(state: GameState, unrolledItem: Item): (Char, Color, Color) = {
-    val OnFloor(Location(_, x, y)) = state.items.lookup(unrolledItem)
-    val unrolled = unrolledItem.behaviors.collectFirst { case u: behaviors.Unrolled => u }.get
-    val prevDir = Dir.from(unrolled.fromCell, (x, y))
-    val nextDir = unrolled.toCell.map(Dir.from(_, (x, y))).getOrElse(prevDir.opposite)
-    import CP437.BoxDrawing._
-    import Dir._
-    val char = (prevDir, nextDir) match {
-      case (N, S) | (S, N) => _U_D
-      case (E, W) | (W, E) => L_R_
-      case (N, E) | (E, N) => _UR_
-      case (N, W) | (W, N) => LU__
-      case (S, W) | (W, S) => L__D
-      case (S, E) | (E, S) => __RD
-      case _ => ???
-    }
-    val (_, fg, bg, _) = charForItem(state, unrolledItem)
-    (char.toChar, fg, bg)
-  }
-
   def canonicalCharForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
     state.data.display.getDisplay(item.kind.display)
   def charForItem(state: GameState, item: Item): (Char, Color, Color, Int) =
@@ -189,12 +169,8 @@ object Appearance {
         // stuff you drop later should be displayed on top.
         val topItem = items.reverse
           .maxBy(charForItem(state, _)._4)
-        if (topItem.behaviors.exists(_.isInstanceOf[behaviors.Unrolled]))
-          charForCable(state, topItem)
-        else {
-          val (char, fg, bg, _) = charForItem(state, topItem)
-          (char, fg, bg)
-        }
+        val (char, fg, bg, _) = charForItem(state, topItem)
+        (char, fg, bg)
       } else {
         val terrain = level.terrain(x, y)
 

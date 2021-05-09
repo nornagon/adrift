@@ -27,10 +27,8 @@ object Behavior {
     "Tool" -> Decoder[Tool].widen,
     "HoldsCharge" -> Decoder[HoldsCharge].widen,
     "UsesElectricity" -> Decoder[UsesElectricity].widen,
-    "Cable" -> Decoder[Cable].widen,
     "ProvidesShipPower" -> Decoder[ProvidesShipPower].widen,
     "GeneratesShipPower" -> Decoder[GeneratesShipPower].widen,
-    "Socket" -> Decoder[Socket].widen,
     "Thermostat" -> Decoder[Thermostat].widen,
     "Heater" -> Decoder[Heater].widen,
     "Wearable" -> Decoder[Wearable].widen,
@@ -69,7 +67,6 @@ object Behavior {
     case b: ProvidesShipPower => Encoder[ProvidesShipPower].apply(b)
     case b: GeneratesShipPower => Encoder[GeneratesShipPower].apply(b)
     case b: Heater => Encoder[Heater].apply(b)
-    case b: Cable => Encoder[Cable].apply(b)
     case b: Thermostat => Encoder[Thermostat].apply(b)
     case b: Wearable => Encoder[Wearable].apply(b)
     case b: GasLeak => Encoder[GasLeak].apply(b)

@@ -445,16 +445,6 @@ class GameState(var data: Data, val random: Random) {
         }
         elapse(5)
 
-      case Action.Plug(item, into) =>
-        items.lookup(item) match {
-          case InHands() =>
-            sendMessage(item, Message.PlugInto(into))
-            elapse(1)
-            putMessage(s"You plug the ${itemDisplayName(item)} into the ${itemDisplayName(into)}.")
-          case _ =>
-            putMessage("You need to pick it up first.")
-        }
-
       case Action.Wear(item) =>
         if (!sendMessage(item, Message.CanWear()).ok)
           putMessage(s"You can't wear that.")
