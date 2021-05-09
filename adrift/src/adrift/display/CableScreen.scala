@@ -146,85 +146,74 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def render(renderer: GlyphRenderer): Unit = {
     renderCableOverlay(renderer, display.screenRect)
 
-    val sb = renderSidebar()
+    val sb = renderSidebar().inflate.asInstanceOf[RenderBox]
     sb.layout(BoxConstraints.tight(Size(display.sidebarRect.width, display.sidebarRect.height)))
     sb.paint(renderer, Offset(display.sidebarRect.l, display.sidebarRect.t))
   }
 
-  def renderSidebar(): RenderBox = new RenderFlex(
-    direction = Axis.Vertical,
-    children = Seq(
-      new RenderBorder(new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), new RenderFlex(
-        direction = Axis.Vertical,
-        children = Seq(
-          new RenderText(" 12345678", halfWidth = false),
-        ) ++ Seq(
-          ("Power", displayedPowerLayers, powerColor, Power),
-          ("Data", displayedDataLayers, dataColor, Data),
-          ("Fluid", displayedFluidLayers, fluidColor, Fluid),
-        ).map {
-          case (title, displayedLayers, color, ty) =>
-            new RenderFlex(
-              direction = Axis.Horizontal,
+  def renderSidebar(): Widget = Column(Seq(
+    Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Column(
+      Seq(
+        Text(" 12345678", halfWidth = false),
+      ) ++ Seq(
+        ("Power", displayedPowerLayers, powerColor, Power),
+        ("Data", displayedDataLayers, dataColor, Data),
+        ("Fluid", displayedFluidLayers, fluidColor, Fluid),
+      ).map {
+        case (title, displayedLayers, color, ty) =>
+          Row(
+            children = Seq(
+              Text(
+                (" " + (0 until 8).map(i => if (displayedLayers(i)) "\u00fe" else "\u00ff").mkString("")).withFg(color),
+                halfWidth = false
+              ),
+              ConstrainedBox(BoxConstraints(minWidth = 1)),
+              Text(title.withFg(if (displaying == ty) lightGreen else Color.White))
+            )
+          )
+      }
+    ))),
+    Flexible(Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Column({
+      var c = Seq.empty[Widget]
+      var prev = 0
+      for ((item, (ports, connections)) <- portsHere) {
+        val displayedPorts = ports.filter(p => queryTypes.contains(p.`type`))
+        if (displayedPorts.nonEmpty) {
+          c :+= Text(state.itemDisplayName(item))
+          for ((p, i) <- displayedPorts.zipWithIndex) {
+            val ix = prev + i
+            val cs = connections.getOrElse(p.name, LayerSet.empty)
+            val intersectsWithCurrentView = cs intersects displayingLayers
+            c :+= Row(
               children = Seq(
-                new RenderText(
-                  (" " + (0 until 8).map(i => if (displayedLayers(i)) "\u00fe" else "\u00ff").mkString("")).withFg(color),
+                Text(
+                  ((if (connecting && ix == connectingCursor) "\u0010" else " ") +
+                    (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString("")).withFg(
+                      (p.`type` match {
+                        case "data-in" | "data-out" => dataColor
+                        case "power-in" | "power-out" => powerColor
+                        case "fluid-in" | "fluid-out" => fluidColor
+                      }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
+                    ),
                   halfWidth = false
                 ),
-                new RenderConstrainedBox(BoxConstraints(minWidth = 1)),
-                new RenderText(title.withFg(if (displaying == ty) lightGreen else Color.White))
+                ConstrainedBox(BoxConstraints(minWidth = 1)),
+                Flexible(ConstrainedBox(
+                  BoxConstraints(maxHeight = 1),
+                  Text(p.name.withFg(Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f)))
+                ))
               )
             )
-        }
-      ))),
-      new RenderFlexible(flex = 1, content = new RenderBorder(new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), new RenderFlex(
-        direction = Axis.Vertical,
-        //clipBehavior = ClipBehavior.Clip,
-        children = {
-          var c = Seq.empty[RenderBox]
-          var prev = 0
-          for ((item, (ports, connections)) <- portsHere) {
-            val displayedPorts = ports.filter(p => queryTypes.contains(p.`type`))
-            if (displayedPorts.nonEmpty) {
-              c :+= new RenderText(state.itemDisplayName(item))
-              for ((p, i) <- displayedPorts.zipWithIndex) {
-                val ix = prev + i
-                val cs = connections.getOrElse(p.name, LayerSet.empty)
-                val intersectsWithCurrentView = cs intersects displayingLayers
-                c :+= new RenderFlex(direction = Axis.Horizontal,
-                  children = Seq(
-                    new RenderText(
-                      ((if (connecting && ix == connectingCursor) "\u0010" else " ") +
-                        (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString("")).withFg(
-                          (p.`type` match {
-                            case "data-in" | "data-out" => dataColor
-                            case "power-in" | "power-out" => powerColor
-                            case "fluid-in" | "fluid-out" => fluidColor
-                          }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
-                        ),
-                      halfWidth = false
-                    ),
-                    new RenderConstrainedBox(BoxConstraints(minWidth = 1)),
-                    new RenderFlexible(
-                      flex = 1,
-                      new RenderConstrainedBox(BoxConstraints(maxHeight = 1),
-                      new RenderText(p.name.withFg(Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f)))
-                      )
-                    )
-                  )
-                )
-              }
-              prev += displayedPorts.size
-            }
           }
-          if (portsHere.exists(_._2._1.nonEmpty))
-            c :+ new RenderFlexible(flex = 1) :+ new RenderText("connect")
-          else
-            c
+          prev += displayedPorts.size
         }
-      ))))
-    )
-  )
+      }
+      if (portsHere.exists(_._2._1.nonEmpty))
+        c :+ Flexible() :+ Text("connect")
+      else
+        c
+    }))))
+  ))
 
   def renderCableOverlay(renderer: GlyphRenderer, bounds: Rect): Unit = {
     val displayingCableColor = displaying match {

@@ -104,39 +104,40 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val actionGuide = actions match {
       case Some(actions) =>
         Seq(
-          new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
-          new RenderText(actions.map(_.display).reduce(_ + " " + _))
+          ConstrainedBox(BoxConstraints(minHeight = 1)),
+          Text(actions.map(_.display).reduce(_ + " " + _))
         )
       case None =>
         Seq.empty
     }
 
-    val r = new RenderLRBorder(
+    val w = LRBorder(
       fg = lightGreen, bg = darkGreen,
-      content = new RenderBackground(bg = darkGreen, content = new RenderConstrainedBox(
+      content = Background(bg = darkGreen, content = ConstrainedBox(
         additionalConstraints = BoxConstraints(minWidth = Int.MaxValue),
-        content = new RenderFlex(direction = Axis.Vertical,
+        content = Column(
           children = sections.zip(items).flatMap {
             case ((title, location), items) =>
-              Seq(new RenderText(title.withFg(disabledGreen))) ++ items.map { item =>
+              Seq(Text(title.withFg(disabledGreen))) ++ items.map { item =>
                 val indentation = countContainers(item)
                 val fg =
                   if (selectedItem.contains(item)) selectedGreen
                   else if (marked(item)) markedBlue
                   else lightGreen
-                new RenderText((" " * indentation + state.itemDisplayName(item)).withFg(fg))
+                Text((" " * indentation + state.itemDisplayName(item)).withFg(fg))
               }
           } ++ (selectedItem match {
             case Some(sel) =>
               Seq(
-                new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
-                new RenderText(sel.kind.description.withFg(disabledGreen))
+                ConstrainedBox(BoxConstraints(minHeight = 1)),
+                Text(sel.kind.description.withFg(disabledGreen))
               )
             case None => Seq.empty
           }) ++ actionGuide
         )
       ))
     )
+    val r = w.inflate.asInstanceOf[RenderBox]
     r.layout(BoxConstraints(maxWidth = bounds.width, maxHeight = bounds.height))
     r.paint(renderer, Offset(bounds.l, bounds.t))
   }

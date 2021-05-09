@@ -1,8 +1,7 @@
 package adrift.display
 
-import adrift.{Color, Rect}
-import adrift.display.CP437.BoxDrawing
 import adrift.display.GlyphRenderer.ColoredString
+import adrift.{Color, Rect}
 
 import scala.language.implicitConversions
 
@@ -31,8 +30,102 @@ object layout3 {
   }
 
   // TODO:
-  // trait Widget
+  trait Widget {
+    // TODO: all the updating and stuff
+    def inflate: RenderObject
+  }
   // trait Element
+
+  case class Flex(
+    direction: Axis,
+    children: Seq[Widget],
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlex(
+      direction = direction,
+      mainAxisAlignment = mainAxisAlignment,
+      verticalDirection = verticalDirection,
+      clipBehavior = clipBehavior,
+      children = children.map(_.inflate.asInstanceOf[RenderBox])
+    )
+  }
+  case class Row(
+    children: Seq[Widget],
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlex(
+      direction = Axis.Horizontal,
+      mainAxisAlignment = mainAxisAlignment,
+      verticalDirection = verticalDirection,
+      clipBehavior = clipBehavior,
+      children = children.map(_.inflate.asInstanceOf[RenderBox])
+    )
+  }
+  case class Column(
+    children: Seq[Widget],
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlex(
+      direction = Axis.Vertical,
+      mainAxisAlignment = mainAxisAlignment,
+      verticalDirection = verticalDirection,
+      clipBehavior = clipBehavior,
+      children = children.map(_.inflate.asInstanceOf[RenderBox])
+    )
+  }
+  case class Text(
+    text: ColoredString,
+    halfWidth: Boolean = true
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderText(text, halfWidth)
+  }
+
+  case class Border(
+    content: Widget
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderBorder(content.inflate.asInstanceOf[RenderBox])
+  }
+
+  case class LRBorder(
+    fg: Color,
+    bg: Color,
+    content: Widget
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderLRBorder(content.inflate.asInstanceOf[RenderBox], fg, bg)
+  }
+
+  case class Flexible(
+    content: Widget = null,
+    flex: Int = 1,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlexible(
+      flex,
+      Option(content).map(_.inflate.asInstanceOf[RenderBox]).orNull
+    )
+  }
+
+  case class ConstrainedBox(
+    additionalConstraints: BoxConstraints,
+    content: Widget = null,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderConstrainedBox(
+      additionalConstraints,
+      Option(content).map(_.inflate.asInstanceOf[RenderBox]).orNull
+    )
+  }
+
+  case class Background(
+    bg: Color,
+    content: Widget
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderBackground(content.inflate.asInstanceOf[RenderBox], bg)
+  }
 
   trait Constraints
   trait ParentData
@@ -249,7 +342,7 @@ object layout3 {
         case Axis.Horizontal => constraints.maxWidth
       }
       val canFlex = maxMainSize < Int.MaxValue
-      var lastFlexChild: RenderBox = null
+      var lastFlexChild: RenderObject = null
       for (child <- children) {
         val flex = child.parentData.asInstanceOf[FlexParentData].flex
         if (flex > 0) {

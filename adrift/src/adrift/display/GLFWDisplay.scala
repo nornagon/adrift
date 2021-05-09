@@ -366,7 +366,6 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
   }
 
   def render(state: GameState): Unit = {
-    val (fbWidth, fbHeight) = window.framebufferSize
     val (wWidth, wHeight) = window.size
     if (wWidth != windowWidthChars * (font.tileWidth * font.scaleFactor) ||
       wHeight != windowHeightChars * (font.tileHeight * font.scaleFactor)) {
@@ -385,47 +384,42 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
       import layout3._
-      val sidebar = new RenderFlex(
-        direction = Axis.Vertical,
-        children = Seq(
-          new RenderConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10, minWidth = Int.MaxValue), content = new RenderBorder(new RenderFlex(
-            direction = Axis.Vertical,
-            children = state.symptoms.take(5).map(t => new RenderText(t.description)) ++
-              (if (state.showTempDebug)
-                Seq(new RenderText(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
-              (if (state.showGasDebug)
-                Seq(new RenderText(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
-          ))),
-          new RenderConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12, minWidth = Int.MaxValue), content = new RenderBorder(new RenderFlex(
-            direction = Axis.Vertical,
-            children = Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
-              new RenderText(title) +:
-                state.items.lookup(loc).map(item => new RenderText(" " + state.itemDisplayName(item)))
+      val sidebar = Column(Seq(
+        ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10, minWidth = Int.MaxValue), content = Border(Column(
+          state.symptoms.take(5).map(t => Text(t.description)) ++
+            (if (state.showTempDebug)
+              Seq(Text(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
+            (if (state.showGasDebug)
+              Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
+        ))),
+        ConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12, minWidth = Int.MaxValue), content = Border(Column(
+          Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
+            Text(title) +:
+              state.items.lookup(loc).map(item => Text(" " + state.itemDisplayName(item)))
+          }
+        ))),
+        Flexible(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Border(Column(
+          verticalDirection = VerticalDirection.Up,
+          clipBehavior = ClipBehavior.Clip,
+          children = {
+            val maxMessageAge = 300
+            val oldestMessageTime = state.currentTime - maxMessageAge
+            val messages = state.messages.filter(_._2 >= oldestMessageTime).reverse
+            messages.map {
+              case (line, time) =>
+                val lineAge = state.currentTime - time
+                val color =
+                  if (lineAge < 30) Color.White
+                  else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
+                  else Color(0.2f, 0.2f, 0.2f, 1.0f)
+                Text(line.withFg(color))
             }
-          ))),
-          new RenderFlexible(flex = 1, content = new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), content = new RenderBorder(new RenderFlex(
-            direction = Axis.Vertical,
-            verticalDirection = VerticalDirection.Up,
-            clipBehavior = ClipBehavior.Clip,
-            children = {
-              val maxMessageAge = 300
-              val oldestMessageTime = state.currentTime - maxMessageAge
-              val messages = state.messages.filter(_._2 >= oldestMessageTime).reverse
-              messages.map {
-                case (line, time) =>
-                  val lineAge = state.currentTime - time
-                  val color =
-                    if (lineAge < 30) Color.White
-                    else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
-                    else Color(0.2f, 0.2f, 0.2f, 1.0f)
-                  new RenderText(line.withFg(color))
-              }
-            }
-          ))))
-        )
-      )
-      sidebar.layout(BoxConstraints(minWidth = sidebarRect.width, maxWidth = sidebarRect.width, minHeight = sidebarRect.height, maxHeight = sidebarRect.height))
-      sidebar.paint(glyphRenderer, Offset(sidebarRect.l, sidebarRect.t))
+          }
+        ))))
+      ))
+      val sidebarRenderObject = sidebar.inflate.asInstanceOf[RenderBox]
+      sidebarRenderObject.layout(BoxConstraints(minWidth = sidebarRect.width, maxWidth = sidebarRect.width, minHeight = sidebarRect.height, maxHeight = sidebarRect.height))
+      sidebarRenderObject.paint(glyphRenderer, Offset(sidebarRect.l, sidebarRect.t))
 
       for (screen <- screens) {
         screen.render(glyphRenderer)

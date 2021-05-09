@@ -199,25 +199,23 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     renderer.drawChar(sx, sy, char, fg, bg = selectedGreen)
     renderer.drawChar(sx + 1, sy, BoxDrawing.L_R_, fg = lightGreen)
 
-    val r = new RenderLRBorder(
+    val w = LRBorder(
       fg = lightGreen, bg = darkGreen,
-      content = new RenderConstrainedBox(
+      content = ConstrainedBox(
         BoxConstraints(minWidth = Int.MaxValue),
-        new RenderBackground(bg = darkGreen, content = new RenderFlex(
-          direction = Axis.Vertical,
+        Background(bg = darkGreen, content = Column(
           children = {
             openStack.zipWithIndex.map { case (it, idx) =>
               val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
-              new RenderFlex(
-                direction = Axis.Horizontal,
+              Row(
                 children = Seq(
-                  new RenderFlexible(flex = 1, content =
-                    new RenderFlex(direction = Axis.Horizontal, children = Seq(
-                      new RenderText(prefix, halfWidth = false),
-                      new RenderFlexible(flex = 1, content = new RenderText(it.kind.name))
+                  Flexible(content =
+                    Row(Seq(
+                      Text(prefix, halfWidth = false),
+                      Flexible(Text(it.kind.name))
                     ))
                   ),
-                  new RenderText(if (state.isKnownToBeNonFunctional(it)) "!".withFg(red) else "", halfWidth = false)
+                  Text(if (state.isKnownToBeNonFunctional(it)) "!".withFg(red) else "", halfWidth = false)
                 )
               )
             } ++ {
@@ -227,20 +225,17 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                 val bg = if (y == selected) selectedGreen else darkGreen
                 val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == entries.size - 1) "\u00c0" else "\u00c3")
                 val entry = entries(y)
-                new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), new RenderBackground(bg = bg, content = new RenderFlex(
-                  direction = Axis.Horizontal,
-                  children = Seq(
-                    new RenderFlexible(
-                      flex = 1,
-                      content =
-                        new RenderFlex(direction = Axis.Horizontal, children = Seq(
-                          new RenderText(prefix, halfWidth = false),
-                          new RenderFlexible(flex = 1, content = new RenderText(entry.text.withFg(
-                            if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen
-                          )))
+                ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Background(bg = bg, content = Row(
+                  Seq(
+                    Flexible(
+                      Row(Seq(
+                        Text(prefix, halfWidth = false),
+                        Flexible(Text(
+                          entry.text.withFg(if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen)
                         ))
+                      ))
                     ),
-                    new RenderText(entry match {
+                    Text(entry match {
                       case ItemEntry(item) =>
                         if (state.isKnownToBeNonFunctional(item))
                           "!".withFg(red)
@@ -258,23 +253,23 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                     (state.visibleConditions(item) match {
                       case Seq() => Seq.empty
                       case conditions =>
-                        new RenderConstrainedBox(BoxConstraints(minHeight = 1)) +:
-                          conditions.map(c => new RenderText(c.withFg(red)))
+                        ConstrainedBox(BoxConstraints(minHeight = 1)) +:
+                          conditions.map(c => Text(c.withFg(red)))
                     }) ++ Seq(
-                      new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
-                      new RenderText(item.kind.description.withFg(disabledGreen))
+                      ConstrainedBox(BoxConstraints(minHeight = 1)),
+                      Text(item.kind.description.withFg(disabledGreen))
                     ) ++ (
                       for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) yield {
                         Seq(
-                          new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
-                          new RenderText(s"Requires ${missingOp.id} to remove.".withFg(red))
+                          ConstrainedBox(BoxConstraints(minHeight = 1)),
+                          Text(s"Requires ${missingOp.id} to remove.".withFg(red))
                         )
                       }
                     ).getOrElse(Seq.empty)
                   case MissingItemEntry(kind, count) =>
                     Seq(
-                      new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
-                      new RenderText(
+                      ConstrainedBox(BoxConstraints(minHeight = 1)),
+                      Text(
                         (count match {
                           case 1 => "This part is missing."
                           case n => s"$n of these are missing."
@@ -286,8 +281,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                 val actionCS = commands(entry).map(_.display)
                 if (actionCS.nonEmpty) {
                   Seq(
-                    new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
-                    new RenderText(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
+                    ConstrainedBox(BoxConstraints(minHeight = 1)),
+                    Text(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
                   )
                 } else Seq.empty
               }
@@ -296,6 +291,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
         ))
       )
     )
+    val r = w.inflate.asInstanceOf[RenderBox]
     r.layout(BoxConstraints(minWidth = width, maxWidth = width))
     r.paint(renderer, Offset(sx + 2, sy))
   }
