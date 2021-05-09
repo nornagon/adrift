@@ -384,21 +384,21 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
       import layout3._
-      val sidebar = Column(Seq(
-        ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10, minWidth = Int.MaxValue), content = Border(Column(
+      val sidebar = Column(crossAxisAlignment = CrossAxisAlignment.Stretch, children = Seq(
+        ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10), content = Border(Column(
           state.symptoms.take(5).map(t => Text(t.description)) ++
             (if (state.showTempDebug)
               Seq(Text(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
             (if (state.showGasDebug)
               Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
         ))),
-        ConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12, minWidth = Int.MaxValue), content = Border(Column(
+        ConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12), content = Border(Column(
           Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
             Text(title) +:
               state.items.lookup(loc).map(item => Text(" " + state.itemDisplayName(item)))
           }
         ))),
-        Flexible(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Border(Column(
+        Flexible(Border(Column(
           verticalDirection = VerticalDirection.Up,
           clipBehavior = ClipBehavior.Clip,
           children = {
@@ -415,7 +415,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
                 Text(line.withFg(color))
             }
           }
-        ))))
+        )))
       ))
       val sidebarRenderObject = sidebar.inflate.asInstanceOf[RenderBox]
       sidebarRenderObject.layout(BoxConstraints(minWidth = sidebarRect.width, maxWidth = sidebarRect.width, minHeight = sidebarRect.height, maxHeight = sidebarRect.height))

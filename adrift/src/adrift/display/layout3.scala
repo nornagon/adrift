@@ -365,10 +365,19 @@ object layout3 {
           totalFlex += flex
           lastFlexChild = child
         } else {
-          val innerConstraints: BoxConstraints = direction match {
-            case Axis.Vertical => BoxConstraints(maxWidth = constraints.maxWidth)
-            case Axis.Horizontal => BoxConstraints(maxHeight = constraints.maxHeight)
-          }
+          val innerConstraints: BoxConstraints =
+            crossAxisAlignment match {
+              case CrossAxisAlignment.Stretch =>
+                direction match {
+                  case Axis.Vertical => BoxConstraints(minWidth = constraints.maxWidth, maxWidth = constraints.maxWidth)
+                  case Axis.Horizontal => BoxConstraints(minHeight = constraints.maxHeight, maxHeight = constraints.maxHeight)
+                }
+              case _ =>
+                direction match {
+                  case Axis.Vertical => BoxConstraints(maxWidth = constraints.maxWidth)
+                  case Axis.Horizontal => BoxConstraints(maxHeight = constraints.maxHeight)
+                }
+            }
           child.layout(innerConstraints)
           allocatedSize += _getMainSize(child.size)
           crossSize = math.max(crossSize, _getCrossSize(child.size))
@@ -391,16 +400,34 @@ object layout3 {
               case CrossAxisAlignment.Stretch =>
                 direction match {
                   case Axis.Vertical =>
-                    BoxConstraints(minWidth = constraints.maxWidth, maxWidth = constraints.maxWidth)
+                    BoxConstraints(
+                      minWidth = constraints.maxWidth,
+                      maxWidth = constraints.maxWidth,
+                      minHeight = minChildExtent,
+                      maxHeight = maxChildExtent,
+                    )
                   case Axis.Horizontal =>
-                    BoxConstraints(minHeight = constraints.maxHeight, maxHeight = constraints.maxHeight)
+                    BoxConstraints(
+                      minWidth = minChildExtent,
+                      maxWidth = maxChildExtent,
+                      minHeight = constraints.maxHeight,
+                      maxHeight = constraints.maxHeight,
+                    )
                 }
               case _ =>
                 direction match {
                   case Axis.Vertical =>
-                    BoxConstraints(maxWidth = constraints.maxWidth, minHeight = minChildExtent, maxHeight = maxChildExtent)
+                    BoxConstraints(
+                      maxWidth = constraints.maxWidth,
+                      minHeight = minChildExtent,
+                      maxHeight = maxChildExtent,
+                    )
                   case Axis.Horizontal =>
-                    BoxConstraints(maxHeight = constraints.maxHeight, minWidth = minChildExtent, maxWidth = maxChildExtent)
+                    BoxConstraints(
+                      minWidth = minChildExtent,
+                      maxWidth = maxChildExtent,
+                      maxHeight = constraints.maxHeight,
+                    )
                 }
             }
 

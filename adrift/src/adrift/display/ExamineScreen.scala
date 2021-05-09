@@ -201,95 +201,85 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
 
     val w = LRBorder(
       fg = lightGreen, bg = darkGreen,
-      content = ConstrainedBox(
-        BoxConstraints(minWidth = Int.MaxValue),
-        Background(bg = darkGreen, content = Column(
-          children = {
-            openStack.zipWithIndex.map { case (it, idx) =>
-              val prefix = if (idx == 0) "" else " " * (idx - 1) + "\u00c0"
-              Row(
-                children = Seq(
-                  Flexible(content =
-                    Row(Seq(
-                      Text(prefix, halfWidth = false),
-                      Flexible(Text(it.kind.name))
-                    ))
-                  ),
-                  Text(if (state.isKnownToBeNonFunctional(it)) "!".withFg(red) else "", halfWidth = false)
-                )
-              )
-            } ++ {
-              val entries = menuEntries
-              val entry = entries(selected)
-              (for (y <- entries.indices) yield {
-                val bg = if (y == selected) selectedGreen else darkGreen
-                val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == entries.size - 1) "\u00c0" else "\u00c3")
-                val entry = entries(y)
-                ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Background(bg = bg, content = Row(
-                  Seq(
-                    Flexible(
-                      Row(Seq(
-                        Text(prefix, halfWidth = false),
-                        Flexible(Text(
-                          entry.text.withFg(if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen)
-                        ))
-                      ))
-                    ),
-                    Text(entry match {
-                      case ItemEntry(item) =>
-                        if (state.isKnownToBeNonFunctional(item))
-                          "!".withFg(red)
-                        else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
-                          "?".withFg(disabledGreen)
-                        else
-                          ""
-                      case _ => ""
-                    }, halfWidth = false)
-                  )
-                )))
-              }) ++ {
-                entry match {
-                  case ItemEntry(item) =>
-                    (state.visibleConditions(item) match {
-                      case Seq() => Seq.empty
-                      case conditions =>
-                        ConstrainedBox(BoxConstraints(minHeight = 1)) +:
-                          conditions.map(c => Text(c.withFg(red)))
-                    }) ++ Seq(
-                      ConstrainedBox(BoxConstraints(minHeight = 1)),
-                      Text(item.kind.description.withFg(disabledGreen))
-                    ) ++ (
-                      for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) yield {
-                        Seq(
-                          ConstrainedBox(BoxConstraints(minHeight = 1)),
-                          Text(s"Requires ${missingOp.id} to remove.".withFg(red))
-                        )
-                      }
-                    ).getOrElse(Seq.empty)
-                  case MissingItemEntry(kind, count) =>
+      content = Background(bg = darkGreen, content = Column({
+        openStack.zipWithIndex.map { case (it, idx) =>
+          Row(Seq(
+            Flexible(
+              Row(Seq(
+                Text(if (idx == 0) "" else " " * (idx - 1) + "\u00c0", halfWidth = false),
+                Flexible(Text(it.kind.name))
+              ))
+            ),
+            Text(if (state.isKnownToBeNonFunctional(it)) "!".withFg(red) else "", halfWidth = false)
+          ))
+        } ++ {
+          val entries = menuEntries
+          val entry = entries(selected)
+          (for (y <- entries.indices) yield {
+            val bg = if (y == selected) selectedGreen else darkGreen
+            val prefix = if (openStack.isEmpty) "" else " " * (openStack.size - 1) + (if (y == entries.size - 1) "\u00c0" else "\u00c3")
+            val entry = entries(y)
+            Background(bg, Row(Seq(
+              Flexible(
+                Row(Seq(
+                  Text(prefix, halfWidth = false),
+                  Flexible(Text(
+                    entry.text.withFg(if (entry.isInstanceOf[ItemEntry]) lightGreen else disabledGreen)
+                  ))
+                ))
+              ),
+              Text(entry match {
+                case ItemEntry(item) =>
+                  if (state.isKnownToBeNonFunctional(item))
+                    "!".withFg(red)
+                  else if (state.sendMessage(item, Message.IsDiagnosable()).diagnosable)
+                    "?".withFg(disabledGreen)
+                  else
+                    ""
+                case _ => ""
+              }, halfWidth = false)
+            )))
+          }) ++ {
+            entry match {
+              case ItemEntry(item) =>
+                (state.visibleConditions(item) match {
+                  case Seq() => Seq.empty
+                  case conditions =>
+                    ConstrainedBox(BoxConstraints(minHeight = 1)) +:
+                      conditions.map(c => Text(c.withFg(red)))
+                }) ++ Seq(
+                  ConstrainedBox(BoxConstraints(minHeight = 1)),
+                  Text(item.kind.description.withFg(disabledGreen))
+                ) ++ (
+                  for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) yield {
                     Seq(
                       ConstrainedBox(BoxConstraints(minHeight = 1)),
-                      Text(
-                        (count match {
-                          case 1 => "This part is missing."
-                          case n => s"$n of these are missing."
-                        }).withFg(disabledGreen)
-                      )
+                      Text(s"Requires ${missingOp.id} to remove.".withFg(red))
                     )
-                }
-              } ++ {
-                val actionCS = commands(entry).map(_.display)
-                if (actionCS.nonEmpty) {
-                  Seq(
-                    ConstrainedBox(BoxConstraints(minHeight = 1)),
-                    Text(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
+                  }
+                ).getOrElse(Seq.empty)
+              case MissingItemEntry(kind, count) =>
+                Seq(
+                  ConstrainedBox(BoxConstraints(minHeight = 1)),
+                  Text(
+                    (count match {
+                      case 1 => "This part is missing."
+                      case n => s"$n of these are missing."
+                    }).withFg(disabledGreen)
                   )
-                } else Seq.empty
-              }
+                )
             }
+          } ++ {
+            val actionCS = commands(entry).map(_.display)
+            if (actionCS.nonEmpty) {
+              Seq(
+                ConstrainedBox(BoxConstraints(minHeight = 1)),
+                Text(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
+              )
+            } else Seq.empty
           }
-        ))
-      )
+        }
+      }))
     )
     val r = w.inflate.asInstanceOf[RenderBox]
     r.layout(BoxConstraints(minWidth = width, maxWidth = width))

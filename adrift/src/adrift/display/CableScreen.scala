@@ -151,8 +151,8 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     sb.paint(renderer, Offset(display.sidebarRect.l, display.sidebarRect.t))
   }
 
-  def renderSidebar(): Widget = Column(Seq(
-    Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue),
+  def renderSidebar(): Widget = Column(crossAxisAlignment = CrossAxisAlignment.Stretch, children = Seq(
+    Border(
       Row(crossAxisAlignment = CrossAxisAlignment.End, children = Seq(
         Flexible(Column(
           Seq(
@@ -177,8 +177,8 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         )),
         Text("\u001d".withFg(lightGreen) + "Tab".withFg(disabledGreen))
       ))
-    )),
-    Flexible(Border(ConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), Column({
+    ),
+    Flexible(Border(Column({
       var c = Seq.empty[Widget]
       var prev = 0
       for ((item, (ports, connections)) <- portsHere) {
@@ -217,7 +217,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         c :+ Spacer() :+ Text("c".withFg(lightGreen) + "onnect".withFg(disabledGreen))
       else
         c
-    }))))
+    })))
   ))
 
   def renderCableOverlay(renderer: GlyphRenderer, bounds: Rect): Unit = {
