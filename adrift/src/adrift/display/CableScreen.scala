@@ -4,7 +4,7 @@ import adrift.items.{Item, Message}
 import adrift.items.behaviors.{HasPorts, LayerSet, PortSpec}
 import adrift.{Color, GameState, Location, OnFloor, Rect}
 import org.lwjgl.glfw.GLFW._
-import layout._
+import layout3._
 
 object NumericKey {
   def unapply(key: Int): Option[Int] =
@@ -144,88 +144,85 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    draw(renderer, hbox(
-      children = Seq(
-        custom(renderCableOverlay),
-        renderSidebar()
-      ),
-      bounds = display.screenRect
-    ))
+    renderCableOverlay(renderer, display.screenRect)
+
+    val sb = renderSidebar()
+    sb.layout(BoxConstraints.tight(Size(display.sidebarRect.width, display.sidebarRect.height)))
+    sb.paint(renderer, Offset(display.sidebarRect.l, display.sidebarRect.t))
   }
 
-  def renderSidebar(): Box = vbox(
-    size = 20,
+  def renderSidebar(): RenderBox = new RenderFlex(
+    direction = Axis.Vertical,
     children = Seq(
-      frame(size = 6, contents = vbox(
+      new RenderBorder(new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), new RenderFlex(
+        direction = Axis.Vertical,
         children = Seq(
-          text(" 12345678"),
-          hbox(
-            children = Seq(
-              text(
-                " " + (0 until 8).map(i => if (displayedPowerLayers(i)) "\u00fe" else "\u00ff").mkString(""),
-                foreground = powerColor
-              ),
-              text(" "),
-              htext("Power", size = 0, foreground = if (displaying == Power) lightGreen else null)
+          new RenderText(" 12345678", halfWidth = false),
+        ) ++ Seq(
+          ("Power", displayedPowerLayers, powerColor, Power),
+          ("Data", displayedDataLayers, dataColor, Data),
+          ("Fluid", displayedFluidLayers, fluidColor, Fluid),
+        ).map {
+          case (title, displayedLayers, color, ty) =>
+            new RenderFlex(
+              direction = Axis.Horizontal,
+              children = Seq(
+                new RenderText(
+                  (" " + (0 until 8).map(i => if (displayedLayers(i)) "\u00fe" else "\u00ff").mkString("")).withFg(color),
+                  halfWidth = false
+                ),
+                new RenderConstrainedBox(BoxConstraints(minWidth = 1)),
+                new RenderText(title.withFg(if (displaying == ty) lightGreen else Color.White))
+              )
             )
-          ),
-          hbox(
-            children = Seq(
-              text(
-                " " + (0 until 8).map(i => if (displayedDataLayers(i)) "\u00fe" else "\u00ff").mkString(""),
-                foreground = dataColor
-              ),
-              text(" "),
-              htext("Data", size = 0, foreground = if (displaying == Data) lightGreen else null)
-            )
-          ),
-          hbox(
-            children = Seq(
-              text(
-                " " + (0 until 8).map(i => if (displayedFluidLayers(i)) "\u00fe" else "\u00ff").mkString(""),
-                foreground = fluidColor
-              ),
-              text(" "),
-              htext("Fluid", size = 0, foreground = if (displaying == Fluid) lightGreen else null)
-            )
-          )
-        )
-      )),
-      frame(contents = vbox(
+        }
+      ))),
+      new RenderFlexible(flex = 1, content = new RenderBorder(new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), new RenderFlex(
+        direction = Axis.Vertical,
+        //clipBehavior = ClipBehavior.Clip,
         children = {
-          var c = Seq.empty[Box]
+          var c = Seq.empty[RenderBox]
           var prev = 0
           for ((item, (ports, connections)) <- portsHere) {
             val displayedPorts = ports.filter(p => queryTypes.contains(p.`type`))
             if (displayedPorts.nonEmpty) {
-              c :+= htext(state.itemDisplayName(item))
+              c :+= new RenderText(state.itemDisplayName(item))
               for ((p, i) <- displayedPorts.zipWithIndex) {
                 val ix = prev + i
                 val cs = connections.getOrElse(p.name, LayerSet.empty)
                 val intersectsWithCurrentView = cs intersects displayingLayers
-                c :+= hbox(
+                c :+= new RenderFlex(direction = Axis.Horizontal,
                   children = Seq(
-                    text(
-                      (if (connecting && ix == connectingCursor) "\u0010" else " ") +
-                        (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString(""),
-                      foreground = (p.`type` match {
-                        case "data-in" | "data-out" => dataColor
-                        case "power-in" | "power-out" => powerColor
-                        case "fluid-in" | "fluid-out" => fluidColor
-                      }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
-                    ), htext(s" ${p.name}", foreground = Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f))
-                  ), size = 1
+                    new RenderText(
+                      ((if (connecting && ix == connectingCursor) "\u0010" else " ") +
+                        (0 until 8).map(i => if (cs(i)) "\u00fe" else "\u00ff").mkString("")).withFg(
+                          (p.`type` match {
+                            case "data-in" | "data-out" => dataColor
+                            case "power-in" | "power-out" => powerColor
+                            case "fluid-in" | "fluid-out" => fluidColor
+                          }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
+                        ),
+                      halfWidth = false
+                    ),
+                    new RenderConstrainedBox(BoxConstraints(minWidth = 1)),
+                    new RenderFlexible(
+                      flex = 1,
+                      new RenderConstrainedBox(BoxConstraints(maxHeight = 1),
+                      new RenderText(p.name.withFg(Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f)))
+                      )
+                    )
+                  )
                 )
               }
               prev += displayedPorts.size
             }
           }
           if (portsHere.exists(_._2._1.nonEmpty))
-            c :+ vbox() :+ htext("(c)onnect")
+            c :+ new RenderFlexible(flex = 1) :+ new RenderText("connect")
           else
             c
         }
-      ))
+      ))))
     )
   )
 

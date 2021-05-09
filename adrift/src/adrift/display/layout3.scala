@@ -150,7 +150,14 @@ object layout3 {
   class RenderText(text: ColoredString, halfWidth: Boolean = true) extends RenderBox {
     private var _lines: Seq[ColoredString] = Seq.empty
     override def layout(constraints: BoxConstraints): Unit = {
-      _lines = GlyphRenderer.wrapCS(text, (constraints.maxWidth * (if (halfWidth) 2 else 1)).i)
+      if (constraints.maxHeight <= 1) {
+        val clipped =
+          if (text.length <= (constraints.maxWidth * (if (halfWidth) 2 else 1)).i) text
+          else text.substring(0, (constraints.maxWidth * (if (halfWidth) 2 else 1) - 1).i) + "\u0010"
+        _lines = Seq(clipped)
+      } else {
+        _lines = GlyphRenderer.wrapCS(text, (constraints.maxWidth * (if (halfWidth) 2 else 1)).i)
+      }
       val textSize = Size(
         width = (_lines.view.map(_.length).max + (if (halfWidth) 1 else 0)) / (if (halfWidth) 2 else 1),
         height = _lines.size
@@ -198,13 +205,18 @@ object layout3 {
     var flex: Int = 0
   }
 
-  class RenderFlexible(content: RenderBox, flex: Int) extends RenderBox {
+  class RenderFlexible(flex: Int, content: RenderBox = null) extends RenderBox {
     override def layout(constraints: BoxConstraints): Unit = {
-      content.layout(constraints)
-      size = content.size
+      if (content != null) {
+        content.layout(constraints)
+        size = content.size
+      } else {
+        size = constraints.constrain(Size(0, 0))
+      }
     }
 
-    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = content.paint(glyphRenderer, offset)
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit =
+      if (content != null) content.paint(glyphRenderer, offset)
 
     override def applyParentData(): Unit = this.parentData.asInstanceOf[FlexParentData].flex = flex
   }
@@ -296,7 +308,7 @@ object layout3 {
 
       def _startIsTopLeft(axis: Axis, direction: VerticalDirection) = {
         axis match {
-          case Axis.Horizontal => false // TODO: rtl
+          case Axis.Horizontal => true // TODO: rtl
           case Axis.Vertical => direction match {
             case VerticalDirection.Down => true
             case VerticalDirection.Up => false
