@@ -30,9 +30,9 @@ object layout3 {
     def +(offset: Offset): Offset = Offset(x + offset.x, y + offset.y)
   }
 
-  trait Widget
-
-  trait Element
+  // TODO:
+  // trait Widget
+  // trait Element
 
   trait Constraints
   trait ParentData
@@ -44,6 +44,7 @@ object layout3 {
     def applyParentData(): Unit = {}
   }
 
+  // Int but Int.MaxValue works like Double.PositiveInfinity
   case class Pint(i: Int) extends AnyVal with Ordered[Pint] {
     def clamp(lo: Pint, hi: Pint): Pint =
       if (i < lo.i) lo.i
@@ -104,7 +105,6 @@ object layout3 {
   }
 
   abstract class RenderBox extends RenderObject {
-    type PD = BoxParentData
     type C = BoxConstraints
     var _size: Size = _
     def size: Size = _size
@@ -113,7 +113,12 @@ object layout3 {
 
   class RenderBorder(content: RenderBox) extends RenderBox {
     override def layout(constraints: BoxConstraints): Unit = {
-      content.layout(constraints.copy(maxWidth = constraints.maxWidth - 2, maxHeight = constraints.maxHeight - 2))
+      content.layout(new BoxConstraints(
+        minWidth = pmath.max(0, constraints.minWidth - 2),
+        maxWidth = constraints.maxWidth - 2,
+        minHeight = pmath.max(0, constraints.minHeight - 2),
+        maxHeight = constraints.maxHeight - 2
+      ))
       size = content.size + Size(2, 2)
     }
 
@@ -125,7 +130,10 @@ object layout3 {
 
   class RenderLRBorder(content: RenderBox, fg: Color, bg: Color) extends RenderBox {
     override def layout(constraints: BoxConstraints): Unit = {
-      content.layout(constraints.copy(maxWidth = constraints.maxWidth - 2))
+      content.layout(constraints.copy(
+        minWidth = pmath.max(0, constraints.minWidth - 2),
+        maxWidth = constraints.maxWidth - 2,
+      ))
       size = content.size + Size(2, 0)
     }
 
@@ -168,6 +176,24 @@ object layout3 {
     case object Horizontal extends Axis
   }
 
+  sealed trait MainAxisAlignment
+  object MainAxisAlignment {
+    case object Start extends MainAxisAlignment
+    case object End extends MainAxisAlignment
+  }
+
+  sealed trait VerticalDirection
+  object VerticalDirection {
+    case object Down extends VerticalDirection
+    case object Up extends VerticalDirection
+  }
+
+  sealed trait ClipBehavior
+  object ClipBehavior {
+    case object Clip extends ClipBehavior
+    case object None extends ClipBehavior
+  }
+
   class FlexParentData extends BoxParentData {
     var flex: Int = 0
   }
@@ -183,7 +209,13 @@ object layout3 {
     override def applyParentData(): Unit = this.parentData.asInstanceOf[FlexParentData].flex = flex
   }
 
-  class RenderFlex(children: Seq[RenderBox], direction: Axis) extends RenderBox {
+  class RenderFlex(
+    children: Seq[RenderBox],
+    direction: Axis,
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends RenderBox {
     children.foreach { c => c.parentData = new FlexParentData(); c.applyParentData() }
 
     private def _getMainSize(size: Size): Int = direction match {
@@ -249,24 +281,59 @@ object layout3 {
         }
       }
 
-      var soFar = 0
-      for (child <- children) {
-        child.parentData.asInstanceOf[BoxParentData].offset = direction match {
-          case Axis.Vertical => Offset(0, soFar)
-          case Axis.Horizontal => Offset(soFar, 0)
-        }
-        soFar += _getMainSize(child.size)
-      }
-
+      // Align items along the main axis
       size = constraints.constrain(direction match {
         case Axis.Vertical => Size(crossSize, allocatedSize)
         case Axis.Horizontal => Size(allocatedSize, crossSize)
       })
+      val actualSize = direction match {
+        case Axis.Vertical => size.height
+        case Axis.Horizontal => size.width
+      }
+
+      val actualSizeDelta = actualSize - allocatedSize
+      val remainingSpace = math.max(0, actualSizeDelta)
+
+      def _startIsTopLeft(axis: Axis, direction: VerticalDirection) = {
+        axis match {
+          case Axis.Horizontal => false // TODO: rtl
+          case Axis.Vertical => direction match {
+            case VerticalDirection.Down => true
+            case VerticalDirection.Up => false
+          }
+        }
+      }
+
+      val flipMainAxis = !_startIsTopLeft(direction, verticalDirection)
+      val leadingSpace = mainAxisAlignment match {
+        case MainAxisAlignment.Start => 0
+        case MainAxisAlignment.End => remainingSpace
+      }
+
+      var childMainPosition = if (flipMainAxis) actualSize - leadingSpace else leadingSpace
+      for (child <- children) {
+        if (flipMainAxis) childMainPosition -= _getMainSize(child.size)
+        child.parentData.asInstanceOf[BoxParentData].offset = direction match {
+          case Axis.Vertical => Offset(0, childMainPosition)
+          case Axis.Horizontal => Offset(childMainPosition, 0)
+        }
+        if (flipMainAxis) {
+          // TODO: childMainPosition -= betweenSpace
+        } else {
+          childMainPosition += _getMainSize(child.size)
+        }
+      }
+
     }
 
     override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
+      val childRenderer = if (clipBehavior == ClipBehavior.None) {
+        glyphRenderer
+      } else {
+        glyphRenderer.clip(Rect(offset.x, offset.y, offset.x + size.width, offset.y + size.height))
+      }
       for (child <- children)
-        child.paint(glyphRenderer, child.parentData.asInstanceOf[BoxParentData].offset + offset)
+        child.paint(childRenderer, child.parentData.asInstanceOf[BoxParentData].offset + offset)
     }
   }
 

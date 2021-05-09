@@ -6,7 +6,7 @@ import adrift.display.glutil.{SpriteBatch, Texture}
 
 import scala.collection.mutable
 
-class GlyphRenderer(
+case class GlyphRenderer(
   spriteBatch: SpriteBatch,
   /** how big is a tile in the source texture */
   tileWidth: Int,
@@ -15,7 +15,7 @@ class GlyphRenderer(
   screenTileWidth: Int,
   screenTileHeight: Int,
   font: Texture,
-  val bounds: Rect,
+  bounds: Rect,
 ) {
   /** Number of tiles in each row in the source texture. */
   private val tilesPerRow: Int = font.width / tileWidth
@@ -31,6 +31,7 @@ class GlyphRenderer(
     fg: Color = Color.White,
     bg: Color = Color.Black
   ): Unit = {
+    if (!bounds.contains(x, y)) return
     if (bg.a != 0) {
       // 0xdb is the full white square ◻️
       val cx = 0xdb % tilesPerRow
@@ -63,6 +64,7 @@ class GlyphRenderer(
     fg: Color = Color.White,
     bg: Color = Color.Black
   ): Unit = {
+    if (!bounds.contains(halfX / 2, y)) return
     if (bg.a != 0) {
       // 0xdb is the full white square ◻️
       val cx = 0xdb % tilesPerRow
@@ -197,6 +199,8 @@ class GlyphRenderer(
         drawString(left + 1, top + 1 + i, l, width - 2)
     }
   }
+
+  def clip(rect: Rect): GlyphRenderer = copy(bounds = (rect & bounds).getOrElse(Rect(0, 0, 0, 0)))
 }
 
 object GlyphRenderer {

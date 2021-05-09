@@ -258,34 +258,35 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                     (state.visibleConditions(item) match {
                       case Seq() => Seq.empty
                       case conditions =>
-                        new RenderText("") +: conditions.map(c => new RenderText(c.withFg(red)))
+                        new RenderConstrainedBox(BoxConstraints(minHeight = 1)) +:
+                          conditions.map(c => new RenderText(c.withFg(red)))
                     }) ++ Seq(
-                      new RenderText(""),
+                      new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
                       new RenderText(item.kind.description.withFg(disabledGreen))
                     ) ++ (
                       for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) yield {
                         Seq(
-                          new RenderText(""),
+                          new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
                           new RenderText(s"Requires ${missingOp.id} to remove.".withFg(red))
                         )
                       }
                     ).getOrElse(Seq.empty)
                   case MissingItemEntry(kind, count) =>
                     Seq(
-                      new RenderText(""),
-                      count match {
-                        case 1 =>
-                          new RenderText("This part is missing.".withFg(disabledGreen))
-                        case n =>
-                          new RenderText(s"$n of these are missing.".withFg(disabledGreen))
-                      }
+                      new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
+                      new RenderText(
+                        (count match {
+                          case 1 => "This part is missing."
+                          case n => s"$n of these are missing."
+                        }).withFg(disabledGreen)
+                      )
                     )
                 }
               } ++ {
                 val actionCS = commands(entry).map(_.display)
                 if (actionCS.nonEmpty) {
                   Seq(
-                    new RenderText(""),
+                    new RenderConstrainedBox(BoxConstraints(minHeight = 1)),
                     new RenderText(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
                   )
                 } else Seq.empty

@@ -384,45 +384,48 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
-      import layout._
-
-      val sidebar = vbox(
-        bounds = sidebarRect,
+      import layout3._
+      val sidebar = new RenderFlex(
+        direction = Axis.Vertical,
         children = Seq(
-          frame(contents = vbox(
-            children = state.symptoms.take(5).map(t => htext(t.description)) ++
+          new RenderConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10, minWidth = Int.MaxValue), content = new RenderBorder(new RenderFlex(
+            direction = Axis.Vertical,
+            children = state.symptoms.take(5).map(t => new RenderText(t.description)) ++
               (if (state.showTempDebug)
-                Seq(htext(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
+                Seq(new RenderText(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
               (if (state.showGasDebug)
-                Seq(htext(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
-          ), size = 10),
-          frame(contents = vbox(
+                Seq(new RenderText(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
+          ))),
+          new RenderConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12, minWidth = Int.MaxValue), content = new RenderBorder(new RenderFlex(
+            direction = Axis.Vertical,
             children = Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
-              htext(title) +:
-                state.items.lookup(loc).map(item => htext(" " + state.itemDisplayName(item)))
+              new RenderText(title) +:
+                state.items.lookup(loc).map(item => new RenderText(" " + state.itemDisplayName(item)))
             }
-          ), size = 22),
-          frame(contents = custom { (r: GlyphRenderer, bounds: Rect) =>
-            val maxMessageAge = 300
-            val oldestMessageTime = state.currentTime - maxMessageAge
-            val wrappedLines = state.messages.filter(_._2 >= oldestMessageTime)
-              .flatMap(m => GlyphRenderer.wrapString(bounds.width * 2, Integer.MAX_VALUE, m._1).map((_, m._2)))
-            val lines = wrappedLines.slice(wrappedLines.size - bounds.height, wrappedLines.size)
-            val top = bounds.b - lines.size
-            lines.zipWithIndex.foreach {
-              case ((line, time), y) =>
-                val lineAge = state.currentTime - time
-                val color =
-                  if (lineAge < 30) Color.White
-                  else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
-                  else Color(0.2f, 0.2f, 0.2f, 1.0f)
-                r.drawHalfString(bounds.l * 2, top + y, line, fg = color)
+          ))),
+          new RenderFlexible(flex = 1, content = new RenderConstrainedBox(BoxConstraints(minWidth = Int.MaxValue), content = new RenderBorder(new RenderFlex(
+            direction = Axis.Vertical,
+            verticalDirection = VerticalDirection.Up,
+            clipBehavior = ClipBehavior.Clip,
+            children = {
+              val maxMessageAge = 300
+              val oldestMessageTime = state.currentTime - maxMessageAge
+              val messages = state.messages.filter(_._2 >= oldestMessageTime).reverse
+              messages.map {
+                case (line, time) =>
+                  val lineAge = state.currentTime - time
+                  val color =
+                    if (lineAge < 30) Color.White
+                    else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
+                    else Color(0.2f, 0.2f, 0.2f, 1.0f)
+                  new RenderText(line.withFg(color))
+              }
             }
-          })
+          ))))
         )
       )
-
-      layout.draw(glyphRenderer, sidebar)
+      sidebar.layout(BoxConstraints(minWidth = sidebarRect.width, maxWidth = sidebarRect.width, minHeight = sidebarRect.height, maxHeight = sidebarRect.height))
+      sidebar.paint(glyphRenderer, Offset(sidebarRect.l, sidebarRect.t))
 
       for (screen <- screens) {
         screen.render(glyphRenderer)

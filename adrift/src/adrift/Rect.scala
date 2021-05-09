@@ -19,6 +19,19 @@ case class Rect(l: Int, t: Int, r: Int, b: Int) {
     splitVertical(cuts.iterator.sliding(2).map { x => (x(0), x(1)) })
   def cutHorizontal(cuts: Iterable[Int]): Iterator[Rect] =
     splitHorizontal(cuts.iterator.sliding(2).map { x => (x(0), x(1)) })
+
+  def contains(x: Int, y: Int): Boolean = l <= x && x < r && t <= y && y < b
+
+  def &(other: Rect): Option[Rect] = {
+    if (l <= other.r && other.l <= r && t <= other.b && other.t <= b)
+      Some(Rect(
+        l = math.max(l, other.l),
+        r = math.min(r, other.r),
+        t = math.max(t, other.t),
+        b = math.min(b, other.b)
+      ))
+    else None
+  }
 }
 
 object Rect {
