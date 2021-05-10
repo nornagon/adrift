@@ -37,7 +37,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       when(marked.nonEmpty && state.sendMessage(item, Message.CanContainItems()).ok)
       (Command("{i}nsert", () => doInsert(item), available = !marked(item))),
 
-      when(state.sendMessage(item, CanWear()).ok)
+      when(location != Worn() && state.sendMessage(item, CanWear()).ok)
       (Command("{w}ear", () => doWear(item))),
     ).flatten
   }
