@@ -79,7 +79,8 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         val Some(hp) = item.behaviorOfType[HasPorts]
         hp.modifyConnections(state, port, existingLayers =>
           if ((mods & GLFW_MOD_SHIFT) != 0) existingLayers.toggle(n - 1)
-          else new LayerSet(1 << (n - 1)))
+          else if (existingLayers == LayerSet(1 << (n - 1))) LayerSet(0)
+          else LayerSet(1 << (n - 1)))
       case _ =>
     }
   }

@@ -23,7 +23,7 @@ class LayerSet(val bits: Int) extends AnyVal { self =>
 object LayerSet {
   def empty = new LayerSet(0)
   def all = new LayerSet(0xff)
-  def apply(bits: Byte) = new LayerSet(bits)
+  def apply(bits: Int) = new LayerSet(bits)
 }
 
 case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet] = Map.empty) extends Behavior {
