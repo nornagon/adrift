@@ -76,16 +76,10 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         connectingCursor = math.max(0, math.min(portsHere.map(_._2._1.size).sum - 1, connectingCursor + dy))
       case (GLFW_PRESS, NumericKey(n)) if n >= 1 && n <= 8 =>
         val Some((item, port)) = editingPort
-        val Some(hp) = item.behaviors.find(_.isInstanceOf[HasPorts]).map(_.asInstanceOf[HasPorts])
-        val existingLayers = hp.connections.getOrElse(port, LayerSet.empty)
-        val newLayers =
-          if ((mods & GLFW_MOD_SHIFT) != 0) {
-            existingLayers.toggle(n - 1)
-          } else {
-            new LayerSet(1 << (n - 1))
-          }
-        hp.connections += port -> newLayers
-        state.recalculateConnections()
+        val Some(hp) = item.behaviorOfType[HasPorts]
+        hp.modifyConnections(state, port, existingLayers =>
+          if ((mods & GLFW_MOD_SHIFT) != 0) existingLayers.toggle(n - 1)
+          else new LayerSet(1 << (n - 1)))
       case _ =>
     }
   }

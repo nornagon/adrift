@@ -23,6 +23,7 @@ class LayerSet(val bits: Int) extends AnyVal { self =>
 object LayerSet {
   def empty = new LayerSet(0)
   def all = new LayerSet(0xff)
+  def apply(bits: Byte) = new LayerSet(bits)
 }
 
 case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet] = Map.empty) extends Behavior {
@@ -64,6 +65,13 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
       }
 
     case _ =>
+  }
+
+  def modifyConnections(state: GameState, portName: String, modify: LayerSet => LayerSet): Unit = {
+    val existingLayers = connections.getOrElse(portName, LayerSet.empty)
+    val newLayers = modify(existingLayers)
+    connections += portName -> newLayers
+    state.recalculateConnections()
   }
 
   /** @return set of layers which match pred */

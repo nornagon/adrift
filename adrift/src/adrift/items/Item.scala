@@ -3,6 +3,7 @@ package adrift.items
 import adrift.Volume
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 
 /*
 Items have some generic type (a battery, a screwdriver, a tomato) and some specific state (half charged, found in the
@@ -107,6 +108,8 @@ case class Item(
       if presentCount < ip.count
     } yield (ip.kind, ip.count - presentCount)
   }
+
+  def behaviorOfType[T <: Behavior: ClassTag]: Option[T] = behaviors.find(b => implicitly[ClassTag[T]].runtimeClass.isInstance(b)).map(_.asInstanceOf[T])
 }
 
 /** Some action that you can do with an item, e.g. PRYING or WELDING */

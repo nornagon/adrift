@@ -4,7 +4,7 @@ import adrift.RandomImplicits._
 import adrift.YamlObject.ItemGroup
 import adrift._
 import adrift.items.Item
-import adrift.items.behaviors.Broken
+import adrift.items.behaviors.{Broken, HasPorts, LayerSet}
 
 import scala.collection.mutable
 import scala.util.Random
@@ -99,8 +99,20 @@ case class WorldGen(data: Data)(implicit random: Random) {
       if (possibleDoorPositions.nonEmpty) {
         val (x, y) = random.pick(possibleDoorPositions)
         level.terrain(x, y) = data.terrain("floor")
-        val doorType = random.oneOf("automatic door", "manually operated door")
-        generateItem(data.itemGroups(doorType)).foreach(state.items.put(_, OnFloor(Location(levelId, x, y))))
+        val door = data.items("automatic door").generateItem()
+        val sensor = data.items(
+          random.oneOf("mounted presence sensor", "mounted button")
+        ).generateItem()
+        door.behaviorOfType[HasPorts].foreach { hp =>
+          hp.modifyConnections(state, "Open", _ => LayerSet(1))
+        }
+        sensor.behaviorOfType[HasPorts].foreach { hp =>
+          hp.modifyConnections(state, "Active", _ => LayerSet(1))
+        }
+        level.dataCables(x, y) = 1
+        state.items.put(door, OnFloor(Location(levelId, x, y)))
+        state.items.put(sensor, OnFloor(Location(levelId, x, y)))
+        //generateItem(data.itemGroups(doorType)).foreach(state.items.put(_, OnFloor(Location(levelId, x, y))))
       }
     }
 

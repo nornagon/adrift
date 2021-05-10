@@ -67,7 +67,7 @@ case class ItemWithConnections(item: String, connect: Seq[ConnectSpec] = Seq.emp
 object ItemWithConnections {
   import io.circe.generic.semiauto._
   private val derivedDecoder = {
-    implicit val derivedDecoder2 = deriveDecoder[ConnectSpec]
+    implicit val derivedDecoder2: Decoder[ConnectSpec] = deriveDecoder
     deriveDecoder[ItemWithConnections]
   }
   private def decodeFromString[T: Decoder]: Decoder[ItemWithConnections] = (c: HCursor) =>
