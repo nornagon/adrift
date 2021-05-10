@@ -66,7 +66,7 @@ case class Level(
     atmoSim.updateHeatCapacityTexture(grid)
   }
 
-  def updateHeat(dt: Double = 1)(implicit random: Random): Unit = {
+  def updateAtmosphere(dt: Double = 1)(implicit random: Random): Unit = {
     atmoSim.step(atmosphere, cylindrical = terrain.isInstanceOf[CylinderGrid[_]])
   }
 }
@@ -296,7 +296,7 @@ class GameState(var data: Data, val random: Random) {
     for (_ <- 0 until durationSec) {
       items.all.foreach(sendMessage(_, Message.Tick))
       val start = System.nanoTime()
-      updateHeat(player.levelId)
+      updateAtmosphere(player.levelId)
       println(f"temperature+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
       checkBodyTemp()
       internalCalories -= 1
@@ -946,10 +946,10 @@ class GameState(var data: Data, val random: Random) {
     x
   }
 
-  def updateHeat(levelId: LevelId, dt: Float = 1): Unit = {
+  def updateAtmosphere(levelId: LevelId, dt: Float = 1): Unit = {
     val level = levels(levelId)
     processPermeabilityUpdateQueue()
-    level.updateHeat(dt)(random)
+    level.updateAtmosphere(dt)(random)
 
     // transfer heat between player & environment
     val playerHeatCapacity = 4 // ~water
@@ -978,5 +978,26 @@ class GameState(var data: Data, val random: Random) {
     val maxMetabolismDq = 0.01f
     val metabolismDq = math.max(0, math.min((310 - bodyTemp) * 0.9f, maxMetabolismDq))
     bodyTemp += metabolismDq / playerHeatCapacity
+
+    // Respiration
+    // https://www3.nd.edu/~nsl/Lectures/mphysics/Medical%20Physics/Part%20I.%20Physics%20of%20the%20Body/Chapter%203.%20Pressure%20System%20of%20the%20Body/3.1%20Physics%20of%20breathing/Physics%20of%20breathing.pdf
+    // We breathe about 500 ml of air per breath (Tidal Volume)
+    // When inhaled air is ~20% O2, exhaled air is ~15% O2.
+    // The volume of gas exchanged is between 0.3 L/min and 1.0 L/min depending on activity level.
+    // i.e. 0.3 L O2 removed, 0.3 L CO2 added.
+    // PV = nRT
+    // we know P, V, T, R = 8.31 J/K/mol
+    // so n = RT/PV
+
+    // breathing rate ~ 8 g / min = 1.6 x 10^23 molecules / min (all gases)
+
+    // 44.5 moles of atmosphere in 1000 L (STP)     21% O2 = 9 moles of O2
+    // 1.6e23 molecules / min = 2.657 moles exchanged per min
+
+    // somewhere in the range of 0.01 ~ 0.07 kPa O2 exchanged per second?
+
+    val playerGC = level.gasComposition(player.xy)
+    val respirated = math.min(playerGC.oxygen, 0.01f * dt)
+    level.setGasComposition(player.x, player.y, playerGC + GasComposition(oxygen = -respirated, carbonDioxide = respirated, nitrogen = 0))
   }
 }

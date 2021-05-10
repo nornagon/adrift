@@ -8,7 +8,7 @@ object GasComposition {
   def earthLike: GasComposition = GasComposition(oxygen = 21, carbonDioxide = 1, nitrogen = 78)
 }
 
-// partial pressure of each gas
+// partial pressure of each gas, in kPa
 case class GasComposition(oxygen: Float, carbonDioxide: Float, nitrogen: Float) {
   def totalPressure(): Float = oxygen + carbonDioxide + nitrogen
 
@@ -23,5 +23,5 @@ case class GasComposition(oxygen: Float, carbonDioxide: Float, nitrogen: Float) 
   def minPressure(): Float =
     math.min(math.min(oxygen, carbonDioxide), nitrogen)
 
-  override def toString: String = s"GC(O2 = $oxygen, CO2 = $carbonDioxide, N2 = $nitrogen"
+  override def toString: String = f"GC(O2 = $oxygen%.2f, CO2 = $carbonDioxide%.2f, N2 = $nitrogen%.2f)"
 }
