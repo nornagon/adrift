@@ -996,8 +996,17 @@ class GameState(var data: Data, val random: Random) {
 
     // somewhere in the range of 0.01 ~ 0.07 kPa O2 exchanged per second?
 
+
+    // Or: humans use about 500 L of O2 per day at STP.
+    // in 1000 L of 21% O2 at STP we have 210 L of O2.
+    // So if you're in a single enclosed cell, 210 L will last you 10 hours.
+    // => you'll use up 21 kPa of O2 in 10 hrs
+    // => 2.1 kPa in 1 hr
+    // => 0.0006 kPa in 1 sec
+
     val playerGC = level.gasComposition(player.xy)
-    val respirated = math.min(playerGC.oxygen, 0.01f * dt)
+    val respirationRate = 0.0006f
+    val respirated = math.min(playerGC.oxygen, respirationRate * dt)
     level.setGasComposition(player.x, player.y, playerGC + GasComposition(oxygen = -respirated, carbonDioxide = respirated, nitrogen = 0))
   }
 }
