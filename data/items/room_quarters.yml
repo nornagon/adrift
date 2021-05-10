@@ -28,6 +28,8 @@
     - { type: cooling unit, count: 1, disassembled_with: SCREWING}
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: MEDIUM_EQUIPMENT
+  behavior:
+    - Container: { maxVolume: 250 L }
 
 - type: item
   name: backpack
@@ -39,6 +41,7 @@
   display: CLOTHING
   behavior:
     - Container: { maxVolume: 25 L }
+    - Wearable: { location: [torso], warmth: 0.05 }
 
 - type: item
   name: flat mirror
@@ -95,6 +98,8 @@
   parts:
   - {type: B-size frame, count: 1, disassembled_with: SCREWING}
   display: SMALL_EQUIPMENT
+  behavior:
+    - Container: { maxVolume: 18 L }
 
 - type: item
   name: chair
