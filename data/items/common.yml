@@ -5,7 +5,6 @@
   volume: 100 L
   description: A standard sturdy door. It opens and closes almost silently.
   parts:
-    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
     - {type: micro e-board, count: 1, disassembled_with: SCREWING}
     - {type: flex component, count: 2, disassembled_with: SOLDERING}
     - {type: C-size stepper motor, count: 2, disassembled_with: SCREWING}
@@ -15,7 +14,7 @@
   behavior:
     - Affixed: {}
     - DoorOpener: {}
-    - UsesElectricity: { perUse: 30 }
+    #- UsesElectricity: { perUse: 30 }  # TODO: connect doors to ship power w/ cables
     - DisplaysConnectedTo: { terrainTypes: [ wall ] }
     - ActivatedByDataPort: { portName: Open }
     - HasPorts:
@@ -32,7 +31,6 @@
   display: OPTICAL
   parts:
     - { type: local motion sensor, disassembled_with: SCREWING }
-    - { type: ship power adapter, disassembled_with: SOLDERING }
     - { type: micro e-board, disassembled_with: SCREWING }
     - { type: A-size frame, disassembled_with: SCREWING }
   behavior:
@@ -73,7 +71,6 @@
   volume: 400 L
   description: A heavy-duty, externally actuated door for containing reactor breaches or the cold void.
   parts:
-    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
     - {type: B-size frame, count: 1, disassembled_with: SCREWING}
     - {type: micro e-board, count: 1, disassembled_with: SCREWING}
     - {type: flex component, count: 12, disassembled_with: SOLDERING}

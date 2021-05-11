@@ -252,7 +252,6 @@
   - { type: combustion chamber, count: 1, disassembled_with: SCREWING }
   - { type: inverter, count: 1, disassembled_with: SCREWING }
   - { type: CO2 tank, count: 1, disassembled_with: SCREWING }
-  - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
   display: MEDIUM_EQUIPMENT
   behavior:
     - Container: { maxVolume: 100 L }

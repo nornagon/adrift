@@ -24,7 +24,6 @@
     - { type: C-size frame, count: 1, disassembled_with: SCREWING }
     - { type: laser pump, count: 2, disassembled_with: SCREWING }
     - { type: B-size frame, count: 2, disassembled_with: SCREWING }
-    - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
   display: LARGE_EQUIPMENT
   behavior:
     - Container: { maxVolume: 950 L }
@@ -37,7 +36,6 @@
     - { type: B-size frame, count: 1, disassembled_with: SCREWING }
     - { type: laser pump, count: 1, disassembled_with: SCREWING }
     - { type: A-size frame, count: 2, disassembled_with: SCREWING }
-    - { type: ship power adapter, count: 1, disassembled_with: SCREWING }
   display: LARGE_EQUIPMENT
 
 

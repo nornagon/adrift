@@ -10,18 +10,6 @@
   display: RAW_THIN
 
 - type: item
-  name: ship power adapter
-  volume: 20 mL
-  description: A box of electronics to adapt from ship power to any other kind of power supply.
-  parts:
-    - { type: micro e-board, count: 1, disassembled_with: SCREWING }
-    - { type: flex component, count: 2, disassembled_with: SOLDERING }
-    - { type: microprocessor, count: 1, disassembled_with: SOLDERING }
-  display: MEDIUM_BOX
-  behavior:
-    - ProvidesShipPower: { circuit: main }
-
-- type: item
   name: multimeter
   volume: .5 L
   description: Measure resistance, capacitance, voltage, diodes, even has some primitive signal analysis tools

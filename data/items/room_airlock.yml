@@ -3,7 +3,6 @@
   volume: 400 L
   description: An airtight door specially designed with interlocks to prevent it from opening if its linked door is open.
   parts:
-    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
     - {type: B-size frame, count: 1, disassembled_with: SCREWING}
     - {type: micro e-board, count: 1, disassembled_with: SCREWING}
     - {type: flex component, count: 4, disassembled_with: SOLDERING}
@@ -18,7 +17,6 @@
   volume: 1000 L
   description: a rack that supports the spacesuit and keeps its batteries charged
   parts:
-    - {type: ship power adapter, count: 1, disassembled_with: SCREWING}
     - {type: B-size frame, count: 1, disassembled_with: SCREWING}
     - {type: micro e-board, count: 1, disassembled_with: SCREWING}
     - {type: flex component, count: 4, disassembled_with: SOLDERING}

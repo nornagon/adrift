@@ -112,7 +112,6 @@ case class WorldGen(data: Data)(implicit random: Random) {
         level.dataCables(x, y) = 1
         state.items.put(door, OnFloor(Location(levelId, x, y)))
         state.items.put(sensor, OnFloor(Location(levelId, x, y)))
-        //generateItem(data.itemGroups(doorType)).foreach(state.items.put(_, OnFloor(Location(levelId, x, y))))
       }
     }
 

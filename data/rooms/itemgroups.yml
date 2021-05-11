@@ -46,7 +46,6 @@
 - type: item group
   name: power systems
   choose:
-    - ship power adapter
     - power cable
     - M3A power supply 
     - M5A power supply 

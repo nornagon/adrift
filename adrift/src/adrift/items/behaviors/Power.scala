@@ -59,10 +59,6 @@ case class UsesElectricity(perUse: Int) extends Behavior {
         t.conditions :+= "unpowered"
     case t: Message.ToolUsed =>
       state.sendMessage(self, Message.DrawCharge(amount = perUse))
-    case t: Message.ChargeAvailable =>
-      state.broadcastToParts(self, t)
-    case t: Message.DrawCharge =>
-      state.broadcastToParts(self, t)
     case _ =>
   }
 }
