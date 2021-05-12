@@ -49,6 +49,7 @@ object Dir {
   case object SW extends Dir { override def opposite: Dir = NE }
   case object W extends Dir { override def opposite: Dir = E }
   case object NW extends Dir { override def opposite: Dir = SE }
+  case object DN extends Dir { override def opposite: Dir = DN }
 
   /** dir of b from a */
   def from(a: (Int, Int), b: (Int, Int)): Dir = {
@@ -58,6 +59,7 @@ object Dir {
       else SW
     } else if (a._1 == b._1) {
       if (a._2 < b._2) N
+      else if (a._2 == b._2) DN
       else S
     } else {
       if (a._2 < b._2) NE

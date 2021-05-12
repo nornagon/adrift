@@ -23,7 +23,7 @@ object DirectionKey {
 
 class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
-    if (action == GLFW_RELEASE) {
+    if (action == GLFW_PRESS) {
       key match {
         case DirectionKey((dx, dy)) =>
           display.popScreen()
