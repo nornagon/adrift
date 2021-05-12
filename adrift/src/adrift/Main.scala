@@ -85,18 +85,14 @@ object Main {
       }
 
     state.refresh()
-    val display: Display = new GLFWDisplay(win, font)
+    val display = new GLFWDisplay(win, font, state)
     display.init()
-    display.update(state)
+    display.update()
 
     FileWatcher.onFileChanged(dataPath) { _ =>
       display.postAction(Action.ReloadData(Data.parse(dataPath)))
     }
 
-    while (display.running) {
-      val action = display.waitForAction
-      state.receive(action)
-      display.update(state)
-    }
+    display.run()
   }
 }
