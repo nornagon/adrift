@@ -3,7 +3,7 @@ package adrift.display
 import adrift.display.GlyphRenderer.{ColoredString, wrapCS}
 import adrift.items.Message.CanWear
 import adrift.items.{Item, Message}
-import adrift.{Action, GameState, InHands, Inside, OnFloor, Rect, Worn}
+import adrift.{Action, GameState, InHands, Inside, ItemLocation, OnFloor, Rect, Worn}
 import org.lwjgl.glfw.GLFW._
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
@@ -75,13 +75,20 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
   var cursor = 0
   var marked = Set.empty[Item]
 
-  val sections = Seq(
-    "HELD" -> InHands(),
-    "WORN" -> Worn(),
-    "NEARBY" -> OnFloor(state.player),
+  val sections: Seq[(String, Seq[ItemLocation])] = Seq(
+    "HELD" -> Seq(InHands()),
+    "WORN" -> Seq(Worn()),
+    "NEARBY" -> (for (dy <- -1 to 1; dx <- -1 to 1) yield OnFloor(state.player + (dx, dy))),
   )
   def contents(item: Item): Seq[Item] = state.items.lookup(Inside(item)).flatMap(i => i +: contents(i))
-  def items: Seq[Seq[Item]] = sections.map(s => state.items.lookup(s._2).flatMap(i => i +: contents(i)))
+  def items: Seq[Seq[Item]] =
+    for ((title, locations) <- sections) yield for {
+      loc <- locations
+      items = state.items.lookup(loc)
+      item <- items
+      i <- item +: contents(item)
+    } yield i
+
   def moveCursor(d: Int): Unit = cursor = math.max(0, math.min(cursor + d, items.map(_.size).sum - 1))
   def selectedItem: Option[Item] = {
     val is = items.flatten
@@ -96,7 +103,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   override def render(renderer: GlyphRenderer): Unit = {
     moveCursor(0) // if the item list has changed, this pushes the cursor back in range
-    val bounds = Rect.centeredAt(renderer.bounds.center, 40, 40)
+    val bounds = Rect.centeredAt(renderer.bounds.center, 25, 40)
 
     import layout3._
 
@@ -114,16 +121,38 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val w = LRBorder(
       fg = lightGreen, bg = darkGreen,
       content = Background(bg = darkGreen, content = Column(
-        sections.zip(items).flatMap {
-          case ((title, location), items) =>
-            Seq(Text(title.withFg(disabledGreen))) ++ items.map { item =>
-              val indentation = countContainers(item)
-              val fg =
-                if (selectedItem.contains(item)) selectedGreen
-                else if (marked(item)) markedBlue
-                else lightGreen
-              Text((" " * indentation + state.itemDisplayName(item)).withFg(fg))
-            }
+        crossAxisAlignment = CrossAxisAlignment.Stretch,
+        children = sections.zip(items).flatMap {
+          case ((title, _), items) =>
+            Seq(Text(title.withFg(disabledGreen))) ++ (if (items.isEmpty) {
+              Seq(Row(Seq(
+                ConstrainedBox(BoxConstraints(minWidth = 1)),
+                Text("(none)".withFg(disabledGreen))
+              )))
+            } else {
+              items.map { item =>
+                val indentation = countContainers(item)
+                val fg =
+                  /*if (selectedItem.contains(item)) selectedGreen
+                  else*/ if (marked(item)) markedBlue
+                  else lightGreen
+                val loc = state.items.lookup(item)
+                val locMarker = loc match {
+                  case OnFloor(l) =>
+                    val dir = Dir.from(l.xy, state.player.xy)
+                    Seq(Text(dir.toString.withFg(disabledGreen)))
+                  case _ => Seq()
+                }
+                Row(Seq(
+                  if (selectedItem.contains(item))
+                    Text("\u0010".withFg(selectedGreen), halfWidth = false)
+                  else
+                    ConstrainedBox(BoxConstraints(minWidth = 1)),
+                  ConstrainedBox(BoxConstraints(minWidth = indentation)),
+                  Flexible(ConstrainedBox(BoxConstraints(maxHeight = 1), Text(state.itemDisplayName(item).withFg(fg)))),
+                ) ++ locMarker)
+              }
+            })
         } ++ (selectedItem match {
           case Some(sel) =>
             Seq(

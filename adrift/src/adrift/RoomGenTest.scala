@@ -2,7 +2,7 @@ package adrift
 
 import java.nio.file.Paths
 
-import adrift.display.{Display, GLFWDisplay, GLFWWindow}
+import adrift.display.{GLFWDisplay, GLFWWindow}
 import adrift.worldgen.{RoomGen, WFC}
 import adrift.RandomImplicits._
 
@@ -44,8 +44,6 @@ object RoomGenTest {
   def main(args: Array[String]): Unit = {
     val dataPath = Paths.get("data")
     val window = new GLFWWindow
-    val display: Display = new GLFWDisplay(window, Main.font)
-    display.init()
     window.show()
     window.poll()
     val forcedWidth = if (args.length > 1) Some(args(1).toInt) else None
@@ -57,7 +55,7 @@ object RoomGenTest {
     var state: GameState = null
     def data = if (state == null) initialData else state.data
     def regenerate(seed: Long): Unit = {
-      implicit val random = new Random(seed)
+      implicit val random: Random = new Random(seed)
       val width = forcedWidth.getOrElse(math.max(3, math.min(15, 10 + random.nextGaussian() * 5)).round.toInt)
       val height = forcedHeight.getOrElse(math.max(3, math.min(15, 10 + random.nextGaussian() * 5)).round.toInt)
       state = generate(data, data.roomgens(args.head), width, height, window)
@@ -68,11 +66,20 @@ object RoomGenTest {
       throw new RuntimeException(s"Couldn't generate a room")
     }
 
-    display.update(state)
+    val display = new GLFWDisplay(window, Main.font, state)
+    display.init()
+    display.update()
+
     FileWatcher.onFileChanged(dataPath) { _ =>
       display.postAction(Action.ReloadData(Data.parse(dataPath)))
     }
 
+    display.run()
+
+    Action.Regenerate // here for "find usages"
+
+    // TODO: fix Action.Regenerate
+    /*
     while (display.running) {
       val action = display.waitForAction
       action match {
@@ -81,8 +88,9 @@ object RoomGenTest {
         case _ =>
           state.receive(action)
       }
-      display.update(state)
+      display.update()
     }
+     */
   }
 
   def generate(data: Data, roomgen: RoomGen, width: Int, height: Int, window: GLFWWindow)(implicit random: Random): GameState = {

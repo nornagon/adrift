@@ -49,6 +49,7 @@ object Dir {
   case object SW extends Dir { override def opposite: Dir = NE }
   case object W extends Dir { override def opposite: Dir = E }
   case object NW extends Dir { override def opposite: Dir = SE }
+  case object DN extends Dir { override def opposite: Dir = DN }
 
   /** dir of b from a */
   def from(a: (Int, Int), b: (Int, Int)): Dir = {
@@ -58,6 +59,7 @@ object Dir {
       else SW
     } else if (a._1 == b._1) {
       if (a._2 < b._2) N
+      else if (a._2 == b._2) DN
       else S
     } else {
       if (a._2 < b._2) NE
@@ -225,8 +227,7 @@ trait Screen {
   def render(renderer: GlyphRenderer): Unit
 }
 
-class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
-  private var lastState: GameState = _
+class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) {
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
   val windowHeightChars = 60
@@ -234,11 +235,11 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
   private [display] def pushScreen(screen: Screen): Unit = {
     screens.append(screen)
-    render(lastState)
+    render()
   }
   private [display] def popScreen(): Unit = {
     if (screens.nonEmpty) screens.remove(screens.size - 1)
-    render(lastState)
+    render()
   }
   private [display] def pushAction(a: Action): Unit = {
     pendingActions.add(a)
@@ -260,7 +261,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
         if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS && !defaultPrevented) {
           popScreen()
         } else {
-          render(lastState)
+          render()
         }
       } else {
         if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -269,7 +270,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
 
               // Drop
             case GLFW_KEY_D =>
-              lastState.items.lookup(InHands()).headOption foreach { item =>
+              state.items.lookup(InHands()).headOption foreach { item =>
                 pushAction(Action.PutDown(item))
               }
 
@@ -278,24 +279,24 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
             case GLFW_KEY_COMMA => pushAction(Action.Wait(100))
 
               // Examine
-            case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, lastState))
+            case GLFW_KEY_E => pushScreen(new ExamineDirectionScreen(this, state))
 
               // Inventory
-            case GLFW_KEY_I => pushScreen(new InventoryScreen(this, lastState))
+            case GLFW_KEY_I => pushScreen(new InventoryScreen(this, state))
 
               // Assemble
-            case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, lastState))
+            case GLFW_KEY_A => pushScreen(new AssemblyScreen(this, state))
 
               // Wish
-            case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, lastState))
+            case GLFW_KEY_GRAVE_ACCENT => pushScreen(new WishScreen(this, state))
 
               // Look
-            case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, lastState))
+            case GLFW_KEY_SEMICOLON => pushScreen(new LookScreen(this, state))
 
-            case GLFW_KEY_C => pushScreen(new CableScreen(this, lastState))
+            case GLFW_KEY_C => pushScreen(new CableScreen(this, state))
 
               // Regenerate (in RoomTest mode)
-            case _ if lastState.isRoomTest =>
+            case _ if state.isRoomTest =>
               key match {
                 case GLFW_KEY_R if (mods & GLFW_MOD_SUPER) != 0 =>
                   pushAction(Action.Regenerate)
@@ -341,7 +342,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
     )
   }
 
-  def render(state: GameState): Unit = {
+  def render(): Unit = {
     val (wWidth, wHeight) = window.size
     if (wWidth != windowWidthChars * (font.tileWidth * font.scaleFactor) ||
       wHeight != windowHeightChars * (font.tileHeight * font.scaleFactor)) {
@@ -453,27 +454,30 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font) extends Display {
     }
   }
 
-  override def update(state: GameState): Unit = {
-    lastState = state
+  def update(): Unit = {
     if (state.isDead) {
       pushScreen(new DeathScreen(this, state))
       return
     }
-    render(state)
+    render()
   }
 
-  override def waitForAction: Action = {
-    if (!pendingActions.isEmpty)
-      return pendingActions.poll()
+  def waitForAction: Action = {
     while (pendingActions.isEmpty)
       glfwWaitEvents()
     pendingActions.poll()
   }
 
-  override def postAction(action: Action): Unit = {
+  def postAction(action: Action): Unit = {
     pushAction(action)
     glfwPostEmptyEvent()
   }
 
-  override def running: Boolean = !window.shouldClose
+  def run(): Unit = {
+    while (!window.shouldClose) {
+      val action = waitForAction
+      state.receive(action)
+      update()
+    }
+  }
 }
