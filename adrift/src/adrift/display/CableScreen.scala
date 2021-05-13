@@ -73,14 +73,28 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         display.preventDefault()
         connecting = false
       case (GLFW_PRESS | GLFW_REPEAT, DirectionKey(0, dy)) =>
-        connectingCursor = math.max(0, math.min(portsHere.map(_._2._1.size).sum - 1, connectingCursor + dy))
+        connectingCursor = math.max(-1, math.min(portsHere.map(_._2._1.size).sum - 1, connectingCursor + dy))
       case (GLFW_PRESS, NumericKey(n)) if n >= 1 && n <= 8 =>
-        val Some((item, port)) = editingPort
-        val Some(hp) = item.behaviorOfType[HasPorts]
-        hp.modifyConnections(state, port, existingLayers =>
-          if ((mods & GLFW_MOD_SHIFT) != 0) existingLayers.toggle(n - 1)
-          else if (existingLayers == LayerSet(1 << (n - 1))) LayerSet(0)
-          else LayerSet(1 << (n - 1)))
+        if (connectingCursor == -1) {
+          val level = state.levels(state.player.levelId)
+          val cables = displaying match {
+            case Power => level.powerCables
+            case Data => level.dataCables
+            case Fluid => level.fluidCables
+          }
+          cables(cursor) ^= (1 << (n - 1))
+          state.recalculateConnections()
+        } else {
+          val Some((item, port)) = editingPort
+          val Some(hp) = item.behaviorOfType[HasPorts]
+          hp.modifyConnections(
+            state, port, existingLayers =>
+              if ((mods & GLFW_MOD_SHIFT) != 0) existingLayers.toggle(n - 1)
+              else if (existingLayers == LayerSet(1 << (n - 1))) LayerSet(0)
+              else LayerSet(1 << (n - 1))
+          )
+          state.recalculateConnections()
+        }
       case _ =>
     }
   }
@@ -92,7 +106,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     }
     (action, key) match {
       case (GLFW_PRESS, GLFW_KEY_C) if portsHere.exists(_._2._1.nonEmpty) =>
-        connectingCursor = 0
+        connectingCursor = -1
         connecting = true
       case (GLFW_PRESS | GLFW_REPEAT, DirectionKey(dx, dy)) =>
         cursor = (cursor._1 + dx, cursor._2 + dy)
@@ -175,6 +189,25 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     ),
     Flexible(Border(Column({
       var c = Seq.empty[Widget]
+      val level = state.levels(state.player.levelId)
+      val cables = displaying match {
+        case Power => level.powerCables
+        case Data => level.dataCables
+        case Fluid => level.fluidCables
+      }
+      val cablesHere = LayerSet(cables(cursor))
+      c :+= Text("Cables")
+      c :+= Text(
+        ((if (connecting && connectingCursor == -1) "\u0010" else " ") +
+          (0 until 8).map(i => if (cablesHere(i)) "\u00fe" else "\u00ff").mkString("")).withFg(
+          displaying match {
+            case Data => dataColor
+            case Power => powerColor
+            case Fluid => fluidColor
+          }
+        ),
+        halfWidth = false
+      )
       var prev = 0
       for ((item, (ports, connections)) <- portsHere) {
         val displayedPorts = ports.filter(p => queryTypes.contains(p.`type`))
@@ -184,6 +217,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
             val ix = prev + i
             val cs = connections.getOrElse(p.name, LayerSet.empty)
             val intersectsWithCurrentView = cs intersects displayingLayers
+            val pluggedIn = cs intersects cablesHere
             c :+= Row(
               children = Seq(
                 Text(
@@ -197,7 +231,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
                     ),
                   halfWidth = false
                 ),
-                ConstrainedBox(BoxConstraints(minWidth = 1)),
+                Text("\u00f9".withFg(if (pluggedIn) Color(0, 1, 0, 1) else Color(1, 1, 0, 1)), halfWidth = false),
                 Flexible(ConstrainedBox(
                   BoxConstraints(maxHeight = 1),
                   Text(p.name.withFg(Color.White.darken(if (intersectsWithCurrentView) 1.0f else 0.5f)))
