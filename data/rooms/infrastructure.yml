@@ -1,24 +1,4 @@
 - type: roomgen
-  name: defiant
-  algorithm: Static
-  options:
-    layout: |
-      xxxxxxxxxxxxxxxx
-      x......x.......x
-      x......d.......x
-      x......x.......x
-      x......x.......x
-      x......x.......x
-      x......xxxxxxxxx
-      x......d.......x
-      x......x.......x
-      xxxxxxxxxxxxxxxx
-    defs:
-      .: { terrain: floor }
-      x: { terrain: wall }
-      d: { terrain: floor, items: {each: [ automatic door, mounted presence sensor ]} }
-
-- type: roomgen
   name: infrastructure
   algorithm: WFC
   #    Infrastructure hubs serve a variety of purposes.

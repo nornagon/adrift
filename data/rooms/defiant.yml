@@ -1,0 +1,38 @@
+- type: roomgen
+  name: defiant
+  algorithm: Static
+  options:
+    layout: |
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      x................x....x....x....x....x....x....x....x....x....x...xxxxxx
+      x................x....x....x....x....x....x....x....x....x....x........xxxxxx
+      x................x....x....x....x....x....x....x....x....x....x..........x..xxxxx
+      x................xxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxx.......x......xxxx
+      x................x...............................................d.......d.........xxxx
+      x................d...............................................xxxxxxxxx............xxx
+      xxxxxxxxxxxxxxxxxx..xxxxxxxxxxxxxdxxxxx....xxxxxxxxxxxxxxxxxxxx..........x..............xx
+             x....x.......x...............x................x........d..........x........xxxxxxxxx
+             x....d.......x...............x................x........xxxxxxxxx..x........d.......xx
+             x....x..xxxdxx...............x................x.........x......x..xxxxxxxxxx........x
+             x....x..x....x...............x................d.........x......x....x...............xx
+             x....x..x....x...............x................x.........x......x....x................x
+             x....x..x....xxxxxxxx........x................xxxxxxxxxxx......d....d................x
+             x....x..x...........x........x................x.........x......x....x................x
+             x....x..x...........x........x................d.........xxxxxxxx....x................x
+             x....x..x...........x........x................x.........x...........x...............xx
+             x....x..xxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........xxxxxxxx........x
+             x....d.....................................................xxxxxxxdxx......x.......xx
+             x....x.....................................................x...............xxxxxxxxx
+      xxxxxxxxxxxxxdxxxxxxxxxdxxxxxxxxxxxxxxxxdxxxxxxdxxxxxxxxxxxxxxxdxxx.....................xx
+      x.............x...........x.................x.....................x...................xxx
+      x.............x...........x.................x.....................x................xxxx
+      x.............x...........x.................x.....................x.............xxxx
+      x.............x...........x.................x.....................x.........xxxxx
+      x.............x...........x.................x.....................x....xxxxxx
+      x.............x...........x.................x.....................xxxxxx
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    defs:
+      .: { terrain: floor }
+      x: { terrain: wall }
+      d: { terrain: floor, items: {each: [ automatic door, mounted presence sensor ]} }
+
