@@ -24,6 +24,8 @@ object Message {
 
   case class IsFunctional(var functional: Boolean = true) extends Message
 
+  case class Disassembled() extends Message
+
   // Tools
   case class UseTool(op: ItemOperation, var ok: Boolean = false) extends Message
   case class ToolUsed(op: ItemOperation) extends Message

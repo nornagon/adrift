@@ -30,7 +30,8 @@
   parts:
    - { type: scis, count: 2, disassembled_with: SCREWING}
   display: SMALL_TOOL
-  provides: [ CUTTING ]
+  behavior:
+    - Tool: { op: CUTTING }
 
 - type: item
   name: scis

@@ -317,8 +317,10 @@ class GameState(var data: Data, val random: Random) {
     val lastParent = parents.last
     assert(lastParent.parts.contains(part))
     lastParent.parts = lastParent.parts.filter(_ ne part)
-    if (!lastParent.behaviors.exists(_.isInstanceOf[MissingParts]))
+    if (!lastParent.behaviors.exists(_.isInstanceOf[MissingParts])) {
       lastParent.behaviors += MissingParts()
+      sendMessage(lastParent, Message.Disassembled())
+    }
     if (lastParent.parts.isEmpty) {
       if (parents.init.nonEmpty)
         removePart(parents.init, lastParent)

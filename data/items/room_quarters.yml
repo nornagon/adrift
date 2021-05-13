@@ -80,6 +80,8 @@
   - {type: C-size frame, count: 2, disassembled_with: SCREWING}
   Container: { maxVolume: 15 L, rigid: true}
   display: DESK
+  behavior:
+    - Container: { maxVolume: 18 L }
 
 - type: item
   name: desk
