@@ -4,8 +4,8 @@
   options:
     layout: |
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-      x................x....x....x....x....x....x....x....x....x....x...xxxxxx
-      x................x....x....x....x....x....x....x....x....x....x........xxxxxx
+      x................xb..Cxb..Cxb..Cxb..bxb..bxbCCbxb..bxb..bxb..Cx...xxxxxx
+      x................x....x....x....xC..CxC..Cx....xC..CxC..Cx....x........xxxxxx
       x................x....x....x....x....x....x....x....x....x....x..........x..xxxxx
       x................xxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxx.......x......xxxx
       x................x...............................................d.......d.........xxxx
@@ -13,26 +13,46 @@
       xxxxxxxxxxxxxxxxxx..xxxxxxxxxxxxxdxxxxx....xxxxxxxxxxxxxxxxxxxx..........x..............xx
              x....x.......x...............x................x........d..........x........xxxxxxxxx
              x....d.......x...............x................x........xxxxxxxxx..x........d.......xx
-             x....x..xxxdxx...............x................x.........x......x..xxxxxxxxxx........x
-             x....x..x....x...............x................d.........x......x....x...............xx
-             x....x..x....x...............x................x.........x......x....x................x
-             x....x..x....xxxxxxxx........x................xxxxxxxxxxx......d....d................x
-             x....x..x...........x........x................x.........x......x....x................x
-             x....x..x...........x........x................d.........xxxxxxxx....x................x
-             x....x..x...........x........x................x.........x...........x...............xx
-             x....x..xxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........xxxxxxxx........x
-             x....d.....................................................xxxxxxxdxx......x.......xx
-             x....x.....................................................x...............xxxxxxxxx
-      xxxxxxxxxxxxxdxxxxxxxxxdxxxxxxxxxxxxxxxxdxxxxxxdxxxxxxxxxxxxxxxdxxx.....................xx
-      x.............x...........x.................x.....................x...................xxx
-      x.............x...........x.................x.....................x................xxxx
-      x.............x...........x.................x.....................x.............xxxx
-      x.............x...........x.................x.....................x.........xxxxx
-      x.............x...........x.................x.....................x....xxxxxx
+             x....x..xxxdxx...............x................x.........x......x..xxxxxxxxxx......../
+             x....x..x....x...............x................d.........x......x....x...............//
+             x....x..x....x...............x................x.........x......x....x................/
+             x....x..x....xxxxxxxx........x................xxxxxxxxxxx......d....d................/
+             x....x..x...........x........x................x.........x......x....x................/
+             x....x..x...........x........x................d.........xxxxxxxx....x................/
+             x....x..x...........x........x................x.........x...........x...............//
+             x....x..xxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........xxxxxxxx......../
+             x....d.....................................................xxxxxxxdxxSSSSRRx.......xx
+             x....x.....................................................x.h.h.h.........xxxxxxxxx
+      xxxxxxxxxxxxxdxxxxxxxxxdxxxxxxxxxxxxxxxxdxxxxxxdxxxxxxxxxxxxxxxdxxxht.t.t..========.h.htxx
+      x.............x...........x.................x.....................x...h.h..ss.s.ss..t.x/x
+      x.............x...........x.................x.....................xhth........hh...x//x
+      x.............x...........x.................x.....................x.hh..hth...ttx//x
+      x.............x...........x.................x.....................xhtth.hth.xx//x
+      x.............x...........x.................x.....................x.hh.x////x
       x.............x...........x.................x.....................xxxxxx
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     defs:
       .: { terrain: floor }
       x: { terrain: wall }
       d: { terrain: floor, items: {each: [ automatic door, mounted presence sensor ]} }
+      b: { terrain: floor, items: { each: [ bed ] } }
+      C: { terrain: floor, items: { each: [ closet, { group: clothing } ] } }
+      /: { terrain: transparent polycarbonate window }
+      =: { terrain: floor, items: [ counter ] }
+      s: { terrain: floor, items: [ stool ] }
+      h: { terrain: floor, items: [ chair ] }
+      t: { terrain: floor, items: [ table ] }
+      R: { terrain: floor, items: [ refrigerator ] }
+      S: { terrain: floor, items: [ tall cupboard ] }
+
+- type: item
+  name: tall cupboard
+  volume: 500 L
+  description: A tall, sturdy cupboard with doors and shelves inside.
+  parts:
+    - { type: C-size frame, count: 1, disassembled_with: SCREWING }
+  display: LARGE_EQUIPMENT
+  behavior:
+    - Affixed: {}
+    - Container: { maxVolume: 400 L, rigid: true }
 
