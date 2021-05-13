@@ -334,6 +334,8 @@
   volume: 300 L
   description: A large storage tank for some sort of liquid... Could be water? Or maybe it's acid.  Or worse.
   display: LARGE_EQUIPMENT
+  behavior:
+  - Container: { maxVolume: 280 L, rigid: true }
 
 - type: item
   name: jeffries hatch

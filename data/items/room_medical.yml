@@ -7,7 +7,7 @@
   display: DESK
   behavior:
     - Affixed: {}
-    - Container: { maxVolume: 400 L }
+    - Container: { maxVolume: 400 L, rigid: true }
 
 - type: item
   name: hypospray

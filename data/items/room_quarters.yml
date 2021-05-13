@@ -29,7 +29,7 @@
     - { type: C-size frame, count: 1, disassembled_with: SCREWING}
   display: MEDIUM_EQUIPMENT
   behavior:
-    - Container: { maxVolume: 250 L }
+    - Container: { maxVolume: 250 L, rigid: true }
 
 - type: item
   name: backpack
@@ -78,6 +78,7 @@
   parts:
   - {type: drawer, count: 3, disassembled_with: SCREWING}
   - {type: C-size frame, count: 2, disassembled_with: SCREWING}
+  Container: { maxVolume: 15 L, rigid: true}
   display: DESK
 
 - type: item
@@ -89,6 +90,7 @@
   - {type: C-size modular panel, count: 3, disassembled_with: SCREWING}
   - {type: C-size modular rod, count: 4, disassembled_with: SCREWING}
   - {type: drawer, count: 3, disassembled_with: SCREWING}
+  Container: { maxVolume: 15 L, rigid: true}
   display: DESK
 
 - type: item
@@ -99,7 +101,7 @@
   - {type: B-size frame, count: 1, disassembled_with: SCREWING}
   display: SMALL_EQUIPMENT
   behavior:
-    - Container: { maxVolume: 18 L }
+    - Container: { maxVolume: 5 L, rigid: true }
 
 - type: item
   name: chair

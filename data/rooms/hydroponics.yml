@@ -51,3 +51,5 @@
   volume: 800 L
   display: LARGE_EQUIPMENT
   description: A large cylindrical hopper with a motor that slowly rotates the drum.
+  behavior:
+    - Container: { volume: 500 L, rigid: true }

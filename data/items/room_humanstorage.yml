@@ -26,7 +26,7 @@
     - { type: B-size frame, count: 2, disassembled_with: SCREWING }
   display: LARGE_EQUIPMENT
   behavior:
-    - Container: { maxVolume: 950 L }
+    - Container: { maxVolume: 950 L, rigid: true }
 
 - type: item
   name: cooling unit
@@ -51,7 +51,7 @@
   behavior:
     - Block: {}
     - Affixed: {}
-    - Container: { maxVolume: 1000 L }
+    - Container: { maxVolume: 1000 L, rigid: true }
 
 - type: item
   name: cryo-door

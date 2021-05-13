@@ -4,7 +4,7 @@
 
 - type: item
   name: screwdriver
-  volume: .2 L
+  volume: .02 L
   description: A standard K35 screwdriver, like you'd find in a koligan.
   display: SMALL_TOOL
   behavior:
@@ -37,21 +37,21 @@
 
 - type: item
   name: multi-wrench
-  volume: .2 L
+  volume: .02 L
   description: Twisting the knob adjusts the grip size.  This is pretty much only useful for adding or removing bolts.
   provides: [ BOLT_TURNING ]
   display: TOOL
 
 - type: item
   name: box cutter
-  volume: .1 L
+  volume: .01 L
   description: A sharp, virtually unbreakable tungsteel blade makes this a great tool or, in a pinch, a weapon.
   provides: [ CUTTING ]
   display: SMALL_TOOL
 
 - type: item
   name: soldering iron
-  volume: .2 L
+  volume: .02 L
   description: An RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components.
   display: SMALL_TOOL
   parts:
