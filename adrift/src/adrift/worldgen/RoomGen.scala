@@ -411,6 +411,61 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   }
 }
 
+case class Static(layout: String, defs: Map[String, PaletteDef]) extends RoomGenAlgorithm {
+  private val lines = layout.split("\n")
+  val width: Int = lines.map(_.length).max
+  val height: Int = lines.length
+  override def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
+    val tileGrid = new Grid[Char](width, height)(' ')
+    for ((line, y) <- lines.zipWithIndex; (char, x) <- line.zipWithIndex) {
+      tileGrid(x, y) = char
+    }
+    fill(state, levelId, cells.map(_._1).min, cells.map(_._2).min, tileGrid)
+  }
+
+  def fill(state: GameState, levelId: LevelId, xmin: Int, ymin: Int, tileGrid: Grid[Char]): Unit = {
+    for (y <- 0 until tileGrid.height; x <- 0 until tileGrid.width) {
+      val tile = tileGrid(x, y)
+      val paletteDef = tile.toString match {
+        case " " => defs.getOrElse(" ", PaletteDef())
+        case other => defs(other)
+      }
+      val terrain = paletteDef.terrain
+      val tx = xmin + x
+      val ty = ymin + y
+      state.levels(levelId).terrain(tx, ty) = state.data.terrain(terrain.getOrElse("empty space"))
+      paletteDef.items.foreach { table =>
+        state.sampleItem2[ItemWithConnections](table, ItemWithConnections(_), _.item) foreach {
+          case (item, iwc) =>
+            state.items.put(item, OnFloor(Location(levelId, tx, ty)))
+            for (spec <- iwc.connect) {
+              item.behaviorOfType[HasPorts] match {
+                case Some(bhvr) =>
+                  bhvr.ports.find(_.name == spec.port) match {
+                    case Some(portSpec) =>
+                      val cableType = portSpec.`type`;
+                      (cableType match {
+                        case "power-in" | "power-out" =>
+                          state.levels(levelId).powerCables
+                        case "data-in" | "data-out" =>
+                          state.levels(levelId).dataCables
+                        case "fluid-in" | "fluid-out" =>
+                          state.levels(levelId).fluidCables
+                      })(tx, ty) |= spec.layer
+                      bhvr.connections += (spec.port -> new LayerSet(spec.layer))
+                    case None =>
+                      println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
+                  }
+                case _ =>
+                  println(s"Warning: ${item.kind.name} does not have ports")
+              }
+            }
+        }
+      }
+    }
+  }
+}
+
 object RoomGenAlgorithm {
   import cats.syntax.functor._
   import io.circe.generic.extras.Configuration
@@ -421,10 +476,12 @@ object RoomGenAlgorithm {
   val decoders: Map[String, Decoder[RoomGenAlgorithm]] = Map(
     "Furnish" -> Decoder[Furnish].widen,
     "WFC" -> Decoder[WFC].widen,
+    "Static" -> Decoder[Static].widen,
   )
 
   implicit val encodeBehavior: Encoder[RoomGenAlgorithm] = (b: RoomGenAlgorithm) => Json.fromJsonObject(JsonObject.singleton(b.getClass.getSimpleName, b match {
     case b: Furnish => Encoder[Furnish].apply(b)
     case b: WFC => Encoder[WFC].apply(b)
+    case b: Static => Encoder[Static].apply(b)
   }))
 }
