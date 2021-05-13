@@ -14,14 +14,16 @@
   volume: .3 L
   description: Through the small glass you can see a swirling foggy substance. There's a dispense button on the back.
   display: SMALL_TOOL
-  provides: [ BIO-HEAL ]
+  behavior:
+    - Tool: { op: BIO-HEAL }
 
 - type: item
   name: dermal regenerator
   volume: .3 L
   description: Remember when you had an owie as a kid and mom used that massive buzzing D.R. to fix it? This is like that, but smaller.
   display: TOOL
-  provides: [ BIO-BOND ]
+  behavior:
+    - Tool: { op: BIO-BOND }
 
 - type: item
   name: scissors
@@ -38,14 +40,16 @@
   volume: .15 L
   description: Half a scissors. Usually considered more useful when joined with another scis.
   display: SMALL_TOOL
-  provides: [ CUTTING ]
+  behavior:
+    - Tool: { op: CUTTING }
 
 - type: item
   name: scalpel
   volume: .1 L
   description: A medical grade tungsteel blade good at getting into tight corners.
-  provides: [ CUTTING ]
   display: SMALL_TOOL
+  behavior:
+    - Tool: { op: CUTTING }
 
 - type: item
   name: gurney
