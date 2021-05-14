@@ -411,29 +411,46 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   }
 }
 
-case class Static(layout: String, defs: Map[String, PaletteDef]) extends RoomGenAlgorithm {
+case class CableDef(power: Int = 0, data: Int = 0, fluid: Int = 0)
+
+case class Static(layout: String, defs: Map[String, PaletteDef], cables: String, cableDefs: Map[String, CableDef]) extends RoomGenAlgorithm {
   private val lines = layout.split("\n")
+  private val cableLines = cables.split("\n")
   val width: Int = lines.map(_.length).max
   val height: Int = lines.length
+  assert(cableLines.length <= height)
+  assert(cableLines.map(_.length).max <= width)
   override def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
     val tileGrid = new Grid[Char](width, height)(' ')
     for ((line, y) <- lines.zipWithIndex; (char, x) <- line.zipWithIndex) {
       tileGrid(x, y) = char
     }
-    fill(state, levelId, cells.map(_._1).min, cells.map(_._2).min, tileGrid)
+    val cableGrid = new Grid[Char](width, height)(' ')
+    for ((line, y) <- cableLines.zipWithIndex; (char, x) <- line.zipWithIndex) {
+      cableGrid(x, y) = char
+    }
+    fill(state, levelId, cells.map(_._1).min, cells.map(_._2).min, tileGrid, cableGrid)
   }
 
-  def fill(state: GameState, levelId: LevelId, xmin: Int, ymin: Int, tileGrid: Grid[Char]): Unit = {
+  def fill(state: GameState, levelId: LevelId, xmin: Int, ymin: Int, tileGrid: Grid[Char], cableGrid: Grid[Char]): Unit = {
     for (y <- 0 until tileGrid.height; x <- 0 until tileGrid.width) {
       val tile = tileGrid(x, y)
       val paletteDef = tile.toString match {
         case " " => defs.getOrElse(" ", PaletteDef())
-        case other => defs(other)
+        case other => defs.getOrElse(other, throw new Exception(s"No palette def for '$other'"))
+      }
+      val cableTile = cableGrid(x, y)
+      val cableDef = cableTile.toString match {
+        case " " => cableDefs.getOrElse(" ", CableDef())
+        case other => cableDefs(other)
       }
       val terrain = paletteDef.terrain
       val tx = xmin + x
       val ty = ymin + y
       state.levels(levelId).terrain(tx, ty) = state.data.terrain(terrain.getOrElse("empty space"))
+      state.levels(levelId).powerCables(tx, ty) = cableDef.power
+      state.levels(levelId).dataCables(tx, ty) = cableDef.data
+      state.levels(levelId).fluidCables(tx, ty) = cableDef.fluid
       paletteDef.items.foreach { table =>
         state.sampleItem2[ItemWithConnections](table, ItemWithConnections(_), _.item) foreach {
           case (item, iwc) =>

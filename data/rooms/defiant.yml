@@ -6,7 +6,7 @@
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
       x................xb..Cxb..Cxb..Cxb..bxb..bxbCCbxb..bxb..bxb..Cx...xxxxxx
       x................x....x....x....xC..CxC..Cx....xC..CxC..Cx....x........xxxxxx
-      x................x....x....x....x....x....x....x....x....x....x..........x..xxxxx
+      x............G...x....x....x....x....x....x....x....x....x....x..........x..xxxxx
       x................xxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxx.......x......xxxx
       x................x...............................................d.......d.........xxxx
       x................d...............................................xxxxxxxxx............xxx
@@ -16,7 +16,8 @@
              x....x..xxxdxx...............x................x.........x......x..xxxxxxxxxx......../
              x....x..x....x...............x................d.........x......x....x...............//
              x....x..x....x...............x................x.........x......x....x................/
-             x....x..x....xxxxxxxx........x................xxxxxxxxxxx......d....d................/
+             x....x..x....xxxxxxxx........x................xxxxxxxxxxx......d....x................/
+             x....x..x...........x........x................x.........x......x....d................/
              x....x..x...........x........x................x.........x......x....x................/
              x....x..x...........x........x................d.........xxxxxxxx....x................/
              x....x..x...........x........x................x.........x...........x...............//
@@ -31,10 +32,54 @@
       x.............x...........x.................x.....................x.hh.x////x
       x.............x...........x.................x.....................xxxxxx
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    cables: |
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      x................x....x....x....x....x....x....x....x....x....x...xxxxxx
+      x................x....x....x....x....x....x....x....x....x....x........xxxxxx
+      x............ppppx....x....x....x....x....x....x....x....x....x..........x..xxxxx
+      x...............pppppppppppppppppppppppppppppppppppppppppppppppppp.......x......xxxx
+      x................p...............................................p.......p.........xxxx
+      x................p...............................................ppppppppp............xxx
+      xxxxxxxxxxxxpppppp..ppppppppppppppppppppppppppppppppppppppppppp..........p..............xx
+             x....p.......p...............x................p........p..........p........xxxxxxxxx
+             x....p.......p...............x................p........ppppppppp..p........p.......xx
+             x....ppppppppp...............x................p.........x......p..pppppppppp........x
+             x....p..x....x...............x................p.........x......p....p...............xx
+             x....p..x....x...............x................p.........x......p....p................x
+             x....p..x....xxxxxxxx........x................pxxxxxxxxxx......p....p................x
+             x....p..x...........x........x................p.........x......x....p................x
+             x....p..x...........x........x................p.........x......x....p................x
+             x....p..x...........x........x................p.........xxxxxxxx....p................x
+             x....p..x...........x........x................x.........x...........p...............xx
+             x....p..xxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........pxxxxxxx........x
+             x....p.....................................................pppppppppp......x.......xx
+             x....p.....................................................p...............xxxxxxxxx
+      xxxxxxxxxxxxppppppppppppppppppppppppppppppppppppppppppppppppppppppp.....................xx
+      x.............x...........x.................x.....................x...................xxx
+      x.............x...........x.................x.....................x................xxxx
+      x.............x...........x.................x.....................x.............xxxx
+      x.............x...........x.................x.....................x.........xxxxx
+      x.............x...........x.................x.....................x....xxxxxx
+      x.............x...........x.................x.....................xxxxxx
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    cableDefs:
+      .: {}
+      x: {}
+      p: { power: 0x1 }
     defs:
       .: { terrain: floor }
       x: { terrain: wall }
-      d: { terrain: floor, items: {each: [ automatic door, mounted presence sensor ]} }
+      d:
+        terrain: floor
+        items:
+          each:
+            - item: automatic door
+              connect:
+                - { port: Open, layer: 0x1 }
+                - { port: Power, layer: 0x1 }
+            - item: mounted presence sensor
+              connect:
+                - { port: Active, layer: 0x1 }
       b: { terrain: floor, items: { each: [ bed ] } }
       C: { terrain: floor, items: { each: [ closet, { group: clothing } ] } }
       /: { terrain: transparent polycarbonate window }
@@ -44,6 +89,7 @@
       t: { terrain: floor, items: [ table ] }
       R: { terrain: floor, items: [ refrigerator ] }
       S: { terrain: floor, items: [ tall cupboard ] }
+      G: { terrain: floor, items: [ combustion generator ] }
 
 - type: item
   name: tall cupboard
