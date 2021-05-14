@@ -181,7 +181,7 @@ object Appearance {
             if (state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.DisplayConnectedTo(terrain)).connected)
               Some(terrain)
             else
-              level.terrain.get(x, y)
+              level.terrain.get(x, y) map { t => t.connectsTo.map(state.data.terrain).getOrElse(t) }
           }
 
           val left = apparent(x - 1, y)

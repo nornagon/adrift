@@ -6,6 +6,7 @@ case class Terrain(
   opaque: Boolean,
   permeable: Boolean = true,
   connects: Boolean = false,
+  connectsTo: Option[String] = None,
   display: String,
   heatCapacity: Float = 1f,
   heatTransfer: Float = 1f,

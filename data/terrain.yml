@@ -53,6 +53,7 @@
   opaque: false
   permeable: false
   walkable: false
+  connectsTo: wall
   display: WINDOW
 
 - type: terrain
