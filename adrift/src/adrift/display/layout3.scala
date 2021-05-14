@@ -207,14 +207,16 @@ object layout3 {
     override def toString: String = s"BoxConstraints(width ∈ [$minWidth,$maxWidth], height ∈ [$minHeight,$maxHeight])"
   }
   object BoxConstraints {
-    def tight(size: Size): BoxConstraints = new BoxConstraints(size.width, size.width, size.height, size.height)
+    def tight(size: Size): BoxConstraints = tight(size.width, size.height)
+    def tight(width: Int, height: Int): BoxConstraints = new BoxConstraints(width, width, height, height)
     def tightFor(width: Int = -1, height: Int = -1) = new BoxConstraints(
       minWidth = if (width >= 0) width else 0,
       maxWidth = if (width >= 0) width else Int.MaxValue,
       minHeight = if (height >= 0) height else 0,
       maxHeight = if (height >= 0) height else Int.MaxValue,
     )
-    def loose(size: Size): BoxConstraints = new BoxConstraints(0, size.width, 0, size.height)
+    def loose(size: Size): BoxConstraints = loose(size.width, size.height)
+    def loose(width: Int, height: Int): BoxConstraints = new BoxConstraints(0, width, 0, height)
   }
 
   class BoxParentData extends ParentData {
@@ -546,4 +548,7 @@ object layout3 {
     r.layout(size)
     r.paint(renderer, offset)
   }
+
+  def draw(renderer: GlyphRenderer, rect: Rect, widget: Widget): Unit =
+    draw(renderer, Offset(rect.l, rect.t), BoxConstraints.tight(rect.width, rect.height), widget)
 }

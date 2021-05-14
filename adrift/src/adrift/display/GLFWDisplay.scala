@@ -360,48 +360,49 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
 
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
-      import layout3._
-      val sidebar = Column(crossAxisAlignment = CrossAxisAlignment.Stretch, children = Seq(
-        ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10), content = Border(Column(
-          state.symptoms.take(5).map(t => Text(t.description)) ++
-            (if (state.showTempDebug)
-              Seq(Text(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
-            (if (state.showGasDebug)
-              Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
-        ))),
-        ConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12), content = Border(Column(
-          Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
-            Text(title) +:
-              state.items.lookup(loc).map(item => Text(" " + state.itemDisplayName(item)))
-          }
-        ))),
-        Flexible(Border(Column(
-          verticalDirection = VerticalDirection.Up,
-          clipBehavior = ClipBehavior.Clip,
-          children = {
-            val maxMessageAge = 300
-            val oldestMessageTime = state.currentTime - maxMessageAge
-            val messages = state.messages.filter(_._2 >= oldestMessageTime).reverse
-            messages.map {
-              case (line, time) =>
-                val lineAge = state.currentTime - time
-                val color =
-                  if (lineAge < 30) Color.White
-                  else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
-                  else Color(0.2f, 0.2f, 0.2f, 1.0f)
-                Text(line.withFg(color))
-            }
-          }
-        )))
-      ))
-      val sidebarRenderObject = sidebar.inflate.asInstanceOf[RenderBox]
-      sidebarRenderObject.layout(BoxConstraints(minWidth = sidebarRect.width, maxWidth = sidebarRect.width, minHeight = sidebarRect.height, maxHeight = sidebarRect.height))
-      sidebarRenderObject.paint(glyphRenderer, Offset(sidebarRect.l, sidebarRect.t))
+      layout3.draw(glyphRenderer, sidebarRect, sidebar())
 
       for (screen <- screens) {
         screen.render(glyphRenderer)
       }
     }
+  }
+
+  private def sidebar(): layout3.Widget = {
+    import layout3._
+    Column(crossAxisAlignment = CrossAxisAlignment.Stretch, children = Seq(
+      ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10), content = Border(Column(
+        state.symptoms.take(5).map(t => Text(t.description)) ++
+          (if (state.showTempDebug)
+            Seq(Text(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
+          (if (state.showGasDebug)
+            Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
+      ))),
+      ConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12), content = Border(Column(
+        Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
+          Text(title) +:
+            state.items.lookup(loc).map(item => Text(" " + state.itemDisplayName(item)))
+        }
+      ))),
+      Flexible(Border(Column(
+        verticalDirection = VerticalDirection.Up,
+        clipBehavior = ClipBehavior.Clip,
+        children = {
+          val maxMessageAge = 300
+          val oldestMessageTime = state.currentTime - maxMessageAge
+          val messages = state.messages.filter(_._2 >= oldestMessageTime).reverse
+          messages.map {
+            case (line, time) =>
+              val lineAge = state.currentTime - time
+              val color =
+                if (lineAge < 30) Color.White
+                else if (lineAge < 120) Color(0.5f, 0.5f, 0.5f, 1.0f)
+                else Color(0.2f, 0.2f, 0.2f, 1.0f)
+              Text(line.withFg(color))
+          }
+        }
+      )))
+    ))
   }
 
   private def renderWorld(
