@@ -10,19 +10,19 @@
       x................xxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxx.......x......xxxx
       x................x...............................................d.......d.........xxxx
       x................d...............................................xxxxxxxxx............xxx
-      xxxxxxxxxxxxxxxxxx..xxxxxxxxxxxxxdxxxxx....xxxxxxxxxxxxxxxxxxxx..........x..............xx
-             x....x.......x...............x................x........d..........x........xxxxxxxxx
-             x....d.......x...............x................x........xxxxxxxxx..x........d.......xx
-             x....x..xxxdxx...............x................x.........x......x..xxxxxxxxxx......../
-             x....x..x....x...............x................d.........x......x....x...............//
-             x....x..x....x...............x................x.........x......x....x................/
-             x....x..x....xxxxxxxx........x................xxxxxxxxxxx......d....x................/
-             x....x..x...........x........x................x.........x......x....d................/
-             x....x..x...........x........x................x.........x......x....x................/
-             x....x..x...........x........x................d.........xxxxxxxx....x................/
-             x....x..x...........x........x................x.........x...........x...............//
-             x....x..xxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........xxxxxxxx......../
-             x....d.....................................................xxxxxxxdxxSSSSRRx.......xx
+      xxxxxxxxxxxxxxxxxx..xdxxxdxxxdxxxdxxxxx....xxxxxxxxxxxxxxxxxxxx..........x..............xx
+             x....x.......x...x...x...x...x..............hhxRRRRRR..d..........x........xxxxxxxxx
+             x.c..d.......xw.Txw.Txw.Txw.Tx.....hth..hh..ttx........xxxxxxxxx..x........d.......xx
+             x....x..xxxdxxxxxxxxxxxxxxxxxx..........tt..hhx..tcct..Rx......x..xxxxxxxxxx......../
+             x....x..x....x=..Pww.tt.Pww..x.....hth..hh....d........Rx......x....x...............//
+             x....x..x....x=..............d.............hh.xSSSSSS..Rx......x....x................/
+             x....x..x....xxxxxxxxS.Aww...x....hth..hh..tt.xxxxxxxxxxx......d....x................/
+             x....x..x..........SxS......tx.........tt..hh.x.........x......x....d................/
+             x....x..x..........SxS......tx....hth..hh.....d.........x......x....x................/
+             x....x..x..........SxS.Aww..tx............hth.x.........xxxxxxxx....x................/
+             xxxxxx..x..........SxS......tx......hth...hth.x.........x...........x...............//
+             x....x..xxxxxxxxxdxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........xxxxxxxx......../
+             D....D.....................................................xxxxxxxdxxSSSSRRx.......xx
              x....x.....................................................x.h.h.h.........xxxxxxxxx
       xxxxxxxxxxxxxdxxxxxxxxxdxxxxxxxxxxxxxxxxdxxxxxxdxxxxxxxxxxxxxxxdxxxht.t.t..========.h.htxx
       x.............x...........x.................x.....................x...h.h..ss.s.ss..t.x/x
@@ -43,14 +43,14 @@
       xxxxxxxxxxxxpppppp..ppppppppppppppppppppppppppppppppppppppppppp..........p..............xx
              x....p.......p...............x................p........p..........p........xxxxxxxxx
              x....p.......p...............x................p........ppppppppp..p........p.......xx
-             x....ppppppppp...............x................p.........x......p..pppppppppp........x
+             x....pppppppppxxxxxxxxxxxxxxxx................p.........x......p..pppppppppp........x
              x....p..x....x...............x................p.........x......p....p...............xx
              x....p..x....x...............x................p.........x......p....p................x
              x....p..x....xxxxxxxx........x................pxxxxxxxxxx......p....p................x
              x....p..x...........x........x................p.........x......x....p................x
              x....p..x...........x........x................p.........x......x....p................x
              x....p..x...........x........x................p.........xxxxxxxx....p................x
-             x....p..x...........x........x................x.........x...........p...............xx
+             xxxxxp..x...........x........x................x.........x...........p...............xx
              x....p..xxxxxxxxxxxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........pxxxxxxx........x
              x....p.....................................................pppppppppp......x.......xx
              x....p.....................................................p...............xxxxxxxxx
@@ -80,15 +80,47 @@
             - item: mounted presence sensor
               connect:
                 - { port: Active, layer: 0x1 }
+      D:
+        terrain: floor
+        items:
+          each:
+            - item: bulkhead door
+              connect:
+                - { port: Open, layer: 0x1 }
+                - { port: Power, layer: 0x1 }
+            - item: mounted button
+              connect:
+                - { port: Active, layer: 0x1 }
+
       b: { terrain: floor, items: { each: [ bed ] } }
       C: { terrain: floor, items: { each: [ closet, { group: clothing } ] } }
       /: { terrain: transparent polycarbonate window }
       =: { terrain: floor, items: [ counter ] }
       s: { terrain: floor, items: [ stool ] }
       h: { terrain: floor, items: [ chair ] }
-      t: { terrain: floor, items: [ table ] }
+      t: { terrain: floor, items: [ table ] }      
+
+      c: { terrain: floor, items: [ cook station]}
+
+      P: { terrain: floor, items: [ sewage decomposition ] }
+      A: { terrain: floor, items: [ water purification ] }
+      w: { terrain: floor, items: [ liquid tank ] }
+      T: { terrain: floor, items: [ toilet ] }
+      S: { terrain: floor, items: [ wash station ] }
+      
+      H:
+        items:
+          each:
+            - item: air heater
+              connect:
+                - { port: Enabled, layer: 0x2 }
+                - { port: Power, layer: 0x1 }
+                - { port: Air Out, layer: 0x1 }
+
+
       R: { terrain: floor, items: [ refrigerator ] }
       S: { terrain: floor, items: [ tall cupboard ] }
+
       G: { terrain: floor, items: [ combustion generator ] }
 
 - type: item
