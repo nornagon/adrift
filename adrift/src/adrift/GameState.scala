@@ -791,8 +791,11 @@ class GameState(var data: Data, val random: Random) {
     }
   }
 
-  def isPermeable(l: Location): Boolean =
-    terrain(l).exists(_.permeable) && items.lookup(OnFloor(l)).forall(itemIsPermeable)
+  def isPermeable(l: Location): Boolean = {
+    val m = Message.IsPermeable(terrain(l).exists(_.permeable))
+    items.lookup(OnFloor(l)).foreach(i => sendMessage(i, m))
+    m.permeable
+  }
 
   def isEdible(item: Item): Boolean = sendMessage(item, Message.IsEdible()).edible
   def eat(item: Item): Unit =

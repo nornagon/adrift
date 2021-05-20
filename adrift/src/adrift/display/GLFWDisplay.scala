@@ -376,7 +376,8 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
           (if (state.showTempDebug)
             Seq(Text(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
           (if (state.showGasDebug)
-            Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty)
+            Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty) ++
+          Seq(Text(state.currentTime.toString))
       ))),
       ConstrainedBox(BoxConstraints(minHeight = 12, maxHeight = 12), content = Border(Column(
         Seq("Held" -> InHands(), "Worn" -> Worn()).flatMap { case (title, loc) =>
