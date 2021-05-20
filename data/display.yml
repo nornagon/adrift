@@ -198,3 +198,7 @@
     HATCH:
       char: "\u000A" # ◙
       fg: dark_gray
+    HOLE:
+      char: "\u0008" # ◘
+      fg: dark_gray
+      bg: true black
