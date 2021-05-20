@@ -124,22 +124,18 @@ class AtmoSim(val width: Int, val height: Int) {
     glFinish()
     println(f"  uploading took ${(System.nanoTime() - start) / 1e6}%.2f ms")
     val target = new Framebuffer(Texture.emptyFloat4(width, height))
-    glCheckError()
     diffusionPass.renderToFramebuffer(
       Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
       target
     )
-    glCheckError()
     diffusionPass.renderToFramebuffer(
       Map("temperature" -> target.texture, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
       sourceFb
     )
-    glCheckError()
     diffusionPass.renderToFramebuffer(
       Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
       target
     )
-    glCheckError()
     val start2 = System.nanoTime()
     glFinish()
     println(f"  glFinish took ${(System.nanoTime() - start2) / 1e6}%.2f ms")
