@@ -118,11 +118,22 @@ class AtmoSim(val width: Int, val height: Int) {
     glFinish()
     val start = System.nanoTime()
     val source = Texture.fromFloat4Array(width, height, atmosphere)
+    val sourceFb = new Framebuffer(source)
     source.wrapS = if (cylindrical) Texture.Repeat else Texture.ClampToEdge
     glCheckError()
     glFinish()
     println(f"  uploading took ${(System.nanoTime() - start) / 1e6}%.2f ms")
     val target = new Framebuffer(Texture.emptyFloat4(width, height))
+    glCheckError()
+    diffusionPass.renderToFramebuffer(
+      Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
+      target
+    )
+    glCheckError()
+    diffusionPass.renderToFramebuffer(
+      Map("temperature" -> target.texture, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
+      sourceFb
+    )
     glCheckError()
     diffusionPass.renderToFramebuffer(
       Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
