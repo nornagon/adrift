@@ -158,12 +158,6 @@ case class WorldGen(data: Data)(implicit random: Random) {
     state
   }
 
-  def generateItem(itemGroup: ItemGroup): Seq[Item] = {
-    itemGroup.choose.sample()(random, data.itemGroups.view.mapValues(_.choose)).map { itemId =>
-      data.items(itemId).generateItem()
-    }
-  }
-
   def break(item: Item): Unit = {
     if (item.parts.isEmpty) {
       println(s"Breaking ${item.kind.name}")

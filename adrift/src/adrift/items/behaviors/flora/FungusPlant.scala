@@ -24,13 +24,8 @@ case class MycelialMat(
     case _ =>
   }
 
-  def produce(state: GameState, self: Item): Unit = {
-    val itemKindNames = produces.sample()(state.random, state.data.itemGroups.view.mapValues(_.choose))
-    if (itemKindNames.nonEmpty) {
-      val items = itemKindNames.map(itemKindName => state.data.items(itemKindName).generateItem())
-      self.parts ++= items
-    }
-  }
+  def produce(state: GameState, self: Item): Unit =
+    self.parts ++= state.sampleItemOnly(produces)
 }
 
 case class Mushroom(
@@ -48,7 +43,7 @@ case class Mushroom(
         age += 1
       } else {
         plant.parts = plant.parts.filter(_ ne self)
-        plant.parts ++= state.sampleItem(fruit)
+        plant.parts ++= state.sampleItemOnly(fruit)
       }
     case _ =>
   }

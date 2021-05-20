@@ -1,7 +1,9 @@
 package adrift
 
 import adrift.Action.AssemblyAction
+import adrift.Population.Table
 import adrift.RandomImplicits._
+import adrift.YamlObject.ItemWithExtras
 import adrift.display.Appearance
 import adrift.items.Message.{CanContain, IsFunctional, PlayerBump, Provides}
 import adrift.items._
@@ -651,12 +653,12 @@ class GameState(var data: Data, val random: Random) {
     }
   }
 
-  def sampleItem2[T](table: Population.Table[T], f: String => T, getMeTheActualNameOfTheItem: T => String): Seq[(Item, T)] = {
+  def sampleItem2[T](table: Population.Table[T], f: ItemWithExtras => T, getMeTheActualNameOfTheItem: T => ItemWithExtras): Seq[(Item, T)] = {
     for {
       t <- table.sample()(random, data.itemGroups.view.mapValues(_.choose).mapValues(_.map(f)))
     } yield {
       val itemKindName = getMeTheActualNameOfTheItem(t)
-      data.items.get(itemKindName) match {
+      data.items.get(itemKindName.item) match {
         case Some(itemKind) =>
           (itemKind.generateItem(), t)
         case None =>
@@ -665,18 +667,26 @@ class GameState(var data: Data, val random: Random) {
     }
   }
 
-  def sampleItem(table: Population.Table[String]): Seq[Item] = {
-    for {
-      itemKindName <- table.sample()(random, data.itemGroups.view.mapValues(_.choose))
-    } yield {
-      data.items.get(itemKindName) match {
+  def sampleItemOnly(table: Population.Table[String]): Seq[Item] =
+    sampleItem(table.map(ItemWithExtras(_)))
+
+  def sampleItem(table: Population.Table[ItemWithExtras]): Seq[Item] = {
+    sampleItemWithExtras(table) map { itemWithExtras =>
+      data.items.get(itemWithExtras.item) match {
         case Some(itemKind) =>
-          itemKind.generateItem()
+          val item = itemKind.generateItem()
+          for (containedItem <- sampleItem(itemWithExtras.contents)) {
+            items.put(containedItem, Inside(item))
+          }
+          item
         case None =>
-          throw new RuntimeException(s"""No item with name "$itemKindName"""")
+          throw new RuntimeException(s"""No item with name "${itemWithExtras.item}"""")
       }
     }
   }
+
+  def sampleItemWithExtras(table: Population.Table[ItemWithExtras]): Seq[ItemWithExtras] =
+    table.sample()(random, data.itemGroups.view.mapValues(_.choose))
 
   def movePlayer(l: Location): Unit = {
     val oldPos = player

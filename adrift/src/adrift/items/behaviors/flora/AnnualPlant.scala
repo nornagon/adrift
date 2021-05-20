@@ -37,18 +37,13 @@ case class AnnualPlant(
     case Pollinate() =>
       state.broadcastToParts(self, message)
     case Die(plant) =>
-      for (b <- state.sampleItem(becomes)) {
+      for (b <- state.sampleItemOnly(becomes)) {
         state.items.put(b, state.items.lookup(plant))
       }
       state.items.delete(plant)
     case _ =>
   }
 
-  def produce(state: GameState, self: Item): Unit = {
-    val itemKindNames = produces.sample()(state.random, state.data.itemGroups.view.mapValues(_.choose))
-    if (itemKindNames.nonEmpty) {
-      val items = itemKindNames.map(itemKindName => state.data.items(itemKindName).generateItem())
-      self.parts ++= items
-    }
-  }
+  def produce(state: GameState, self: Item): Unit =
+    self.parts ++= state.sampleItemOnly(produces)
 }

@@ -2,8 +2,8 @@ package adrift
 
 import java.nio.file.{FileSystems, Files, Path}
 import java.util.stream.Collectors
-
 import adrift.Population.Table
+import adrift.YamlObject.ItemWithExtras
 import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
 import adrift.worldgen.{RoomGen, RoomGenAlgorithm, WFC}
 import io.circe._
@@ -32,10 +32,24 @@ object YamlObject {
     count: Int = 1
   )
 
-  case class ItemGroup(
+  case class ItemGroup[T](
     name: String,
-    choose: Table[String]
+    choose: Table[T]
   )
+
+  case class ConnectSpec(port: String, layer: Int)
+  case class ItemWithExtras(
+    item: String,
+    contents: Table[ItemWithExtras] = Table.empty,
+    connect: Seq[ConnectSpec] = Seq.empty
+  )
+  object ItemWithExtras {
+    implicit private val configuration: Configuration = Configuration.default.withDefaults
+    implicit val itemWithExtrasDecoder: Decoder[ItemWithExtras] = { (c: HCursor) =>
+      c.as[String].map(ItemWithExtras(_))
+        .orElse(deriveConfiguredDecoder[ItemWithExtras].apply(c))
+    }
+  }
 
   case class RoomGen(
     name: String,
@@ -48,7 +62,7 @@ object YamlObject {
 
 case class Data(
   items: Map[String, ItemKind],
-  itemGroups: Map[String, YamlObject.ItemGroup],
+  itemGroups: Map[String, YamlObject.ItemGroup[YamlObject.ItemWithExtras]],
   roomgens: Map[String, RoomGen],
   terrain: Map[String, Terrain],
   display: DisplayData,
@@ -199,16 +213,16 @@ object Data {
       }
     }
 
-    val itemGroups: Map[String, YamlObject.ItemGroup] = ymls("item group")
-      .map(parse[YamlObject.ItemGroup])
+    val itemGroups: Map[String, YamlObject.ItemGroup[YamlObject.ItemWithExtras]] = ymls("item group")
+      .map(parse[YamlObject.ItemGroup[YamlObject.ItemWithExtras]])
       .groupBy(_.name).map {
         case (k, v) => assert(v.length == 1, s"More than one item group with name $k"); k -> v.head
       }
 
-    def checkValid(referrer: String, name: String, table: Table[String]): Unit = {
+    def checkValid(referrer: String, name: String, table: Table[YamlObject.ItemWithExtras]): Unit = {
       table match {
         case Population.TableElement(item) =>
-          if (!items.contains(item))
+          if (!items.contains(item.item))
             println(s"Warning: $referrer '$name' referred to item '$item', which was not defined.")
         case Population.TableGroup(group) =>
           if (!itemGroups.contains(group))

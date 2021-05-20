@@ -87,7 +87,7 @@
       s: { terrain: floor, items: [ stool ] }
       h: { terrain: floor, items: [ chair ] }
       t: { terrain: floor, items: [ table ] }
-      R: { terrain: floor, items: [ refrigerator ] }
+      R: { terrain: floor, items: [ { item: refrigerator, contents: { group: refrigerated food } } ] }
       S: { terrain: floor, items: [ tall cupboard ] }
       G: { terrain: floor, items: [ combustion generator ] }
 
@@ -102,3 +102,9 @@
     - Affixed: {}
     - Container: { maxVolume: 400 L, rigid: true }
 
+- type: item group
+  name: refrigerated food
+  choose:
+    - beans
+    - tuna
+    - mandarin oranges
