@@ -439,7 +439,10 @@ case class Static(layout: String, defs: Map[String, PaletteDef], cables: String,
       state.levels(levelId).fluidCables(tx, ty) = cableDef.fluid
       paletteDef.items.foreach { table =>
         state.sampleItemWithExtras(table) foreach { itemWithExtras =>
-          val item = state.data.items(itemWithExtras.item).generateItem()
+          val item = state.data.items.get(itemWithExtras.item) match {
+            case Some(v) => v.generateItem()
+            case None => throw new RuntimeException(s"no such item: ${itemWithExtras.item}")
+          }
           for (containedItem <- state.sampleItem(itemWithExtras.contents))
             state.items.put(containedItem, Inside(item))
           state.items.put(item, OnFloor(Location(levelId, tx, ty)))
