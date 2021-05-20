@@ -14,13 +14,13 @@
              x....x.......x...x...x...x...x..............hhxRRRRRR..d..........x........xxxxxxxxx
              x.c..d.......xw.Txw.Txw.Txw.Tx.....hth..hh..ttx........xxxxxxxxx..x........d.......xx
              x....x..xxxdxxxxxxxxxxxxxxxxxx..........tt..hhx..tcct..Rx......x..xxxxxxxxxx......../
-             x....x..x....x=..Pww.tt.Pww..x.....hth..hh....d........Rx......x....x...............//
-             x....x..x....x=..............d.............hh.xSSSSSS..Rx......x....x................/
-             x....x..x....xxxxxxxxS.Aww...x....hth..hh..tt.xxxxxxxxxxx......d....x................/
-             x....x..x..........SxS......tx.........tt..hh.x.........x......x....d................/
-             x....x..x..........SxS......tx....hth..hh.....d.........x......x....x................/
-             x....x..x..........SxS.Aww..tx............hth.x.........xxxxxxxx....x................/
-             xxxxxx..x..........SxS......tx......hth...hth.x.........x...........x...............//
+             x....x..xA..Nx=..Pww.tt.Pww..x.....hth..hh....d........Rx......x....x...............//
+             x....x..xE..Ox=..............d.............hh.xSSSSSS..Rx......x....x................/
+             x....x..xH..BxxxxxxxxS.Aww...x....hth..hh..tt.xxxxxxxxxxx......d....x................/
+             x....x..x...F.NOBF.SxS......tx.........tt..hh.x.........x......x....d................/
+             x....x..x=.........SxS......tx....hth..hh.....d.........x......x....x................/
+             x....x..x=.....th..SxS.Aww..tx............hth.x.........xxxxxxxx....x................/
+             xxxxxx..x.aEH......SxS......tx......hth...hth.x.........x...........x...............//
              x....x..xxxxxxxxxdxxxxxxxxxxxxxx....xxxxxxxxxxxxxxxxxxxxx...........xxxxxxxx......../
              D....D.....................................................xxxxxxxdxxSSSSRRx.......xx
              x....x.....................................................x.h.h.h.........xxxxxxxxx
@@ -107,7 +107,14 @@
       w: { terrain: floor, items: [ liquid tank ] }
       T: { terrain: floor, items: [ toilet ] }
       S: { terrain: floor, items: [ wash station ] }
-      
+      E:
+        items:
+          each:
+            - item: atmospheric temperature control system
+              connect:
+                - { port: Thermostat Command, layer: 0x1 } # TODO (unused currently)
+                - { port: Heater Enabled, layer: 0x2 }
+                - { port: Cooler Enabled, layer: 0x4 }
       H:
         items:
           each:
@@ -116,13 +123,40 @@
                 - { port: Enabled, layer: 0x2 }
                 - { port: Power, layer: 0x1 }
                 - { port: Air Out, layer: 0x1 }
+      a:
+        items:
+          each:
+            - item: air cooler
+              connect:
+                - { port: Enabled, layer: 0x4 }
+                - { port: Power, layer: 0x1 }
+                - { port: Air Out, layer: 0x1 }
+      F: { items: { each: [ air mix system ] } }
+      O: 
+        items: 
+          each: 
+            - item: oxygen tank
+              connect: 
+                - {port: O2_IN, layer: 1} 
+                - {port: O2_OUT, layer: 16}
 
+      B: { items: { each: [ {item: CO2 tank,
+                             connect: [{port: CO2_IN, layer: 2}, {port: CO2_OUT, layer: 32}]
+                          } ] } }
+      N: { items: { each: [ {item: nitrogen tank,
+                             connect: [{port: N2_IN, layer: 2}, {port: N2_OUT, layer: 32}]
+                          } ] } }
 
-      R: { terrain: floor, items: [ refrigerator ] }
       R: { terrain: floor, items: [ { item: refrigerator, contents: { group: refrigerated food } } ] }
       S: { terrain: floor, items: [ tall cupboard ] }
 
       G: { terrain: floor, items: [ combustion generator ] }
+
+- type: item
+  name: cook station
+  volume: 500 L
+  description: A tall, sturdy cook station with doors and shelves inside.
+  display: LARGE_EQUIPMENT
 
 - type: item
   name: tall cupboard

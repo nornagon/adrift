@@ -21,7 +21,7 @@
       - max: 2
         part: |
           xxxxxxxx
-          .EaAOCC.
+          .EaAOCN.
           ........
     # Air Temperature Control
       - max: 1
@@ -71,8 +71,24 @@
                 - { port: Power, layer: 0x1 }
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
-      O: { items: { each: [ {item: oxygen tank} ] } }
-      C: { items: { group: gas canister } }
+
+      O: 
+        items: 
+          each: 
+            - item: oxygen tank
+              connect: 
+                - {port: O2_IN, layer: 1} 
+                - {port: O2_OUT, layer: 16}
+
+      C: { items: { each: [ {item: CO2 tank,
+                             connect: [{port: CO2_IN, layer: 2}, {port: CO2_OUT, layer: 32}]
+                          } ] } }
+      N: { items: { each: [ {item: nitrogen tank,
+                             connect: [{port: N2_IN, layer: 2}, {port: N2_OUT, layer: 32}]
+                          } ] } }
+
+      H: { items: { each: [ jeffries hatch] } }
+
       h:
         items:
           each:
@@ -81,7 +97,6 @@
                 - { port: Enabled, layer: 0x2 }
                 - { port: Power, layer: 0x1 }
                 - { port: Air Out, layer: 0x1 }
-      H: { items: { each: [ jeffries hatch] } }
       c:
         items:
           each:
@@ -164,6 +179,23 @@
   volume: 200 L
   description: keeps the ratios of O2, N2 and CO2 suitable for human and plant life
   display: LARGE_EQUIPMENT
+  behavior:
+    - HasPorts:
+        ports:
+          - type: O2-in
+            name: Input 1
+          - type: O2-out
+            name: Output 1
+          - type: N2-in
+            name: Input 2
+          - type: N2-out
+            name: Output 2
+          - type: CO2-in
+            name: Input 3
+          - type: CO2-out
+            name: Output 3
+
+
 
 - type: item
   volume: 100 L
