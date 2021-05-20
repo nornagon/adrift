@@ -1,6 +1,7 @@
 package adrift.items.behaviors.flora
 
 
+import adrift.YamlObject.ItemWithExtras
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, Population}
 
@@ -22,14 +23,14 @@ case class Leaf(
   ): Unit = message match {
     case msg @ Die(plant) => {
       plant.parts = plant.parts.filter(_ ne self)
-      for (b <- state.sampleItem(becomes)) {
+      for (b <- state.sampleItem(becomes.map(ItemWithExtras(_)))) {
         state.items.put(b, state.items.lookup(plant))
       }
     }
     case msg @ Live(plant, _) =>
       if (state.random.nextDouble() < chanceToDie) {
         plant.parts = plant.parts.filter(_ ne self)
-        for (b <- state.sampleItem(becomes)) {
+        for (b <- state.sampleItem(becomes.map(ItemWithExtras(_)))) {
           state.items.put(b, state.items.lookup(plant))
         }
       } else {
@@ -66,7 +67,7 @@ case class Flower(
       } else {
         plant.parts = plant.parts.filter(_ ne self)
         if (fertilized) {
-          plant.parts ++= state.sampleItem(fruit)
+          plant.parts ++= state.sampleItem(fruit.map(ItemWithExtras(_)))
         }
       }
     case Pollinate() =>
@@ -98,11 +99,6 @@ case class PerennialPlant(
     case _ =>
   }
 
-  def produce(state: GameState, self: Item): Unit = {
-    val itemKindNames = produces.sample()(state.random, state.data.itemGroups.view.mapValues(_.choose))
-    if (itemKindNames.nonEmpty) {
-      val items = itemKindNames.map(itemKindName => state.data.items(itemKindName).generateItem())
-      self.parts ++= items
-    }
-  }
+  def produce(state: GameState, self: Item): Unit =
+    self.parts ++= state.sampleItem(produces.map(ItemWithExtras(_)))
 }

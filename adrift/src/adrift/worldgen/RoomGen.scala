@@ -2,6 +2,7 @@ package adrift.worldgen
 
 import adrift.Population.Table
 import adrift.RandomImplicits._
+import adrift.YamlObject.ItemWithExtras
 import adrift.worldgen.WaveFunctionCollapse.GraphTileSet
 import adrift._
 import adrift.items.behaviors.{HasPorts, LayerSet}
@@ -50,10 +51,10 @@ case class Furnish(items: Table[FurnishItem]) extends RoomGenAlgorithm {
     for (item <- toPlace) {
       val maybeLoc = if (item.wall_adjacent) chooseWallAdjacentLocation() else chooseAnyLocation()
       maybeLoc foreach { loc =>
-        val items = state.sampleItem(item.`type`)
+        val items = state.sampleItem(item.`type`.map(ItemWithExtras(_)))
         for (i <- items) state.items.put(i, OnFloor(Location(levelId, loc._1, loc._2)))
         for (nearby <- item.nearby; nearbyLoc <- chooseNearbyLocation(loc)) {
-          val items = state.sampleItem(nearby)
+          val items = state.sampleItem(nearby.map(ItemWithExtras(_)))
           for (i <- items) state.items.put(i, OnFloor(Location(levelId, nearbyLoc._1, nearbyLoc._2)))
         }
       }
@@ -61,22 +62,7 @@ case class Furnish(items: Table[FurnishItem]) extends RoomGenAlgorithm {
   }
 }
 
-case class ConnectSpec(port: String, layer: Int)
-case class ItemWithConnections(item: String, connect: Seq[ConnectSpec] = Seq.empty)
-
-object ItemWithConnections {
-  import io.circe.generic.semiauto._
-  private val derivedDecoder = {
-    implicit val derivedDecoder2: Decoder[ConnectSpec] = deriveDecoder
-    deriveDecoder[ItemWithConnections]
-  }
-  private def decodeFromString[T: Decoder]: Decoder[ItemWithConnections] = (c: HCursor) =>
-    for { item <- c.as[String] } yield ItemWithConnections(item)
-  implicit val decoder: Decoder[ItemWithConnections] = decodeFromString or derivedDecoder
-}
-
-
-case class PaletteDef(terrain: Option[String] = None, items: Option[Table[ItemWithConnections]] = None)
+case class PaletteDef(terrain: Option[String] = None, items: Option[Table[YamlObject.ItemWithExtras]] = None)
 case class PartWithOpts(
   part: String,
   min: Option[Int] = None,
@@ -364,31 +350,31 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
       val ty = ymin + y
       state.levels(levelId).terrain(tx, ty) = state.data.terrain(terrain.getOrElse("floor"))
       paletteDef.items.foreach { table =>
-        state.sampleItem2[ItemWithConnections](table, ItemWithConnections(_), _.item) foreach {
-          case (item, iwc) =>
-            state.items.put(item, OnFloor(Location(levelId, tx, ty)))
-            for (spec <- iwc.connect) {
-              item.behaviors.find(_.isInstanceOf[HasPorts]) match {
-                case Some(bhvr: HasPorts) =>
-                  bhvr.ports.find(_.name == spec.port) match {
-                    case Some(portSpec) =>
-                      val cableType = portSpec.`type`;
-                      (cableType match {
-                        case "power-in" | "power-out" =>
-                          state.levels(levelId).powerCables
-                        case "data-in" | "data-out" =>
-                          state.levels(levelId).dataCables
-                        case "fluid-in" | "fluid-out" =>
-                          state.levels(levelId).fluidCables
-                      })(tx, ty) |= spec.layer
-                      bhvr.connections += (spec.port -> new LayerSet(spec.layer))
-                    case None =>
-                      println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
-                  }
-                case _ =>
-                  println(s"Warning: ${item.kind.name} does not have ports")
-              }
+        state.sampleItemWithExtras(table) foreach { itemWithExtras =>
+          val item = state.data.items(itemWithExtras.item).generateItem()
+          state.items.put(item, OnFloor(Location(levelId, tx, ty)))
+          for (spec <- itemWithExtras.connect) {
+            item.behaviors.find(_.isInstanceOf[HasPorts]) match {
+              case Some(bhvr: HasPorts) =>
+                bhvr.ports.find(_.name == spec.port) match {
+                  case Some(portSpec) =>
+                    val cableType = portSpec.`type`;
+                    (cableType match {
+                      case "power-in" | "power-out" =>
+                        state.levels(levelId).powerCables
+                      case "data-in" | "data-out" =>
+                        state.levels(levelId).dataCables
+                      case "fluid-in" | "fluid-out" =>
+                        state.levels(levelId).fluidCables
+                    })(tx, ty) |= spec.layer
+                    bhvr.connections += (spec.port -> new LayerSet(spec.layer))
+                  case None =>
+                    println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
+                }
+              case _ =>
+                println(s"Warning: ${item.kind.name} does not have ports")
             }
+          }
         }
       }
     }
@@ -452,31 +438,33 @@ case class Static(layout: String, defs: Map[String, PaletteDef], cables: String,
       state.levels(levelId).dataCables(tx, ty) = cableDef.data
       state.levels(levelId).fluidCables(tx, ty) = cableDef.fluid
       paletteDef.items.foreach { table =>
-        state.sampleItem2[ItemWithConnections](table, ItemWithConnections(_), _.item) foreach {
-          case (item, iwc) =>
-            state.items.put(item, OnFloor(Location(levelId, tx, ty)))
-            for (spec <- iwc.connect) {
-              item.behaviorOfType[HasPorts] match {
-                case Some(bhvr) =>
-                  bhvr.ports.find(_.name == spec.port) match {
-                    case Some(portSpec) =>
-                      val cableType = portSpec.`type`;
-                      (cableType match {
-                        case "power-in" | "power-out" =>
-                          state.levels(levelId).powerCables
-                        case "data-in" | "data-out" =>
-                          state.levels(levelId).dataCables
-                        case "fluid-in" | "fluid-out" =>
-                          state.levels(levelId).fluidCables
-                      })(tx, ty) |= spec.layer
-                      bhvr.connections += (spec.port -> new LayerSet(spec.layer))
-                    case None =>
-                      println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
-                  }
-                case _ =>
-                  println(s"Warning: ${item.kind.name} does not have ports")
-              }
+        state.sampleItemWithExtras(table) foreach { itemWithExtras =>
+          val item = state.data.items(itemWithExtras.item).generateItem()
+          for (containedItem <- state.sampleItem(itemWithExtras.contents))
+            state.items.put(containedItem, Inside(item))
+          state.items.put(item, OnFloor(Location(levelId, tx, ty)))
+          for (spec <- itemWithExtras.connect) {
+            item.behaviors.find(_.isInstanceOf[HasPorts]) match {
+              case Some(bhvr: HasPorts) =>
+                bhvr.ports.find(_.name == spec.port) match {
+                  case Some(portSpec) =>
+                    val cableType = portSpec.`type`;
+                    (cableType match {
+                      case "power-in" | "power-out" =>
+                        state.levels(levelId).powerCables
+                      case "data-in" | "data-out" =>
+                        state.levels(levelId).dataCables
+                      case "fluid-in" | "fluid-out" =>
+                        state.levels(levelId).fluidCables
+                    })(tx, ty) |= spec.layer
+                    bhvr.connections += (spec.port -> new LayerSet(spec.layer))
+                  case None =>
+                    println(s"Warning: ${item.kind.name} has no port named ${spec.port}")
+                }
+              case _ =>
+                println(s"Warning: ${item.kind.name} does not have ports")
             }
+          }
         }
       }
     }

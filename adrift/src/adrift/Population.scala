@@ -110,6 +110,10 @@ object Population {
     def sample()(implicit r: Random, ctx: TableContext[T]): Seq[T]
   }
 
+  object Table {
+    def empty[T]: Table[T] = TableChoose(Seq.empty)
+  }
+
   case class TableElement[T](item: T) extends Table[T] {
     def sample()(implicit r: Random, ctx: TableContext[T]): Seq[T] = Seq(item)
 
@@ -128,7 +132,9 @@ object Population {
 
   case class TableChoose[T](choose: Seq[TableChooseEntry[T]]) extends Table[T] {
     override def sample()(implicit r: Random, ctx: TableContext[T]): Seq[T] =
-      r.chooseFrom(choose)(_.weight).subtable.sample()
+      if (choose.nonEmpty)
+        r.chooseFrom(choose)(_.weight).subtable.sample()
+      else Seq.empty
 
     override def map[K](f: T => K): Table[K] = TableChoose(choose.map(_.map(f)))
   }
