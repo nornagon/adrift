@@ -832,6 +832,7 @@ class GameState(var data: Data, val random: Random) {
 
   var powerLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
   var dataLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
+  var fluidLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
   def recalculateConnections(): Unit = {
     def rc(getCables: Level => Grid[Int]): Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = {
       val newCableLayerConnections = mutable.Map.empty[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]]
@@ -879,6 +880,7 @@ class GameState(var data: Data, val random: Random) {
     }
     powerLayerConnections = rc(_.powerCables)
     dataLayerConnections = rc(_.dataCables)
+    fluidLayerConnections = rc(_.fluidCables)
   }
 
   def recalculateConnections2(): Unit = {

@@ -3,6 +3,8 @@ package adrift.items.behaviors
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, LevelId, Location, OnFloor}
 
+import scala.collection.mutable
+
 case class PortSpec(
   `type`: String,
   name: String
@@ -64,6 +66,33 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
         }
       }
 
+    case m: Message.PushFluid =>
+      if (state.isFunctional(self)) {
+        val outLayers = portLayers(p => p.`type` == "fluid-out" && p.name == m.outPort)
+        val outs = connectedItems(state, self, outLayers, "fluid-in").toSeq
+        val perOut = m.mixture.map { case (k, v) => k -> (v / outs.size) }
+        val remainder = mutable.Map.empty[String, Float].withDefaultValue(0)
+        for (item <- outs) {
+          val remaining = state.sendMessage(item, Message.ReceiveFluid(outLayers, perOut)).mixture
+          for ((k, v) <- remaining; if v != 0)
+            remainder(k) += v
+        }
+        m.mixture = remainder.toMap
+      }
+
+    case m: Message.ReceiveFluid =>
+      if (state.isFunctional(self)) {
+        val ports = (for ((portName, layers) <- connections; if layers.intersects(m.layers)) yield portName).toSeq
+        val mixturePerPort = m.mixture.map { case (k, v) => k -> (v / ports.size) }
+        val remainder = mutable.Map.empty[String, Float].withDefaultValue(0)
+        for (port <- ports) {
+          val remaining = state.sendMessage(self, Message.ReceivedFluid(port, mixturePerPort)).mixture
+          for ((k, v) <- remaining; if v != 0)
+            remainder(k) += v
+        }
+        m.mixture = remainder.toMap
+      }
+
     case _ =>
   }
 
@@ -88,6 +117,7 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
     val conns = connType match {
       case "data-in" | "data-out" => state.dataLayerConnections
       case "power-in" | "power-out" => state.powerLayerConnections
+      case "fluid-in" | "fluid-out" => state.fluidLayerConnections
     }
 
     connectedLocations(conns, location, layers).flatMap {

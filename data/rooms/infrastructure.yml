@@ -376,3 +376,29 @@
   display: HATCH
   behavior:
     - Affixed: {}
+
+- type: item
+  name: vent
+  volume: 1 L
+  description: A metal vent.
+  display: HATCH
+  behavior:
+    - Affixed: {}
+    - HasPorts:
+        ports:
+          - { name: Atmo In, type: fluid-in }
+    - Vent:
+        portName: Atmo In
+
+- type: item
+  name: pump
+  volume: 1 L
+  description: A metal vent with a fan.
+  display: HATCH
+  behavior:
+    - Affixed: {}
+    - HasPorts:
+        ports:
+          - { name: Atmo Out, type: fluid-out }
+    - AtmoPump:
+        portName: Atmo Out
