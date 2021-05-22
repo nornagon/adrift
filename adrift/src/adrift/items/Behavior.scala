@@ -2,7 +2,6 @@ package adrift.items
 
 import adrift.GameState
 import adrift.items.behaviors._
-// import adrift.items.behaviors.flora.{PerennialPlant,AnnualPlant,Seed,Pollinator,MycelialMat,Mushroom,Leaf,Flower}
 import adrift.items.behaviors.flora._
 import io.circe.{Json, JsonObject}
 
@@ -13,11 +12,10 @@ trait Behavior {
 
 object Behavior {
   import cats.syntax.functor._
-  import io.circe.{Decoder, Encoder}
   import io.circe.generic.extras.Configuration
   import io.circe.generic.extras.auto._
   import io.circe.generic.extras.semiauto._
-  import adrift.Population.serialization._
+  import io.circe.{Decoder, Encoder}
   implicit private val configuration: Configuration = Configuration.default.withDefaults.withDiscriminator("type")
 
   val decoders: Map[String, Decoder[Behavior]] = Map(

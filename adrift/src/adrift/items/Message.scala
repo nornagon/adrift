@@ -1,7 +1,7 @@
 package adrift.items
 
 import adrift.items.behaviors.LayerSet
-import adrift.{GasComposition, Location, Terrain, Volume}
+import adrift.{Location, Terrain, Volume}
 
 trait Message
 

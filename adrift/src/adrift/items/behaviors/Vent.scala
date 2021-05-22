@@ -1,8 +1,8 @@
 package adrift.items.behaviors
 
-import adrift.{GameState, GasComposition, InHands, Inside, OnFloor, Worn}
 import adrift.items.Message.{ReceivedFluid, Tick}
 import adrift.items.{Behavior, Item, Message}
+import adrift.{GameState, GasComposition, OnFloor}
 
 import scala.collection.mutable
 
