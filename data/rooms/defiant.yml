@@ -173,11 +173,12 @@
 - type: item
   name: hole in the wall
   volume: 0 L
-  description: A terrible rent in the shockingly thin layer of steel that separates you from the vast emptiness of space.
+  description: A small, terrible rent in the shockingly thin layer of steel that separates you from the vast emptiness of space.
   display: HOLE
   behavior:
     - Affixed: {}
-    - HoleInTheWall: {}
+    - Permeable: {}
+    - Vacuum: {}
 
 - type: item group
   name: refrigerated food

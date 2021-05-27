@@ -1,8 +1,7 @@
 package adrift.items.behaviors
 
-import adrift.items.Message.IsPermeable
-import adrift.{GameState, GasComposition, OnFloor}
 import adrift.items.{Behavior, Item, Message}
+import adrift.{GameState, GasComposition}
 
 case class GasLeak() extends Behavior {
   override def receive(
@@ -19,7 +18,7 @@ case class GasLeak() extends Behavior {
   }
 }
 
-case class HoleInTheWall() extends Behavior {
+case class Vacuum() extends Behavior {
   override def receive(
     state: GameState,
     self: Item,
@@ -30,8 +29,6 @@ case class HoleInTheWall() extends Behavior {
       val level = state.levels(loc.levelId)
       level.setGasComposition(loc.x, loc.y, GasComposition(oxygen = 0, carbonDioxide = 0, nitrogen = 0))
       state.markPermeabilityDirty(loc)
-    case msg: IsPermeable =>
-      msg.permeable = true
     case _ =>
   }
 }

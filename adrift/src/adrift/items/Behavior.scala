@@ -51,7 +51,8 @@ object Behavior {
     "ProvidesInfinitePower" -> Decoder[ProvidesInfinitePower].widen,
     "CombustsContents" -> Decoder[CombustsContents].widen,
     "Combustible" -> Decoder[Combustible].widen,
-    "HoleInTheWall" -> Decoder[HoleInTheWall].widen,
+    "Vacuum" -> Decoder[Vacuum].widen,
+    "Permeable" -> Decoder[Permeable].widen,
     "Vent" -> Decoder[Vent].widen,
     "AtmoPump" -> Decoder[AtmoPump].widen,
   )
@@ -91,7 +92,8 @@ object Behavior {
     case b: ProvidesInfinitePower => Encoder[ProvidesInfinitePower].apply(b)
     case b: CombustsContents => Encoder[CombustsContents].apply(b)
     case b: Combustible => Encoder[Combustible].apply(b)
-    case b: HoleInTheWall => Encoder[HoleInTheWall].apply(b)
+    case b: Vacuum => Encoder[Vacuum].apply(b)
+    case b: Permeable => Encoder[Permeable].apply(b)
     case b: Vent => Encoder[Vent].apply(b)
     case b: AtmoPump => Encoder[AtmoPump].apply(b)
   }))
