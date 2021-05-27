@@ -300,11 +300,26 @@ class GameState(var data: Data, val random: Random) {
       val start = System.nanoTime()
       updateAtmosphere(player.levelId)
       println(f"temperature+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
+      tickFluidNetworks()
       checkBodyTemp()
       internalCalories -= 1
       checkHunger()
       breathe()
       currentTime += 1
+    }
+  }
+
+  def tickFluidNetworks(): Unit = {
+    for ((levelId, networkLayers) <- fluidLayerConnections; (networkLayer, i) <- networkLayers.zipWithIndex) {
+      val connectedClusters = networkLayer.values.toSet
+      for (cluster <- connectedClusters) {
+        val message = Message.TotalPressure(i, GasComposition.zero, 0)
+        for ((x, y) <- cluster)
+          broadcastToLocation(OnFloor(Location(levelId, (x, y))), message)
+        val averagePressure = message.totalPressure / message.count
+        for ((x, y) <- cluster)
+          broadcastToLocation(OnFloor(Location(levelId, (x, y))), Message.AdjustPressure(i, averagePressure, 0.5f))
+      }
     }
   }
 

@@ -1,7 +1,7 @@
 package adrift.items
 
 import adrift.items.behaviors.LayerSet
-import adrift.{Location, Terrain, Volume}
+import adrift.{GasComposition, Location, Terrain, Volume}
 
 trait Message
 
@@ -64,6 +64,11 @@ object Message {
   case class PushFluid(outPort: String, var mixture: Map[String, Float /* kg */]) extends Message
   case class ReceiveFluid(layers: LayerSet, var mixture: Map[String, Float /* kg */]) extends Message
   case class ReceivedFluid(inPort: String, var mixture: Map[String, Float /* kg */]) extends Message
+
+  case class TotalPressure(layer: Int, var totalPressure: GasComposition, var count: Int) extends Message
+  case class AdjustPressure(layer: Int, averagePressure: GasComposition, t: Float) extends Message
+  case class GetPressure(port: String, var totalPressure: Option[GasComposition]) extends Message
+  case class AdjustPressureOnPort(port: String, averagePressure: GasComposition, t: Float) extends Message
 
   // Containers
   case class CanContainItems(var ok: Boolean = false) extends Message

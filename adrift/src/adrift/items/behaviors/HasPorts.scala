@@ -1,7 +1,7 @@
 package adrift.items.behaviors
 
 import adrift.items.{Behavior, Item, Message}
-import adrift.{GameState, LevelId, Location, OnFloor}
+import adrift.{GameState, GasComposition, LevelId, Location, OnFloor}
 
 import scala.collection.mutable
 
@@ -92,6 +92,30 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
         }
         m.mixture = remainder.toMap
       }
+
+    case m: Message.TotalPressure =>
+      if (state.isFunctional(self)) {
+        val ports = (for ((portName, layers) <- connections; if layers.intersects(LayerSet(1 << m.layer))) yield portName).toSeq
+        for (port <- ports) {
+          val pressureOnThisPort = state.sendMessage(self, Message.GetPressure(port, None)).totalPressure
+          pressureOnThisPort match {
+            case Some(pressure) =>
+              m.totalPressure += pressure
+              m.count += 1
+            case None =>
+              // port does not contribute to pressure network
+          }
+        }
+      }
+
+    case m: Message.AdjustPressure =>
+      if (state.isFunctional(self)) {
+        val ports = (for ((portName, layers) <- connections; if layers.intersects(LayerSet(1 << m.layer))) yield portName).toSeq
+        for (port <- ports) {
+          state.sendMessage(self, Message.AdjustPressureOnPort(port, m.averagePressure, m.t))
+        }
+      }
+
 
     case _ =>
   }

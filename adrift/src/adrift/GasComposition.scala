@@ -20,6 +20,9 @@ case class GasComposition(oxygen: Float, carbonDioxide: Float, nitrogen: Float) 
   def *(s: Float): GasComposition =
     GasComposition(oxygen*s, carbonDioxide*s, nitrogen*s)
 
+  def /(s: Float): GasComposition =
+    GasComposition(oxygen/s, carbonDioxide/s, nitrogen/s)
+
   def minPressure(): Float =
     math.min(math.min(oxygen, carbonDioxide), nitrogen)
 

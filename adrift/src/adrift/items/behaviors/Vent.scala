@@ -1,6 +1,6 @@
 package adrift.items.behaviors
 
-import adrift.items.Message.{ReceivedFluid, Tick}
+import adrift.items.Message.{AdjustPressureOnPort, GetPressure, ReceivedFluid, Tick, TotalPressure}
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, OnFloor}
 
@@ -12,6 +12,25 @@ case class Vent(portName: String) extends Behavior {
     self: Item,
     message: Message
   ): Unit = message match {
+    case m: GetPressure if m.port == portName =>
+      val loc = state.items.lookup(self)
+      loc match {
+        case OnFloor(l) =>
+          m.totalPressure = Some(state.levels(l.levelId).gasComposition(l.xy))
+        case _ =>
+          println("WARNING: GetPressure message delivered to item not on floor")
+      }
+    case m: AdjustPressureOnPort if m.port == portName =>
+      val loc = state.items.lookup(self)
+      loc match {
+        case OnFloor(l) =>
+          val gc = state.levels(l.levelId).gasComposition(l.xy)
+          state.levels(l.levelId).setGasComposition(l.x, l.y, gc + (m.averagePressure - gc) * m.t)
+        case _ =>
+          println("WARNING: AdjustPressure message delivered to item not on floor")
+      }
+
+
     case m @ ReceivedFluid(inPort, mixture) if inPort == portName =>
       if (state.isFunctional(self)) {
         val loc = state.items.lookup(self)

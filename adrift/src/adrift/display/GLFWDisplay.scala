@@ -436,9 +436,10 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
 
       if (state.showGasDebug && level.terrain.contains(x, y)) {
         val gc = level.gasComposition(x, y)
-        val (min, max) = (20, 25)
+        val (min, max) = (0, 42)
         val gradient = Gradient(
-          Seq(Color.fromHex("#fee8c8"), Color.fromHex("#fdbb84"), Color.fromHex("#e34a33")).map(_.get)
+          //Seq(Color.fromHex("#fee8c8"), Color.fromHex("#fdbb84"), Color.fromHex("#e34a33")).map(_.get)
+          Seq(Color.fromHex("#0000ff"), Color.fromHex("#fee8c8"), Color.fromHex("#ff0000")).map(_.get)
         )
         val t = (gc.oxygen - min) / (max - min)
         val color = gradient.sample(t).copy(a = 0.8f)
