@@ -59,12 +59,49 @@ case class Vent(portName: String) extends Behavior {
   }
 }
 
-case class AtmoPump(portName: String) extends Behavior {
+case class AtmoPump(
+  inPort: String,
+  outPort: String,
+  minPressure: Float,
+  var internalPressure: GasComposition = GasComposition.zero,
+  var blocked: Boolean = false
+) extends Behavior {
+
+  private def inPortPressure =
+    if (internalPressure.totalPressure() < minPressure) {
+      internalPressure
+    } else {
+      internalPressure * (minPressure / internalPressure.totalPressure())
+    }
+
   override def receive(
     state: GameState,
     self: Item,
     message: Message
   ): Unit = message match {
+
+    case m: GetPressure if m.port == inPort && !blocked =>
+      m.totalPressure = Some(inPortPressure)
+
+    case m: AdjustPressureOnPort if m.port == inPort =>
+      if (!blocked) {
+        val delta = (m.averagePressure - inPortPressure) * m.t
+        internalPressure += delta
+        println(s"pump added $delta on in port, internal pressure is now $internalPressure")
+      }
+      // We block the valve if the pressure on the network falls below our min.
+      blocked = m.averagePressure.totalPressure() < minPressure
+
+    case m: GetPressure if m.port == outPort =>
+      m.totalPressure = Some(internalPressure)
+
+    case m: AdjustPressureOnPort if m.port == outPort =>
+      val delta = (m.averagePressure - internalPressure) * m.t
+      internalPressure += delta
+      println(s"pump added $delta on out port, internal pressure is now $internalPressure")
+
+
+      /*
     case Tick =>
       if (state.isFunctional(self)) {
         val loc = state.items.lookup(self)
@@ -85,6 +122,7 @@ case class AtmoPump(portName: String) extends Behavior {
             ))
         }
       }
+       */
     case _ =>
   }
 }

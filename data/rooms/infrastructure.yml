@@ -391,14 +391,17 @@
         portName: Atmo In
 
 - type: item
-  name: pump
+  name: air pump
   volume: 1 L
-  description: A metal vent with a fan.
+  description: A box with a air pump in it. It has two ports on the side.
   display: HATCH
   behavior:
     - Affixed: {}
     - HasPorts:
         ports:
-          - { name: Atmo Out, type: fluid-out }
+          - { name: In, type: fluid-in }
+          - { name: Out, type: fluid-out }
     - AtmoPump:
-        portName: Atmo Out
+        inPort: In
+        outPort: Out
+        minPressure: 10
