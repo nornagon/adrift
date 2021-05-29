@@ -174,6 +174,7 @@ class GameState(var data: Data, val random: Random) {
   def isDead: Boolean = deathReason.nonEmpty
 
   def die(reason: String): Unit = {
+    if (invulnerable) return
     putMessage("You die.")
     deathReason = Some(reason)
   }
@@ -290,6 +291,7 @@ class GameState(var data: Data, val random: Random) {
   var showTempDebug = false
   var showGasDebug = false
   var showCableDebug = false
+  var invulnerable = false
 
   var messages: Seq[(String, Int)] = Seq.empty
   def putMessage(message: String): Unit = messages :+= ((message, currentTime))

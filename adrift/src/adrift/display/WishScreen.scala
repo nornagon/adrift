@@ -48,6 +48,8 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               state.walkThroughWalls = !state.walkThroughWalls
             case "stw" =>
               state.seeThroughWalls = !state.seeThroughWalls
+            case "god" =>
+              state.invulnerable = true
             case "showtemp" =>
               state.showTempDebug = !state.showTempDebug
             case "showgas" =>
