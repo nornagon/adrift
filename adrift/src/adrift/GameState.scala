@@ -318,9 +318,11 @@ class GameState(var data: Data, val random: Random) {
         val message = Message.TotalPressure(i, GasComposition.zero, 0)
         for ((x, y) <- cluster)
           broadcastToLocation(OnFloor(Location(levelId, (x, y))), message)
-        val averagePressure = message.totalPressure / message.count
-        for ((x, y) <- cluster)
-          broadcastToLocation(OnFloor(Location(levelId, (x, y))), Message.AdjustPressure(i, averagePressure, 0.5f))
+        if (message.count > 0) {
+          val averagePressure = message.totalPressure / message.count
+          for ((x, y) <- cluster)
+            broadcastToLocation(OnFloor(Location(levelId, (x, y))), Message.AdjustPressure(i, averagePressure, 0.5f))
+        }
       }
     }
   }
