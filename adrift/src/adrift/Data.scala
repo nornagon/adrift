@@ -161,6 +161,7 @@ object Volume {
       case other => Left(DecodingFailure(s"Failed to parse volume: '$other'", h.history))
     }
   }
+  implicit val encoder: Encoder[Volume] = (v: Volume) => Json.fromString(s"${v.milliliters} ml")
 }
 
 object Data {
