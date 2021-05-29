@@ -95,7 +95,13 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
 
     case m: Message.TotalPressure =>
       if (state.isFunctional(self)) {
-        val ports = (for ((portName, layers) <- connections; if layers.intersects(LayerSet(1 << m.layer))) yield portName).toSeq
+        val ports =
+          (for {
+            (portName, layers) <- connections
+            if layers.intersects(LayerSet(1 << m.layer))
+            spec <- this.ports.find(p => p.name == portName)
+            if spec.`type` == "fluid-in" || spec.`type` == "fluid-out"
+          } yield portName).toSeq
         for (port <- ports) {
           val pressureOnThisPort = state.sendMessage(self, Message.GetPressure(port, None)).totalPressure
           pressureOnThisPort match {
@@ -110,7 +116,13 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
 
     case m: Message.AdjustPressure =>
       if (state.isFunctional(self)) {
-        val ports = (for ((portName, layers) <- connections; if layers.intersects(LayerSet(1 << m.layer))) yield portName).toSeq
+        val ports =
+          (for {
+            (portName, layers) <- connections
+              if layers.intersects(LayerSet(1 << m.layer))
+              spec <- this.ports.find(p => p.name == portName)
+              if spec.`type` == "fluid-in" || spec.`type` == "fluid-out"
+          } yield portName).toSeq
         for (port <- ports) {
           state.sendMessage(self, Message.AdjustPressureOnPort(port, m.averagePressure, m.t))
         }
