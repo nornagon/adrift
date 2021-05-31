@@ -87,7 +87,6 @@ case class AtmoPump(
       if (!blocked) {
         val delta = (m.averagePressure - inPortPressure) * m.t
         internalPressure += delta
-        println(s"pump added $delta on in port, internal pressure is now $internalPressure")
       }
       // We block the valve if the pressure on the network falls below our min.
       blocked = m.averagePressure.totalPressure() < minPressure
@@ -98,7 +97,6 @@ case class AtmoPump(
     case m: AdjustPressureOnPort if m.port == outPort =>
       val delta = (m.averagePressure - internalPressure) * m.t
       internalPressure += delta
-      println(s"pump added $delta on out port, internal pressure is now $internalPressure")
 
 
       /*
@@ -123,6 +121,34 @@ case class AtmoPump(
         }
       }
        */
+    case _ =>
+  }
+}
+
+case class GasTank(
+  port: String,
+  var internalPressure: GasComposition,
+  var regulatedPressure: Float,
+) extends Behavior {
+  private def regulatedPressureComposition =
+    if (internalPressure.totalPressure() < regulatedPressure) {
+      internalPressure
+    } else {
+      internalPressure * (regulatedPressure / internalPressure.totalPressure())
+    }
+
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case m: GetPressure =>
+      m.totalPressure = Some(regulatedPressureComposition)
+
+    case m: AdjustPressureOnPort if m.port == port =>
+      val delta = (m.averagePressure - regulatedPressureComposition) * m.t
+      internalPressure += delta
+
     case _ =>
   }
 }

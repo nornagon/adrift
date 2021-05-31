@@ -55,6 +55,8 @@ object Behavior {
     "Permeable" -> Decoder[Permeable].widen,
     "Vent" -> Decoder[Vent].widen,
     "AtmoPump" -> Decoder[AtmoPump].widen,
+    "AirMix" -> Decoder[AirMix].widen,
+    "GasTank" -> Decoder[GasTank].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveConfiguredEncoder
@@ -96,6 +98,8 @@ object Behavior {
     case b: Permeable => Encoder[Permeable].apply(b)
     case b: Vent => Encoder[Vent].apply(b)
     case b: AtmoPump => Encoder[AtmoPump].apply(b)
+    case b: AirMix => Encoder[AirMix].apply(b)
+    case b: GasTank => Encoder[GasTank].apply(b)
   }))
 }
 

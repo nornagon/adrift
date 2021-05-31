@@ -4,8 +4,8 @@
   options:
     layout: |
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-      x................xb..Cxb..Cxb..Cxb..bxb..bxbCCbxb..bxb..bxb..Cx...xxxxxx
-      x................x....x....x....xC..CxC..Cx....xC..CxC..Cx....x........xxxxxx
+      x................xbv.Cxbv.Cxbv.Cxbv.bxbv.bxbCCbxb..bxb..bxb..Cx...xxxxxx
+      x................x....x....x....xC..CxC..Cx.v..xCv.CxCv.Cx.v..x.v......xxxxxx
       x............G...x....x....x....x....x....x....x....x....x....x..........x..xxxxx
       x................xxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxdxxxxx.......x......xxxx
       0................x...............................................d.......d.........xxxx
@@ -14,7 +14,7 @@
              x....x.......x...x...x...x...x..............hhxRRRRRR..d..........x........xxxxxxxxx
              x.c..d.......xw.Txw.Txw.Txw.Tx.....hth..hh..ttx........xxxxxxxxx..x........d.......xx
              x....x..xxxdxxxxxxxxxxxxxxxxxx..........tt..hhx..tcct..Rx......x..xxxxxxxxxx......../
-             x....x..xA..Nx=..Pww.tt.Pww..x.....hth..hh....d........Rx......x....x...............//
+             x....x..xa..Nx=..Pww.tt.Pww..x.....hth..hh....d........Rx......x....x...............//
              x....x..xE..Ox=..............d.............hh.xSSSSSS..Rx......x....x................/
              x....x..xH..BxxxxxxxxS.Aww...x....hth..hh..tt.xxxxxxxxxxx......d....x................/
              x....x..x...F.NOBF.SxS......tx.........tt..hh.x.........x......x....d................/
@@ -34,19 +34,19 @@
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     cables: |
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-      x................x....x....x....x....x....x....x....x....x....x...xxxxxx
-      x................x....x....x....x....x....x....x....x....x....x........xxxxxx
-      x............ppppx....x....x....x....x....x....x....x....x....x..........x..xxxxx
-      x...............pppppppppppppppppppppppppppppppppppppppppppppppppp.......x......xxxx
-      x................p...............................................p.......p.........xxxx
-      x................p...............................................ppppppppp............xxx
-      xxxxxxxxxxxxpppppp..ppppppppppppppppppppppppppppppppppppppppppp..........p..............xx
-             x....p.......p...............x................p........p..........p........xxxxxxxxx
-             x....p.......p...............x................p........ppppppppp..p........p.......xx
-             x....pppppppppxxxxxxxxxxxxxxxx................p.........x......p..pppppppppp........x
-             x....p..x....x...............x................p.........x......p....p...............xx
-             x....p..x....x...............x................p.........x......p....p................x
-             x....p..x....xxxxxxxx........x................pxxxxxxxxxx......p....p................x
+      x................aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.xxxxxx
+      x................a....x....x....x....x....x.a..x.a..x.a..x.a..x.a......xxxxxx
+      x............ppppa....x....x....x....x....x....x....x....x....x..........x..xxxxx
+      x...............pPpppppppppppppppppppppppppppppppppppppppppppppppp.......x......xxxx
+      x................P...............................................p.......p.........xxxx
+      x................P...............................................ppppppppp............xxx
+      xxxxxxxxxxxxpppppP..ppppppppppppppppppppppppppppppppppppppppppp..........p..............xx
+             x....p....a..p...............x................p........p..........p........xxxxxxxxx
+             x....p....a..p...............x................p........ppppppppp..p........p.......xx
+             x....pppppPPppxxxxxxxxxxxxxxxx................p.........x......p..pppppppppp........x
+             x....p..x..a.x...............x................p.........x......p....p...............xx
+             x....p..x..a.x...............x................p.........x......p....p................x
+             x....p..x..a.xxxxxxxx........x................pxxxxxxxxxx......p....p................x
              x....p..x...........x........x................p.........x......x....p................x
              x....p..x...........x........x................p.........x......x....p................x
              x....p..x...........x........x................p.........xxxxxxxx....p................x
@@ -66,6 +66,8 @@
       .: {}
       x: {}
       p: { power: 0x1 }
+      P: { power: 0x1, fluid: 0x1 }
+      a: { fluid: 0x1 }
     defs:
       .: { terrain: floor }
       0: { terrain: wall, items: hole in the wall }
@@ -133,7 +135,7 @@
                 - { port: Power, layer: 0x1 }
                 - { port: Air Out, layer: 0x1 }
       F: { items: { each: [ air mix system ] } }
-      O: 
+      O:
         items: 
           each: 
             - item: oxygen tank
@@ -152,6 +154,13 @@
       S: { terrain: floor, items: [ tall cupboard ] }
 
       G: { terrain: floor, items: [ combustion generator ] }
+
+      v:
+        terrain: floor
+        items:
+          - item: vent
+            connect:
+              - { port: In/Out, layer: 1 }
 
 - type: item
   name: cook station

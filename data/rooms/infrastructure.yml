@@ -182,18 +182,22 @@
   behavior:
     - HasPorts:
         ports:
-          - type: O2-in
-            name: Input 1
-          - type: O2-out
-            name: Output 1
-          - type: N2-in
-            name: Input 2
-          - type: N2-out
-            name: Output 2
-          - type: CO2-in
-            name: Input 3
-          - type: CO2-out
-            name: Output 3
+          - type: fluid-in
+            name: O2 reserve
+          - type: fluid-in
+            name: N2 reserve
+          - type: fluid-in
+            name: CO2 reserve
+          - type: fluid-in
+            name: Atmo In
+          - type: fluid-out
+            name: Atmo Out
+    - AirMix:
+        o2Port: O2 reserve
+        co2Port: CO2 reserve
+        n2Port: N2 reserve
+        atmoInPort: Atmo In
+        atmoOutPort: Atmo Out
 
 
 
@@ -255,18 +259,51 @@
   volume: 300 L
   description: a big canister for storing and transporting life-giving oxygen.
   display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid-in, name: O2 }
+    - GasTank:
+        port: O2
+        regulatedPressure: 21
+        internalPressure:
+          oxygen: 10000
+          carbonDioxide: 0
+          nitrogen: 0
 
 - type: item
   name: CO2 tank
   volume: 300 L
   description: A canister designed for transporting solid carbon dioxide pellets
   display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid-in, name: CO2 }
+    - GasTank:
+        port: CO2
+        regulatedPressure: 1
+        internalPressure:
+          oxygen: 0
+          carbonDioxide: 10000
+          nitrogen: 0
 
 - type: item
   name: nitrogen tank
   volume: 300 L
   description: A double-walled vac system for moving liquid nitrogen. Built-in optional gassifier.
   display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid-in, name: N2 }
+    - GasTank:
+        port: N2
+        regulatedPressure: 78
+        internalPressure:
+          oxygen: 0
+          carbonDioxide: 0
+          nitrogen: 10000
 
 - type: item
   name: hydrogen tank
@@ -386,9 +423,9 @@
     - Affixed: {}
     - HasPorts:
         ports:
-          - { name: Atmo In, type: fluid-in }
+          - { name: In/Out, type: fluid-in }
     - Vent:
-        portName: Atmo In
+        portName: In/Out
 
 - type: item
   name: air pump
