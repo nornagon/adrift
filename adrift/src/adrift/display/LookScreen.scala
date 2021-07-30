@@ -18,6 +18,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
+    import layout3._
     val loc = Location(state.player.levelId, x, y)
     val isVisible = state.isVisible(loc)
     val width = 20
@@ -31,11 +32,11 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
           val terrain = state.levels(levelId).terrain(x, y)
           val items = state.items.lookup(OnFloor(Location(levelId, x, y)))
 
-          import layout3._
           val w = Border(Column(
             Seq(Text(terrain.name.withFg(UI.Color.lightGreen))) ++
               items.take(9).map(i => Text(state.itemDisplayName(i))) ++
-              (if (items.size > 9) Seq(Text(s"${items.size - 9} more...")) else Seq.empty)
+              (if (items.size > 9) Seq(Text(s"${items.size - 9} more...")) else Seq.empty) ++
+              (if (state.showGasDebug) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
           ))
           draw(
             renderer,
@@ -49,6 +50,17 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
       display.worldToScreen(state)(x, y) match {
         case Some((sx, sy)) =>
           renderer.drawChar(sx, sy, ' ', fg = Color.Black, bg = Color.White)
+          if (state.showGasDebug) {
+            val w = Border(Column(
+              (if (state.showGasDebug) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
+            ))
+            draw(
+              renderer,
+              Offset(anchor._1, anchor._2),
+              BoxConstraints.tightFor(width = width),
+              w
+            )
+          }
         case None =>
       }
     }

@@ -397,28 +397,40 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
   }
 }
 
-case class CableDef(power: Int = 0, data: Int = 0, fluid: Int = 0)
-
-case class Static(layout: String, defs: Map[String, PaletteDef], cables: String, cableDefs: Map[String, CableDef]) extends RoomGenAlgorithm {
+case class Static(
+  layout: String,
+  defs: Map[String, PaletteDef],
+  powerCables: String,
+  fluidCables: String,
+  dataCables: String,
+) extends RoomGenAlgorithm {
   private val lines = layout.split("\n")
-  private val cableLines = cables.split("\n")
+  private val powerCableLines = powerCables.split("\n")
+  private val fluidCableLines = fluidCables.split("\n")
+  private val dataCableLines = dataCables.split("\n")
   val width: Int = lines.map(_.length).max
   val height: Int = lines.length
-  assert(cableLines.length <= height)
-  assert(cableLines.map(_.length).max <= width)
+  assert(powerCableLines.length <= height)
+  assert(powerCableLines.map(_.length).max <= width)
   override def generate(state: GameState, levelId: LevelId, cells: Seq[(Int, Int)])(implicit r: Random): Unit = {
     val tileGrid = new Grid[Char](width, height)(' ')
     for ((line, y) <- lines.zipWithIndex; (char, x) <- line.zipWithIndex) {
       tileGrid(x, y) = char
     }
-    val cableGrid = new Grid[Char](width, height)(' ')
-    for ((line, y) <- cableLines.zipWithIndex; (char, x) <- line.zipWithIndex) {
-      cableGrid(x, y) = char
+    val cableGrid = new Grid[(Char, Char, Char)](width, height)(('0','0','0'))
+    for ((line, y) <- powerCableLines.zipWithIndex; (char, x) <- line.zipWithIndex) {
+      cableGrid(x, y) = cableGrid(x, y).copy(_1 = char)
+    }
+    for ((line, y) <- fluidCableLines.zipWithIndex; (char, x) <- line.zipWithIndex) {
+      cableGrid(x, y) = cableGrid(x, y).copy(_2 = char)
+    }
+    for ((line, y) <- dataCableLines.zipWithIndex; (char, x) <- line.zipWithIndex) {
+      cableGrid(x, y) = cableGrid(x, y).copy(_3 = char)
     }
     fill(state, levelId, cells.map(_._1).min, cells.map(_._2).min, tileGrid, cableGrid)
   }
 
-  def fill(state: GameState, levelId: LevelId, xmin: Int, ymin: Int, tileGrid: Grid[Char], cableGrid: Grid[Char]): Unit = {
+  def fill(state: GameState, levelId: LevelId, xmin: Int, ymin: Int, tileGrid: Grid[Char], cableGrid: Grid[(Char, Char, Char)]): Unit = {
     for (y <- 0 until tileGrid.height; x <- 0 until tileGrid.width) {
       val tile = tileGrid(x, y)
       val paletteDef = tile.toString match {
@@ -426,17 +438,28 @@ case class Static(layout: String, defs: Map[String, PaletteDef], cables: String,
         case other => defs.getOrElse(other, throw new Exception(s"No palette def for '$other'"))
       }
       val cableTile = cableGrid(x, y)
-      val cableDef = cableTile.toString match {
-        case " " => cableDefs.getOrElse(" ", CableDef())
-        case other => cableDefs(other)
+      val powerCableDef = cableTile._1 match {
+        case x if x >= '0' && x <= '9' => x - '0'
+        case x if x >= 'a' && x <= 'v' => x - 'a' + 10
+        case _ => 0
+      }
+      val fluidCableDef = cableTile._2 match {
+        case x if x >= '0' && x <= '9' => x - '0'
+        case x if x >= 'a' && x <= 'v' => x - 'a' + 10
+        case _ => 0
+      }
+      val dataCableDef = cableTile._3 match {
+        case x if x >= '0' && x <= '9' => x - '0'
+        case x if x >= 'a' && x <= 'v' => x - 'a' + 10
+        case _ => 0
       }
       val terrain = paletteDef.terrain
       val tx = xmin + x
       val ty = ymin + y
       state.levels(levelId).terrain(tx, ty) = state.data.terrain(terrain.getOrElse("empty space"))
-      state.levels(levelId).powerCables(tx, ty) = cableDef.power
-      state.levels(levelId).dataCables(tx, ty) = cableDef.data
-      state.levels(levelId).fluidCables(tx, ty) = cableDef.fluid
+      state.levels(levelId).powerCables(tx, ty) = powerCableDef
+      state.levels(levelId).dataCables(tx, ty) = dataCableDef
+      state.levels(levelId).fluidCables(tx, ty) = fluidCableDef
       paletteDef.items.foreach { table =>
         state.sampleItemWithExtras(table) foreach { itemWithExtras =>
           val item = state.data.items.get(itemWithExtras.item) match {

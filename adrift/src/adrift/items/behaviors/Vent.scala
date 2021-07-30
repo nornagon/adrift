@@ -1,6 +1,6 @@
 package adrift.items.behaviors
 
-import adrift.items.Message.{AdjustPressureOnPort, GetPressure, ReceivedFluid, Tick, TotalPressure}
+import adrift.items.Message.{AdjustPressureOnPort, GetPressure, ReceivedFluid}
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, OnFloor}
 
@@ -16,7 +16,7 @@ case class Vent(portName: String) extends Behavior {
       val loc = state.items.lookup(self)
       loc match {
         case OnFloor(l) =>
-          m.totalPressure = Some(state.levels(l.levelId).gasComposition(l.xy))
+          m.totalPressure = Some((state.levels(l.levelId).gasComposition(l.xy), 1000))
         case _ =>
           println("WARNING: GetPressure message delivered to item not on floor")
       }
@@ -66,6 +66,7 @@ case class AtmoPump(
   var internalPressure: GasComposition = GasComposition.zero,
   var blocked: Boolean = false
 ) extends Behavior {
+  private val internalVolume = 100
 
   private def inPortPressure =
     if (internalPressure.totalPressure() < minPressure) {
@@ -81,7 +82,7 @@ case class AtmoPump(
   ): Unit = message match {
 
     case m: GetPressure if m.port == inPort && !blocked =>
-      m.totalPressure = Some(inPortPressure)
+      m.totalPressure = Some((inPortPressure, internalVolume))
 
     case m: AdjustPressureOnPort if m.port == inPort =>
       if (!blocked) {
@@ -92,7 +93,7 @@ case class AtmoPump(
       blocked = m.averagePressure.totalPressure() < minPressure
 
     case m: GetPressure if m.port == outPort =>
-      m.totalPressure = Some(internalPressure)
+      m.totalPressure = Some((internalPressure, internalVolume))
 
     case m: AdjustPressureOnPort if m.port == outPort =>
       val delta = (m.averagePressure - internalPressure) * m.t
@@ -130,6 +131,8 @@ case class GasTank(
   var internalPressure: GasComposition,
   var regulatedPressure: Float,
 ) extends Behavior {
+  private val internalVolume = 100
+
   private def regulatedPressureComposition =
     if (internalPressure.totalPressure() < regulatedPressure) {
       internalPressure
@@ -143,7 +146,7 @@ case class GasTank(
     message: Message
   ): Unit = message match {
     case m: GetPressure =>
-      m.totalPressure = Some(regulatedPressureComposition)
+      m.totalPressure = Some((regulatedPressureComposition, internalVolume))
 
     case m: AdjustPressureOnPort if m.port == port =>
       val delta = (m.averagePressure - regulatedPressureComposition) * m.t
