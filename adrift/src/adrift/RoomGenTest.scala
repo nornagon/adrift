@@ -62,7 +62,7 @@ object RoomGenTest {
       state.refresh()
       state.recalculateFOV()
     }
-    Iterator.continually(Try { regenerate(random.nextLong) }).take(5).find(_.isSuccess) getOrElse {
+    Iterator.continually(Try { regenerate(random.nextLong()) }).take(5).find(_.isSuccess) getOrElse {
       throw new RuntimeException(s"Couldn't generate a room")
     }
 

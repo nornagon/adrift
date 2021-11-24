@@ -66,13 +66,13 @@ case class AtmoPump(
   var internalPressure: GasComposition = GasComposition.zero,
   var blocked: Boolean = false
 ) extends Behavior {
-  private val internalVolume = 100
+  private val internalVolume = 100f
 
   private def inPortPressure =
-    if (internalPressure.totalPressure() < minPressure) {
+    if (internalPressure.totalPressure < minPressure) {
       internalPressure
     } else {
-      internalPressure * (minPressure / internalPressure.totalPressure())
+      internalPressure * (minPressure / internalPressure.totalPressure)
     }
 
   override def receive(
@@ -90,7 +90,7 @@ case class AtmoPump(
         internalPressure += delta
       }
       // We block the valve if the pressure on the network falls below our min.
-      blocked = m.averagePressure.totalPressure() < minPressure
+      blocked = m.averagePressure.totalPressure < minPressure
 
     case m: GetPressure if m.port == outPort =>
       m.totalPressure = Some((internalPressure, internalVolume))
@@ -131,13 +131,13 @@ case class GasTank(
   var internalPressure: GasComposition,
   var regulatedPressure: Float,
 ) extends Behavior {
-  private val internalVolume = 100
+  private val internalVolume = 100f
 
   private def regulatedPressureComposition =
-    if (internalPressure.totalPressure() < regulatedPressure) {
+    if (internalPressure.totalPressure < regulatedPressure) {
       internalPressure
     } else {
-      internalPressure * (regulatedPressure / internalPressure.totalPressure())
+      internalPressure * (regulatedPressure / internalPressure.totalPressure)
     }
 
   override def receive(

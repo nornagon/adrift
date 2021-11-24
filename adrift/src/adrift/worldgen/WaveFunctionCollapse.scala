@@ -204,8 +204,8 @@ object WaveFunctionCollapse {
           // 2. set it to a random value
           new IntStrategy(
             tiles,
-            new SmallDomainRandom(model, random.nextLong),
-            new IntDomainWeightedRandom(random.nextLong, gts.weight)
+            new SmallDomainRandom(model, random.nextLong()),
+            new IntDomainWeightedRandom(random.nextLong(), gts.weight)
           ),
           new GraphSearch(connectivity).useLastConflict().configure(GraphSearch.MIN_P_DEGREE),
         )

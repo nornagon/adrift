@@ -12,11 +12,11 @@ object adrift extends ScalaModule {
     if (System.getProperty("os.name") startsWith "Mac")
       Seq("-XstartOnFirstThread")
     else Seq.empty)
-  override def scalaVersion = "2.13.1"
+  override def scalaVersion = "2.13.7"
 
   override def mainClass = Some("adrift.Main")
 
-  override def scalacOptions = Seq("-feature", "-deprecation")
+  override def scalacOptions = Seq("-feature", "-deprecation", "-Xsource:3")
 
   override def repositories = super.repositories ++ Seq(
     MavenRepository("https://oss.sonatype.org/content/repositories/snapshots/"),

@@ -159,11 +159,11 @@ object Population {
     override def map[K](f: T => K): Table[K] = TableOptional(chance, optional.map(f))
   }
 
-  private val diceRegex = raw"""(\d+)d(\d+)""".r("numDice", "numSides")
-  private val rangeRegex = raw"""(\d+)-(\d+)""".r("low", "high")
-  private val intRegex = raw"""(\d+)""".r("num")
+  private val diceRegex = raw"""(?<numDice>\d+)d(?<numSides>\d+)""".r
+  private val rangeRegex = raw"""(?<low>\d+)-(?<high>\d+)""".r
+  private val intRegex = raw"""(?<num>\d+)""".r
 
-  private val percentageRegex = raw"""(\d*\.?\d+)%""".r("percentage")
+  private val percentageRegex = raw"""(?<percentage>\d*\.?\d+)%""".r
 
   import io.circe.generic.semiauto._
   def derivedTableItemDecoder[T](implicit d: Decoder[T]): Decoder[TableElement[T]] = deriveDecoder

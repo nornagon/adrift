@@ -95,24 +95,28 @@ object Appearance {
           case NE | N | E => _UR_
           case NW | W => LU__
           case SW | S | SE => L_R_
+          case DN => 254
         }
       case (true, true, false, true) =>
         viewingFrom match {
           case NW | N | W => LU__
           case SW | S => L__D
           case E | NE | SE => _U_D
+          case DN => 254
         }
       case (true, false, true, true) =>
         viewingFrom match {
           case SW | S | W => L__D
           case SE | E => __RD
           case N | NW | NE => L_R_
+          case DN => 254
         }
       case (false, true, true, true) =>
         viewingFrom match {
           case NE | N | E => _UR_
           case SE | S => __RD
           case W | NW | SW => _U_D
+          case DN => 254
         }
       case (true, true, true, true) =>
         viewingFrom match {
@@ -120,6 +124,7 @@ object Appearance {
           case SE | E => __RD
           case NW | W => LU__
           case SW | S => L__D
+          case DN => 254
         }
     }).toChar
   }

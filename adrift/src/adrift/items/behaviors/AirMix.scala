@@ -12,7 +12,7 @@ case class AirMix(
   atmoOutPort: String,
   var internalPressure: GasComposition = GasComposition.zero,
 ) extends Behavior {
-  private val internalVolume = 100
+  private val internalVolume = 100f
   override def receive(
     state: GameState,
     self: Item,

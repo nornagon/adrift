@@ -13,13 +13,13 @@ object RandomImplicits {
 
     def oneOf[K](options: K*): K = pick(options)
     def nOf[K](n: Int, options: Seq[K]): Seq[K] = r.shuffle(options).take(n)
-    def pick[K](options: Seq[K]): K = options(r.between(0, options.size).floor.toInt)
+    def pick[K](options: Seq[K]): K = options(r.between(0, options.size))
     def pick[K](options: IterableOnce[K]): K = {
       var i = 1
       val iterator = options.iterator
-      var x = iterator.next
+      var x = iterator.next()
       while (iterator.hasNext) {
-        val b = iterator.next
+        val b = iterator.next()
         i += 1
         if (oneIn(i)) x = b
       }
@@ -29,9 +29,9 @@ object RandomImplicits {
       var i = 1
       val iterator = options.iterator
       if (!iterator.hasNext) return None
-      var x = iterator.next
+      var x = iterator.next()
       while (iterator.hasNext) {
-        val b = iterator.next
+        val b = iterator.next()
         i += 1
         if (oneIn(i)) x = b
       }

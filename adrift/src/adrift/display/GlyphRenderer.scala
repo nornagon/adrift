@@ -275,7 +275,7 @@ object GlyphRenderer {
         }
         if (!shouldContinue) {
           // only last line without leading spaces is left
-          if (inputLineLength - offset <= wrapLength) break
+          if (inputLineLength - offset <= wrapLength) break()
           while (matcher.find) spaceToWrapAt = matcher.start + offset
           if (spaceToWrapAt >= offset) { // normal case
             append(str, offset, spaceToWrapAt)
@@ -338,7 +338,7 @@ object GlyphRenderer {
         }
         if (!shouldContinue) {
           // only last line without leading spaces is left
-          if (inputLineLength - offset <= wrapLength) break
+          if (inputLineLength - offset <= wrapLength) break()
           while (matcher.find) spaceToWrapAt = matcher.start + offset
           if (spaceToWrapAt >= offset) { // normal case
             append(str, offset, spaceToWrapAt)

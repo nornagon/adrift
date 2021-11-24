@@ -57,9 +57,9 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
   def resize(width: Int, height: Int): Unit = {
     program.use()
     val left: Float = 0
-    val right: Float = width
+    val right: Float = width.toFloat
     val top: Float = 0
-    val bottom: Float = height
+    val bottom: Float = height.toFloat
     val zFar: Float = -1
     val zNear: Float = 1
     val tx = -(right + left) / (right - left)

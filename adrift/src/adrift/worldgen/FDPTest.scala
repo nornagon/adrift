@@ -66,7 +66,7 @@ object FDPTest {
       override def keyPressed(e: KeyEvent): Unit = {
         if (e.getKeyChar == ' ') {
           if (alphaSequence.hasNext)
-            fdp.step(alphaSequence.next)
+            fdp.step(alphaSequence.next())
           frame.repaint()
         }
       }

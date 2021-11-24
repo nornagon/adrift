@@ -117,7 +117,7 @@ case class Gradient(colors: Seq[Color]) {
     if (t >= 1f) return colors.last
     if (t <= 0f) return colors.head
     val tScaled = t * (colors.size - 1)
-    val tClamped = math.max(0, math.min(colors.size - 1, tScaled))
+    val tClamped = math.max(0, math.min(colors.size.toFloat - 1, tScaled))
     val aIndex = math.min(colors.size - 2, tClamped.floor.toInt)
     val bIndex = aIndex + 1
     val a = colors(aIndex)

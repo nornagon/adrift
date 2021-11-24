@@ -22,11 +22,11 @@ case class Seed(
       val pos = state.getItemTile(self)
       val gas = state.levels(pos.levelId).gasComposition(pos.xy)
       val temp = state.levels(pos.levelId).temperature(pos.xy)
-      if (gas.totalPressure() < survival.minPressure || temp < survival.minTemperature || temp > survival.maxTemperature) {
+      if (gas.totalPressure < survival.minPressure || temp < survival.minTemperature || temp > survival.maxTemperature) {
         dead = true
       }
       if (!dead) {
-        if (gas.totalPressure() >= germination.minPressure && temp >= germination.minTemperature && temp <= germination.maxTemperature) {
+        if (gas.totalPressure >= germination.minPressure && temp >= germination.minTemperature && temp <= germination.maxTemperature) {
           germinationTimer += 1
         } else {
           germinationTimer = 0
