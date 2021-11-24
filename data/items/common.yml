@@ -80,6 +80,8 @@
   display: DOOR_CLOSED
   behavior:
     - DoorOpener: {}
+    - Affixed: {}
+    - DisplaysConnectedTo: { terrainTypes: [ wall ] }
 
 - type: item
   name: local motion sensor

@@ -58,11 +58,21 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               state.resetGas()
             case "showcable" =>
               state.showCableDebug = !state.showCableDebug
-            case setGas("oxygen", pp) =>
+            case setGas("o2", pp) =>
               val level = state.levels(state.player.levelId)
               level.setGasComposition(
                 state.player.x, state.player.y,
                 level.gasComposition(state.player.x, state.player.y).copy(oxygen = pp.toFloat))
+            case setGas("n2", pp) =>
+              val level = state.levels(state.player.levelId)
+              level.setGasComposition(
+                state.player.x, state.player.y,
+                level.gasComposition(state.player.x, state.player.y).copy(nitrogen = pp.toFloat))
+            case setGas("co2", pp) =>
+              val level = state.levels(state.player.levelId)
+              level.setGasComposition(
+                state.player.x, state.player.y,
+                level.gasComposition(state.player.x, state.player.y).copy(carbonDioxide = pp.toFloat))
             case setTemp(t) =>
               val level = state.levels(state.player.levelId)
               level.setTemperature(state.player.x, state.player.y, t.toFloat)
