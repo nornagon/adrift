@@ -79,7 +79,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   private def menuEntries: Seq[MenuEntry] =
-    items.map(ItemEntry) ++
+    items.map(ItemEntry.apply) ++
       missingParts.map { case (k, c) => MissingItemEntry(k, c) }
 
   case class Command(name: String, execute: () => Unit, available: Boolean = true) {
@@ -147,10 +147,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
     state.receive(Action.Remove(parents, item))
 
     var ps = parents
-    do {
+    while ({
       selected = math.min(selected, ps.last.parts.size - 1)
       ps = ps.init
-    } while (selected < 0 && ps.nonEmpty)
+      selected < 0 && ps.nonEmpty
+    }) {}
     if (selected < 0) display.popScreen()
   }
 

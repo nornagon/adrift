@@ -96,7 +96,7 @@ class StressMajorization {
     var count = 0
     var prevStress = computeStress
     var curStress = Double.PositiveInfinity
-    do {
+    while ({
       if (count > 0) prevStress = curStress
       for (u <- 0 until size) {
         if (!this.isFixedPosition(u)) {
@@ -106,9 +106,8 @@ class StressMajorization {
       }
       curStress = computeStress
       //assert(curStress <= prevStress, s"stress must never increase (was $prevStress, now $curStress)")
-    } while (
       !done({ count += 1; count - 1 }, prevStress, curStress)
-    )
+    }) {}
   }
 
   /**

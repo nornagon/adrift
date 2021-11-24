@@ -255,7 +255,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
 
   def init(): Unit = {
     window.init(width = windowWidthChars * font.tileWidth * font.scaleFactor, height = windowHeightChars * font.tileHeight * font.scaleFactor)
-    window.onChar { char: Int =>
+    window.onChar { (char: Int) =>
       if (screens.nonEmpty)
         screens.last.char(char)
     }

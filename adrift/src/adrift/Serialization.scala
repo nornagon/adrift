@@ -106,7 +106,7 @@ object Serialization {
   implicit val encodeLevelIdAsKey: KeyEncoder[LevelId] = (t: LevelId) => t.id
   implicit val decodeLevelIdAsKey: KeyDecoder[LevelId] = (t: String) => Some(LevelId(t))
   implicit val encodeLevelId: Encoder[LevelId] = (t: LevelId) => t.id.asJson
-  implicit def decodeLevelId: Decoder[LevelId] = (c: HCursor) => c.as[String].map(LevelId)
+  implicit def decodeLevelId: Decoder[LevelId] = (c: HCursor) => c.as[String].map(LevelId(_))
 
   implicit val circuitCodec: Codec[Circuit] = deriveConfiguredCodec[Circuit]
   implicit val locationCodec: Codec[Location] = deriveConfiguredCodec[Location]

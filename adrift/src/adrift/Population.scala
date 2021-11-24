@@ -34,7 +34,7 @@ object Population {
   // TODO: poisson?
 
   implicit val decodeCountSpec: Decoder[CountSpec] = (c: HCursor) => {
-    c.as[Int].map(CountSpecExact)
+    c.as[Int].map(CountSpecExact.apply)
       .orElse(c.as[String].flatMap {
         case diceRegex(numDice, numSides) => Right(CountSpecDice(numDice.toInt, numSides.toInt))
         case rangeRegex(low, high) => Right(CountSpecRange(low.toInt, high.toInt))
@@ -46,7 +46,7 @@ object Population {
   final case class Chance(chance: Double)
 
   implicit val decodeChance: Decoder[Chance] = (c: HCursor) => {
-    c.as[Double].map(Chance)
+    c.as[Double].map(Chance.apply)
       .orElse(c.as[String].flatMap {
         case percentageRegex(percentage) => Right(Chance(percentage.toDouble / 100))
         case other => Left(DecodingFailure(s"Unparseable chance: '$other'", c.history))

@@ -112,6 +112,31 @@ class SpriteBatch private (program: ShaderProgram, shaderAttribs: Seq[VertexAttr
 
   def drawRegion(
     tex: Texture,
+    srcX: Int,
+    srcY: Int,
+    srcWidth: Int,
+    srcHeight: Int,
+    dstX: Int,
+    dstY: Int,
+    dstWidth: Int,
+    dstHeight: Int,
+    color: Color
+  ): Unit =
+    drawRegion(
+      tex,
+      srcX.toFloat,
+      srcY.toFloat,
+      srcWidth.toFloat,
+      srcHeight.toFloat,
+      dstX.toFloat,
+      dstY.toFloat,
+      dstWidth.toFloat,
+      dstHeight.toFloat,
+      color,
+    )
+
+  def drawRegion(
+    tex: Texture,
     srcX: Float,
     srcY: Float,
     srcWidth: Float,

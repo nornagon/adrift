@@ -41,20 +41,20 @@ object adrift extends ScalaModule {
     ivy"org.choco-solver:choco-solver:4.0.6",
     ivy"org.choco-solver:choco-graph:4.2.2",
 
-    ivy"org.scalanlp::breeze:1.0",
-    ivy"org.scalanlp::breeze-natives:1.0",
-    ivy"org.scalanlp::breeze-viz:1.0",
+    //ivy"org.scalanlp::breeze:1.0",
+    //ivy"org.scalanlp::breeze-natives:1.0",
+    //ivy"org.scalanlp::breeze-viz:1.0",
 
-    ivy"io.circe::circe-core:0.14.0-M6",
-    ivy"io.circe::circe-generic:0.14.0-M6",
-    ivy"io.circe::circe-generic-extras:0.13.0",
-    ivy"io.circe::circe-parser:0.14.0-M6",
-    ivy"io.circe::circe-optics:0.13.0",
-    ivy"io.circe::circe-yaml:0.13.0",
+    ivy"io.circe::circe-core:0.14.1",
+    ivy"io.circe::circe-generic:0.14.1",
+    ivy"io.circe::circe-generic-extras:0.14.1",
+    ivy"io.circe::circe-parser:0.14.1",
+    ivy"io.circe::circe-optics:0.14.1",
+    ivy"io.circe::circe-yaml:0.14.1",
 
     ivy"com.googlecode.soundlibs:mp3spi:1.9.5.4",
 
-    ivy"org.scala-lang.modules::scala-parallel-collections:0.2.0",
+    ivy"org.scala-lang.modules::scala-parallel-collections:1.0.3",
   ) ++ Agg.from(
     Seq(
       "lwjgl",
