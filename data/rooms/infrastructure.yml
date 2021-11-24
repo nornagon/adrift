@@ -441,4 +441,4 @@
     - AtmoPump:
         inPort: In
         outPort: Out
-        minPressure: 10
+        maxPressureGradient: 100

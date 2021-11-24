@@ -65,7 +65,7 @@ object Message {
   case class ReceiveFluid(layers: LayerSet, var mixture: Map[String, Float /* kg */]) extends Message
   case class ReceivedFluid(inPort: String, var mixture: Map[String, Float /* kg */]) extends Message
 
-  case class TotalPressure(layer: Int, var totalPressure: GasComposition, var count: Float) extends Message
+  case class TotalPressure(layer: Int, var totalAmountOfSubstance: GasComposition, var totalVolume: Float) extends Message
   case class AdjustPressure(layer: Int, averagePressure: GasComposition, t: Float) extends Message
   case class GetPressure(port: String, var totalPressure: Option[(GasComposition, Float)]) extends Message
   case class AdjustPressureOnPort(port: String, averagePressure: GasComposition, t: Float) extends Message

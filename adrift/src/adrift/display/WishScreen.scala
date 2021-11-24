@@ -54,6 +54,8 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
               state.showTempDebug = !state.showTempDebug
             case "showgas" =>
               state.showGasDebug = !state.showGasDebug
+            case "resetgas" =>
+              state.resetGas()
             case "showcable" =>
               state.showCableDebug = !state.showCableDebug
             case setGas("oxygen", pp) =>

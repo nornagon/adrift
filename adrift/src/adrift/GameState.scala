@@ -112,6 +112,12 @@ object Level {
 }
 
 class GameState(var data: Data, val random: Random) {
+  def resetGas(): Unit = {
+    val level = levels(player.levelId)
+    for ((x, y) <- level.terrain.indices)
+      level.setGasComposition(x, y, GasComposition.earthLike)
+  }
+
   var levels = mutable.Map.empty[LevelId, Level]
   var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
@@ -318,8 +324,8 @@ class GameState(var data: Data, val random: Random) {
         val message = Message.TotalPressure(i, GasComposition.zero, 0)
         for ((x, y) <- cluster)
           broadcastToLocation(OnFloor(Location(levelId, (x, y))), message)
-        if (message.count > 0) {
-          val averagePressure = message.totalPressure / message.count
+        if (message.totalVolume > 0) {
+          val averagePressure = message.totalAmountOfSubstance / message.totalVolume
           for ((x, y) <- cluster)
             broadcastToLocation(OnFloor(Location(levelId, (x, y))), Message.AdjustPressure(i, averagePressure, 0.5f))
         }

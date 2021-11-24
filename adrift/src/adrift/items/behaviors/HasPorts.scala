@@ -106,8 +106,8 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
           val pressureOnThisPort = state.sendMessage(self, Message.GetPressure(port, None)).totalPressure
           pressureOnThisPort match {
             case Some((pressure, volume)) =>
-              m.totalPressure += pressure
-              m.count += volume
+              m.totalAmountOfSubstance += pressure * volume
+              m.totalVolume += volume
             case None =>
               // port does not contribute to pressure network
           }

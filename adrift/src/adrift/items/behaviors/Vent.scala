@@ -1,6 +1,6 @@
 package adrift.items.behaviors
 
-import adrift.items.Message.{AdjustPressureOnPort, GetPressure, ReceivedFluid}
+import adrift.items.Message.{AdjustPressureOnPort, GetPressure, ReceivedFluid, Tick}
 import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, GasComposition, OnFloor}
 
@@ -31,7 +31,7 @@ case class Vent(portName: String) extends Behavior {
       }
 
 
-    case m @ ReceivedFluid(inPort, mixture) if inPort == portName =>
+    case m@ReceivedFluid(inPort, mixture) if inPort == portName =>
       if (state.isFunctional(self)) {
         val loc = state.items.lookup(self)
         loc match {
@@ -62,66 +62,42 @@ case class Vent(portName: String) extends Behavior {
 case class AtmoPump(
   inPort: String,
   outPort: String,
-  minPressure: Float,
-  var internalPressure: GasComposition = GasComposition.zero,
-  var blocked: Boolean = false
+  maxPressureGradient: Float,
+  var internalPressureIn: GasComposition = GasComposition.zero,
+  var internalPressureOut: GasComposition = GasComposition.zero,
 ) extends Behavior {
-  private val internalVolume = 100f
-
-  private def inPortPressure =
-    if (internalPressure.totalPressure < minPressure) {
-      internalPressure
-    } else {
-      internalPressure * (minPressure / internalPressure.totalPressure)
-    }
+  // The atmo pump has 2 tanks. One is equalized with the in port, one is equalized with the out port.
+  // Each tick, the pump moves half the gas from the in tank to the out tank.
+  // If the pressure gradient exceeds |maxPressureGradient|, the pump stops working.
+  private val internalTankVolume = 100f
 
   override def receive(
     state: GameState,
     self: Item,
     message: Message
   ): Unit = message match {
-
-    case m: GetPressure if m.port == inPort && !blocked =>
-      m.totalPressure = Some((inPortPressure, internalVolume))
-
-    case m: AdjustPressureOnPort if m.port == inPort =>
-      if (!blocked) {
-        val delta = (m.averagePressure - inPortPressure) * m.t
-        internalPressure += delta
+    case m: GetPressure =>
+      if (m.port == inPort) {
+        m.totalPressure = Some((internalPressureIn, internalTankVolume))
+      } else if (m.port == outPort) {
+        m.totalPressure = Some((internalPressureOut, internalTankVolume))
       }
-      // We block the valve if the pressure on the network falls below our min.
-      blocked = m.averagePressure.totalPressure < minPressure
+    case m: AdjustPressureOnPort =>
+      if (m.port == inPort) {
+        val delta = (m.averagePressure - internalPressureIn) * m.t
+        internalPressureIn += delta
+      } else if (m.port == outPort) {
+        val delta = (m.averagePressure - internalPressureOut) * m.t
+        internalPressureOut += delta
+      }
 
-    case m: GetPressure if m.port == outPort =>
-      m.totalPressure = Some((internalPressure, internalVolume))
-
-    case m: AdjustPressureOnPort if m.port == outPort =>
-      val delta = (m.averagePressure - internalPressure) * m.t
-      internalPressure += delta
-
-
-      /*
     case Tick =>
-      if (state.isFunctional(self)) {
-        val loc = state.items.lookup(self)
-        loc match {
-          case OnFloor(l) =>
-            val gc = state.levels(l.levelId).gasComposition(l.xy)
-            val mixture = Map(
-              "oxygen" -> gc.oxygen,
-              "nitrogen" -> gc.nitrogen,
-              "carbon dioxide" -> gc.carbonDioxide,
-            )
-            val remainder = state.sendMessage(self, Message.PushFluid(portName, mixture)).mixture
-
-            state.levels(l.levelId).setGasComposition(l.x, l.y, GasComposition(
-              remainder.getOrElse("oxygen", 0),
-              remainder.getOrElse("carbon dioxide", 0),
-              remainder.getOrElse("nitrogen", 0),
-            ))
-        }
+      val diff = internalPressureOut.totalPressure - internalPressureIn.totalPressure
+      if (diff < maxPressureGradient) { // if the gradient is shallow enough, we can pump against it
+        val delta = internalPressureIn * 0.5f
+        internalPressureIn -= delta
+        internalPressureOut += delta
       }
-       */
     case _ =>
   }
 }

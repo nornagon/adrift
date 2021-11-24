@@ -195,7 +195,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         case Data => level.dataCables
         case Fluid => level.fluidCables
       }
-      val cablesHere = LayerSet(cables(cursor))
+      val cablesHere = LayerSet(cables.getOrElse(cursor, 0))
       c :+= Text("Cables")
       c :+= Text(
         ((if (connecting && connectingCursor == -1) "\u0010" else " ") +
