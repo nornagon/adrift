@@ -1,9 +1,7 @@
 package adrift.items.behaviors
 
 import adrift.items.{Behavior, Item, Message}
-import adrift.{GameState, GasComposition, LevelId, Location, OnFloor}
-
-import scala.collection.mutable
+import adrift.{GameState, LevelId, Location, OnFloor}
 
 case class PortSpec(
   `type`: String,
@@ -66,33 +64,6 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
         }
       }
 
-    case m: Message.PushFluid =>
-      if (state.isFunctional(self)) {
-        val outLayers = portLayers(p => p.`type` == "fluid-out" && p.name == m.outPort)
-        val outs = connectedItems(state, self, outLayers, "fluid-in").toSeq
-        val perOut = m.mixture.map { case (k, v) => k -> (v / outs.size) }
-        val remainder = mutable.Map.empty[String, Float].withDefaultValue(0)
-        for (item <- outs) {
-          val remaining = state.sendMessage(item, Message.ReceiveFluid(outLayers, perOut)).mixture
-          for ((k, v) <- remaining; if v != 0)
-            remainder(k) += v
-        }
-        m.mixture = remainder.toMap
-      }
-
-    case m: Message.ReceiveFluid =>
-      if (state.isFunctional(self)) {
-        val ports = (for ((portName, layers) <- connections; if layers.intersects(m.layers)) yield portName).toSeq
-        val mixturePerPort = m.mixture.map { case (k, v) => k -> (v / ports.size) }
-        val remainder = mutable.Map.empty[String, Float].withDefaultValue(0)
-        for (port <- ports) {
-          val remaining = state.sendMessage(self, Message.ReceivedFluid(port, mixturePerPort)).mixture
-          for ((k, v) <- remaining; if v != 0)
-            remainder(k) += v
-        }
-        m.mixture = remainder.toMap
-      }
-
     case m: Message.TotalPressure =>
       if (state.isFunctional(self)) {
         val ports =
@@ -100,7 +71,7 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
             (portName, layers) <- connections
             if layers.intersects(LayerSet(1 << m.layer))
             spec <- this.ports.find(p => p.name == portName)
-            if spec.`type` == "fluid-in" || spec.`type` == "fluid-out"
+            if spec.`type` == "fluid"
           } yield portName).toSeq
         for (port <- ports) {
           val pressureOnThisPort = state.sendMessage(self, Message.GetPressure(port, None)).totalPressure
@@ -121,7 +92,7 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
             (portName, layers) <- connections
               if layers.intersects(LayerSet(1 << m.layer))
               spec <- this.ports.find(p => p.name == portName)
-              if spec.`type` == "fluid-in" || spec.`type` == "fluid-out"
+              if spec.`type` == "fluid"
           } yield portName).toSeq
         for (port <- ports) {
           state.sendMessage(self, Message.AdjustPressureOnPort(port, m.averagePressure, m.t))
@@ -153,7 +124,7 @@ case class HasPorts(ports: Seq[PortSpec], var connections: Map[String, LayerSet]
     val conns = connType match {
       case "data-in" | "data-out" => state.dataLayerConnections
       case "power-in" | "power-out" => state.powerLayerConnections
-      case "fluid-in" | "fluid-out" => state.fluidLayerConnections
+      case "fluid" => state.fluidLayerConnections
     }
 
     connectedLocations(conns, location, layers).flatMap {

@@ -61,9 +61,6 @@ object Message {
   case class SendDataPacket(outPort: String, value: Byte) extends Message
   case class DataPacket(layers: LayerSet, value: Byte) extends Message
   case class ReceivedDataPacket(inPort: String, value: Byte) extends Message
-  case class PushFluid(outPort: String, var mixture: Map[String, Float /* kg */]) extends Message
-  case class ReceiveFluid(layers: LayerSet, var mixture: Map[String, Float /* kg */]) extends Message
-  case class ReceivedFluid(inPort: String, var mixture: Map[String, Float /* kg */]) extends Message
 
   case class TotalPressure(layer: Int, var totalAmountOfSubstance: GasComposition, var totalVolume: Float) extends Message
   case class AdjustPressure(layer: Int, averagePressure: GasComposition, t: Float) extends Message

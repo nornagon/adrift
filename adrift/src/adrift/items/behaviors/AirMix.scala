@@ -8,8 +8,7 @@ case class AirMix(
   o2Port: String,
   co2Port: String,
   n2Port: String,
-  atmoInPort: String,
-  atmoOutPort: String,
+  atmoPort: String,
   var internalPressure: GasComposition = GasComposition.zero,
 ) extends Behavior {
   private val internalVolume = 100f
@@ -18,10 +17,10 @@ case class AirMix(
     self: Item,
     message: Message
   ): Unit = message match {
-    case m: GetPressure if m.port == atmoInPort || m.port == atmoOutPort =>
+    case m: GetPressure if m.port == atmoPort =>
       m.totalPressure = Some((internalPressure, internalVolume))
 
-    case m: AdjustPressureOnPort if m.port == atmoInPort || m.port == atmoOutPort =>
+    case m: AdjustPressureOnPort if m.port == atmoPort =>
       internalPressure += (m.averagePressure - internalPressure) * m.t
 
     case m: GetPressure if m.port == o2Port =>

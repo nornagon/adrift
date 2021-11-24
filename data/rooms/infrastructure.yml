@@ -182,22 +182,19 @@
   behavior:
     - HasPorts:
         ports:
-          - type: fluid-in
+          - type: fluid
             name: O2 reserve
-          - type: fluid-in
+          - type: fluid
             name: N2 reserve
-          - type: fluid-in
+          - type: fluid
             name: CO2 reserve
-          - type: fluid-in
-            name: Atmo In
-          - type: fluid-out
-            name: Atmo Out
+          - type: fluid
+            name: Atmo
     - AirMix:
         o2Port: O2 reserve
         co2Port: CO2 reserve
         n2Port: N2 reserve
-        atmoInPort: Atmo In
-        atmoOutPort: Atmo Out
+        atmoPort: Atmo
 
 
 
@@ -262,7 +259,7 @@
   behavior:
     - HasPorts:
         ports:
-          - { type: fluid-in, name: O2 }
+          - { type: fluid, name: O2 }
     - GasTank:
         port: O2
         regulatedPressure: 21
@@ -279,7 +276,7 @@
   behavior:
     - HasPorts:
         ports:
-          - { type: fluid-in, name: CO2 }
+          - { type: fluid, name: CO2 }
     - GasTank:
         port: CO2
         regulatedPressure: 1
@@ -296,7 +293,7 @@
   behavior:
     - HasPorts:
         ports:
-          - { type: fluid-in, name: N2 }
+          - { type: fluid, name: N2 }
     - GasTank:
         port: N2
         regulatedPressure: 78
@@ -423,7 +420,7 @@
     - Affixed: {}
     - HasPorts:
         ports:
-          - { name: In/Out, type: fluid-in }
+          - { name: In/Out, type: fluid }
     - Vent:
         portName: In/Out
 
@@ -436,8 +433,8 @@
     - Affixed: {}
     - HasPorts:
         ports:
-          - { name: In, type: fluid-in }
-          - { name: Out, type: fluid-out }
+          - { name: In, type: fluid }
+          - { name: Out, type: fluid }
     - AtmoPump:
         inPort: In
         outPort: Out

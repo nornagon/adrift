@@ -30,7 +30,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
   def queryTypes: Seq[String] = displaying match {
     case Power => Seq("power-in", "power-out")
     case Data => Seq("data-in", "data-out")
-    case Fluid => Seq("fluid-in", "fluid-out")
+    case Fluid => Seq("fluid")
   }
   def displayingLayers: LayerSet = displaying match {
     case Power => displayedPowerLayers
@@ -226,7 +226,7 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
                       (p.`type` match {
                         case "data-in" | "data-out" => dataColor
                         case "power-in" | "power-out" => powerColor
-                        case "fluid-in" | "fluid-out" => fluidColor
+                        case "fluid" => fluidColor
                       }).darken(if (intersectsWithCurrentView) 1.0f else 0.5f)
                     ),
                   halfWidth = false

@@ -364,7 +364,7 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
                         state.levels(levelId).powerCables
                       case "data-in" | "data-out" =>
                         state.levels(levelId).dataCables
-                      case "fluid-in" | "fluid-out" =>
+                      case "fluid" =>
                         state.levels(levelId).fluidCables
                     })(tx, ty) |= spec.layer
                     bhvr.connections += (spec.port -> new LayerSet(spec.layer))
@@ -480,7 +480,7 @@ case class Static(
                         state.levels(levelId).powerCables
                       case "data-in" | "data-out" =>
                         state.levels(levelId).dataCables
-                      case "fluid-in" | "fluid-out" =>
+                      case "fluid" =>
                         state.levels(levelId).fluidCables
                     })(tx, ty) |= spec.layer
                     bhvr.connections += (spec.port -> new LayerSet(spec.layer))
