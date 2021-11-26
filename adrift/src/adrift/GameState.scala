@@ -296,7 +296,7 @@ class GameState(var data: Data, val random: Random) {
   var walkThroughWalls = false
   var seeThroughWalls = false
   var showTempDebug = false
-  var showGasDebug = false
+  var showGasDebug: Option[String] = None
   var showCableDebug = false
   var invulnerable = false
 

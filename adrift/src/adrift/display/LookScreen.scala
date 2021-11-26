@@ -1,7 +1,7 @@
 package adrift.display
 
 import adrift.{Color, GameState, Location, OnFloor}
-import org.lwjgl.glfw.GLFW._
+import org.lwjgl.glfw.GLFW.*
 
 class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   var Location(levelId, x, y) = state.player
@@ -18,7 +18,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout3._
+    import layout3.*
     val loc = Location(state.player.levelId, x, y)
     val isVisible = state.isVisible(loc)
     val width = 20
@@ -36,7 +36,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
             Seq(Text(terrain.name.withFg(UI.Color.lightGreen))) ++
               items.take(9).map(i => Text(state.itemDisplayName(i))) ++
               (if (items.size > 9) Seq(Text(s"${items.size - 9} more...")) else Seq.empty) ++
-              (if (state.showGasDebug) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
+              (if (state.showGasDebug.nonEmpty) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
           ))
           draw(
             renderer,
@@ -50,9 +50,9 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
       display.worldToScreen(state)(x, y) match {
         case Some((sx, sy)) =>
           renderer.drawChar(sx, sy, ' ', fg = Color.Black, bg = Color.White)
-          if (state.showGasDebug) {
+          if (state.showGasDebug.nonEmpty) {
             val w = Border(Column(
-              (if (state.showGasDebug) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
+              (if (state.showGasDebug.nonEmpty) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
             ))
             draw(
               renderer,

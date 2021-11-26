@@ -214,7 +214,7 @@ object Appearance {
     val debug =
       if (state.showTempDebug)
         f" (${level.temperature(location.x, location.y) - 273}%.1f C)"
-      else if (state.showGasDebug)
+      else if (state.showGasDebug.nonEmpty)
         s" (${level.gasComposition(location.x, location.y)})"
       else
         ""
@@ -374,13 +374,13 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
   }
 
   private def sidebar(): layout3.Widget = {
-    import layout3._
+    import layout3.*
     Column(crossAxisAlignment = CrossAxisAlignment.Stretch, children = Seq(
       ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10), content = Border(Column(
         state.symptoms.take(5).map(t => Text(t.description)) ++
           (if (state.showTempDebug)
             Seq(Text(state.levels(state.player.levelId).temperature(state.player.xy).toString)) else Seq.empty) ++
-          (if (state.showGasDebug)
+          (if (state.showGasDebug.nonEmpty)
             Seq(Text(state.levels(state.player.levelId).gasComposition(state.player.xy).toString)) else Seq.empty) ++
           Seq(Text(state.currentTime.toString))
       ))),
@@ -439,14 +439,20 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
 
       val level = state.levels(levelId)
 
-      if (state.showGasDebug && level.terrain.contains(x, y)) {
+      if (state.showGasDebug.nonEmpty && level.terrain.contains(x, y)) {
         val gc = level.gasComposition(x, y)
+        val gasLevel = state.showGasDebug.get match {
+          case "o2" => gc.oxygen
+          case "co2" => gc.carbonDioxide
+          case "n2" => gc.nitrogen
+          case _ => 0f
+        }
         val (min, max) = (0, 42)
         val gradient = Gradient(
           //Seq(Color.fromHex("#fee8c8"), Color.fromHex("#fdbb84"), Color.fromHex("#e34a33")).map(_.get)
           Seq(Color.fromHex("#0000ff"), Color.fromHex("#fee8c8"), Color.fromHex("#ff0000")).map(_.get)
         )
-        val t = (gc.oxygen - min) / (max - min)
+        val t = (gasLevel - min) / (max - min)
         val color = gradient.sample(t).copy(a = 0.8f)
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, fg = color, bg = Color(0f, 0f, 0f, 0f))
       }

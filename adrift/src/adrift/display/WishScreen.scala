@@ -8,6 +8,7 @@ import org.lwjgl.glfw.GLFW
 class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
   val setTemp = raw"settemp (-?[0-9.]+)".r
   val setGas = raw"setgas (\S+) (-?[0-9.]+)".r
+  val showGas = raw"showgas(?: (\S+))?".r
   val item = raw"item (.+)".r
   var input = ""
 
@@ -53,7 +54,12 @@ class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
             case "showtemp" =>
               state.showTempDebug = !state.showTempDebug
             case "showgas" =>
-              state.showGasDebug = !state.showGasDebug
+              if (state.showGasDebug.nonEmpty)
+                state.showGasDebug = None
+              else
+                state.showGasDebug = Some("o2")
+            case showGas(s) =>
+              state.showGasDebug = Some(s)
             case "resetgas" =>
               state.resetGas()
             case "showcable" =>
