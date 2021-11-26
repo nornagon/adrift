@@ -19,13 +19,23 @@ object DirectionKey {
       case GLFW_KEY_N => Some((1, 1))
       case _ => None
     }
+
+  // Also admits '.' to specify 'here'.
+  object WithHere {
+    def unapply(key: Int): Option[(Int, Int)] =
+      key match {
+        case DirectionKey((dx, dy)) => Some((dx, dy))
+        case GLFW_KEY_PERIOD => Some((0, 0))
+        case _ => None
+      }
+  }
 }
 
 class ExamineDirectionScreen(display: GLFWDisplay, state: GameState) extends Screen {
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     if (action == GLFW_PRESS) {
       key match {
-        case DirectionKey((dx, dy)) =>
+        case DirectionKey.WithHere((dx, dy)) =>
           display.popScreen()
           val location = state.player + (dx, dy)
           if (state.items.lookup(OnFloor(location)).nonEmpty)
