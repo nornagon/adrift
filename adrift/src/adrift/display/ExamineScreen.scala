@@ -64,7 +64,7 @@ object UI {
 }
 
 class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) extends Screen {
-  import UI.Color._
+  import UI.Color.*
   var selected: Int = 0
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
@@ -201,7 +201,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout3._
+    import layout3.*
 
     val width = 24
     val Some((sx, sy)) = display.worldToScreen(state)(location.xy)
