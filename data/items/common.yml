@@ -82,6 +82,14 @@
     - DoorOpener: {}
     - Affixed: {}
     - DisplaysConnectedTo: { terrainTypes: [ wall ] }
+    #- UsesElectricity: { perUse: 30 }  # TODO: connect doors to ship power w/ cables
+    - ActivatedByDataPort: { portName: Open }
+    - HasPorts:
+        ports:
+          - type: data-in
+            name: Open
+          - type: power-in
+            name: Power
 
 - type: item
   name: local motion sensor

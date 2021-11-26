@@ -400,9 +400,9 @@ case class WFC(parts: Seq[PartWithOpts], defs: Map[String, PaletteDef]) extends 
 case class Static(
   layout: String,
   defs: Map[String, PaletteDef],
-  powerCables: String,
-  fluidCables: String,
-  dataCables: String,
+  powerCables: String = "",
+  fluidCables: String = "",
+  dataCables: String = "",
 ) extends RoomGenAlgorithm {
   private val lines = layout.split("\n")
   private val powerCableLines = powerCables.split("\n")

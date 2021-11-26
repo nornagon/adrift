@@ -6,3 +6,39 @@
     - Heater: { dq: 5 }
     - Thermostat: { }
   display: VENT
+
+- type: item
+  name: diagtest
+  volume: .5 L
+  description: test item for testing diagnosis mechanics
+  display: SMALL_EQUIPMENT
+  parts:
+    - { type: diagtest_auto, count: 2, disassembled_with: SCREWING }
+    - { type: diagtest_broken, count: 2, disassembled_with: SCREWING }
+    - { type: diagtest_fine, count: 2, disassembled_with: SCREWING }
+  behavior:
+  #- Diagnosable: { op: VOLTAGE_MEASURING }
+
+- type: item
+  name: diagtest_auto
+  volume: 1 L
+  description: this item is not diagnosable, i.e. automatically diagnosed
+  display: SMALL_EQUIPMENT
+
+- type: item
+  name: diagtest_broken
+  volume: 1 L
+  description: this item is diagnosable and broken.
+  display: SMALL_EQUIPMENT
+  behavior:
+    - Diagnosable: { op: VOLTAGE_MEASURING }
+    - Broken: {}
+
+- type: item
+  name: diagtest_fine
+  volume: 1 L
+  description: this item is diagnosable and not broken.
+  display: SMALL_EQUIPMENT
+  behavior:
+    - Diagnosable: { op: VOLTAGE_MEASURING }
+

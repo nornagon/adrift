@@ -1,4 +1,31 @@
 - type: roomgen
+  name: 3rm
+  algorithm: Static
+  options:
+    layout: |
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+      x.........x.............x........x
+      x.........x.............x........x
+      x.........D.............D........x
+      x.........x.............x........x
+      x.........x.............x........x
+      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    defs:
+      .: { terrain: floor }
+      x: { terrain: wall }
+      D:
+        terrain: floor
+        items:
+          each:
+            - item: bulkhead door
+              connect:
+                - { port: Open, layer: 0x1 }
+                - { port: Power, layer: 0x1 }
+            - item: mounted button
+              connect:
+                - { port: Active, layer: 0x1 }
+
+- type: roomgen
   name: defiant
   algorithm: Static
   options:

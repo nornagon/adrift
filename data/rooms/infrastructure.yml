@@ -217,13 +217,13 @@
   description: a bulky unit for dumping large amounts of heat into some air
   display: LARGE_EQUIPMENT
   behavior:
-    - Heater: {}
+    - Heater: { dq: 5 }
     - ActivatedByDataPort: { portName: Enabled }
     - HasPorts:
         ports:
           - { type: power-in, name: Power }
           - { type: data-in, name: Enabled }
-          - { type: fluid-out, name: Air Out }
+          - { type: fluid, name: Air Out }
     - UsesElectricity: { perUse: 300 }
 
 - type: item
@@ -249,7 +249,8 @@
         ports:
           - { type: power-in, name: Power }
           - { type: data-in, name: Enabled }
-          - { type: fluid-out, name: Air Out }
+          - { type: fluid, name: Air Out }
+    - UsesElectricity: { perUse: 300 }
 
 - type: item
   name: oxygen tank
@@ -267,6 +268,52 @@
           oxygen: 10000
           carbonDioxide: 0
           nitrogen: 0
+
+- type: item
+  name: gas tank
+  volume: 300 L
+  description: A big canister for storing gas.
+  display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid, name: Gas }
+    - GasTank:
+        port: Gas
+        internalPressure:
+          oxygen: 0
+          carbonDioxide: 0
+          nitrogen: 0
+
+- type: item
+  name: regulator
+  volume: 20 L
+  description: Regulates gas pressure.
+  display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid, name: In }
+          - { type: fluid, name: Out }
+    - Regulator:
+        inPort: In
+        outPort: Out
+        targetPressure: 50
+
+- type: item
+  name: compressor
+  volume: 20 L
+  description: Compresses gas.
+  display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid, name: In }
+          - { type: fluid, name: Out }
+    - Compressor:
+        inPort: In
+        outPort: Out
+        maxPressure: 10000
 
 - type: item
   name: CO2 tank
