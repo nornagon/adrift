@@ -261,7 +261,16 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                 }) ++ Seq(
                   ConstrainedBox(BoxConstraints(minHeight = 1)),
                   Text(item.kind.description.withFg(disabledGreen))
-                ) ++ (
+                ) ++ {
+                  val Message.IsDiagnosable(diagnosable, diagnoseOp) = state.sendMessage(item, Message.IsDiagnosable())
+                  val Message.IsDiagnosed(diagnosed) = state.sendMessage(item, Message.IsDiagnosed())
+                  if (diagnosable && !diagnosed) {
+                    Seq(
+                      ConstrainedBox(BoxConstraints(minHeight = 1)),
+                      Text("You could diagnose this with ".withFg(lightGreen) + diagnoseOp.map(_.id).getOrElse("???").withFg(red) + ".".withFg(lightGreen))
+                    )
+                  } else Seq.empty
+                } ++ (
                   for (parent <- openStack.lastOption; missingOp <- missingRemoveOp(parent, item)) yield {
                     Seq(
                       ConstrainedBox(BoxConstraints(minHeight = 1)),
@@ -285,7 +294,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
             if (actionCS.nonEmpty) {
               Seq(
                 ConstrainedBox(BoxConstraints(minHeight = 1)),
-                Text(actionCS.reduce(_ + ColoredString(" ", Seq.empty) + _))
+                Text(actionCS.reduce(_ + " " + _))
               )
             } else Seq.empty
           }

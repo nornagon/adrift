@@ -238,6 +238,7 @@ object GlyphRenderer {
 
     def ann(from: Int, until: Int, fg: Color): ColoredString = copy(as = as :+ Ann(from, until, fg))
     def withFg(fg: Color): ColoredString = copy(as = Seq(Ann(0, s.length, fg)))
+    def asColoredString: ColoredString = this
 
     def plain: String = parts.view.map(_._1).mkString("")
   }
