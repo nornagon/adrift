@@ -115,7 +115,7 @@ class AtmoSim(val width: Int, val height: Int) {
     val wasBlendingEnabled = glIsEnabled(GL_BLEND)
     glDisable(GL_BLEND)
 
-    glFinish()
+    timed("  first glFinish") { glFinish() }
     val start = System.nanoTime()
     val source = Texture.fromFloat4Array(width, height, atmosphere)
     val sourceFb = new Framebuffer(source)
@@ -136,15 +136,9 @@ class AtmoSim(val width: Int, val height: Int) {
       Map("temperature" -> source, "heatTransfer" -> transferTexture, "heatCapacity" -> heatCapacityTexture),
       target
     )
-    val start2 = System.nanoTime()
-    glFinish()
-    println(f"  glFinish took ${(System.nanoTime() - start2) / 1e6}%.2f ms")
-    val start3 = System.nanoTime()
-    val buf = target.texture.readFloat4()
-    println(f"  copy back took ${(System.nanoTime() - start3) / 1e6}%.2f ms")
-    val start5 = System.nanoTime()
-    buf.get(atmosphere)
-    println(f"  copy took ${(System.nanoTime() - start5) / 1e6}%.2f ms")
+    timed("  glFinish") { glFinish() }
+    val buf = timed("  copy back") { target.texture.readFloat4() }
+    timed("  copy") { buf.get(atmosphere) }
     source.dispose()
     target.dispose()
     glCheckError()

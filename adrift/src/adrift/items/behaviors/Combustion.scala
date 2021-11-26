@@ -26,6 +26,8 @@ case class CombustsContents(rate: Int, var combustingItemJoulesRemaining: Int = 
       }
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }
 
 case class Combustible(joules: Int) extends Behavior {

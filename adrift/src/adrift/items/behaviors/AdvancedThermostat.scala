@@ -32,4 +32,6 @@ case class AdvancedThermostat(
       }
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }

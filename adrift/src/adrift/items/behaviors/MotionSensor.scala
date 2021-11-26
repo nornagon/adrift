@@ -24,6 +24,8 @@ case class MotionSensor(radius: Int, timer: Int = 6, var activeTicks: Int = 0) e
       }
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }
 
 case class BumpActivated(timer: Int = 6, var activeTicks: Int = 0) extends Behavior {
@@ -38,4 +40,6 @@ case class BumpActivated(timer: Int = 6, var activeTicks: Int = 0) extends Behav
         state.sendMessage(self, Message.SendDataPacket("Active", 0))
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }

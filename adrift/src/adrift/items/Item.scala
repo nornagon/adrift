@@ -110,6 +110,8 @@ case class Item(
   }
 
   def behaviorOfType[T <: Behavior: ClassTag]: Option[T] = behaviors.find(b => implicitly[ClassTag[T]].runtimeClass.isInstance(b)).map(_.asInstanceOf[T])
+
+  def tickable: Boolean = behaviors.exists(_.tickable)
 }
 
 /** Some action that you can do with an item, e.g. PRYING or WELDING */

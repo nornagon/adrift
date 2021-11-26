@@ -7,6 +7,8 @@ import io.circe.{Json, JsonObject}
 
 
 trait Behavior {
+  def tickable: Boolean = false
+
   def receive(state: GameState, self: Item, message: Message): Unit
 }
 

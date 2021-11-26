@@ -73,6 +73,8 @@ case class AtmoPump(
       }
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }
 
 /*
@@ -163,6 +165,8 @@ case class Regulator(
       }
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }
 
 case class Compressor(
@@ -199,4 +203,6 @@ case class Compressor(
 
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }

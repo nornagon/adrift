@@ -157,6 +157,7 @@ class GameState(var data: Data, val random: Random) {
     def lookup(location: ItemLocation): Seq[Item] = itemDb.lookup(normalize(location))
     def exists(item: Item): Boolean = itemDb.exists(item)
     def all: Iterable[Item] = itemDb.all
+    def tickable: Iterable[Item] = itemDb.tickable
     def move(item: Item, location: ItemLocation): Unit = itemDb.move(item, normalize(location))
   }
 
@@ -304,10 +305,12 @@ class GameState(var data: Data, val random: Random) {
 
   def elapse(durationSec: Int): Unit = {
     for (_ <- 0 until durationSec) {
-      items.all.foreach(sendMessage(_, Message.Tick))
-      val start = System.nanoTime()
-      updateAtmosphere(player.levelId)
-      println(f"temperature+gas sim took ${(System.nanoTime() - start) / 1e6}%.2f ms")
+      timed("tick") {
+        items.tickable.foreach(sendMessage(_, Message.Tick))
+      }
+      timed("atmosphere sim") {
+        updateAtmosphere(player.levelId)
+      }
       tickFluidNetworks()
       checkBodyTemp()
       internalCalories -= 1
@@ -855,6 +858,10 @@ class GameState(var data: Data, val random: Random) {
     updateMemory()
   }
 
+  // Map from level id =>
+  //   Array of cable layers (8 wide) of
+  //     maps from x,y =>
+  //       sets of other tiles connected to that x,y
   var powerLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
   var dataLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
   var fluidLayerConnections: Map[LevelId, Array[Map[(Int, Int), Set[(Int, Int)]]]] = Map.empty
