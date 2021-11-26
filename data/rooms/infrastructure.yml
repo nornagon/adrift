@@ -288,7 +288,7 @@
 - type: item
   name: regulator
   volume: 20 L
-  description: Regulates gas pressure.
+  description: Regulates gas pressure on the output side.
   display: LARGE_ROD
   behavior:
     - HasPorts:
@@ -296,6 +296,21 @@
           - { type: fluid, name: In }
           - { type: fluid, name: Out }
     - Regulator:
+        inPort: In
+        outPort: Out
+        targetPressure: 50
+
+- type: item
+  name: inverse regulator
+  volume: 20 L
+  description: Regulates gas pressure on the input side.
+  display: LARGE_ROD
+  behavior:
+    - HasPorts:
+        ports:
+          - { type: fluid, name: In }
+          - { type: fluid, name: Out }
+    - InSideRegulator:
         inPort: In
         outPort: Out
         targetPressure: 50

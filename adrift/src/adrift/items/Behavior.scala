@@ -60,6 +60,7 @@ object Behavior {
     "AirMix" -> Decoder[AirMix].widen,
     "GasTank" -> Decoder[GasTank].widen,
     "Regulator" -> Decoder[Regulator].widen,
+    "InSideRegulator" -> Decoder[InSideRegulator].widen,
     "Compressor" -> Decoder[Compressor].widen,
   )
 
@@ -105,6 +106,7 @@ object Behavior {
     case b: AirMix => Encoder[AirMix].apply(b)
     case b: GasTank => Encoder[GasTank].apply(b)
     case b: Regulator => Encoder[Regulator].apply(b)
+    case b: InSideRegulator => Encoder[InSideRegulator].apply(b)
     case b: Compressor => Encoder[Compressor].apply(b)
   }))
 }

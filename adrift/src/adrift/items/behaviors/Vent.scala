@@ -169,6 +169,44 @@ case class Regulator(
   override def tickable: Boolean = true
 }
 
+case class InSideRegulator(
+  inPort: String,
+  outPort: String,
+  var targetPressure: Float = 0f,
+  var inSidePressure: GasComposition = GasComposition.zero,
+  var outSidePressure: GasComposition = GasComposition.zero
+) extends Behavior {
+  val internalVolume = 100f
+  override def receive(
+    state: GameState,
+    self: Item,
+    message: Message
+  ): Unit = message match {
+    case m: GetPressure if m.port == inPort =>
+      m.totalPressure = Some((inSidePressure, internalVolume))
+    case m: AdjustPressureOnPort if m.port == inPort =>
+      val delta = (m.averagePressure - inSidePressure) * m.t
+      inSidePressure += delta
+
+    case m: GetPressure if m.port == outPort =>
+      m.totalPressure = Some((outSidePressure, internalVolume))
+    case m: AdjustPressureOnPort if m.port == outPort =>
+      val delta = (m.averagePressure - outSidePressure) * m.t
+      outSidePressure += delta
+
+    case Tick =>
+      if (inSidePressure.totalPressure > targetPressure && inSidePressure.totalPressure > outSidePressure.totalPressure) {
+        val deltaSize = (math.max(targetPressure, inSidePressure.totalPressure) - outSidePressure.totalPressure) * 0.5f
+        val delta = inSidePressure / inSidePressure.totalPressure * deltaSize
+        inSidePressure -= delta
+        outSidePressure += delta
+      }
+    case _ =>
+  }
+
+  override def tickable: Boolean = true
+}
+
 case class Compressor(
   inPort: String,
   outPort: String,
@@ -196,10 +234,11 @@ case class Compressor(
       outSidePressure += delta
 
     case Tick =>
-      val movedAmountOfSubstance = inSidePressure * inSideVolume * 0.1f
-      inSidePressure -= movedAmountOfSubstance / inSideVolume
-      outSidePressure += movedAmountOfSubstance / outSideVolume
-      // TODO: handle over-pressure.
+      if (outSidePressure.totalPressure < maxPressure) {
+        val movedAmountOfSubstance = inSidePressure * inSideVolume * 0.1f
+        inSidePressure -= movedAmountOfSubstance / inSideVolume
+        outSidePressure += movedAmountOfSubstance / outSideVolume
+      }
 
     case _ =>
   }

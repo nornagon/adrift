@@ -16,6 +16,8 @@ case class GasLeak() extends Behavior {
       level.setGasComposition(loc.x, loc.y, gc + GasComposition(oxygen = 1, carbonDioxide = 0, nitrogen = 0))
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }
 
 case class Vacuum() extends Behavior {
@@ -31,4 +33,6 @@ case class Vacuum() extends Behavior {
       state.markPermeabilityDirty(loc)
     case _ =>
   }
+
+  override def tickable: Boolean = true
 }
