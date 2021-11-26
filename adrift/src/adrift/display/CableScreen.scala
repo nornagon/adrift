@@ -274,16 +274,17 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
       val layers = new LayerSet(cables(x, y))
       // if there's something with ports here...
       val connected = queryTypes.exists(queryType =>
-        state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected(queryType, LayerSet.all)).connected)
+        state.broadcastToLocation(OnFloor(Location(levelId, x, y)), Message.IsConnected(queryType, displayingLayers)).connected)
       if (connected) {
         // Is it connected to a cable?
         val color = if (layers.intersects(displayingLayers)) displayingCableColor else Color.White
         renderer.drawChar(bounds.l + sx, bounds.t + sy, 8, fg = color)
       } else if (layers.nonEmpty) {
-        val connectLeft = cables.contains(x - 1, y) && ((cables(x - 1, y) & layers.bits) != 0)
-        val connectUp = cables.contains(x, y - 1) && ((cables(x, y - 1) & layers.bits) != 0)
-        val connectRight = cables.contains(x + 1, y) && ((cables(x + 1, y) & layers.bits) != 0)
-        val connectDown = cables.contains(x, y + 1) && ((cables(x, y + 1) & layers.bits) != 0)
+        val connectLayers = if (layers.intersects(displayingLayers)) displayingLayers else layers
+        val connectLeft = cables.contains(x - 1, y) && ((cables(x - 1, y) & connectLayers.bits) != 0)
+        val connectUp = cables.contains(x, y - 1) && ((cables(x, y - 1) & connectLayers.bits) != 0)
+        val connectRight = cables.contains(x + 1, y) && ((cables(x + 1, y) & connectLayers.bits) != 0)
+        val connectDown = cables.contains(x, y + 1) && ((cables(x, y + 1) & connectLayers.bits) != 0)
         val color = if (layers.intersects(displayingLayers)) displayingCableColor else Color(0.5f, 0.5f, 0.5f, 1.0f)
         renderer.drawChar(bounds.l + sx, bounds.t + sy, Appearance.charForConnection(connectLeft, connectUp, connectRight, connectDown), color)
       }
