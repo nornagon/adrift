@@ -1,10 +1,11 @@
 package adrift.display
 
 import adrift.items.{Item, Message}
-import adrift.items.behaviors.{HasPorts, LayerSet, PortSpec}
+import adrift.items.behaviors.{HasPorts, LayerSet}
+import adrift.animation.squash
 import adrift.{Color, GameState, Location, OnFloor, Rect}
-import org.lwjgl.glfw.GLFW._
-import layout3._
+import org.lwjgl.glfw.GLFW.*
+import layout3.*
 
 object NumericKey {
   def unapply(key: Int): Option[Int] =
@@ -15,7 +16,11 @@ object NumericKey {
 }
 
 class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  import UI.Color._
+  import UI.Color.*
+
+  private var startTime = System.nanoTime()
+  private var _animating = true
+  override def animating: Boolean = _animating
 
   private sealed trait DisplayingType {
     def next: DisplayingType
@@ -148,12 +153,14 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
         }
       case (GLFW_PRESS, GLFW_KEY_TAB) =>
         displaying = displaying.next
+        startTime = System.nanoTime()
+        _animating = true
       case _ =>
     }
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    renderCableOverlay(renderer, display.screenRect)
+    renderCableOverlay(renderer, display.worldViewRect)
 
     val sb = renderSidebar().inflate.asInstanceOf[RenderBox]
     sb.layout(BoxConstraints.tight(Size(display.sidebarRect.width, display.sidebarRect.height)))
@@ -259,9 +266,17 @@ class CableScreen(display: GLFWDisplay, state: GameState) extends Screen {
     val levelId = state.player.levelId
     val level = state.levels(levelId)
 
+    val elapsedNs = System.nanoTime() - startTime
+    val elapsedS = elapsedNs / 1e9f
+    if (elapsedS > 1)
+      _animating = false
+
     for {
       sy <- bounds.l until bounds.r
       sx <- bounds.t until bounds.b
+      dy = bounds.center._2 - sy
+      dx = bounds.center._1 - sx
+      if math.sqrt(dy*dy+dx*dx) < squash(2, elapsedS) * 120
       (x, y) = display.screenToWorld(state)((sx, sy))
       if level.terrain.contains(x, y)
       if state.isVisible(Location(levelId, x, y))

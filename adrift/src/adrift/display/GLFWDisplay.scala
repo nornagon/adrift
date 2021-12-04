@@ -230,9 +230,11 @@ trait Screen {
   def key(key: Int, scancode: Int, action: Int, mods: Int): Unit
   def char(char: Int): Unit = {}
   def render(renderer: GlyphRenderer): Unit
+  def animating: Boolean = false
 }
 
 class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) {
+  /** NB. this is thread-safe because it can be accessed from the file watcher for reloading data */
   private val pendingActions = new java.util.concurrent.ConcurrentLinkedQueue[Action]
   val windowWidthChars = 80
   val windowHeightChars = 60
@@ -477,8 +479,13 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
   }
 
   def waitForAction: Action = {
-    while (pendingActions.isEmpty)
-      glfwWaitEvents()
+    while (pendingActions.isEmpty) {
+      if (screens.exists(_.animating))
+        window.poll()
+      else
+        window.waitEvents()
+      render()
+    }
     pendingActions.poll()
   }
 
