@@ -62,8 +62,8 @@
   volume: 10 ml
   description: A small DC motor. Could be from a remote-controlled toy or something.
   parts:
-    - { type: copper wire, count: 2, disassembled_with: CUTTING }
-    - { type: magnet, count: 1, disassembled_with: HANDLING }
+    - { type: copper wire, count: 2 }
+    - { type: magnet, count: 1 }
   display: SMALL_COMPONENT
 
 - type: item

@@ -56,7 +56,7 @@ Less simple:
 
  */
 
-case class ItemPart(kind: ItemKind, count: Int, operation: ItemOperation)
+case class ItemPart(kind: ItemKind, count: Int, attachment: Option[ItemAttachment])
 
 case class ItemKind(
   name: String,
@@ -117,3 +117,8 @@ case class Item(
 /** Some action that you can do with an item, e.g. PRYING or WELDING */
 case class ItemOperation(id: String)
 
+case class ItemAttachment(
+  id: String,
+  assembly: ItemOperation,
+  disassembly: ItemOperation,
+)

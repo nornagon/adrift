@@ -8,7 +8,7 @@
   description: A standard K35 screwdriver, like you'd find in a koligan.
   display: SMALL_TOOL
   behavior:
-    - Tool: { op: SCREWING }
+    - Tool: { op: screwing }
 
 - type: item
   name: gas leak
@@ -23,31 +23,35 @@
   volume: .5 L
   description: A largely obsolete device, the hand-held hammer consists of a rigid handle and weighted head.
   parts:
-    - { type: wooden rod, disassembled_with: HAMMERING }
-    - { type: chunk of steel, disassembled_with: HAMMERING }
-  provides: [ HAMMERING ]
+    - { type: wooden rod, attachment: pressed }
+    - { type: chunk of steel, attachment: pressed }
   display: SMALL_TOOL
+  behavior:
+    - Tool: { op: hammering }
 
 - type: item
   name: crowbar
   volume: .5 L
   description: Used during the invasion by many as a last-ditch weapon. The weight is comforting, and it's a practical tool too.
-  provides: [ PRYING ]
   display: TOOL
+  behavior:
+    - Tool: { op: prying }
 
 - type: item
   name: multi-wrench
   volume: .02 L
   description: Twisting the knob adjusts the grip size.  This is pretty much only useful for adding or removing bolts.
-  provides: [ BOLT_TURNING ]
   display: TOOL
+  behavior:
+    - Tool: { op: bolt turning }
 
 - type: item
   name: box cutter
   volume: .01 L
   description: A sharp, virtually unbreakable tungsteel blade makes this a great tool or, in a pinch, a weapon.
-  provides: [ CUTTING ]
   display: SMALL_TOOL
+  behavior:
+    - Tool: { op: cutting }
 
 - type: item
   name: soldering iron
@@ -55,18 +59,20 @@
   description: An RF powered insta-hot pocket-sized portable soldering iron makes it easy to add or remove soldered components.
   display: SMALL_TOOL
   parts:
-    - { type: rechargeable battery, disassembled_with: HANDLING }
-    - { type: B-size frame, disassembled_with: HANDLING }
+    - { type: rechargeable battery, attachment: hand }
+    - { type: B-size frame, attachment: hand }
   behavior:
     - UsesElectricity: { perUse: 300 }
-    - Tool: { op: SOLDERING, level: 3 }
+    - Tool: { op: soldering, level: 3 }
 
 - type: item
   name: hull welder
   volume: 3 L
   description: a massive system for adding and removing hull plates
-  provides: [ WELDING, CUTTING ]
   display: LARGE_EQUIPMENT
+  behavior:
+    - Tool: { op: welding, level: 3 }
+    - Tool: { op: cutting, level: 3 }
 
 - type: item group
   name: tool list

@@ -371,28 +371,30 @@ class GameState(var data: Data, val random: Random) {
         elapse(1)
 
       case Action.Remove(parents, item) =>
-        val disassembleOp = parents.last.kind.parts.find(_.kind == item.kind).get.operation
-        if (disassembleOp.id == "HANDLING" ||
-          nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(disassembleOp)).ok }) {
+        val attachment = parents.last.kind.parts.find(_.kind == item.kind).get.attachment
+        val disassembleOp = attachment.map(_.disassembly)
+        if (disassembleOp.isEmpty ||
+          nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(disassembleOp.get)).ok }) {
           items.put(item, OnFloor(player))
           removePart(parents, item)
           elapse(10)
           putMessage(s"You remove the ${itemDisplayName(item)} from the ${itemDisplayName(parents.last)}.")
         } else {
-          putMessage(s"You need a ${disassembleOp.id} tool to do that.")
+          putMessage(s"You need a ${disassembleOp.get.id} tool to do that.")
         }
 
       case Action.Install(parent, part) =>
-        val op = parent.kind.parts.find(_.kind == part.kind).get.operation
-        if (op.id == "HANDLING" ||
-          nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(op)).ok }) {
+        val attachment = parent.kind.parts.find(_.kind == part.kind).get.attachment
+        val op = attachment.map(_.assembly)
+        if (op.isEmpty ||
+          nearbyItems.exists { tool => sendMessage(tool, Message.UseTool(op.get)).ok }) {
           items.delete(part)
           parent.parts = parent.parts :+ part
           sendMessage(parent, PartInstalled())
           elapse(10)
           putMessage(s"You install the ${itemDisplayName(part)} into the ${itemDisplayName(parent)}")
         } else {
-          putMessage(s"You need a ${op.id} tool to do that.")
+          putMessage(s"You need a ${op.get.id} tool to do that.")
         }
 
       case Action.Diagnose(item) =>
@@ -413,9 +415,10 @@ class GameState(var data: Data, val random: Random) {
 
       case Action.Assemble(itemKind, ops) =>
         val ok = ops.forall {
-          case AssemblyAction(tool, part, op) =>
+          case AssemblyAction(maybeOp, part) =>
             elapse(1)
-            sendMessage(tool, Message.UseTool(op)).ok
+            (for ((tool, op) <- maybeOp)
+              yield sendMessage(tool, Message.UseTool(op)).ok).getOrElse(true)
         }
         if (ok) {
           val parts = ops.map(_.part)
@@ -967,7 +970,7 @@ class GameState(var data: Data, val random: Random) {
           val requiredQty = parts.map(_.count).sum
           val candidateComponents = availableItems.filter(_.kind == partKind).take(requiredQty)
           if (candidateComponents.size < requiredQty) return None
-          val requiredOps = parts.map(_.operation).distinct
+          val requiredOps = parts.flatMap(_.attachment.map(_.assembly)).distinct
           val candidateTools: Map[ItemOperation, Seq[Item]] =
             requiredOps.view.map { op => op -> toolsForOp(op) }.to(Map)
           if (candidateTools.values.exists(_.isEmpty)) {
@@ -976,9 +979,9 @@ class GameState(var data: Data, val random: Random) {
           // NB. parts and tools are assumed to be non-overlapping
           val tools = candidateTools.view.mapValues(_.head)
 
-          parts.flatMap(part => Seq.fill(part.count)(part.operation)).zip(candidateComponents).map {
-            case (op, item) =>
-              AssemblyAction(tools(op), item, op)
+          parts.flatMap(part => Seq.fill(part.count)(part.attachment.map(_.assembly))).zip(candidateComponents).map {
+            case (maybeOp, item) =>
+              AssemblyAction(maybeOp.map(op => (tools(op), op)), item)
           }
 
           /*val operations = candidateComponents.zip(parts.map(_.operation)).map {

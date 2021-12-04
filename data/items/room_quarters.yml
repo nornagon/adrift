@@ -3,11 +3,11 @@
   volume: .5 L
   description: A small cube that projects a 3D holographic message. A novelty, really, it's much easier to just write an e-mail.
   parts:
-    - { type: rechargeable battery, disassembled_with: SCREWING }
-    - { type: holographic projector, disassembled_with: SCREWING }
-    - { type: A-size frame, disassembled_with: SCREWING }
-    - { type: microprocessor, disassembled_with: SOLDERING }
-    - { type: MRAM chip, disassembled_with: SOLDERING }
+    - { type: rechargeable battery, attachment: screwed }
+    - { type: holographic projector, attachment: screwed }
+    - { type: A-size frame, attachment: screwed }
+    - { type: microprocessor, attachment: soldered }
+    - { type: MRAM chip, attachment: soldered }
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -15,9 +15,9 @@
   volume: .2 L
   description: A laser array and an assortment of spinning mirrors, capable of producing an ethereal full-color 3-dimensional image.
   parts:
-    - { type: laser diode, count: 3, disassembled_with: SOLDERING }
-    - { type: flat mirror, disassembled_with: SCREWING }
-    - { type: tiny DC motor, disassembled_with: SOLDERING }
+    - { type: laser diode, count: 3, attachment: soldered }
+    - { type: flat mirror, attachment: screwed }
+    - { type: tiny DC motor, attachment: soldered }
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -25,8 +25,8 @@
   volume: 300 L
   description: A small food-grade refrigerator for keeping your lunch in
   parts:
-    - { type: cooling unit, count: 1, disassembled_with: SCREWING}
-    - { type: C-size frame, count: 1, disassembled_with: SCREWING}
+    - { type: cooling unit, count: 1, attachment: screwed}
+    - { type: C-size frame, count: 1, attachment: screwed}
   display: MEDIUM_EQUIPMENT
   behavior:
     - Container: { maxVolume: 250 L, rigid: true }
@@ -36,8 +36,8 @@
   volume: 5 L
   description: A light textile bag that straps close to the body. It has a lot of pockets.
   parts:
-    - { type: synthetic fabric rag, count: 4, disassembled_with: CUTTING }
-    - { type: nylon thread, count: 2, disassembled_with: CUTTING }
+    - { type: synthetic fabric rag, count: 4, attachment: sewn }
+    - { type: nylon thread, count: 2, attachment: sewn }
   display: CLOTHING
   behavior:
     - Container: { maxVolume: 25 L }
@@ -76,8 +76,8 @@
   volume: 100 L
   description: side table
   parts:
-  - {type: drawer, count: 3, disassembled_with: SCREWING}
-  - {type: C-size frame, count: 2, disassembled_with: SCREWING}
+  - {type: drawer, count: 3, attachment: screwed}
+  - {type: C-size frame, count: 2, attachment: screwed}
   Container: { maxVolume: 15 L, rigid: true}
   display: DESK
   behavior:
@@ -88,10 +88,10 @@
   volume: 800 L
   description: A modular alum-composite structural desk. Designed for maximum productivity. Under normal conditions.
   parts:
-  - {type: D-size frame, count: 1, disassembled_with: SCREWING}
-  - {type: C-size modular panel, count: 3, disassembled_with: SCREWING}
-  - {type: C-size modular rod, count: 4, disassembled_with: SCREWING}
-  - {type: drawer, count: 3, disassembled_with: SCREWING}
+  - {type: D-size frame, count: 1, attachment: screwed}
+  - {type: C-size modular panel, count: 3, attachment: screwed}
+  - {type: C-size modular rod, count: 4, attachment: screwed}
+  - {type: drawer, count: 3, attachment: screwed}
   Container: { maxVolume: 15 L, rigid: true}
   display: DESK
 
@@ -100,7 +100,7 @@
   volume: 20 L
   description: Is it a drawer once you've pulled it out of the furniture?  Is it just a weird box?
   parts:
-  - {type: B-size frame, count: 1, disassembled_with: SCREWING}
+  - {type: B-size frame, count: 1, attachment: screwed}
   display: SMALL_EQUIPMENT
   behavior:
     - Container: { maxVolume: 5 L, rigid: true }

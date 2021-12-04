@@ -4,7 +4,7 @@ sealed trait Action
 
 object Action {
   case class PlayerMove(dx: Int, dy: Int) extends Action
-  case class AssemblyAction(tool: Item, part: Item, operation: ItemOperation)
+  case class AssemblyAction(tool: Option[(Item, ItemOperation)], part: Item)
   case class Assemble(item: ItemKind, operations: Seq[AssemblyAction]) extends Action
   case class PickUp(item: Item) extends Action
   case class PutDown(item: Item) extends Action

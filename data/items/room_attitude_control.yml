@@ -15,12 +15,12 @@
   volume: 1000 L
   description: dozens of these thruster packs are scattered about the hull of the ship and are used to help maintain spin and orientation
   parts:
-    - {type: small combustion chamber, count: 4, disassembled_with: BOLT_TURNING}
-    - {type: small bell nozzle, count: 4, disassembled_with: BOLT_TURNING}
-    - {type: turbopump, count: 1, disassembled_with: BOLT_TURNING}
-    - {type: thruster controller, count: 1, disassembled_with: SCREWING}
-    - {type: pressure sensor, count: 4, disassembled_with: SCREWING}
-    - {type: temperature sensor, count: 4, disassembled_with: SCREWING}
+    - {type: small combustion chamber, count: 4, attachment: bolted}
+    - {type: small bell nozzle, count: 4, attachment: bolted}
+    - {type: turbopump, count: 1, attachment: bolted}
+    - {type: thruster controller, count: 1, attachment: screwed}
+    - {type: pressure sensor, count: 4, attachment: screwed}
+    - {type: temperature sensor, count: 4, attachment: screwed}
   display: LARGE_EQUIPMENT
 
 - type: item
@@ -28,11 +28,11 @@
   volume: 200 L
   description: the electronics to run and control the attitude thrusters
   parts:
-    - {type: A-size frame, count: 1, disassembled_with: SOLDERING}
-    - {type: microcontroller, count: 1, disassembled_with: SOLDERING}
-    - {type: standard e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 12, disassembled_with: SOLDERING}
-    - {type: M5A power supply, count: 1, disassembled_with: SCREWING}
+    - {type: A-size frame, count: 1, attachment: soldered}
+    - {type: microcontroller, count: 1, attachment: soldered}
+    - {type: standard e-board, count: 1, attachment: screwed}
+    - {type: flex component, count: 12, attachment: soldered}
+    - {type: M5A power supply, count: 1, attachment: screwed}
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -65,8 +65,8 @@
   volume: 2 L
   description: ceramic vanes and a magnetic-vacuum bearing indicate this was designed for operation only in space, not atmosphere
   parts:
-    - {type: pump vane, count: 12, disassembled_with: BOLT_TURNING}
-    - {type: mag-vac bearing, count: 2, disassembled_with: PRYING}
+    - {type: pump vane, count: 12, attachment: bolted}
+    - {type: mag-vac bearing, count: 2, attachment: pressed}
   display: MEDIUM_EQUIPMENT
 
 - type: item

@@ -5,11 +5,11 @@
   volume: 100 L
   description: A standard sturdy door. It opens and closes almost silently.
   parts:
-    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 2, disassembled_with: SOLDERING}
-    - {type: C-size stepper motor, count: 2, disassembled_with: SCREWING}
-    - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
-    - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
+    - {type: micro e-board, count: 1, attachment: screwed}
+    - {type: flex component, count: 2, attachment: soldered}
+    - {type: C-size stepper motor, count: 2, attachment: screwed}
+    - {type: D-size modular panel, count: 3, attachment: screwed}
+    - {type: D-size modular rod, count: 6, attachment: screwed}
   display: DOOR_CLOSED
   behavior:
     - Affixed: {}
@@ -30,9 +30,9 @@
   description: A small dark panel hides a device that can sense the presence of humans.
   display: OPTICAL
   parts:
-    - { type: local motion sensor, disassembled_with: SCREWING }
-    - { type: micro e-board, disassembled_with: SCREWING }
-    - { type: A-size frame, disassembled_with: SCREWING }
+    - { type: local motion sensor, attachment: screwed }
+    - { type: micro e-board, attachment: screwed }
+    - { type: A-size frame, attachment: screwed }
   behavior:
     - Affixed: {}
     - MotionSensor: { radius: 1 }
@@ -47,8 +47,8 @@
   description: A manually operated momentary switch, mounted to the wall. You could press it.
   display: MEDIUM_COMPONENT
   parts:
-    - { type: micro e-board, disassembled_with: SCREWING }
-    - { type: A-size frame, disassembled_with: SCREWING }
+    - { type: micro e-board, attachment: screwed }
+    - { type: A-size frame, attachment: screwed }
   behavior:
     - Affixed: {}
     - BumpActivated: {}
@@ -62,8 +62,8 @@
   volume: 100 L
   description: A standard sturdy, manually operated door.
   parts:
-    - {type: D-size modular panel, count: 3, disassembled_with: SCREWING}
-    - {type: D-size modular rod, count: 6, disassembled_with: SCREWING}
+    - {type: D-size modular panel, count: 3, attachment: screwed}
+    - {type: D-size modular rod, count: 6, attachment: screwed}
   display: DOOR_CLOSED
 
 - type: item
@@ -71,12 +71,12 @@
   volume: 400 L
   description: A heavy-duty, externally actuated door for containing reactor breaches or the cold void.
   parts:
-    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
-    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 12, disassembled_with: SOLDERING}
-    - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
-    - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
-    - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, attachment: screwed}
+    - {type: micro e-board, count: 1, attachment: screwed}
+    - {type: flex component, count: 12, attachment: soldered}
+    - {type: D-size stepper motor, count: 4, attachment: screwed}
+    - {type: E-size modular panel, count: 6, attachment: screwed}
+    - {type: E-size modular rod, count: 6, attachment: screwed}
   display: DOOR_CLOSED
   behavior:
     - DoorOpener: {}
@@ -96,14 +96,14 @@
   volume: 0.2 L
   description: A device capable of sensing motion in a small area.
   parts:
-    - {type: laser diode, count: 2, disassembled_with: SCREWING}
-    - {type: micro e-board, count: 2, disassembled_with: SCREWING}
-    - {type: flex component, count: 12, disassembled_with: SOLDERING}
-    - {type: Y1 mirror, count: 4, disassembled_with: SCREWING}
-    - {type: W1 mirror, count: 2, disassembled_with: SCREWING}
-    - {type: Z1 lens, count: 2, disassembled_with: SCREWING}
-    - {type: X1 lens, count: 4, disassembled_with: SCREWING}
-    - {type: A-size frame, count: 1, disassembled_with: SCREWING}
+    - {type: laser diode, count: 2, attachment: screwed}
+    - {type: micro e-board, count: 2, attachment: screwed}
+    - {type: flex component, count: 12, attachment: soldered}
+    - {type: Y1 mirror, count: 4, attachment: screwed}
+    - {type: W1 mirror, count: 2, attachment: screwed}
+    - {type: Z1 lens, count: 2, attachment: screwed}
+    - {type: X1 lens, count: 4, attachment: screwed}
+    - {type: A-size frame, count: 1, attachment: screwed}
   display: MEDIUM_COMPONENT
 
 - type: item

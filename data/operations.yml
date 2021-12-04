@@ -1,29 +1,75 @@
 - type: operation
-  id: SCREWING
+  id: screwing
 
 - type: operation
-  id: HAMMERING
+  id: hammering
 
 - type: operation
-  id: PRYING
+  id: prying
 
 - type: operation
-  id: BOLT_TURNING
+  id: bolt turning
 
 - type: operation
-  id: CUTTING
+  id: cutting
 
 - type: operation
-  id: SOLDERING
+  id: sewing
 
 - type: operation
-  id: WELDING
+  id: soldering
 
 - type: operation
-  id: HANDLING
+  id: welding
 
 - type: operation
-  id: BIO-BOND
+  id: metal cutting
 
 - type: operation
-  id: BIO-HEAL
+  id: handling
+
+#- type: operation
+#  id: BIO-BOND
+#
+#- type: operation
+#  id: BIO-HEAL
+
+- type: attachment
+  id: screwed
+  assembly: screwing
+  disassembly: screwing
+
+- type: attachment
+  id: nailed
+  assembly: hammering
+  disassembly: prying
+
+- type: attachment
+  id: pressed
+  assembly: hammering
+  disassembly: hammering
+
+- type: attachment
+  id: bolted
+  assembly: bolt turning
+  disassembly: bolt turning
+
+- type: attachment
+  id: sewn
+  assembly: sewing
+  disassembly: cutting
+
+- type: attachment
+  id: soldered
+  assembly: soldering
+  disassembly: soldering
+
+- type: attachment
+  id: welded
+  assembly: welding
+  disassembly: metal cutting
+
+- type: attachment
+  id: hand
+  assembly: handling
+  disassembly: handling

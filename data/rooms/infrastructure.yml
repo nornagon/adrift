@@ -72,12 +72,12 @@
       A: { items: { each: [ air mix system ] } }
       a: { items: { each: [ air purification ] } }
 
-      O: 
-        items: 
-          each: 
+      O:
+        items:
+          each:
             - item: oxygen tank
-              connect: 
-                - {port: O2_IN, layer: 1} 
+              connect:
+                - {port: O2_IN, layer: 1}
                 - {port: O2_OUT, layer: 16}
 
       C: { items: { each: [ {item: CO2 tank,
@@ -375,11 +375,11 @@
   volume: 500 L
   description: A highly efficient combustion generator with automated carbon resequestration.  Feed carbon and oxygen in, get heat and compressed CO2 out.
   parts:
-  - { type: C-size frame, count: 1, disassembled_with: SCREWING }
-  - { type: fuel hopper, count: 1, disassembled_with: SCREWING }
-  - { type: combustion chamber, count: 1, disassembled_with: SCREWING }
-  - { type: inverter, count: 1, disassembled_with: SCREWING }
-  - { type: CO2 tank, count: 1, disassembled_with: SCREWING }
+  - { type: C-size frame, count: 1, attachment: screwed }
+  - { type: fuel hopper, count: 1, attachment: screwed }
+  - { type: combustion chamber, count: 1, attachment: screwed }
+  - { type: inverter, count: 1, attachment: screwed }
+  - { type: CO2 tank, count: 1, attachment: screwed }
   display: MEDIUM_EQUIPMENT
   behavior:
     - Container: { maxVolume: 100 L }
@@ -394,8 +394,8 @@
   volume: 50 L
   description: A port for accepting a wide variety of combustible fuels.
   parts:
-    - { type: B-size frame, count: 1, disassembled_with: SCREWING }
-    - { type: B-size modular panel, count: 2, disassembled_with: SCREWING }
+    - { type: B-size frame, count: 1, attachment: screwed }
+    - { type: B-size modular panel, count: 2, attachment: screwed }
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -403,9 +403,9 @@
   volume: 300 L
   description: A valved box for combusting fuel to drive a small inverter.
   parts:
-    - { type: B-size frame, count: 2, disassembled_with: SCREWING }
-    - { type: B-size modular rod, count: 4, disassembled_with: SCREWING }
-    - { type: gas valve, count: 2, disassembled_with: SCREWING }
+    - { type: B-size frame, count: 2, attachment: screwed }
+    - { type: B-size modular rod, count: 4, attachment: screwed }
+    - { type: gas valve, count: 2, attachment: screwed }
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -413,13 +413,13 @@
   volume: 2 L
   description: Converts motion into POWER.
   parts:
-    - { type: A-size frame, count: 1, disassembled_with: SCREWING }
-    - { type: insulated wire, count: 1, disassembled_with: SCREWING }
-    - { type: B-size modular rod, count: 4, disassembled_with: SCREWING }
-    - { type: magnet, count: 3, disassembled_with: SCREWING }
+    - { type: A-size frame, count: 1, attachment: screwed }
+    - { type: insulated wire, count: 1, attachment: soldered }
+    - { type: B-size modular rod, count: 4, attachment: screwed }
+    - { type: magnet, count: 3, attachment: screwed }
     # wheatstone bridge!
-    - { type: micro e-board, count: 1, disassembled_with: SCREWING }
-    - { type: flex component, count: 4, disassembled_with: SCREWING }
+    - { type: micro e-board, count: 1, attachment: screwed }
+    - { type: flex component, count: 4, attachment: screwed }
   display: SMALL_EQUIPMENT
 
 - type: item

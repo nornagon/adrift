@@ -33,8 +33,8 @@
   volume: 5 mL
   description: A micro-scale structural frame for holding mechanical and electrical components.
   parts:
-    - { type: "A-size modular rod", count: 12, disassembled_with: SCREWING }
-    - { type: "A-size modular panel", count: 6, disassembled_with: SCREWING }
+    - { type: "A-size modular rod", count: 12, attachment: screwed }
+    - { type: "A-size modular panel", count: 6, attachment: screwed }
   display: SMALL_BOX
 
 - type: item
@@ -42,8 +42,8 @@
   volume: 125 mL
   description: A small structural frame for holding mechanical and electrical components.
   parts:
-    - { type: "B-size modular rod", count: 12, disassembled_with: SCREWING }
-    - { type: "B-size modular panel", count: 6, disassembled_with: SCREWING }
+    - { type: "B-size modular rod", count: 12, attachment: screwed }
+    - { type: "B-size modular panel", count: 6, attachment: screwed }
   display: MEDIUM_BOX
 
 - type: item
@@ -51,8 +51,8 @@
   volume: 2.5 L
   description: A structural frame for holding mechanical and electrical components.
   parts:
-    - { type: "C-size modular rod", count: 12, disassembled_with: SCREWING }
-    - { type: "C-size modular panel", count: 6, disassembled_with: SCREWING }
+    - { type: "C-size modular rod", count: 12, attachment: screwed }
+    - { type: "C-size modular panel", count: 6, attachment: screwed }
   display: MEDIUM_BOX
 
 - type: item
@@ -60,8 +60,8 @@
   volume: 50 L
   description: A large structural frame for holding mechanical and electrical components.
   parts:
-    - { type: "D-size modular rod", count: 12, disassembled_with: SCREWING }
-    - { type: "D-size modular panel", count: 6, disassembled_with: SCREWING }
+    - { type: "D-size modular rod", count: 12, attachment: screwed }
+    - { type: "D-size modular panel", count: 6, attachment: screwed }
   display: MEDIUM_BOX
 
 - type: item
@@ -69,6 +69,6 @@
   volume: 1000 L
   description: A massive structural frame for holding mechanical and electrical components.
   parts:
-    - { type: "E-size modular rod", count: 12, disassembled_with: SCREWING }
-    - { type: "E-size modular panel", count: 6, disassembled_with: SCREWING }
+    - { type: "E-size modular rod", count: 12, attachment: screwed }
+    - { type: "E-size modular panel", count: 6, attachment: screwed }
   display: LARGE_BOX

@@ -26,8 +26,8 @@
   volume: 2 L
   description: A few meters of ship-standard wire.
   parts:
-    - { type: copper wire, count: 1, disassembled_with: CUTTING }
-    - { type: electric insulator, count: 1, disassembled_with: CUTTING }
+    - { type: copper wire, count: 1 }
+    - { type: electric insulator, count: 1 }
   display: RAW_THIN
 
 - type: item
@@ -77,7 +77,7 @@
   volume: .1 L
   description: A small section of synthetic fabric. It's extremely light and strong.
   parts:
-    - { type: nylon thread, count: 8, disassembled_with: CUTTING }
+    - { type: nylon thread, count: 8, attachment: sewn }
   display: RAW_CLOTH
 
 - type: item

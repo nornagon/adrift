@@ -182,7 +182,7 @@
       =: { terrain: floor, items: [ counter ] }
       s: { terrain: floor, items: [ stool ] }
       h: { terrain: floor, items: [ chair ] }
-      t: { terrain: floor, items: [ table ] }      
+      t: { terrain: floor, items: [ table ] }
 
       c: { terrain: floor } #, items: [ cook station]}
 
@@ -232,9 +232,9 @@
                   layer: 1
       O:
         items:
-          each: 
+          each:
             - item: oxygen tank
-              connect: 
+              connect:
                 - {port: O2, layer: 8}
 
       B: { items: { each: [ {item: CO2 tank,
@@ -282,7 +282,7 @@
   volume: 500 L
   description: A tall, sturdy cupboard with doors and shelves inside.
   parts:
-    - { type: C-size frame, count: 1, disassembled_with: SCREWING }
+    - { type: C-size frame, count: 1, attachment: screwed }
   display: LARGE_EQUIPMENT
   behavior:
     - Affixed: {}

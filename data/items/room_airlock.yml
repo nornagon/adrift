@@ -3,12 +3,12 @@
   volume: 400 L
   description: An airtight door specially designed with interlocks to prevent it from opening if its linked door is open.
   parts:
-    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
-    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 4, disassembled_with: SOLDERING}
-    - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
-    - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
-    - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, attachment: screwed}
+    - {type: micro e-board, count: 1, attachment: screwed}
+    - {type: flex component, count: 4, attachment: soldered}
+    - {type: D-size stepper motor, count: 4, attachment: screwed}
+    - {type: E-size modular panel, count: 6, attachment: screwed}
+    - {type: E-size modular rod, count: 6, attachment: screwed}
   display: DOOR_CLOSED
 
 
@@ -17,13 +17,13 @@
   volume: 1000 L
   description: a rack that supports the spacesuit and keeps its batteries charged
   parts:
-    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
-    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 4, disassembled_with: SOLDERING}
-    - {type: C-size modular panel, count: 4, disassembled_with: SCREWING}
-    - {type: C-size modular rod, count: 6, disassembled_with: SCREWING}
-    - {type: D-size modular panel, count: 2, disassembled_with: SCREWING}
-    - {type: D-size modular rod, count: 4, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, attachment: screwed}
+    - {type: micro e-board, count: 1, attachment: screwed}
+    - {type: flex component, count: 4, attachment: soldered}
+    - {type: C-size modular panel, count: 4, attachment: screwed}
+    - {type: C-size modular rod, count: 6, attachment: screwed}
+    - {type: D-size modular panel, count: 2, attachment: screwed}
+    - {type: D-size modular rod, count: 4, attachment: screwed}
   display: MEDIUM_EQUIPMENT
 
 - type: item
@@ -31,13 +31,13 @@
   volume: 1200 L
   description: a snug, armored, human casing with integrated atmosphere and waste processing systems designed for hand assembly
   parts:
-    - { type: suit atmosphere processor, disassembled_with: HANDLING }
-    - { type: suit waste processor, disassembled_with: HANDLING }
-    - { type: battery pack, disassembled_with: HANDLING }
-    - { type: inner body sleeve, disassembled_with: HANDLING }
-    - { type: helmet, disassembled_with: HANDLING }
-    - { type: armor plating, disassembled_with: HANDLING }
-    - { type: mag boots, disassembled_with: HANDLING }
+    - { type: suit atmosphere processor }
+    - { type: suit waste processor }
+    - { type: battery pack }
+    - { type: inner body sleeve }
+    - { type: helmet }
+    - { type: armor plating }
+    - { type: mag boots }
   display: HUMAN_EQUIPMENT
 
 - type: item
@@ -45,13 +45,13 @@
   volume: 10 L
   description: a miniaturized atmosphere recycling system. There's some sort of goop in the packs
   parts:
-    - { type: mouthpiece, count: 1, disassembled_with: HANDLING}
-    - { type: CO2 cartridge, count: 2, disassembled_with: BOLT_TURNING}
-    - { type: small oxygen tank, disassembled_with: BOLT_TURNING}
-    - { type: gas controller, disassembled_with: SCREWING}
-    - { type: flanged hose, disassembled_with: SCREWING}
-    - { type: small valve, count: 2,  disassembled_with: SCREWING}
-    - { type: B-size frame, disassembled_with: SCREWING}
+    - { type: mouthpiece, count: 1}
+    - { type: CO2 cartridge, count: 2, attachment: bolted}
+    - { type: small oxygen tank, attachment: bolted}
+    - { type: gas controller, attachment: screwed}
+    - { type: flanged hose, attachment: screwed}
+    - { type: small valve, count: 2,  attachment: screwed}
+    - { type: B-size frame, attachment: screwed}
   display: MEDIUM_EQUIPMENT
 
 - type: item
@@ -77,10 +77,10 @@
   volume: 1 L
   description: a small tube connects to the air intake. electrical terminals for valves and power decorate the other side.
   parts:
-   - { type: A-size frame, disassembled_with: SCREWING}
-   - { type: gas sensor, disassembled_with: SOLDERING}
-   - { type: standard e-board, disassembled_with: SCREWING}
-   - { type: flex component, count: 8, disassembled_with: SOLDERING}
+   - { type: A-size frame, attachment: screwed}
+   - { type: gas sensor, attachment: soldered}
+   - { type: standard e-board, attachment: screwed}
+   - { type: flex component, count: 8, attachment: soldered}
   display: SMALL_EQUIPMENT
 
 - type: item
@@ -100,9 +100,9 @@
   volume: 10 L
   description: pee and poop in, clean water and stored waste out.
   parts:
-   - { type: groin adapter, disassembled_with: HANDLING }
-   - { type: liquid filter unit, disassembled_with: BOLT_TURNING }
-   - { type: solid waste unit, disassembled_with: BOLT_TURNING }
+   - { type: groin adapter }
+   - { type: liquid filter unit, attachment: bolted }
+   - { type: solid waste unit, attachment: bolted }
   display: MEDIUM_EQUIPMENT
 
 - type: item
@@ -150,5 +150,5 @@
 - type: item
   name: armor plating
   volume: 20 L
-  description: layers of tungsteel foil provide some protection from micrometeoroids 
+  description: layers of tungsteel foil provide some protection from micrometeoroids
   display: SMALL_EQUIPMENT

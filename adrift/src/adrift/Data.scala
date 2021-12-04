@@ -4,14 +4,14 @@ import java.nio.file.{FileSystems, Files, Path}
 import java.util.stream.Collectors
 import adrift.Population.Table
 import adrift.YamlObject.ItemWithExtras
-import adrift.items.{Behavior, ItemKind, ItemOperation, ItemPart}
+import adrift.items.{Behavior, ItemAttachment, ItemKind, ItemOperation, ItemPart}
 import adrift.worldgen.{RoomGen, RoomGenAlgorithm, WFC}
-import io.circe._
+import io.circe.*
 import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.auto._
-import io.circe.generic.extras.semiauto._
+import io.circe.generic.extras.auto.*
+import io.circe.generic.extras.semiauto.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.collection.mutable
 import scala.util.matching.Regex
 
@@ -20,7 +20,6 @@ object YamlObject {
     name: String,
     description: String,
     parts: Seq[ItemPart],
-    provides: Seq[String] = Seq.empty,
     display: String,
     volume: Volume = Volume(Int.MaxValue),
     behavior: Seq[JsonObject] = Seq.empty,
@@ -28,13 +27,19 @@ object YamlObject {
 
   case class ItemPart(
     `type`: String,
-    disassembled_with: String = "HANDLING",
+    attachment: Option[String],
     count: Int = 1
   )
 
   case class ItemGroup[T](
     name: String,
     choose: Table[T]
+  )
+
+  case class ItemAttachment(
+    id: String,
+    assembly: String,
+    disassembly: String,
   )
 
   case class ConnectSpec(port: String, layer: Int)
@@ -204,9 +209,18 @@ object Data {
 
     val operations: Map[String, ItemOperation] = ymls("operation")
       .map(parse[ItemOperation])
-      .groupBy(_.id).map { case (k, v) => assert(v.length == 1); k -> v.head }
+      .groupBy(_.id).map { case (k, v) => assert(v.length == 1, s"More than one operation with name '$k'"); k -> v.head }
 
-    val items: Map[String, ItemKind] = parseItems(ymls("item"), operations)
+    val attachments: Map[String, ItemAttachment] = ymls("attachment")
+      .map(parse[YamlObject.ItemAttachment])
+      .map(a => ItemAttachment(
+        a.id,
+        assembly = operations.getOrElse(a.assembly, throw new RuntimeException(s"Attachment '${a.id}' specified unknown assembly operation '${a.assembly}'")),
+        disassembly = operations.getOrElse(a.assembly, throw new RuntimeException(s"Attachment '${a.id}' specified unknown disassembly operation '${a.assembly}'")),
+      ))
+      .groupBy(_.id).map { case (k, v) => assert(v.length == 1, s"More than one attachment with name '$k'"); k -> v.head }
+
+    val items: Map[String, ItemKind] = parseItems(ymls("item"), attachments)
     println(s"${items.size} items")
     for (item <- items.values) {
       if (item.volume.milliliters == Int.MaxValue) {
@@ -294,7 +308,7 @@ object Data {
     )
   }
 
-  private def parseItems(items: Seq[Json], operations: Map[String, ItemOperation]): Map[String, ItemKind] = {
+  private def parseItems(items: Seq[Json], operations: Map[String, ItemAttachment]): Map[String, ItemKind] = {
     val itemDefs = items.map(parse[YamlObject.ItemKind])
     val itemsById: Map[String, YamlObject.ItemKind] = itemDefs.groupBy(_.name).map {
       case (k, v) =>
@@ -318,11 +332,13 @@ object Data {
             i.name,
             i.description,
             i.parts.map { p =>
-              val operation = operations.getOrElse(p.disassembled_with, throw new RuntimeException(s"item '${i.name}' specified an operation '${p.disassembled_with}' which doesn't seem to exist"))
+              val attachment = p.attachment.map(a =>
+                operations.getOrElse(a, throw new RuntimeException(s"item '${i.name}' specified an attachment '$a' which doesn't seem to exist"))
+              )
               if (!itemsById.contains(p.`type`)) {
                 throw new NoSuchElementException(s"Item '${i.name}' referenced part '${p.`type`}', but that item doesn't exist")
               }
-              ItemPart(itemForId(p.`type`), p.count, operation)
+              ItemPart(itemForId(p.`type`), p.count, attachment)
             },
             volume = i.volume,
             display = i.display,

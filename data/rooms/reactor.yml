@@ -213,12 +213,12 @@
   volume: 1000 L
   description: An airtight and radiation proof door specially designed with interlocks to prevent it from opening, pretty much ever.
   parts:
-    - {type: B-size frame, count: 1, disassembled_with: SCREWING}
-    - {type: micro e-board, count: 1, disassembled_with: SCREWING}
-    - {type: flex component, count: 4, disassembled_with: SOLDERING}
-    - {type: D-size stepper motor, count: 4, disassembled_with: SCREWING}
-    - {type: E-size modular panel, count: 6, disassembled_with: SCREWING}
-    - {type: E-size modular rod, count: 6, disassembled_with: SCREWING}
+    - {type: B-size frame, count: 1, attachment: screwed}
+    - {type: micro e-board, count: 1, attachment: screwed}
+    - {type: flex component, count: 4, attachment: soldered}
+    - {type: D-size stepper motor, count: 4, attachment: screwed}
+    - {type: E-size modular panel, count: 6, attachment: screwed}
+    - {type: E-size modular rod, count: 6, attachment: screwed}
   display: DOOR_CLOSED
   behavior:
     - Block: {}

@@ -158,7 +158,7 @@
   description: A metal rack for holding... pretty much anything.  Large, strong, easily movable shelves mean your options are endless.  Only 39.95 for a limited time only.
   display: MEDIUM_EQUIPMENT
   parts:
-    - { type: "D-size frame", count: 2, disassembled_with: SCREWING }
+    - { type: "D-size frame", count: 2, attachment: screwed }
 
 - type: item group
   name: equipmentstuff

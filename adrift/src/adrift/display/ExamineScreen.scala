@@ -104,10 +104,14 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   def missingRemoveOp(parent: Item, item: Item): Option[ItemOperation] = {
-    val disassemblyOp = parent.kind.parts.find(_.kind == item.kind).get.operation
-    if (state.nearbyItems.exists(i => state.sendMessage(i, Provides(disassemblyOp)).provides))
-      None
-    else Some(disassemblyOp)
+    val attachment = parent.kind.parts.find(_.kind == item.kind).get.attachment
+    val disassemblyOp = attachment.map(_.disassembly)
+    disassemblyOp.flatMap { op =>
+      if (state.nearbyItems.exists(i => state.sendMessage(i, Provides(op)).provides))
+        None
+      else
+        Some(op)
+    }
   }
 
   private def commands(menuEntry: MenuEntry): Seq[Command] = {
