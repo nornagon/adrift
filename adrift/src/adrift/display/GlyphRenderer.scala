@@ -311,7 +311,7 @@ object GlyphRenderer {
   /** Text-wrap a colored string so it fits in |wrapLength|. */
   def wrapCS(str: ColoredString, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[ColoredString] = {
     import java.util.regex.Pattern
-    import scala.util.control.Breaks._
+    import scala.util.control.Breaks.*
     if (str == null) return Seq.empty
     if (str.length == 0) return Seq(str)
     if (wrapLength >= str.length) return Seq(str)

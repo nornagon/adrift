@@ -1,13 +1,13 @@
 package adrift.display
 
-import adrift.display.GlyphRenderer.{ColoredString, wrapCS}
+import adrift.display.GlyphRenderer.ColoredString
 import adrift.items.Message.CanWear
 import adrift.items.{Item, Message}
-import adrift.{Action, GameState, InHands, Inside, ItemLocation, OnFloor, Rect, Worn}
-import org.lwjgl.glfw.GLFW._
+import adrift.*
+import org.lwjgl.glfw.GLFW.*
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  import UI.Color._
+  import UI.Color.*
 
   case class Command(name: String, execute: () => Unit, available: Boolean = true) {
     private val pat = raw"(.*)\{(.)}(.*)".r
@@ -62,7 +62,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     (action, key) match {
-      case (GLFW_PRESS | GLFW_REPEAT, DirectionKey(dx, dy)) =>
+      case (GLFW_PRESS | GLFW_REPEAT, DirectionKey(0, dy)) =>
         moveCursor(dy)
       case (GLFW_PRESS, k) =>
         selectedItem foreach { item =>
@@ -105,7 +105,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     moveCursor(0) // if the item list has changed, this pushes the cursor back in range
     val bounds = Rect.centeredAt(renderer.bounds.center, 25, 40)
 
-    import layout3._
+    import layout3.*
 
     val actions = selectedItem map { commands }
     val actionGuide = actions match {

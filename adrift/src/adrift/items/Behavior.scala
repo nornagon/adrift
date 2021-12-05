@@ -62,6 +62,7 @@ object Behavior {
     "Regulator" -> Decoder[Regulator].widen,
     "InSideRegulator" -> Decoder[InSideRegulator].widen,
     "Compressor" -> Decoder[Compressor].widen,
+    "MissingParts" -> Decoder[MissingParts].widen,
   )
 
   implicit val usesElectricityEncoder: Encoder[UsesElectricity] = deriveConfiguredEncoder
@@ -108,6 +109,7 @@ object Behavior {
     case b: Regulator => Encoder[Regulator].apply(b)
     case b: InSideRegulator => Encoder[InSideRegulator].apply(b)
     case b: Compressor => Encoder[Compressor].apply(b)
+    case b: MissingParts => Encoder[MissingParts].apply(b)
   }))
 }
 

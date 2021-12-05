@@ -1,10 +1,10 @@
 package adrift.display
+import adrift.*
 import adrift.display.CP437.BoxDrawing
 import adrift.display.GlyphRenderer.ColoredString
-import adrift.items.{Item, ItemKind, ItemOperation, Message}
-import adrift._
 import adrift.items.Message.Provides
-import org.lwjgl.glfw.GLFW._
+import adrift.items.{Item, ItemAttachment, ItemKind, ItemOperation, Message}
+import org.lwjgl.glfw.GLFW.*
 
 object DirectionKey {
   def unapply(key: Int): Option[(Int, Int)] =
@@ -69,13 +69,13 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   private var openStack: Seq[Item] = Seq.empty
   private def items = openStack.lastOption.map(_.parts).getOrElse(state.items.lookup(OnFloor(location)))
   private def missingParts = openStack.lastOption.map(getMissingParts).getOrElse(Seq.empty)
-  private def getMissingParts(item: Item): Seq[(ItemKind, Int)] = {
+  private def getMissingParts(item: Item) = {
     val partCountByKind = item.parts.groupBy(_.kind).view.mapValues(_.size)
     for {
       ip <- item.kind.parts
       presentCount = partCountByKind.getOrElse(ip.kind, 0)
       if presentCount < ip.count
-    } yield (ip.kind, ip.count - presentCount)
+    } yield (ip.kind, ip.attachment, ip.count - presentCount)
   }
 
   sealed trait MenuEntry {
@@ -84,13 +84,13 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   case class ItemEntry(item: Item) extends MenuEntry {
     override def text: String = item.kind.name
   }
-  case class MissingItemEntry(kind: ItemKind, count: Int) extends MenuEntry {
+  case class MissingItemEntry(kind: ItemKind, attachment: Option[ItemAttachment], count: Int) extends MenuEntry {
     override def text: String = s"${kind.name}${if (count > 1) s" x $count" else ""}"
   }
 
   private def menuEntries: Seq[MenuEntry] =
     items.map(ItemEntry.apply) ++
-      missingParts.map { case (k, c) => MissingItemEntry(k, c) }
+      missingParts.map { case (k, a, c) => MissingItemEntry(k, a, c) }
 
   case class Command(name: String, execute: () => Unit, available: Boolean = true) {
     private val pat = raw"(.*)\{(.)}(.*)".r
@@ -133,10 +133,11 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
           when(openStack.nonEmpty)
           (Command("{r}emove", () => doRemove(openStack, item), available = missingRemoveOp(openStack.last, item).isEmpty)),
         ).flatten
-      case MissingItemEntry(kind, count) =>
+      case MissingItemEntry(kind, attachment, count) =>
         val partAvailable = state.nearbyItems.find(_.kind == kind)
+        val installable = attachment.isEmpty || attachment.exists(a => state.toolsProviding(a.assembly).nonEmpty)
         Seq(
-          Some(Command("{i}nstall", () => doInstall(openStack.last, partAvailable.get), available = partAvailable.nonEmpty))
+          Some(Command("{i}nstall", () => doInstall(openStack.last, partAvailable.get), available = partAvailable.nonEmpty && installable))
         ).flatten
     }
   }
@@ -194,8 +195,8 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
             case ItemEntry(item) =>
               val json = Serialization.encodeItem(item)
               println(io.circe.yaml.printer.print(json))
-            case MissingItemEntry(kind, count) =>
-              println(s"Missing $kind $count")
+            case MissingItemEntry(kind, attachment, count) =>
+              println(s"Missing $kind $attachment $count")
           }
         case k =>
           val selectedItem = menuEntries(selected)
@@ -282,7 +283,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                     )
                   }
                 ).getOrElse(Seq.empty)
-              case MissingItemEntry(kind, count) =>
+              case MissingItemEntry(kind, attachment, count) =>
                 Seq(
                   ConstrainedBox(BoxConstraints(minHeight = 1)),
                   Text(
@@ -291,6 +292,13 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
                       case n => s"$n of these are missing."
                     }).withFg(disabledGreen)
                   )
+                ) ++ (
+                  if (attachment.nonEmpty && state.toolsProviding(attachment.get.assembly).isEmpty)
+                    Seq(
+                      ConstrainedBox(BoxConstraints(minHeight = 1)),
+                      Text(s"Requires ${attachment.get.assembly.id} to install.".withFg(red))
+                    )
+                  else Seq.empty
                 )
             }
           } ++ {
