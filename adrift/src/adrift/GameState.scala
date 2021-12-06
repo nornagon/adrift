@@ -959,43 +959,41 @@ class GameState(var data: Data, val random: Random) {
     onFloor ++ items.lookup(InHands()) ++ items.lookup(Worn())
   }
 
+  def isBuildable(availableItems: Seq[Item], kind: ItemKind): Option[Seq[AssemblyAction]] = {
+    def providesOperation(operation: ItemOperation, item: Item): Boolean =
+      sendMessage(item, Provides(operation)).provides
+    def toolsForOp(operation: ItemOperation): Seq[Item] =
+      availableItems.filter(providesOperation(operation, _))
+    Some(kind.parts.groupBy(_.kind).flatMap {
+      case (partKind: ItemKind, parts: Seq[ItemPart]) =>
+        val requiredQty = parts.map(_.count).sum
+        val candidateComponents = availableItems.filter(_.kind == partKind).take(requiredQty)
+        if (candidateComponents.size < requiredQty) return None
+        val requiredOps = parts.flatMap(_.attachment.map(_.assembly)).distinct
+        val candidateTools: Map[ItemOperation, Seq[Item]] =
+          requiredOps.view.map { op => op -> toolsForOp(op) }.to(Map)
+        if (candidateTools.values.exists(_.isEmpty)) {
+          return None
+        }
+        // NB. parts and tools are assumed to be non-overlapping
+        val tools = candidateTools.view.mapValues(_.head)
+
+        parts.flatMap(part => Seq.fill(part.count)(part.attachment.map(_.assembly))).zip(candidateComponents).map {
+          case (maybeOp, item) =>
+            AssemblyAction(maybeOp.map(op => (tools(op), op)), item)
+        }
+
+      /*val operations = candidateComponents.zip(parts.map(_.operation)).map {
+        case (item, op) => AssemblyAction(tools(op), item, op)
+      }*/
+    }.to(Seq))
+  }
   def buildableItems2(availableItems: Seq[Item]): Seq[(ItemKind, Seq[AssemblyAction])] = {
-    def isBuildable(kind: ItemKind): Option[Seq[AssemblyAction]] = {
-      def providesOperation(operation: ItemOperation, item: Item): Boolean =
-        sendMessage(item, Provides(operation)).provides
-      def toolsForOp(operation: ItemOperation): Seq[Item] =
-        availableItems.filter(providesOperation(operation, _))
-      Some(kind.parts.groupBy(_.kind).flatMap {
-        case (partKind: ItemKind, parts: Seq[ItemPart]) =>
-          val requiredQty = parts.map(_.count).sum
-          val candidateComponents = availableItems.filter(_.kind == partKind).take(requiredQty)
-          if (candidateComponents.size < requiredQty) return None
-          val requiredOps = parts.flatMap(_.attachment.map(_.assembly)).distinct
-          val candidateTools: Map[ItemOperation, Seq[Item]] =
-            requiredOps.view.map { op => op -> toolsForOp(op) }.to(Map)
-          if (candidateTools.values.exists(_.isEmpty)) {
-            return None
-          }
-          // NB. parts and tools are assumed to be non-overlapping
-          val tools = candidateTools.view.mapValues(_.head)
-
-          parts.flatMap(part => Seq.fill(part.count)(part.attachment.map(_.assembly))).zip(candidateComponents).map {
-            case (maybeOp, item) =>
-              AssemblyAction(maybeOp.map(op => (tools(op), op)), item)
-          }
-
-          /*val operations = candidateComponents.zip(parts.map(_.operation)).map {
-            case (item, op) => AssemblyAction(tools(op), item, op)
-          }*/
-      }.to(Seq))
-    }
-
-    val x = (for {
+    (for {
       kind <- data.items.values
       if kind.parts.nonEmpty
-      operations <- isBuildable(kind)
+      operations <- isBuildable(availableItems, kind)
     } yield (kind, operations)).toSeq
-    x
   }
 
   def updateAtmosphere(levelId: LevelId, dt: Float = 1): Unit = {
