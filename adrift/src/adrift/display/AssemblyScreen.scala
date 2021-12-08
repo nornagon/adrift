@@ -71,7 +71,17 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
               ) ++ sel.parts.map(part => {
                 val available = nearbyItems.exists(_.kind == part.kind)
                 val fg = if (available) lightGreen else disabledGreen
-                Text((" " + part.kind.name + (if (part.count != 1) s" x ${part.count}" else "")).withFg(fg))
+                Row(
+                  Seq(
+                    ConstrainedBox(BoxConstraints(minWidth = 1)),
+                    Text((part.kind.name + (if (part.count != 1) s" x ${part.count}" else "")).withFg(fg)),
+                    Spacer(),
+                  ) ++ (if (part.attachment.nonEmpty) {
+                    val Some(attachment) = part.attachment
+                    val available = state.toolsProviding(attachment.assembly).nonEmpty
+                    Seq(Text(attachment.assembly.id.withFg(if (available) lightGreen else disabledGreen), textAlignment = TextAlignment.Right))
+                  } else Seq.empty)
+                )
               }) ++ Seq(
                 ConstrainedBox(BoxConstraints(minHeight = 1)),
                 Text(sel.description.withFg(disabledGreen))

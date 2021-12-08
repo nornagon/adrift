@@ -85,11 +85,19 @@ object layout3 {
       children = children.map(_.inflate.asInstanceOf[RenderBox])
     )
   }
+
+
+  sealed trait TextAlignment
+  object TextAlignment {
+    case object Left extends TextAlignment
+    case object Right extends TextAlignment
+  }
   case class Text(
     text: ColoredString,
-    halfWidth: Boolean = true
+    halfWidth: Boolean = true,
+    textAlignment: TextAlignment = TextAlignment.Left
   ) extends Widget {
-    override def inflate: RenderObject = new RenderText(text, halfWidth)
+    override def inflate: RenderObject = new RenderText(text, halfWidth, textAlignment)
   }
 
   case class Border(
@@ -121,7 +129,7 @@ object layout3 {
 
   case class Spacer(flex: Int = 1) extends Widget {
     override def inflate: RenderObject =
-      Flexible(ConstrainedBox(BoxConstraints.tight(Size(0, 0)))).inflate
+      Flexible(ConstrainedBox(BoxConstraints.tight(Size(0, 0))), flex = flex).inflate
   }
 
   case class ConstrainedBox(
@@ -266,7 +274,7 @@ object layout3 {
   }
 
   implicit def convertStringToColoredString(string: String): ColoredString = ColoredString(string)
-  class RenderText(text: ColoredString, halfWidth: Boolean = true) extends RenderBox {
+  class RenderText(text: ColoredString, halfWidth: Boolean = true, textAlignment: TextAlignment = TextAlignment.Left) extends RenderBox {
     private var _lines: Seq[ColoredString] = Seq.empty
     override def layout(constraints: BoxConstraints): Unit = {
       if (constraints.maxHeight <= 1) {
@@ -285,13 +293,20 @@ object layout3 {
     }
 
     override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
-      var y = 0
-      for (line <- _lines) {
-        if (halfWidth)
-          glyphRenderer.drawHalfColoredString(offset.x * 2, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width * 2)
-        else
-          glyphRenderer.drawColoredString(offset.x, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width)
-        y += 1
+      for ((line, y) <- _lines.zipWithIndex) {
+        if (halfWidth) {
+          val offsetX = textAlignment match {
+            case TextAlignment.Left => 0
+            case TextAlignment.Right => size.width * 2 - line.length
+          }
+          glyphRenderer.drawHalfColoredString(offset.x * 2 + offsetX, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width * 2)
+        } else {
+          val offsetX = textAlignment match {
+            case TextAlignment.Left => 0
+            case TextAlignment.Right => size.width - line.length
+          }
+          glyphRenderer.drawColoredString(offset.x + offsetX, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width)
+        }
       }
     }
 
