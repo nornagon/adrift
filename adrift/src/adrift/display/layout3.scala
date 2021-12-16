@@ -86,6 +86,16 @@ object layout3 {
     )
   }
 
+  case class Scrollable(
+    content: Widget,
+    offset: Offset = Offset(0, 0),
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderScrollable(
+      content = content.inflate.asInstanceOf[RenderBox],
+      offset = offset
+    )
+  }
+
 
   sealed trait TextAlignment
   object TextAlignment {
@@ -529,6 +539,25 @@ object layout3 {
       }
       for (child <- children)
         child.paint(childRenderer, child.parentData.asInstanceOf[BoxParentData].offset + offset)
+    }
+  }
+
+  class RenderScrollable(content: RenderBox, offset: Offset) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      if (content != null) {
+        content.layout(constraints)
+        size = constraints.constrain(content.size)
+      } else {
+        size = constraints.constrain(Size(0, 0))
+      }
+    }
+
+    override def paint(
+      glyphRenderer: GlyphRenderer,
+      offset: Offset
+    ): Unit = {
+      val childRenderer = glyphRenderer.clip(Rect(offset.x, offset.y, offset.x + size.width, offset.y + size.height))
+      content.paint(childRenderer, offset + this.offset)
     }
   }
 

@@ -22,8 +22,13 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   var cursor = 0
+  var scrollY = 0
 
-  def moveCursor(d: Int): Unit = cursor = math.max(0, math.min(cursor + d, buildInfos.size - 1))
+  def moveCursor(d: Int): Unit = {
+    cursor = math.max(0, math.min(cursor + d, buildInfos.size - 1))
+    if (cursor >= scrollY + 30) scrollY += 1
+    if (cursor < scrollY) scrollY -= 1
+  }
 
   override def key(key: Int, scancode: Int, action: Int, mods: Int): Unit = {
     (action, key) match {
@@ -50,8 +55,7 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
         bg = darkGreen, content = Column(
           crossAxisAlignment = CrossAxisAlignment.Stretch,
           children = Seq(Text("Assemble".withFg(disabledGreen))) ++ {
-            Seq(ConstrainedBox(BoxConstraints(maxHeight = 30), Column(
-              clipBehavior = ClipBehavior.Clip,
+            Seq(ConstrainedBox(BoxConstraints(maxHeight = 30), Scrollable(offset = Offset(0, -scrollY), content = Column(
               children = buildInfos.zipWithIndex.map { case (BuildInfo(itemKind, actions), i) =>
                 val fg = if (actions.nonEmpty) lightGreen else disabledGreen
                 Row(Seq(
@@ -62,7 +66,7 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
                   Flexible(ConstrainedBox(BoxConstraints(maxHeight = 1), Text(itemKind.name.withFg(fg)))),
                 ))
               }
-            )))
+            ))))
           } ++ (selectedKind match {
             case Some(sel) =>
               Seq(
