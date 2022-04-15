@@ -43,6 +43,8 @@ case class Level(
   def gasComposition(xy: (Int, Int)): GasComposition = gasComposition(xy._1, xy._2)
   def gasComposition(x: Int, y: Int): GasComposition = {
     val nx = terrain.normalizeX(x)
+    if (!terrain.contains(nx, y))
+      return GasComposition(0, 0, 0)
     val i = (y * width + nx) * 4
     GasComposition(atmosphere(i + 1), atmosphere(i + 2), atmosphere(i + 3))
   }

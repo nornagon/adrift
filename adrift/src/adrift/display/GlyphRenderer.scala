@@ -1,10 +1,8 @@
 package adrift.display
 
 import adrift.display.GlyphRenderer.ColoredString
-import adrift.{Color, Rect}
 import adrift.display.glutil.{SpriteBatch, Texture}
-
-import scala.collection.mutable
+import adrift.{Color, Rect}
 
 case class GlyphRenderer(
   spriteBatch: SpriteBatch,
@@ -54,6 +52,21 @@ case class GlyphRenderer(
       x * screenTileWidth, y * screenTileHeight,
       screenTileWidth, screenTileHeight,
       fg
+    )
+  }
+
+  def drawParticle(x: Float, y: Float, size: Float, color: Color = Color.White): Unit = {
+    if (!bounds.contains(x.toInt, y.floor.toInt)) return
+    // 0xdb is the full white square ◻️
+    val cx = 0xdb % tilesPerRow
+    val cy = 0xdb / tilesPerRow
+    spriteBatch.drawRegion(
+      font,
+      (cx * tileWidth).toFloat, (cy * tileHeight).toFloat,
+      tileWidth.toFloat, tileHeight.toFloat,
+      x * screenTileWidth - size / 2, y * screenTileHeight - size / 2,
+      size, size,
+      color
     )
   }
 
@@ -250,7 +263,7 @@ object GlyphRenderer {
   // Copyright 2001-2020 The Apache Software Foundation
   def wrap(str: String, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[String] = {
     import java.util.regex.Pattern
-    import scala.util.control.Breaks._
+    import scala.util.control.Breaks.*
     if (str == null) return Seq.empty
     val patternToWrapOn = Pattern.compile(wrapOn)
     val inputLineLength = str.length

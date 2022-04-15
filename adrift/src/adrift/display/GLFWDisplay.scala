@@ -6,6 +6,7 @@ import adrift.items.{Item, Message}
 import org.lwjgl.glfw.GLFW.*
 
 import scala.collection.mutable
+import scala.util.Random
 
 //noinspection TypeAnnotation
 object CP437 {
@@ -467,6 +468,45 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, BoxDrawing.LURD, color, bg = Color(0f, 0f, 0f, 0f))
       }
     }
+    for (p <- particles) {
+      if (state.isVisible(Location(levelId, p.x.toInt, p.y.toInt)) || state.seeThroughWalls)
+        renderer.drawParticle(screenLeft + p.x - left, screenTop + p.y - top, 2, Color(1, 1, 1, 0.1f))
+    }
+  }
+
+  def updateParticles(dt: Float = 0.01f): Unit = {
+    val level = state.levels(state.player.levelId)
+    for (p <- particles) {
+      val tx = p.x.toInt
+      val ty = p.y.toInt
+      val gc = level.gasComposition(tx, ty)
+      def gcAt(tx: Int, ty: Int): GasComposition = {
+        val walkable = state.canWalk(Location(state.player.levelId, tx, ty))
+        if (walkable)
+          level.gasComposition(tx, ty)
+        else
+          gc
+      }
+      val gcUp = gcAt(tx, ty - 1)
+      val gcDown = gcAt(tx, ty + 1)
+      val gcLeft = gcAt(tx - 1, ty)
+      val gcRight = gcAt(tx + 1, ty)
+
+      val gcp = gc.totalPressure
+      val gx = 1 * (gcLeft.totalPressure - gcp) + -1 * (gcRight.totalPressure - gcp)
+      val gy = 1 * (gcUp.totalPressure - gcp) + -1 * (gcDown.totalPressure - gcp)
+      p.x += gx * dt + (prandom.nextFloat() * 2 - 1) * 0.01f
+      p.y += gy * dt + (prandom.nextFloat() * 2 - 1) * 0.01f
+      p.lifetime -= dt
+
+      if (p.lifetime < 0 || p.x < 0 || p.y < 0 || p.x >= level.width || p.y >= level.height || !state.canWalk(Location(state.player.levelId, p.x.toInt, p.y.toInt))) {
+        p.lifetime = 2f + prandom.nextFloat()
+        do {
+          p.x = level.width * prandom.nextFloat()
+          p.y = level.height * prandom.nextFloat()
+        } while (!state.canWalk(Location(state.player.levelId, p.x.toInt, p.y.toInt)))
+      }
+    }
   }
 
   def update(): Unit = {
@@ -479,11 +519,12 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
 
   def waitForAction: Action = {
     while (pendingActions.isEmpty) {
-      if (screens.exists(_.animating))
+      if (screens.exists(_.animating) || true)
         window.poll()
       else
         window.waitEvents()
       render()
+      updateParticles()
     }
     pendingActions.poll()
   }
@@ -491,6 +532,17 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
   def postAction(action: Action): Unit = {
     pushAction(action)
     glfwPostEmptyEvent()
+  }
+
+  case class Particle(var x: Float, var y: Float, var lifetime: Float)
+  val particles = mutable.Buffer.empty[Particle];
+  val prandom = new Random;
+  {
+    val width = state.levels(state.player.levelId).width
+    val height = state.levels(state.player.levelId).height
+    for (_ <- 0 until width * height * 5) {
+      particles.append(Particle(prandom.nextFloat() * width, prandom.nextFloat() * height, 10 * prandom.nextFloat()))
+    }
   }
 
   def run(): Unit = {
