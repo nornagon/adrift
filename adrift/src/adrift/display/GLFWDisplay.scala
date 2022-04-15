@@ -545,6 +545,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
     for (_ <- 0 until width * height * 5) {
       particles.append(Particle(prandom.nextFloat() * width, prandom.nextFloat() * height, 10 * prandom.nextFloat()))
     }
+    updateParticles()
   }
 
   def run(): Unit = {
