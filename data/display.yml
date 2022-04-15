@@ -27,7 +27,7 @@
   categories:
     PLAYER:
       char: "@"
-      fg: brown
+      fg: white
       layer: 50
     FLOOR:
       char: "\u00b0" # ░
@@ -48,6 +48,7 @@
       fg: light_gray
     WALL:
       char: "\u00C5" # ┼
+      fg: gray
     REACTOR_WALL:
       char: "\u00CE" # ╬
       fg: red
