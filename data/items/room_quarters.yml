@@ -92,7 +92,8 @@
   - {type: C-size modular panel, count: 3, attachment: screwed}
   - {type: C-size modular rod, count: 4, attachment: screwed}
   - {type: drawer, count: 3, attachment: screwed}
-  Container: { maxVolume: 15 L, rigid: true}
+  behavior:
+    - Container: { maxVolume: 15 L, rigid: true }
   display: DESK
 
 - type: item
@@ -116,3 +117,6 @@
   volume: 600 L
   description: For some reason this table has a wood-veneer surface, as if the architects thought you needed to be reminded of home.
   display: DESK
+  parts:
+    - { type: D-size frame, attachment: screwed }
+    - { type: C-size modular rod, count: 4, attachment: screwed }
