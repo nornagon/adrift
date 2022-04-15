@@ -159,6 +159,11 @@ object layout3 {
     override def inflate: RenderObject = new RenderBackground(content.inflate.asInstanceOf[RenderBox], bg)
   }
 
+  implicit class ExtendedWidget(x: Widget) {
+    def background(bg: Color): Widget = Background(bg, content = x)
+    def lrBorder(fg: Color, bg: Color): Widget = LRBorder(fg = fg, bg = bg, content = x)
+  }
+
   trait Constraints
   trait ParentData
   abstract class RenderObject {

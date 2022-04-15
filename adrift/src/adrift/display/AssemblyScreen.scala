@@ -49,13 +49,14 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
     import layout3.*
     import UI.Color.*
 
-    val w = LRBorder(
-      fg = lightGreen, bg = darkGreen,
-      content = Background(
-        bg = darkGreen, content = Column(
-          crossAxisAlignment = CrossAxisAlignment.Stretch,
-          children = Seq(Text("Assemble".withFg(disabledGreen))) ++ {
-            Seq(ConstrainedBox(BoxConstraints(maxHeight = 30), Scrollable(offset = Offset(0, -scrollY), content = Column(
+    val w = Column(
+      crossAxisAlignment = CrossAxisAlignment.Stretch,
+      children = Seq(Text("Assemble".withFg(disabledGreen))) ++ {
+        Seq(ConstrainedBox(
+          BoxConstraints(maxHeight = 30),
+          Scrollable(
+            offset = Offset(0, -scrollY),
+            content = Column(
               children = buildInfos.zipWithIndex.map { case (BuildInfo(itemKind, actions), i) =>
                 val fg = if (actions.nonEmpty) lightGreen else disabledGreen
                 Row(Seq(
@@ -66,35 +67,37 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
                   Flexible(ConstrainedBox(BoxConstraints(maxHeight = 1), Text(itemKind.name.withFg(fg)))),
                 ))
               }
-            ))))
-          } ++ (selectedKind match {
-            case Some(sel) =>
+            )
+          )
+        ))
+      } ++ (selectedKind match {
+        case Some(sel) =>
+          Seq(
+            ConstrainedBox(BoxConstraints(minHeight = 1)),
+            Text("Parts".withFg(disabledGreen))
+          ) ++ sel.parts.map(part => {
+            val available = nearbyItems.exists(_.kind == part.kind)
+            val fg = if (available) lightGreen else disabledGreen
+            Row(
               Seq(
-                ConstrainedBox(BoxConstraints(minHeight = 1)),
-                Text("Parts".withFg(disabledGreen))
-              ) ++ sel.parts.map(part => {
-                val available = nearbyItems.exists(_.kind == part.kind)
-                val fg = if (available) lightGreen else disabledGreen
-                Row(
-                  Seq(
-                    ConstrainedBox(BoxConstraints(minWidth = 1)),
-                    Text((part.kind.name + (if (part.count != 1) s" x ${part.count}" else "")).withFg(fg)),
-                    Spacer(),
-                  ) ++ (if (part.attachment.nonEmpty) {
-                    val Some(attachment) = part.attachment
-                    val available = state.toolsProviding(attachment.assembly).nonEmpty
-                    Seq(Text(attachment.assembly.id.withFg(if (available) lightGreen else disabledGreen), textAlignment = TextAlignment.Right))
-                  } else Seq.empty)
-                )
-              }) ++ Seq(
-                ConstrainedBox(BoxConstraints(minHeight = 1)),
-                Text(sel.description.withFg(disabledGreen))
-              )
-            case None => Seq.empty
-          }) // ++ actionGuide
-        )
-      )
+                ConstrainedBox(BoxConstraints(minWidth = 1)),
+                Text((part.kind.name + (if (part.count != 1) s" x ${part.count}" else "")).withFg(fg)),
+                Spacer(),
+              ) ++ (if (part.attachment.nonEmpty) {
+                val Some(attachment) = part.attachment
+                val available = state.toolsProviding(attachment.assembly).nonEmpty
+                Seq(Text(attachment.assembly.id.withFg(if (available) lightGreen else disabledGreen), textAlignment = TextAlignment.Right))
+              } else Seq.empty)
+            )
+          }) ++ Seq(
+            ConstrainedBox(BoxConstraints(minHeight = 1)),
+            Text(sel.description.withFg(disabledGreen))
+          )
+        case None => Seq.empty
+      }) // ++ actionGuide
     )
+      .background(darkGreen)
+      .lrBorder(fg = lightGreen, bg = darkGreen)
 
     val bounds = Rect.centeredAt(renderer.bounds.center, 25, 40)
     val r = w.inflate.asInstanceOf[RenderBox]

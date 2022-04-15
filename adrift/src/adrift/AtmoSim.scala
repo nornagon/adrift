@@ -1,11 +1,11 @@
 package adrift
 
 import adrift.display.GLFWWindow
-import adrift.display.glutil._
-import org.lwjgl.opengl.GL11._
-import org.lwjgl.opengl.GL13._
+import adrift.display.glutil.*
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL13.*
 import org.lwjgl.opengl.GL20.glUniform1i
-import org.lwjgl.opengl.GL30._
+import org.lwjgl.opengl.GL30.*
 import org.lwjgl.opengl.GLDebugMessageCallback
 import org.lwjgl.system.MemoryUtil
 
@@ -234,7 +234,7 @@ object AtmoSimTest {
 
     if (org.lwjgl.glfw.GLFW.glfwExtensionSupported("GL_ARB_debug_output")) {
       println("Debug output supported")
-      import org.lwjgl.opengl.GL43._
+      import org.lwjgl.opengl.GL43.*
       glEnable(GL_DEBUG_OUTPUT)
       val cb = GLDebugMessageCallback.create((source: Int, `type`: Int, id: Int, severity: Int, length: Int, message: Long, userParam: Long) => {
         val msg = MemoryUtil.memUTF8(message)
