@@ -20,6 +20,8 @@
     dark_gray: "#432424"
     black: "#101820"
     true black: "#000000"
+
+    remembered: "#00200c"
   default:
     fg: white
     bg: black

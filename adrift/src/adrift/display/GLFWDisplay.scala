@@ -434,7 +434,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
         renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg.darken(d), bg.darken(d))
       } else {
         state.remembered(Location(levelId, x, y)) foreach { case (char, _, _) =>
-          renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg = Color(0.0f, 0.1f, 0.05f, 1.0f))
+          renderer.drawChar(screenLeft + x - left, screenTop + y - top, char, fg = state.data.display.palette("remembered"))
         }
       }
 
