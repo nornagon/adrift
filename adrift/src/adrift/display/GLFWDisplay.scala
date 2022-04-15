@@ -481,8 +481,10 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
       val ty = p.y.toInt
       val gc = level.gasComposition(tx, ty)
       def gcAt(tx: Int, ty: Int): GasComposition = {
-        val walkable = state.canWalk(Location(state.player.levelId, tx, ty))
-        if (walkable)
+        // if a neighboring tile is not permeable, pretend its pressure is the same as this tile,
+        // to give it a neutral contribution to the final gradient.
+        val permeable = state.isPermeable(Location(state.player.levelId, tx, ty))
+        if (permeable)
           level.gasComposition(tx, ty)
         else
           gc
@@ -499,12 +501,12 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
       p.y += gy * dt + (prandom.nextFloat() * 2 - 1) * 0.01f
       p.lifetime -= dt
 
-      if (p.lifetime < 0 || p.x < 0 || p.y < 0 || p.x >= level.width || p.y >= level.height || !state.canWalk(Location(state.player.levelId, p.x.toInt, p.y.toInt))) {
+      if (p.lifetime < 0 || p.x < 0 || p.y < 0 || p.x >= level.width || p.y >= level.height || !state.isPermeable(Location(state.player.levelId, p.x.toInt, p.y.toInt))) {
         p.lifetime = 2f + prandom.nextFloat()
         do {
           p.x = level.width * prandom.nextFloat()
           p.y = level.height * prandom.nextFloat()
-        } while (!state.canWalk(Location(state.player.levelId, p.x.toInt, p.y.toInt)))
+        } while (!state.isPermeable(Location(state.player.levelId, p.x.toInt, p.y.toInt)))
       }
     }
   }
