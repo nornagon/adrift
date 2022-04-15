@@ -24,6 +24,8 @@ object Message {
 
   case class IsFunctional(var functional: Boolean = true) extends Message
 
+  case class DescriptiveTraits(var traits: Seq[String] = Seq.empty) extends Message
+
   case class Disassembled() extends Message
 
   // Tools

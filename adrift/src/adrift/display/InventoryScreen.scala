@@ -32,7 +32,8 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
       when(location match { case Inside(_) | InHands() | Worn() => true ; case _ => false })
       (Command("{d}rop", () => doDrop(item))),
 
-      Some(Command("{m}ark", () => doToggleMark(item))),
+      when(state.sendMessage(item, Message.CanPickUp()).ok)
+      (Command("{m}ark", () => doToggleMark(item))),
 
       when(marked.nonEmpty && state.sendMessage(item, Message.CanContainItems()).ok)
       (Command("{i}nsert", () => doInsert(item), available = !marked(item))),
@@ -158,7 +159,12 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
             Seq(
               ConstrainedBox(BoxConstraints(minHeight = 1)),
               Text(sel.kind.description.withFg(disabledGreen))
-            )
+            ) ++ (state.sendMessage(sel, Message.DescriptiveTraits()).traits match {
+              case Seq() => Seq.empty
+              case traits =>
+                ConstrainedBox(BoxConstraints(minHeight = 1)) +:
+                  traits.map(c => Text(c.withFg(lightGreen)))
+            })
           case None => Seq.empty
         }) ++ actionGuide
       ))

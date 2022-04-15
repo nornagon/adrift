@@ -1,9 +1,9 @@
 package adrift
 
-import java.nio.file._
+import java.nio.file.*
 
 import adrift.display.glutil.{Image, Texture}
-import adrift.display._
+import adrift.display.*
 import adrift.worldgen.WorldGen
 
 import scala.util.Random

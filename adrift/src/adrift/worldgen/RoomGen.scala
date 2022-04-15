@@ -72,7 +72,7 @@ case class PartWithOpts(
   flip: Option[Boolean] = None
 )
 object PartWithOpts {
-  import io.circe.generic.semiauto._
+  import io.circe.generic.semiauto.*
   private val derivedDecoder = deriveDecoder[PartWithOpts]
   private def decodeFromString[T: Decoder]: Decoder[PartWithOpts] = (c: HCursor) =>
     for { part <- c.as[String] } yield PartWithOpts(part)
@@ -498,9 +498,9 @@ case class Static(
 }
 
 object RoomGenAlgorithm {
-  import cats.syntax.functor._
+  import cats.syntax.functor.*
   import io.circe.generic.extras.Configuration
-  import io.circe.generic.extras.auto._
+  import io.circe.generic.extras.auto.*
   import io.circe.{Decoder, Encoder}
   implicit private val configuration: Configuration = Configuration.default.withDefaults.withDiscriminator("type")
 
