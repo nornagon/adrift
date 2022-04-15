@@ -1,10 +1,9 @@
 package adrift.display
 
-import adrift._
+import adrift.*
 import adrift.display.CP437.BoxDrawing
-import adrift.items.behaviors.LayerSet
-import adrift.items.{Item, Message, behaviors}
-import org.lwjgl.glfw.GLFW._
+import adrift.items.{Item, Message}
+import org.lwjgl.glfw.GLFW.*
 
 import scala.collection.mutable
 
@@ -76,8 +75,8 @@ object Appearance {
   }
 
   def charForWall(connectLeft: Boolean, connectUp: Boolean, connectRight: Boolean, connectDown: Boolean, viewingFrom: Dir): Char = {
-    import CP437.BoxDrawing._
-    import Dir._
+    import CP437.BoxDrawing.*
+    import Dir.*
     ((connectLeft, connectUp, connectRight, connectDown) match {
       case (false, false, false, false) => 254
       case (false, false, false, true)
@@ -130,7 +129,7 @@ object Appearance {
   }
 
   def charForConnection(connectLeft: Boolean, connectUp: Boolean, connectRight: Boolean, connectDown: Boolean): Char = {
-    import CP437.BoxDrawing._
+    import CP437.BoxDrawing.*
     ((connectLeft, connectUp, connectRight, connectDown) match {
       //    Left   Up     Right  Down
       case (false, false, false, false) => 254
