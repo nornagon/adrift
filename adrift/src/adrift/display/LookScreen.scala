@@ -36,7 +36,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
             Seq(Text(terrain.name.withFg(UI.Color.lightGreen))) ++
               items.take(9).map(i => Text(state.itemDisplayName(i))) ++
               (if (items.size > 9) Seq(Text(s"${items.size - 9} more...")) else Seq.empty) ++
-              (if (state.showGasDebug.nonEmpty) Seq(Text(s"${state.levels(levelId).gasComposition(x, y)}")) else Seq.empty)
+              (if (state.showGasDebug.nonEmpty) Seq(Text(f"${state.levels(levelId).gasComposition(x, y)} ${state.levels(levelId).gasComposition(x, y).totalPressure}%.1f")) else Seq.empty)
           ))
           draw(
             renderer,

@@ -469,44 +469,63 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
       }
     }
     for (p <- particles) {
-      if (state.isVisible(Location(levelId, p.x.toInt, p.y.toInt)) || state.seeThroughWalls)
-        renderer.drawParticle(screenLeft + p.x - left, screenTop + p.y - top, 2, Color(1, 1, 1, 0.1f))
+      if (state.isVisible(Location(levelId, p.x.toInt, p.y.toInt)) || state.seeThroughWalls) {
+        val fadeTime = 0.2f
+        val alphaFraction =
+          if (p.age < fadeTime) animation.squash01(2, p.age / fadeTime)
+          else if (p.lifetime - p.age < fadeTime) animation.squash01(2, (p.lifetime - p.age) / fadeTime)
+          else 1f
+        renderer.drawParticle(screenLeft + p.x - left, screenTop + p.y - top, 2, Color(1, 1, 1, 0.1f * alphaFraction))
+      }
     }
+  }
+
+  def particleForceAt(levelId: LevelId, tx: Int, ty: Int): (Float, Float) = {
+    val level = state.levels(levelId)
+    val gc = level.gasComposition(tx, ty)
+    def gcAt(tx: Int, ty: Int): GasComposition = {
+      // if a neighboring tile is not permeable, pretend its pressure is the same as this tile,
+      // to give it a neutral contribution to the final gradient.
+      val permeable = state.isPermeable(Location(levelId, tx, ty))
+      if (permeable)
+        level.gasComposition(tx, ty)
+      else
+        gc
+    }
+    val gcUp = gcAt(tx, ty - 1)
+    val gcDown = gcAt(tx, ty + 1)
+    val gcLeft = gcAt(tx - 1, ty)
+    val gcRight = gcAt(tx + 1, ty)
+
+    val gcp = gc.totalPressure
+    val gx = 1 * (gcLeft.totalPressure - gcp) + -1 * (gcRight.totalPressure - gcp)
+    val gy = 1 * (gcUp.totalPressure - gcp) + -1 * (gcDown.totalPressure - gcp)
+    (gx, gy)
   }
 
   def updateParticles(dt: Float = 0.01f): Unit = {
     val level = state.levels(state.player.levelId)
-    for (p <- particles) {
-      val tx = p.x.toInt
-      val ty = p.y.toInt
-      val gc = level.gasComposition(tx, ty)
-      def gcAt(tx: Int, ty: Int): GasComposition = {
-        // if a neighboring tile is not permeable, pretend its pressure is the same as this tile,
-        // to give it a neutral contribution to the final gradient.
-        val permeable = state.isPermeable(Location(state.player.levelId, tx, ty))
-        if (permeable)
-          level.gasComposition(tx, ty)
-        else
-          gc
-      }
-      val gcUp = gcAt(tx, ty - 1)
-      val gcDown = gcAt(tx, ty + 1)
-      val gcLeft = gcAt(tx - 1, ty)
-      val gcRight = gcAt(tx + 1, ty)
+    def updateParticle(p: Particle): Unit = {
+      val (dx, dy) = particleForceAt(state.player.levelId, p.x.floor.toInt, p.y.floor.toInt)
+      p.x += dx * dt + (prandom.nextFloat() * 2 - 1) * 0.01f // TODO: smoother noise?
+      p.y += dy * dt + (prandom.nextFloat() * 2 - 1) * 0.01f
+      p.age += dt
+    }
 
-      val gcp = gc.totalPressure
-      val gx = 1 * (gcLeft.totalPressure - gcp) + -1 * (gcRight.totalPressure - gcp)
-      val gy = 1 * (gcUp.totalPressure - gcp) + -1 * (gcDown.totalPressure - gcp)
-      p.x += gx * dt + (prandom.nextFloat() * 2 - 1) * 0.01f
-      p.y += gy * dt + (prandom.nextFloat() * 2 - 1) * 0.01f
-      p.lifetime -= dt
+    for (p <- particles) updateParticle(p)
 
-      if (p.lifetime < 0 || p.x < 0 || p.y < 0 || p.x >= level.width || p.y >= level.height || !state.isPermeable(Location(state.player.levelId, p.x.toInt, p.y.toInt))) {
-        p.lifetime = 2f + prandom.nextFloat()
-        do {
-          p.x = level.width * prandom.nextFloat()
-          p.y = level.height * prandom.nextFloat()
-        } while (!state.isPermeable(Location(state.player.levelId, p.x.toInt, p.y.toInt)))
+    particles = particles.filter(p =>
+      p.age < p.lifetime &&
+        level.terrain.contains(p.x.floor.toInt, p.y.floor.toInt) &&
+        state.isPermeable(Location(state.player.levelId, p.x.floor.toInt, p.y.floor.toInt))
+    )
+
+    for ((x, y) <- level.terrain.indices; if state.isPermeable(Location(state.player.levelId, x, y))) {
+      val gc = level.gasComposition(x, y)
+      // This is tuned to produce a density about 8 particles per cell at a total pressure of 100 kPa.
+      // With a particle lifetime of around 2 sec, we need to spawn 4 particles/sec to maintain a particle density of 8.
+      if (prandom.nextFloat() < 0.04f*(animation.squash(2, gc.totalPressure/100f-1)+1)) {
+        particles.append(Particle(x + prandom.nextFloat(), y + prandom.nextFloat(), 2f + prandom.nextFloat()))
       }
     }
   }
@@ -536,14 +555,14 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
     glfwPostEmptyEvent()
   }
 
-  case class Particle(var x: Float, var y: Float, var lifetime: Float)
-  val particles = mutable.Buffer.empty[Particle];
+  case class Particle(var x: Float, var y: Float, var lifetime: Float, var age: Float = 0)
+  var particles = mutable.Buffer.empty[Particle];
   val prandom = new Random;
   {
     val width = state.levels(state.player.levelId).width
     val height = state.levels(state.player.levelId).height
     for (_ <- 0 until width * height * 5) {
-      particles.append(Particle(prandom.nextFloat() * width, prandom.nextFloat() * height, 10 * prandom.nextFloat()))
+      particles.append(Particle(prandom.nextFloat() * width, prandom.nextFloat() * height, 2 + prandom.nextFloat()))
     }
     updateParticles()
   }

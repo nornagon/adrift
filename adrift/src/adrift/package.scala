@@ -8,10 +8,22 @@ package object adrift {
 
   object animation {
     // https://nornagon.medium.com/math-for-game-developers-parameterised-easing-9336a50c816d
-    def squash(k: Double, t: Double): Double =
+    def squash(k: Double, t: Double): Double = {
       if (t >= 1) 1
       else if (t < -1) -1
       else if (t >= 0) 1 - scala.math.pow(1 - t, k)
       else scala.math.pow(1 + t, k) - 1
+    }
+    def squash(k: Float, t: Float): Float = {
+      if (t >= 1) 1
+      else if (t < -1) -1
+      else if (t >= 0) 1 - scala.math.pow(1 - t, k).toFloat
+      else scala.math.pow(1 + t, k).toFloat - 1f
+    }
+
+    def squash01(k: Double, t: Double): Double =
+      (squash(k, t * 2 - 1) + 1) / 2
+    def squash01(k: Float, t: Float): Float =
+      (squash(k, t * 2 - 1) + 1) / 2
   }
 }
