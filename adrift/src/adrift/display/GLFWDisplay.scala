@@ -524,8 +524,8 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
       val gc = level.gasComposition(x, y)
       // This is tuned to produce a density about 8 particles per cell at a total pressure of 100 kPa.
       // With a particle lifetime of around 2 sec, we need to spawn 4 particles/sec to maintain a particle density of 8.
-      if (prandom.nextFloat() < 0.04f*(animation.squash(2, gc.totalPressure/100f-1)+1)) {
-        particles.append(Particle(x + prandom.nextFloat(), y + prandom.nextFloat(), 2f + prandom.nextFloat()))
+      if (prandom.nextFloat() < 0.08f*(animation.squash(2, gc.totalPressure/100f-1)+1)) {
+        particles.append(Particle(x + prandom.nextFloat(), y + prandom.nextFloat(), 1f + prandom.nextFloat()))
       }
     }
   }
@@ -562,7 +562,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
     val width = state.levels(state.player.levelId).width
     val height = state.levels(state.player.levelId).height
     for (_ <- 0 until width * height * 5) {
-      particles.append(Particle(prandom.nextFloat() * width, prandom.nextFloat() * height, 2 + prandom.nextFloat()))
+      particles.append(Particle(prandom.nextFloat() * width, prandom.nextFloat() * height, 1 + prandom.nextFloat()))
     }
     updateParticles()
   }
