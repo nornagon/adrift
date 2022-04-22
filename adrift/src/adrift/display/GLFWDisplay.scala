@@ -568,6 +568,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
   }
 
   def run(): Unit = {
+    pushScreen(new MessageScreen(this))
     while (!window.shouldClose) {
       val action = waitForAction
       state.receive(action)

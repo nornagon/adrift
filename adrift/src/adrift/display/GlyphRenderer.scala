@@ -4,6 +4,8 @@ import adrift.display.GlyphRenderer.ColoredString
 import adrift.display.glutil.{SpriteBatch, Texture}
 import adrift.{Color, Rect}
 
+import scala.collection.mutable
+
 case class GlyphRenderer(
   spriteBatch: SpriteBatch,
   /** how big is a tile in the source texture */
@@ -241,10 +243,8 @@ object GlyphRenderer {
 
     def length: Int = s.length
 
-    def splitAt(i: Int): (ColoredString, ColoredString) = {
-      val (l, r) = s.splitAt(i)
-      (ColoredString(l, as.flatMap(_.intersection(0, l.length))), ColoredString(r, as.flatMap(_.intersection(l.length, s.length))))
-    }
+    def splitAt(i: Int): (ColoredString, ColoredString) =
+      (substring(0, i), substring(i, s.length))
 
     def +(other: ColoredString): ColoredString =
       ColoredString(s + other.s, as ++ other.as.map(_ + s.length))
@@ -272,7 +272,7 @@ object GlyphRenderer {
     def append(string: String, start: Int, end: Int): Unit = {
       if (wrappedLine.isEmpty)
         wrappedLine = Seq("")
-      wrappedLine = wrappedLine.init :+ (wrappedLine.last + str.substring(start, end))
+      wrappedLine = wrappedLine.init :+ (wrappedLine.last + string.substring(start, end))
     }
     breakable {
       while (offset < inputLineLength) {
@@ -321,8 +321,26 @@ object GlyphRenderer {
     wrappedLine
   }
 
-  /** Text-wrap a colored string so it fits in |wrapLength|. */
   def wrapCS(str: ColoredString, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[ColoredString] = {
+    var s = str
+    val lines = mutable.Buffer.empty[ColoredString]
+    while (s.length > 0) {
+      val nextNewline = s.s.indexOf("\n")
+      if (nextNewline >= 0) {
+        val line = s.substring(0, nextNewline)
+        val rest = s.substring(nextNewline + 1, s.length)
+        lines.append(line)
+        s = rest
+      } else {
+        lines.append(s)
+        s = ColoredString.empty
+      }
+    }
+    lines.toSeq.flatMap(this.wrapSingleLineCS(_, wrapLength, wrapLongWords, wrapOn))
+  }
+
+  /** Text-wrap a colored string so it fits in |wrapLength|. */
+  def wrapSingleLineCS(str: ColoredString, wrapLength: Int = 1, wrapLongWords: Boolean = true, wrapOn: String = " "): Seq[ColoredString] = {
     import java.util.regex.Pattern
     import scala.util.control.Breaks.*
     if (str == null) return Seq.empty
@@ -335,7 +353,7 @@ object GlyphRenderer {
     def append(string: ColoredString, start: Int, end: Int): Unit = {
       if (wrappedLine.isEmpty)
         wrappedLine = Seq(ColoredString.empty)
-      wrappedLine = wrappedLine.init :+ (wrappedLine.last + str.substring(start, end))
+      wrappedLine = wrappedLine.init :+ (wrappedLine.last + string.substring(start, end))
     }
     breakable {
       while (offset < inputLineLength) {
