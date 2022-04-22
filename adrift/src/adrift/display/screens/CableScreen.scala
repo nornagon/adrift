@@ -1,11 +1,12 @@
-package adrift.display
+package adrift.display.screens
 
-import adrift.items.{Item, Message}
-import adrift.items.behaviors.{HasPorts, LayerSet}
+import adrift.*
 import adrift.animation.squash
-import adrift.{Color, GameState, Location, OnFloor, Rect}
+import adrift.display.layout3.*
+import adrift.display.{Appearance, GLFWDisplay, GlyphRenderer, Screen}
+import adrift.items.behaviors.{HasPorts, LayerSet}
+import adrift.items.{Item, Message}
 import org.lwjgl.glfw.GLFW.*
-import layout3.*
 
 object NumericKey {
   def unapply(key: Int): Option[Int] =

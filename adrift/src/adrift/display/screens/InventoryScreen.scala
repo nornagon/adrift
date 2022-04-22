@@ -1,13 +1,14 @@
-package adrift.display
+package adrift.display.screens
 
+import adrift.*
 import adrift.display.GlyphRenderer.ColoredString
+import adrift.display.*
 import adrift.items.Message.CanWear
 import adrift.items.{Item, Message}
-import adrift.*
 import org.lwjgl.glfw.GLFW.*
 
 class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
-  import UI.Color.*
+  import adrift.display.screens.UI.Color.*
 
   case class Command(name: String, execute: () => Unit, available: Boolean = true) {
     private val pat = raw"(.*)\{(.)}(.*)".r

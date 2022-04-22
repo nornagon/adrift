@@ -1,6 +1,7 @@
-package adrift.display
+package adrift.display.screens
 
 import adrift.GameState
+import adrift.display.{GLFWDisplay, GlyphRenderer, Screen}
 import org.lwjgl.glfw.GLFW
 
 class ColorTestScreen(display: GLFWDisplay, state: GameState) extends Screen {

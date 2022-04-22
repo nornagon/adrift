@@ -1,7 +1,8 @@
-package adrift.display
+package adrift.display.screens
 
 import adrift.Rect
-import adrift.display.UI.Color.*
+import adrift.display.screens.UI.Color.*
+import adrift.display.{GLFWDisplay, GlyphRenderer, Screen, layout3}
 import org.lwjgl.glfw.GLFW.*
 
 class MessageScreen(display: GLFWDisplay) extends Screen {

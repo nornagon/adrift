@@ -2,6 +2,7 @@ package adrift.display
 
 import adrift.*
 import adrift.display.CP437.BoxDrawing
+import adrift.display.screens.{AssemblyScreen, CableScreen, DeathScreen, DirectionKey, ExamineDirectionScreen, InventoryScreen, LookScreen, MessageScreen, WishScreen}
 import adrift.items.{Item, Message}
 import org.lwjgl.glfw.GLFW.*
 

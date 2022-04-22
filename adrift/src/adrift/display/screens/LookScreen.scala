@@ -1,5 +1,6 @@
-package adrift.display
+package adrift.display.screens
 
+import adrift.display.*
 import adrift.{Color, GameState, Location, OnFloor}
 import org.lwjgl.glfw.GLFW.*
 

@@ -1,9 +1,10 @@
-package adrift.display
+package adrift.display.screens
+
+import adrift.*
+import adrift.display.{GLFWDisplay, GlyphRenderer, Screen}
+import org.lwjgl.glfw.GLFW
 
 import java.nio.file.{Files, Paths}
-
-import adrift._
-import org.lwjgl.glfw.GLFW
 
 class WishScreen(display: GLFWDisplay, state: GameState) extends Screen {
   val setTemp = raw"settemp (-?[0-9.]+)".r

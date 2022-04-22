@@ -1,9 +1,11 @@
-package adrift.display
+package adrift.display.screens
+
 import adrift.*
+import adrift.display.*
 import adrift.display.CP437.BoxDrawing
 import adrift.display.GlyphRenderer.ColoredString
+import adrift.items.*
 import adrift.items.Message.Provides
-import adrift.items.{Item, ItemAttachment, ItemKind, ItemOperation, Message}
 import org.lwjgl.glfw.GLFW.*
 
 object DirectionKey {

@@ -1,6 +1,7 @@
-package adrift.display
+package adrift.display.screens
 
 import adrift.Action.AssemblyAction
+import adrift.display.{GLFWDisplay, GlyphRenderer, Screen, layout3}
 import adrift.items.ItemKind
 import adrift.{Action, GameState, Rect}
 import org.lwjgl.glfw.GLFW.*
@@ -46,8 +47,8 @@ class AssemblyScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout3.*
     import UI.Color.*
+    import layout3.*
 
     val w = Column(
       crossAxisAlignment = CrossAxisAlignment.Stretch,
