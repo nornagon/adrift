@@ -111,13 +111,12 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
 
     val actions = selectedItem map { commands }
     val actionGuide = actions match {
-      case Some(actions) =>
+      case Some(actions) if actions.nonEmpty =>
         Seq(
           ConstrainedBox(BoxConstraints(minHeight = 1)),
           Text(actions.map(_.display).reduce(_ + " " + _))
         )
-      case None =>
-        Seq.empty
+      case _ => Seq.empty
     }
 
     val w = LRBorder(

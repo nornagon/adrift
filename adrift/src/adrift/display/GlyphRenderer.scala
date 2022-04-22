@@ -336,7 +336,10 @@ object GlyphRenderer {
         s = ColoredString.empty
       }
     }
-    lines.toSeq.flatMap(this.wrapSingleLineCS(_, wrapLength, wrapLongWords, wrapOn))
+    lines.toSeq.flatMap(this.wrapSingleLineCS(_, wrapLength, wrapLongWords, wrapOn)) match {
+      case Seq() => Seq(ColoredString.empty)
+      case x => x
+    }
   }
 
   /** Text-wrap a colored string so it fits in |wrapLength|. */

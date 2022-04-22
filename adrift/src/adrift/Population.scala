@@ -1,7 +1,7 @@
 package adrift
 
-import adrift.RandomImplicits._
-import io.circe._
+import adrift.RandomImplicits.*
+import io.circe.*
 
 import scala.util.Random
 
@@ -165,7 +165,7 @@ object Population {
 
   private val percentageRegex = raw"""(?<percentage>\d*\.?\d+)%""".r
 
-  import io.circe.generic.semiauto._
+  import io.circe.generic.semiauto.*
   def derivedTableItemDecoder[T](implicit d: Decoder[T]): Decoder[TableElement[T]] = deriveDecoder
   implicit def decodeTableElement[T](implicit d: Decoder[T]): Decoder[TableElement[T]] = (c: HCursor) => {
     c.as[T].map(TableElement(_))
@@ -196,8 +196,8 @@ object Population {
   }
 
   object serialization {
-    import io.circe.generic.semiauto._
-    import io.circe.syntax._
+    import io.circe.generic.semiauto.*
+    import io.circe.syntax.*
     import io.circe.{Encoder, Json}
 
     implicit def encodeCountSpec: Encoder[CountSpec] = {
