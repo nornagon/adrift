@@ -177,7 +177,7 @@
                 - { port: Active, layer: 0x1 }
 
       b: { terrain: floor, items: { each: [ bed ] } }
-      C: { terrain: floor, items: { each: [ closet, { group: clothing } ] } }
+      C: { terrain: floor, items: { each: [ { item: closet, contents: { group: clothing } } ] } }
       /: { terrain: transparent polycarbonate window }
       =: { terrain: floor, items: [ counter ] }
       s: { terrain: floor, items: [ stool ] }
