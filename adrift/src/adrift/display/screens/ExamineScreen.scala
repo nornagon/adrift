@@ -208,7 +208,7 @@ class ExamineScreen(display: GLFWDisplay, state: GameState, location: Location) 
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout3.*
+    import layout.*
 
     val width = 24
     val Some((sx, sy)) = display.worldToScreen(state)(location.xy)

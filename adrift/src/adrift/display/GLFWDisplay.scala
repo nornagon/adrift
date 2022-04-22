@@ -368,7 +368,7 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
 
       renderWorld(state, glyphRenderer, worldRect(state), worldViewRect.l, worldViewRect.t)
 
-      layout3.draw(glyphRenderer, sidebarRect, sidebar())
+      layout.draw(glyphRenderer, sidebarRect, sidebar())
 
       for (screen <- screens) {
         screen.render(glyphRenderer)
@@ -376,8 +376,8 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
     }
   }
 
-  private def sidebar(): layout3.Widget = {
-    import layout3.*
+  private def sidebar(): layout.Widget = {
+    import layout.*
     Column(crossAxisAlignment = CrossAxisAlignment.Stretch, children = Seq(
       ConstrainedBox(BoxConstraints(minHeight = 10, maxHeight = 10), content = Border(Column(
         state.symptoms.take(5).map(t => Text(t.description)) ++

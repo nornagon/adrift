@@ -19,7 +19,7 @@ class LookScreen(display: GLFWDisplay, state: GameState) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout3.*
+    import layout.*
     val loc = Location(state.player.levelId, x, y)
     val isVisible = state.isVisible(loc)
     val width = 20

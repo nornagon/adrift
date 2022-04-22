@@ -107,7 +107,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     moveCursor(0) // if the item list has changed, this pushes the cursor back in range
     val bounds = Rect.centeredAt(renderer.bounds.center, 25, 40)
 
-    import layout3.*
+    import layout.*
 
     val actions = selectedItem map { commands }
     val actionGuide = actions match {

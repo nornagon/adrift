@@ -3,202 +3,601 @@ package adrift.display
 import adrift.display.GlyphRenderer.ColoredString
 import adrift.{Color, Rect}
 
-import scala.collection.mutable
 import scala.language.implicitConversions
 
+// Inspired by Flutter
 object layout {
-  sealed trait Direction
-  case object Vertical extends Direction
-  case object Horizontal extends Direction
+  // There are 3 trees: Widget, Element and RenderObject
+  // Each tree controls the next one: Widget => Element => RenderObject
+  // Widgets are the immutable logical structure. A Widget is a _description of_ an Element.
+  // Elements are the instantiated persistent structure.
+  // RenderObjects are the realized physical structure. This is where layout happens.
 
-  type RenderFn = (GlyphRenderer, Rect) => Unit
+  // Example Widget tree:
+  // Border(
+  //   VStack(
+  //     Text(...),
+  //     Text(...),
+  //     Text(...),
+  //   )
+  // )
+
+  case class Size(width: Int, height: Int) {
+    def +(size: Size): Size = Size(width + size.width, height + size.height)
+  }
+  case class Offset(x: Int, y: Int) {
+    def +(offset: Offset): Offset = Offset(x + offset.x, y + offset.y)
+  }
+
+  // TODO:
+  trait Widget {
+    // TODO: all the updating and stuff
+    def inflate: RenderObject
+  }
+  // trait Element
+
+  case class Flex(
+    direction: Axis,
+    children: Seq[Widget],
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlex(
+      direction = direction,
+      mainAxisAlignment = mainAxisAlignment,
+      crossAxisAlignment = crossAxisAlignment,
+      verticalDirection = verticalDirection,
+      clipBehavior = clipBehavior,
+      children = children.map(_.inflate.asInstanceOf[RenderBox])
+    )
+  }
+  case class Row(
+    children: Seq[Widget],
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlex(
+      direction = Axis.Horizontal,
+      mainAxisAlignment = mainAxisAlignment,
+      crossAxisAlignment = crossAxisAlignment,
+      verticalDirection = verticalDirection,
+      clipBehavior = clipBehavior,
+      children = children.map(_.inflate.asInstanceOf[RenderBox])
+    )
+  }
+  case class Column(
+    children: Seq[Widget],
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderFlex(
+      direction = Axis.Vertical,
+      mainAxisAlignment = mainAxisAlignment,
+      crossAxisAlignment = crossAxisAlignment,
+      verticalDirection = verticalDirection,
+      clipBehavior = clipBehavior,
+      children = children.map(_.inflate.asInstanceOf[RenderBox])
+    )
+  }
+
+  case class Scrollable(
+    content: Widget,
+    offset: Offset = Offset(0, 0),
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderScrollable(
+      content = content.inflate.asInstanceOf[RenderBox],
+      offset = offset
+    )
+  }
+
+
+  sealed trait TextAlignment
+  object TextAlignment {
+    case object Left extends TextAlignment
+    case object Right extends TextAlignment
+  }
+  case class Text(
+    text: ColoredString,
+    halfWidth: Boolean = true,
+    textAlignment: TextAlignment = TextAlignment.Left
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderText(text, halfWidth, textAlignment)
+  }
+
+  case class Border(
+    content: Widget
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderBorder(content.inflate.asInstanceOf[RenderBox])
+  }
+
+  case class LRBorder(
+    fg: Color,
+    bg: Color,
+    content: Widget
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderLRBorder(content.inflate.asInstanceOf[RenderBox], fg, bg)
+  }
+
+  case class Flexible(
+    content: Widget,
+    flex: Int = 1,
+  ) extends Widget {
+    override def inflate: RenderObject = {
+      val child = content.inflate.asInstanceOf[RenderBox]
+      val pd = new FlexParentData()
+      pd.flex = flex
+      child.parentData = pd
+      child
+    }
+  }
+
+  case class Spacer(flex: Int = 1) extends Widget {
+    override def inflate: RenderObject =
+      Flexible(ConstrainedBox(BoxConstraints.tight(Size(0, 0))), flex = flex).inflate
+  }
+
+  case class ConstrainedBox(
+    additionalConstraints: BoxConstraints,
+    content: Widget = null,
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderConstrainedBox(
+      additionalConstraints,
+      Option(content).map(_.inflate.asInstanceOf[RenderBox]).orNull
+    )
+  }
+
+  case class Background(
+    bg: Color,
+    content: Widget
+  ) extends Widget {
+    override def inflate: RenderObject = new RenderBackground(content.inflate.asInstanceOf[RenderBox], bg)
+  }
+
+  implicit class ExtendedWidget(x: Widget) {
+    def background(bg: Color): Widget = Background(bg, content = x)
+    def lrBorder(fg: Color, bg: Color): Widget = LRBorder(fg = fg, bg = bg, content = x)
+  }
+
+  trait Constraints
+  trait ParentData
+  abstract class RenderObject {
+    type C <: Constraints
+    var parentData: ParentData = _
+    def layout(constraints: C): Unit
+    def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit
+    def applyParentData(): Unit = {}
+  }
+
+  // Int but Int.MaxValue works like Double.PositiveInfinity
+  case class Pint(i: Int) extends AnyVal with Ordered[Pint] {
+    def clamp(lo: Pint, hi: Pint): Pint =
+      if (i < lo.i) lo.i
+      else if (i > hi.i) hi.i
+      else i
+
+    def *(other: Pint): Pint =
+      if (i == Int.MaxValue || other.i == Int.MaxValue) Int.MaxValue
+      else i * other.i
+
+    def -(other: Pint): Pint =
+      if (i == Int.MaxValue) Int.MaxValue
+      else if (other.i == Int.MaxValue) 0
+      else i - other.i
+
+    def +(other: Pint): Pint =
+      if (i == Int.MaxValue) Int.MaxValue
+      else i + other.i
+
+    def /(other: Pint): Pint =
+      if (i == Int.MaxValue) Int.MaxValue
+      else i / other.i
+
+    override def compare(that: Pint): Int = i.compare(that.i)
+
+    override def toString: String = if (i == Int.MaxValue) "∞" else i.toString
+  }
+  implicit def intToPint(i: Int): Pint = Pint(i)
+
+  object pmath {
+    def max(a: Pint, b: Pint): Pint = if (a > b) a else b
+  }
+
+  case class BoxConstraints(
+    minWidth: Pint = 0,
+    maxWidth: Pint = Int.MaxValue,
+    minHeight: Pint = 0,
+    maxHeight: Pint = Int.MaxValue
+  ) extends Constraints {
+    def enforce(other: BoxConstraints): BoxConstraints = new BoxConstraints(
+      minWidth = minWidth.clamp(other.minWidth, other.maxWidth),
+      maxWidth = maxWidth.clamp(other.minWidth, other.maxWidth),
+      minHeight = minHeight.clamp(other.minHeight, other.maxHeight),
+      maxHeight = maxHeight.clamp(other.minHeight, other.maxHeight),
+    )
+
+    def constrain(size: Size): Size =
+      Size(constrainWidth(size.width).i, constrainHeight(size.height).i)
+
+    def constrainWidth(width: Int = Int.MaxValue): Pint = width.clamp(minWidth, maxWidth)
+    def constrainHeight(height: Int = Int.MaxValue): Pint = height.clamp(minHeight, maxHeight)
+
+    override def toString: String = s"BoxConstraints(width ∈ [$minWidth,$maxWidth], height ∈ [$minHeight,$maxHeight])"
+  }
+  object BoxConstraints {
+    def tight(size: Size): BoxConstraints = tight(size.width, size.height)
+    def tight(width: Int, height: Int): BoxConstraints = new BoxConstraints(width, width, height, height)
+    def tightFor(width: Int = -1, height: Int = -1) = new BoxConstraints(
+      minWidth = if (width >= 0) width else 0,
+      maxWidth = if (width >= 0) width else Int.MaxValue,
+      minHeight = if (height >= 0) height else 0,
+      maxHeight = if (height >= 0) height else Int.MaxValue,
+    )
+    def loose(size: Size): BoxConstraints = loose(size.width, size.height)
+    def loose(width: Int, height: Int): BoxConstraints = new BoxConstraints(0, width, 0, height)
+  }
+
+  class BoxParentData extends ParentData {
+    var offset: Offset = Offset(0, 0)
+  }
+
+  abstract class RenderBox extends RenderObject {
+    type C = BoxConstraints
+    var _size: Size = _
+    def size: Size = _size
+    protected def size_=(size: Size): Unit = _size = size
+  }
+
+  class RenderBorder(content: RenderBox) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      content.layout(new BoxConstraints(
+        minWidth = pmath.max(0, constraints.minWidth - 2),
+        maxWidth = constraints.maxWidth - 2,
+        minHeight = pmath.max(0, constraints.minHeight - 2),
+        maxHeight = constraints.maxHeight - 2
+      ))
+      size = content.size + Size(2, 2)
+    }
+
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
+      glyphRenderer.drawBox(offset.x, offset.y, size.width, size.height)
+      content.paint(glyphRenderer, offset + Offset(1, 1))
+    }
+  }
+
+  class RenderLRBorder(content: RenderBox, fg: Color, bg: Color) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      content.layout(constraints.copy(
+        minWidth = pmath.max(0, constraints.minWidth - 2),
+        maxWidth = constraints.maxWidth - 2,
+      ))
+      size = content.size + Size(2, 0)
+    }
+
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
+      for (y <- offset.y until offset.y + size.height) {
+        glyphRenderer.drawChar(offset.x, y, 0xdd, fg, bg)
+        glyphRenderer.drawChar(offset.x + size.width - 1, y, 0xde, fg, bg)
+      }
+      content.paint(glyphRenderer, offset + Offset(1, 0))
+    }
+  }
 
   implicit def convertStringToColoredString(string: String): ColoredString = ColoredString(string)
+  class RenderText(text: ColoredString, halfWidth: Boolean = true, textAlignment: TextAlignment = TextAlignment.Left) extends RenderBox {
+    private var _lines: Seq[ColoredString] = Seq.empty
+    override def layout(constraints: BoxConstraints): Unit = {
+      if (constraints.maxHeight <= 1) {
+        val clipped =
+          if (text.length <= (constraints.maxWidth * (if (halfWidth) 2 else 1)).i) text
+          else text.substring(0, (constraints.maxWidth * (if (halfWidth) 2 else 1) - 1).i) + "\u0010"
+        _lines = Seq(clipped)
+      } else {
+        _lines = GlyphRenderer.wrapCS(text, (constraints.maxWidth * (if (halfWidth) 2 else 1)).i)
+      }
+      val textSize = Size(
+        width = (_lines.view.map(_.length).max + (if (halfWidth) 1 else 0)) / (if (halfWidth) 2 else 1),
+        height = _lines.size
+      )
+      size = constraints.constrain(textSize)
+    }
 
-  case class Box(
-    direction: Direction,
-    bounds: Option[Rect],
-    size: Int,
-    background: Option[Color],
-    foreground: Option[Color],
-    fill: Option[Char],
-    children: Seq[Box],
-    text: Option[ColoredString],
-    halfWidth: Boolean = false,
-    render: Option[RenderFn]
-  ) {
-    def textAdjustedSize(parentDirection: Direction): Int = {
-      if (size >= 0) size
-      else parentDirection match {
-        case Horizontal => (text.get.length + (-size / 2)) / -size
-        case Vertical => 1
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
+      for ((line, y) <- _lines.zipWithIndex) {
+        if (halfWidth) {
+          val offsetX = textAlignment match {
+            case TextAlignment.Left => 0
+            case TextAlignment.Right => size.width * 2 - line.length
+          }
+          glyphRenderer.drawHalfColoredString(offset.x * 2 + offsetX, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width * 2)
+        } else {
+          val offsetX = textAlignment match {
+            case TextAlignment.Left => 0
+            case TextAlignment.Right => size.width - line.length
+          }
+          glyphRenderer.drawColoredString(offset.x + offsetX, offset.y + y, line, bg = Color.Transparent, maxWidth = size.width)
+        }
       }
     }
+
+    override def toString: String = s"RenderText(${text.plain})"
   }
 
-  def hbox(
-    bounds: Rect = null,
-    background: Color = null,
-    foreground: Color = null,
-    fill: Char = ' ',
-    render: RenderFn = null,
-    size: Int = 0,
-    children: Seq[Box] = Seq.empty
-  ): Box = Box(
-    direction = Horizontal,
-    bounds = Option(bounds),
-    background = Option(background),
-    foreground = Option(foreground),
-    fill = Option(fill),
-    render = Option(render),
-    size = size,
-    children = children,
-    text = None,
-  )
+  sealed trait Axis
+  object Axis {
+    case object Vertical extends Axis
+    case object Horizontal extends Axis
+  }
 
-  def vbox(
-    bounds: Rect = null,
-    background: Color = null,
-    foreground: Color = null,
-    fill: Char = ' ',
-    render: RenderFn = null,
-    size: Int = 0,
-    children: Seq[Box] = Seq.empty
-  ): Box = Box(
-    direction = Vertical,
-    bounds = Option(bounds),
-    background = Option(background),
-    foreground = Option(foreground),
-    fill = Option(fill),
-    render = Option(render),
-    size = size,
-    children = children,
-    text = None,
-  )
+  sealed trait MainAxisAlignment
+  object MainAxisAlignment {
+    case object Start extends MainAxisAlignment
+    case object End extends MainAxisAlignment
+  }
 
-  def text(
-    text: ColoredString,
-    background: Color = null,
-    foreground: Color = null,
-    size: Int = -1
-  ): Box = Box(
-    direction = Horizontal,
-    bounds = None,
-    background = Option(background),
-    foreground = Option(foreground),
-    fill = None,
-    size = size,
-    children = Seq.empty,
-    text = Some(text),
-    render = None,
-  )
+  sealed trait CrossAxisAlignment
+  object CrossAxisAlignment {
+    case object Start extends CrossAxisAlignment
+    case object End extends CrossAxisAlignment
+    case object Stretch extends CrossAxisAlignment
+  }
 
-  def htext(
-    text: ColoredString,
-    background: Color = null,
-    foreground: Color = null,
-    size: Int = -2
-  ): Box = Box(
-    direction = Horizontal,
-    bounds = None,
-    background = Option(background),
-    foreground = Option(foreground),
-    fill = None,
-    size = size,
-    children = Seq.empty,
-    text = Some(text),
-    halfWidth = true,
-    render = None,
-  )
+  sealed trait VerticalDirection
+  object VerticalDirection {
+    case object Down extends VerticalDirection
+    case object Up extends VerticalDirection
+  }
 
-  def frame(contents: Box, size: Int = 0): Box = vbox(
-    size = size,
-    children = Seq(vbox(
-      children = Seq(
-        vbox(size = 1),
-        hbox(children = Seq(
-          vbox(size = 1),
-          contents,
-          vbox(size = 1)
-        )),
-        vbox(size = 1)
-      )
-    )),
-    render = (renderer, bounds) => {
-      renderer.drawBox(bounds)
+  sealed trait ClipBehavior
+  object ClipBehavior {
+    case object Clip extends ClipBehavior
+    case object None extends ClipBehavior
+  }
+
+  class FlexParentData extends BoxParentData {
+    var flex: Int = 0
+  }
+
+  class RenderFlex(
+    children: Seq[RenderBox],
+    direction: Axis,
+    mainAxisAlignment: MainAxisAlignment = MainAxisAlignment.Start,
+    crossAxisAlignment: CrossAxisAlignment = CrossAxisAlignment.Start,
+    verticalDirection: VerticalDirection = VerticalDirection.Down,
+    clipBehavior: ClipBehavior = ClipBehavior.None,
+  ) extends RenderBox {
+    children.foreach { c =>
+      if (!c.parentData.isInstanceOf[FlexParentData])
+        c.parentData = new FlexParentData()
+      c.applyParentData()
     }
-  )
 
-  def custom(
-    render: RenderFn,
-    size: Int = 0,
-    children: Seq[Box] = Seq.empty
-  ): Box = Box(
-    direction = Horizontal,
-    bounds = None,
-    background = None,
-    foreground = None,
-    fill = None,
-    size = size,
-    children = children,
-    text = None,
-    render = Some(render)
-  )
+    private def _getMainSize(size: Size): Int = direction match {
+      case Axis.Vertical => size.height
+      case Axis.Horizontal => size.width
+    }
 
-  def draw(renderer: GlyphRenderer, box: Box): Unit = {
-    drawIn(box, box.bounds.getOrElse(throw new RuntimeException("root needs bounds")), Color.White, Color.Black)
+    private def _getCrossSize(size: Size): Int = direction match {
+      case Axis.Vertical => size.width
+      case Axis.Horizontal => size.height
+    }
 
-    def drawIn(box: Box, bounds: Rect, parentFg: Color, parentBg: Color): Unit = {
-      val currentFg = box.foreground.getOrElse(parentFg)
-      val currentBg = box.background.getOrElse(parentBg)
-      // 1. fill background
-      if (box.background.nonEmpty || box.fill.exists(_ != ' '))
-        renderer.fillRect(bounds, box.fill.getOrElse(' '), bg = box.background.getOrElse(currentBg), fg = box.foreground.getOrElse(currentFg))
-      // 2. draw content
-      // 2a. if there's a render function, call it
-      for (render <- box.render)
-        render(renderer, bounds)
-      // 2b. if there's text, draw it
-      for (text <- box.text) {
-        if (box.halfWidth) {
-          renderer.drawHalfColoredString(bounds.l * 2, bounds.t, text, maxWidth = bounds.width * 2, fg = currentFg, bg = currentBg)
+    override def layout(constraints: BoxConstraints): Unit = {
+      var allocatedSize: Int = 0
+      var crossSize: Int = 0
+      var totalFlex: Int = 0
+      val maxMainSize = direction match {
+        case Axis.Vertical => constraints.maxHeight
+        case Axis.Horizontal => constraints.maxWidth
+      }
+      val canFlex = maxMainSize < Int.MaxValue
+      var lastFlexChild: RenderObject = null
+      for (child <- children) {
+        val flex = child.parentData.asInstanceOf[FlexParentData].flex
+        if (flex > 0) {
+          totalFlex += flex
+          lastFlexChild = child
         } else {
-          renderer.drawColoredString(bounds.l, bounds.t, text, maxWidth = bounds.width, fg = currentFg, bg = currentBg)
+          val innerConstraints: BoxConstraints =
+            crossAxisAlignment match {
+              case CrossAxisAlignment.Stretch =>
+                direction match {
+                  case Axis.Vertical => BoxConstraints(minWidth = constraints.maxWidth, maxWidth = constraints.maxWidth)
+                  case Axis.Horizontal => BoxConstraints(minHeight = constraints.maxHeight, maxHeight = constraints.maxHeight)
+                }
+              case _ =>
+                direction match {
+                  case Axis.Vertical => BoxConstraints(maxWidth = constraints.maxWidth)
+                  case Axis.Horizontal => BoxConstraints(maxHeight = constraints.maxHeight)
+                }
+            }
+          child.layout(innerConstraints)
+          allocatedSize += _getMainSize(child.size)
+          crossSize = math.max(crossSize, _getCrossSize(child.size))
         }
       }
-      // 2c. if there are children, lay them out and draw them
-      if (box.children.nonEmpty) {
-        val availableSize = box.direction match {
-          case Horizontal => bounds.width
-          case Vertical => bounds.height
-        }
-        val specifiedSize = box.children.view.map(_.textAdjustedSize(box.direction)).sum
-        val remainingAfterSpecified = availableSize - specifiedSize
-        val numUnspecifiedChildren = box.children.count(_.size == 0)
-        val minimumSizePerUnspecifiedChild = if (numUnspecifiedChildren != 0) remainingAfterSpecified / numUnspecifiedChildren else 0
-        val extraCells = remainingAfterSpecified - minimumSizePerUnspecifiedChild * numUnspecifiedChildren
-        val childSizes = mutable.Seq.fill[Int](box.children.size)(0)
-        var remainingExtraCells = extraCells
-        for ((child, i) <- box.children.zipWithIndex) {
-          child.textAdjustedSize(box.direction) match {
-            case 0 =>
-              childSizes(i) = minimumSizePerUnspecifiedChild + (if (remainingExtraCells > 0) {
-                remainingExtraCells -= 1
-                1
-              } else 0)
-            case s =>
-              childSizes(i) = s
+
+      val freeSpace = pmath.max(0, (if (canFlex) maxMainSize else Pint(0)) - allocatedSize)
+      var allocatedFlexSpace: Pint = 0
+
+      if (totalFlex > 0) {
+        val spacePerFlex: Pint = if (canFlex) freeSpace / totalFlex else -1
+        for (child <- children) {
+          val flex = child.parentData.asInstanceOf[FlexParentData].flex
+          if (flex > 0) {
+            val maxChildExtent: Pint = if (canFlex) {
+              if (child == lastFlexChild) freeSpace - allocatedFlexSpace else spacePerFlex * flex
+            } else Int.MaxValue
+            val minChildExtent: Pint = maxChildExtent // TODO: fit
+            val innerConstraints = crossAxisAlignment match {
+              case CrossAxisAlignment.Stretch =>
+                direction match {
+                  case Axis.Vertical =>
+                    BoxConstraints(
+                      minWidth = constraints.maxWidth,
+                      maxWidth = constraints.maxWidth,
+                      minHeight = minChildExtent,
+                      maxHeight = maxChildExtent,
+                    )
+                  case Axis.Horizontal =>
+                    BoxConstraints(
+                      minWidth = minChildExtent,
+                      maxWidth = maxChildExtent,
+                      minHeight = constraints.maxHeight,
+                      maxHeight = constraints.maxHeight,
+                    )
+                }
+              case _ =>
+                direction match {
+                  case Axis.Vertical =>
+                    BoxConstraints(
+                      maxWidth = constraints.maxWidth,
+                      minHeight = minChildExtent,
+                      maxHeight = maxChildExtent,
+                    )
+                  case Axis.Horizontal =>
+                    BoxConstraints(
+                      minWidth = minChildExtent,
+                      maxWidth = maxChildExtent,
+                      maxHeight = constraints.maxHeight,
+                    )
+                }
+            }
+
+            child.layout(innerConstraints)
+            val childMainSize = _getMainSize(child.size)
+            allocatedSize += childMainSize
+            allocatedFlexSpace += maxChildExtent
+            crossSize = math.max(crossSize, _getCrossSize(child.size));
           }
         }
-        val splitPoints = childSizes.scanLeft(0)(_ + _)
-        val childBounds = box.direction match {
-          case Horizontal => bounds.cutHorizontal(splitPoints)
-          case Vertical => bounds.cutVertical(splitPoints)
-        }
-        for ((child, bounds) <- box.children.zip(childBounds)) {
-          drawIn(child, bounds, currentFg, currentBg)
+      }
+
+      // Align items along the main axis
+      size = constraints.constrain(direction match {
+        case Axis.Vertical => Size(crossSize, allocatedSize)
+        case Axis.Horizontal => Size(allocatedSize, crossSize)
+      })
+      val actualSize = direction match {
+        case Axis.Vertical => size.height
+        case Axis.Horizontal => size.width
+      }
+
+      val actualSizeDelta = actualSize - allocatedSize
+      val remainingSpace = math.max(0, actualSizeDelta)
+
+      def _startIsTopLeft(axis: Axis, direction: VerticalDirection) = {
+        axis match {
+          case Axis.Horizontal => true // TODO: rtl
+          case Axis.Vertical => direction match {
+            case VerticalDirection.Down => true
+            case VerticalDirection.Up => false
+          }
         }
       }
+
+      def flipAxis(axis: Axis): Axis = axis match {
+        case Axis.Vertical => Axis.Horizontal
+        case Axis.Horizontal => Axis.Vertical
+      }
+
+      val flipMainAxis = !_startIsTopLeft(direction, verticalDirection)
+      val leadingSpace = mainAxisAlignment match {
+        case MainAxisAlignment.Start => 0
+        case MainAxisAlignment.End => remainingSpace
+      }
+
+      var childMainPosition = if (flipMainAxis) actualSize - leadingSpace else leadingSpace
+      for (child <- children) {
+        val childCrossPosition = crossAxisAlignment match {
+          case CrossAxisAlignment.Start | CrossAxisAlignment.End =>
+            if (_startIsTopLeft(flipAxis(direction), verticalDirection) == (crossAxisAlignment == CrossAxisAlignment.Start))
+              0
+            else
+              crossSize - _getCrossSize(child.size)
+          case CrossAxisAlignment.Stretch => 0
+        }
+        if (flipMainAxis) childMainPosition -= _getMainSize(child.size)
+        child.parentData.asInstanceOf[BoxParentData].offset = direction match {
+          case Axis.Vertical => Offset(childCrossPosition, childMainPosition)
+          case Axis.Horizontal => Offset(childMainPosition, childCrossPosition)
+        }
+        if (flipMainAxis) {
+          // TODO: childMainPosition -= betweenSpace
+        } else {
+          childMainPosition += _getMainSize(child.size)
+        }
+      }
+
+    }
+
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
+      val childRenderer = if (clipBehavior == ClipBehavior.None) {
+        glyphRenderer
+      } else {
+        glyphRenderer.clip(Rect(offset.x, offset.y, offset.x + size.width, offset.y + size.height))
+      }
+      for (child <- children)
+        child.paint(childRenderer, child.parentData.asInstanceOf[BoxParentData].offset + offset)
     }
   }
+
+  class RenderScrollable(content: RenderBox, offset: Offset) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      if (content != null) {
+        content.layout(constraints)
+        size = constraints.constrain(content.size)
+      } else {
+        size = constraints.constrain(Size(0, 0))
+      }
+    }
+
+    override def paint(
+      glyphRenderer: GlyphRenderer,
+      offset: Offset
+    ): Unit = {
+      val childRenderer = glyphRenderer.clip(Rect(offset.x, offset.y, offset.x + size.width, offset.y + size.height))
+      content.paint(childRenderer, offset + this.offset)
+    }
+  }
+
+  class RenderConstrainedBox(additionalConstraints: BoxConstraints, content: RenderBox = null) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      if (content != null) {
+        content.layout(additionalConstraints.enforce(constraints))
+        size = content.size
+      } else {
+        size = additionalConstraints.enforce(constraints).constrain(Size(0, 0))
+      }
+    }
+
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit =
+      if (content != null) content.paint(glyphRenderer, offset)
+  }
+
+  class RenderBackground(content: RenderBox, bg: Color) extends RenderBox {
+    override def layout(constraints: BoxConstraints): Unit = {
+      content.layout(constraints)
+      size = content.size
+    }
+
+    override def paint(glyphRenderer: GlyphRenderer, offset: Offset): Unit = {
+      glyphRenderer.fillRect(Rect(l = offset.x, t = offset.y, r = offset.x + size.width, b = offset.y + size.height), ' ', bg = bg, fg = Color.Transparent)
+      content.paint(glyphRenderer, offset)
+    }
+  }
+
+  def draw(renderer: GlyphRenderer, offset: Offset, size: BoxConstraints, widget: Widget): Unit = {
+    val r = widget.inflate.asInstanceOf[RenderBox]
+    r.layout(size)
+    r.paint(renderer, offset)
+  }
+
+  def draw(renderer: GlyphRenderer, rect: Rect, widget: Widget): Unit =
+    draw(renderer, Offset(rect.l, rect.t), BoxConstraints.tight(rect.width, rect.height), widget)
 }

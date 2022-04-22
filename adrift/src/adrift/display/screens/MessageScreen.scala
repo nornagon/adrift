@@ -2,7 +2,7 @@ package adrift.display.screens
 
 import adrift.Rect
 import adrift.display.screens.UI.Color.*
-import adrift.display.{GLFWDisplay, GlyphRenderer, Screen, layout3}
+import adrift.display.{GLFWDisplay, GlyphRenderer, Screen, layout}
 import org.lwjgl.glfw.GLFW.*
 
 class MessageScreen(display: GLFWDisplay) extends Screen {
@@ -15,7 +15,7 @@ class MessageScreen(display: GLFWDisplay) extends Screen {
   }
 
   override def render(renderer: GlyphRenderer): Unit = {
-    import layout3.*
+    import layout.*
 
     val bounds = Rect.centeredAt(renderer.bounds.center, 30, 40)
 

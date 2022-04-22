@@ -2,7 +2,7 @@ package adrift.display.screens
 
 import adrift.*
 import adrift.animation.squash
-import adrift.display.layout3.*
+import adrift.display.layout.*
 import adrift.display.{Appearance, GLFWDisplay, GlyphRenderer, Screen}
 import adrift.items.behaviors.{HasPorts, LayerSet}
 import adrift.items.{Item, Message}
