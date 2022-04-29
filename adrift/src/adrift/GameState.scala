@@ -584,32 +584,31 @@ class GameState(var data: Data, val random: Random) {
   }
 
   private def checkHunger(): Unit = {
-    if (internalCalories < 6000) {
-      if (random.oneIn(60)) {
-        putMessage("Your stomach grumbles.")
-      }
-    } else if (internalCalories < 5000) {
-      if (random.oneIn(30)) {
-        putMessage("Your empty stomach aches.")
-      }
-    } else if (internalCalories < 4000) {
-      if (random.oneIn(30)) {
-        putMessage("You can't remember when you last ate.")
+    if (internalCalories < -8000) {
+      die("hunger")
+      return
+    } else if (internalCalories < 1000) {
+      if (random.oneIn(10)) {
+        putMessage("You feel dizzy with hunger. You have to sit down for a moment.")
+        elapse(1)
       }
     } else if (internalCalories < 2000) {
       if (random.oneIn(20)) {
         putMessage("You feel faint with hunger.")
         elapse(1)
       }
-    } else if (internalCalories < 1000) {
-      if (random.oneIn(10)) {
-        putMessage("You feel dizzy with hunger. You have to sit down for a moment.")
-        elapse(1)
+    } else if (internalCalories < 4000) {
+      if (random.oneIn(30)) {
+        putMessage("You can't remember when you last ate.")
       }
-    }
-    if (internalCalories < -8000) {
-      die("hunger")
-      return
+    } else if (internalCalories < 5000) {
+      if (random.oneIn(30)) {
+        putMessage("Your empty stomach aches.")
+      }
+    } else if (internalCalories < 6000) {
+      if (random.oneIn(60)) {
+        putMessage("Your stomach grumbles.")
+      }
     }
   }
 
