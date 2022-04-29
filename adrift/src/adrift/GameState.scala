@@ -26,12 +26,7 @@ object Location {
 }
 
 class GameState(var data: Data, val random: Random) {
-  def resetGas(): Unit = {
-    val level = levels(player.levelId)
-    for ((x, y) <- level.terrain.indices)
-      level.setGasComposition(x, y, GasComposition.earthLike)
-  }
-
+  var isRoomTest: Boolean = false
   var levels = mutable.Map.empty[LevelId, Level]
   var itemDb: ItemDatabase = new ItemDatabase
   var player: Location = Location(LevelId("main"), 0, 0)
@@ -50,8 +45,20 @@ class GameState(var data: Data, val random: Random) {
       c
     }
   }
-  def bodyStates: Set[BodyState] = Set(thermalBodyState, breathingBodyState)
-  def symptoms: Seq[Symptom] = (thermalBodyState.symptoms++breathingBodyState.symptoms).toSeq.sortBy(_.priority)
+  var deathReason: Option[String] = None
+
+  var walkThroughWalls = false
+  var seeThroughWalls = false
+  var showTempDebug = false
+  var showGasDebug: Option[String] = None
+  var showCableDebug = false
+  var invulnerable = false
+
+  var messages: Seq[(String, Int)] = Seq.empty
+
+  val items = new NormalizedItemDb()
+
+  def symptoms: Seq[Symptom] = (thermalBodyState.symptoms ++ breathingBodyState.symptoms).toSeq.sortBy(_.priority)
   def remembered(loc: Location): Option[(Char, Color, Color)] =
     mapMemory.get(loc.levelId).flatMap(_.getOrElse(loc.xy, None))
 
@@ -61,8 +68,6 @@ class GameState(var data: Data, val random: Random) {
     for ((x, y) <- visible; if memory.contains(x, y))
       memory(x, y) = Some(Appearance.charAtPosition(this, x, y))
   }
-
-  var isRoomTest: Boolean = false
 
   class NormalizedItemDb() {
     def put(item: Item, location: ItemLocation): Unit = itemDb.put(item, normalize(location))
@@ -74,8 +79,6 @@ class GameState(var data: Data, val random: Random) {
     def tickable: Iterable[Item] = itemDb.tickable
     def move(item: Item, location: ItemLocation): Unit = itemDb.move(item, normalize(location))
   }
-
-  val items = new NormalizedItemDb()
 
   def normalize(l: Location): Location = {
     val level = levels(l.levelId)
@@ -91,7 +94,6 @@ class GameState(var data: Data, val random: Random) {
     math.max(1, math.min(internalCalories / 200, 100))
   }
 
-  var deathReason: Option[String] = None
   def isDead: Boolean = deathReason.nonEmpty
 
   def die(reason: String): Unit = {
@@ -99,15 +101,6 @@ class GameState(var data: Data, val random: Random) {
     putMessage("You die.")
     deathReason = Some(reason)
   }
-
-  var walkThroughWalls = false
-  var seeThroughWalls = false
-  var showTempDebug = false
-  var showGasDebug: Option[String] = None
-  var showCableDebug = false
-  var invulnerable = false
-
-  var messages: Seq[(String, Int)] = Seq.empty
   def putMessage(message: String): Unit = messages :+= ((message, currentTime))
 
   def elapse(durationSec: Int): Unit = {
@@ -864,5 +857,11 @@ class GameState(var data: Data, val random: Random) {
     val respirationRate = 0.0006f
     val respirated = math.min(playerGC.oxygen, respirationRate * dt)
     level.setGasComposition(player.x, player.y, playerGC + GasComposition(oxygen = -respirated, carbonDioxide = respirated, nitrogen = 0))
+  }
+
+  def resetGas(): Unit = {
+    val level = levels(player.levelId)
+    for ((x, y) <- level.terrain.indices)
+      level.setGasComposition(x, y, GasComposition.earthLike)
   }
 }
