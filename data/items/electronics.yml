@@ -124,24 +124,6 @@
     - Affixed: {}
 
 - type: item
-  name: secondary ship power generator
-  volume: 400 L
-  description: temporary test item for testing ship power components
-  display: LARGE_EQUIPMENT
-  behavior:
-    - GeneratesShipPower: { circuit: secondary, amountPerTick: 50 }
-    - Affixed: {}
-
-- type: item
-  name: main ship power generator
-  volume: 400 L
-  description: temporary test item for testing ship power components
-  display: LARGE_EQUIPMENT
-  behavior:
-    - GeneratesShipPower: { circuit: main, amountPerTick: 50 }
-    - Affixed: {}
-
-- type: item
   name: capacitor bank
   volume: 600 L
   description: a large power storage device
