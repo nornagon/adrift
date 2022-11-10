@@ -476,7 +476,12 @@ class GLFWDisplay(val window: GLFWWindow, val font: Font, val state: GameState) 
           if (p.age < fadeTime) animation.squash01(2, p.age / fadeTime)
           else if (p.lifetime - p.age < fadeTime) animation.squash01(2, (p.lifetime - p.age) / fadeTime)
           else 1f
-        renderer.drawParticle(screenLeft + p.x - left, screenTop + p.y - top, 2, Color(1, 1, 1, 0.1f * alphaFraction))
+        val temp = state.levels(levelId).temperature(p.x.toInt, p.y.toInt)
+        val color = if (temp > 273)
+          Color((1 - math.exp(-(temp - 273)/10)).toFloat, 0.3f, 0.3f)
+        else
+          Color(0.3f, 0.3f, (1 - math.exp((temp - 273)/10)).toFloat)
+        renderer.drawParticle(screenLeft + p.x - left, screenTop + p.y - top, 2, color.copy(a = 0.1f * alphaFraction))
       }
     }
   }

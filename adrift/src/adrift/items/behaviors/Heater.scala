@@ -4,6 +4,8 @@ import adrift.items.{Behavior, Item, Message}
 import adrift.{GameState, OnFloor}
 
 case class Heater(var active: Boolean = true, dq: Float = 5f) extends Behavior {
+  override def tickable: Boolean = true
+
   override def receive(
     state: GameState,
     self: Item,

@@ -84,6 +84,7 @@ case class Color(r: Float, g: Float, b: Float, a: Float) {
   )
 }
 object Color {
+  def apply(r: Float, g: Float, b: Float): Color = Color(r, g, b, 1)
   val hexColor: Regex = raw"#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})?".r
   implicit val decoder: Decoder[Color] = { (h: HCursor) =>
     h.as[String].flatMap { s =>

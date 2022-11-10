@@ -3,8 +3,8 @@
   volume: 50 L
   description: To make a space warm
   behavior:
-    - Heater: { dq: 5 }
-    - Thermostat: { }
+    - Heater: { dq: 50 }
+    - Thermostat: { targetTemp: 293, hysteresis: 4 }
   display: VENT
 
 - type: item
