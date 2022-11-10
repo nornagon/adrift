@@ -56,12 +56,34 @@
   display: BED
   behavior:
     - Affixed: {}
+  parts:
+    - { type: E-size frame, attachment: welded }
+    - { type: C-size modular rod, count: 4, attachment: welded }
+    - { type: D-size modular panel, attachment: screwed }
+    - { type: mattress, attachment: hand }
+
+- type: item
+  name: mattress
+  volume: 200 L
+  description: A lightweight foam mattress.
+  display: HUMAN_EQUIPMENT
 
 - type: item
   name: couch
   volume: 500 L
-  description: A lump of soft thing.
+  description: A steel frame containing a lump of soft thing.
   display: BED
+  parts:
+    - { type: E-size frame, attachment: welded }
+    - { type: D-size modular panel, attachment: welded }
+    - { type: cushion, count: 4, attachment: hand }
+
+- type: item
+  name: cushion
+  volume: 20 L
+  description: A soft cushion with a rather spare and scratchy beige cover.
+  display: RAW_CLOTH
+  parts: [] # TODO
 
 - type: item
   name: closet
@@ -70,6 +92,9 @@
   display: HUMAN_EQUIPMENT
   behavior:
     - Affixed: {}
+  parts:
+    - { type: E-size frame, attachment: screwed }
+    - { type: D-size modular panel, count: 2, attachment: screwed }
 
 - type: item
   name: side table
@@ -78,10 +103,9 @@
   parts:
   - {type: drawer, count: 3, attachment: screwed}
   - {type: C-size frame, count: 2, attachment: screwed}
-  Container: { maxVolume: 15 L, rigid: true}
   display: DESK
   behavior:
-    - Container: { maxVolume: 18 L }
+    - Container: { maxVolume: 18 L, rigid: true }
 
 - type: item
   name: desk
@@ -111,6 +135,10 @@
   volume: 100 L
   description: A sleek alum-composite adjustable chair. Great for when you need to take a break.
   display: CHAIR
+  parts:
+    - { type: C-size modular panel, attachment: screwed }
+    - { type: C-size modular rod, count: 2, attachment: screwed }
+    - { type: D-size modular rod, count: 2, attachment: screwed }
 
 - type: item
   name: table
@@ -118,5 +146,5 @@
   description: For some reason this table has a wood-veneer surface, as if the architects thought you needed to be reminded of home.
   display: DESK
   parts:
-    - { type: D-size frame, attachment: screwed }
+    - { type: C-size modular panel, attachment: screwed }
     - { type: C-size modular rod, count: 4, attachment: screwed }
