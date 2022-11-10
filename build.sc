@@ -1,6 +1,5 @@
 import mill._
 import mill.scalalib._
-import ammonite.ops._
 import coursier.maven.MavenRepository
 import mill.modules.Jvm
 import mill.eval.Result
@@ -74,7 +73,7 @@ object adrift extends ScalaModule {
   override def unmanagedClasspath = Agg(
     mill.modules.Util.download(
       "http://www.softsynth.com/jsyn/developers/archives/jsyn-20171016.jar",
-      "jsyn-20171016.jar"
+      os.rel / "jsyn-20171016.jar"
     )
   )
 
