@@ -3,6 +3,7 @@ package adrift.display.screens
 import adrift.*
 import adrift.display.GlyphRenderer.ColoredString
 import adrift.display.*
+import adrift.display.layout.AnnotatedColorString
 import adrift.items.Message.CanWear
 import adrift.items.{Item, Message}
 import org.lwjgl.glfw.GLFW.*
@@ -16,7 +17,7 @@ class InventoryScreen(display: GLFWDisplay, state: GameState) extends Screen {
     private def highlightColor = if (available) lightGreen else red
     val (char, display) = name match {
       case pat(pre, char, post) =>
-        (char, ColoredString(pre).withFg(color) + ColoredString(char).withFg(highlightColor) + ColoredString(post).withFg(color))
+        (char, pre.withFg(color) + char.withFg(highlightColor) + post.withFg(color))
     }
     val key: Int = GLFW_KEY_A + char.charAt(0) - 'a'
   }

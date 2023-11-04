@@ -170,7 +170,7 @@ case class GlyphRenderer(
     var widthRemaining = maxWidth
     var tx = x
     for ((s, anns) <- cs.parts) {
-      val color = anns.lastOption.map(_.fg).getOrElse(fg)
+      val color = anns.lastOption.map(_.data).getOrElse(fg)
       drawString(tx, y, s, fg = color, bg = bg, maxWidth = widthRemaining)
       tx += s.length
       if (maxWidth != 0) {
@@ -192,7 +192,7 @@ case class GlyphRenderer(
     var widthRemaining = maxWidth
     var tx = halfX
     for ((s, anns) <- cs.parts) {
-      val color = anns.lastOption.map(_.fg).getOrElse(fg)
+      val color = anns.lastOption.map(_.data).getOrElse(fg)
       drawHalfString(tx, y, s, fg = color, bg = bg, maxWidth = widthRemaining)
       tx += s.length
       if (maxWidth >= 0) {
@@ -222,41 +222,54 @@ object GlyphRenderer {
   def wrapString(maxWidth: Int, maxHeight: Int, s: String): Seq[String] =
     wrap(s, maxWidth).take(maxHeight)
 
-  case class Ann(from: Int, until: Int, fg: Color) {
+  case class Ann[T](from: Int, until: Int, data: T) {
     require(from <= until, s"annotation must have from <= until but was ($from, $until)")
     def intersects(from: Int, until: Int): Boolean = this.until > from && this.from < until
-    def intersection(from: Int, until: Int): Option[Ann] = {
+    def intersection(from: Int, until: Int): Option[Ann[T]] = {
       if (intersects(from, until)) {
-        Some(Ann(math.max(from, this.from), math.min(until, this.until), fg))
+        Some(Ann(math.max(from, this.from), math.min(until, this.until), data))
       } else None
     }
 
-    def +(x: Int): Ann = copy(from = from + x, until = until + x)
-    def -(x: Int): Ann = copy(from = from - x, until = until - x)
+    def +(x: Int): Ann[T] = copy(from = from + x, until = until + x)
+    def -(x: Int): Ann[T] = copy(from = from - x, until = until - x)
   }
-  case class ColoredString(s: String, as: Seq[Ann] = Seq.empty) {
-    def parts: Seq[(String, Seq[Ann])] =
+
+  case class AnnotatedString[T](s: String, as: Seq[Ann[T]] = Seq.empty) {
+    def parts: Seq[(String, Seq[Ann[T]])] =
       for (i <- s.indices) yield (String.valueOf(s(i)), as.filter(_.intersects(i, i + 1)))
 
-    def substring(start: Int, end: Int): ColoredString =
-      ColoredString(s.substring(start, end), as.flatMap(_.intersection(start, end)).map(_ - start))
+    def substring(start: Int, end: Int): AnnotatedString[T] =
+      AnnotatedString(s.substring(start, end), as.flatMap(_.intersection(start, end)).map(_ - start))
 
     def length: Int = s.length
 
-    def splitAt(i: Int): (ColoredString, ColoredString) =
+    def splitAt(i: Int): (AnnotatedString[T], AnnotatedString[T]) =
       (substring(0, i), substring(i, s.length))
 
-    def +(other: ColoredString): ColoredString =
-      ColoredString(s + other.s, as ++ other.as.map(_ + s.length))
+    def +(other: AnnotatedString[T]): AnnotatedString[T] =
+      AnnotatedString(s + other.s, as ++ other.as.map(_ + s.length))
 
-    def ann(from: Int, until: Int, fg: Color): ColoredString = copy(as = as :+ Ann(from, until, fg))
-    def withFg(fg: Color): ColoredString = copy(as = Seq(Ann(0, s.length, fg)))
-    def asColoredString: ColoredString = this
+    def ann(from: Int, until: Int, data: T): AnnotatedString[T] = copy(as = as :+ Ann(from, until, data))
+
+    def withAnn(data: T): AnnotatedString[T] = copy(as = Seq(Ann(0, s.length, data)))
+
+    def asColoredString: AnnotatedString[T] = this
 
     def plain: String = parts.view.map(_._1).mkString("")
   }
+
+  object AnnotatedString {
+    def empty[T]: AnnotatedString[T] = AnnotatedString("", Seq.empty)
+  }
+
+  type ColoredString = AnnotatedString[Color]
   object ColoredString {
-    def empty: ColoredString = ColoredString("", Seq.empty)
+    def empty: ColoredString = AnnotatedString.empty
+  }
+
+  implicit class AnnotatedColorString(s: AnnotatedString[Color]) {
+    def withFg(c: Color): ColoredString = s.withAnn(c)
   }
 
   // Adapted from https://github.com/apache/commons-lang/blob/9747b14/src/main/java/org/apache/commons/lang3/text/WordUtils.java#L274

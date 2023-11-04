@@ -1,6 +1,6 @@
 package adrift.display
 
-import adrift.display.GlyphRenderer.ColoredString
+import adrift.display.GlyphRenderer.{AnnotatedString, ColoredString}
 import adrift.{Color, Rect}
 
 import scala.language.implicitConversions
@@ -288,7 +288,11 @@ object layout {
     }
   }
 
-  implicit def convertStringToColoredString(string: String): ColoredString = ColoredString(string)
+  implicit def convertStringToColoredString(string: String): ColoredString = new ColoredString(string)
+  implicit class AnnotatedColorString(s: String) {
+    def withFg(c: Color): ColoredString = s.withAnn(c)
+  }
+
   class RenderText(text: ColoredString, halfWidth: Boolean = true, textAlignment: TextAlignment = TextAlignment.Left) extends RenderBox {
     private var _lines: Seq[ColoredString] = Seq.empty
     override def layout(constraints: BoxConstraints): Unit = {
