@@ -185,7 +185,7 @@ case class GlyphRenderer(
     halfX: Int,
     y: Int,
     cs: ColoredString,
-    maxWidth: Int = 0,
+    maxWidth: Int = -1,
     fg: Color = Color.White,
     bg: Color = Color.Black,
   ): Unit = {
@@ -195,7 +195,7 @@ case class GlyphRenderer(
       val color = anns.lastOption.map(_.fg).getOrElse(fg)
       drawHalfString(tx, y, s, fg = color, bg = bg, maxWidth = widthRemaining)
       tx += s.length
-      if (maxWidth != 0) {
+      if (maxWidth >= 0) {
         widthRemaining -= s.length
         if (widthRemaining <= 0)
           return
