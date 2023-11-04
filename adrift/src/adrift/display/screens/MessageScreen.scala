@@ -1,6 +1,7 @@
 package adrift.display.screens
 
-import adrift.Rect
+import adrift.{Color, Rect}
+import adrift.display.GlyphRenderer.ColoredString
 import adrift.display.screens.UI.Color.*
 import adrift.display.{GLFWDisplay, GlyphRenderer, Screen, layout}
 import org.lwjgl.glfw.GLFW.*
@@ -37,6 +38,10 @@ class MessageScreen(display: GLFWDisplay) extends Screen {
     }
   }
 
+  private def hideCharsAfter(cs: ColoredString, n: Int): ColoredString = {
+    cs.substring(0, math.min(n, cs.length)) + cs.substring(math.min(n, cs.length), cs.length).withFg(Color.Transparent)
+  }
+
   override def render(renderer: GlyphRenderer): Unit = {
     import layout.*
 
@@ -46,7 +51,7 @@ class MessageScreen(display: GLFWDisplay) extends Screen {
       crossAxisAlignment = CrossAxisAlignment.Stretch,
       children =
         message.take(i).map(s => Text((s + "\n\n").withFg(lightGreen))) ++ Seq(
-          Text(message(i).withFg(lightGreen), hideCharsAfter = maxCharsToShow),
+          Text(hideCharsAfter(message(i).withFg(lightGreen), maxCharsToShow)),
           Text("\n"),
           Text("[Press SPACE to continue]".withFg(disabledGreen), textAlignment = TextAlignment.Right),
         )
